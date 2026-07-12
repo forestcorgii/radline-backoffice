@@ -3,9 +3,9 @@
 {{ end }}
 
 {{ define "content" }}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+<div class="header-bar">
     <h2 style="margin: 0;">Inventory</h2>
-    <div style="display: flex; gap: 0.5rem;">
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
         <a href="/inventory/receiving" hx-get="/inventory/receiving" hx-target="#main-content" hx-push-url="true" class="btn" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
             📦 Receive Stock
         </a>
@@ -28,7 +28,7 @@
                    hx-include="[name='stock_filter']"
                    class="form-input">
         </div>
-        <div style="width: 12rem;">
+        <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Stock Filter</label>
             <select name="stock_filter"
                     hx-get="/inventory/stock"
@@ -44,21 +44,23 @@
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 18%;">Item Code</th>
-                <th style="width: 32%;">Description</th>
-                <th style="width: 12%;">UOM</th>
-                <th style="width: 14%;">Received</th>
-                <th style="width: 10%;">Sold</th>
-                <th style="width: 14%;">Adjusted</th>
-                <th style="width: 14%;">On Hand</th>
-            </tr>
-        </thead>
-        <tbody id="inventory-stock-tbody">
-            {{ template "inventory_stock_rows.html" .StockItems }}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="table-scroll-md">
+            <thead>
+                <tr>
+                    <th style="width: 18%;">Item Code</th>
+                    <th style="width: 32%;">Description</th>
+                    <th style="width: 12%;">UOM</th>
+                    <th style="width: 14%;">Received</th>
+                    <th style="width: 10%;">Sold</th>
+                    <th style="width: 14%;">Adjusted</th>
+                    <th style="width: 14%;">On Hand</th>
+                </tr>
+            </thead>
+            <tbody id="inventory-stock-tbody">
+                {{ template "inventory_stock_rows.html" .StockItems }}
+            </tbody>
+        </table>
+    </div>
 </div>
 {{ end }}

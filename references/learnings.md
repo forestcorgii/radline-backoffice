@@ -129,3 +129,10 @@
 - Added safe migration for existing `inventory_adjustments` tables missing the `adjustment_id` column.
 - Added unit tests for `StockAdjustment` in `domain/adjustment_test.go`.
 
+## Context: Mobile-Responsive Spreadsheet Tables and Form Elements
+**Problem**: Tabular forms and logs containing inputs, selects, and many data cells compress to unusable widths or overflow card blocks on mobile viewports.
+**Enforced Solution**:
+- Wrap all wide tables in a layout container with horizontal overflow support: `.table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }`.
+- Style scrollbars with subtle, custom styled WebKit tracks to keep the UX sleek and premium.
+- Apply min-width constraints (e.g. `.table-scroll-md` at 800px, `.table-scroll-lg` at 1000px) directly to the table element to prevent input squishing and preserve tabular layout integrity on mobile devices.
+- Replace hardcoded filter widths with responsive `.filter-item` wrappers, and grid layouts with responsive media-query classes (e.g. `.grid-cols-2`, `.grid-cols-3`, `.grid-cols-5`) to stack vertically on mobile and span horizontally on desktop.
