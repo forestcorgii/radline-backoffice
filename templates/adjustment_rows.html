@@ -1,0 +1,21 @@
+{{ define "adjustment_rows.html" }}
+{{ range . }}
+<tr>
+    <td><span class="badge" style="background-color: rgba(139, 92, 246, 0.08); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.2);">{{ if .AdjustmentID }}ADJ-{{ .AdjustmentID }}{{ else }}-{{ end }}</span></td>
+    <td>{{ .Date.Format "2006-01-02" }}</td>
+    <td style="font-weight: 500;">{{ .ItemCode }}</td>
+    <td style="font-weight: 600; {{ if gt .AdjustmentQty 0.0 }}color: #15803d;{{ else }}color: #b91c1c;{{ end }}">
+        {{ if gt .AdjustmentQty 0.0 }}+{{ end }}{{ .AdjustmentQty }}
+    </td>
+    <td>{{ .UOM }}</td>
+    <td>₱{{ printf "%.2f" .Cost }}</td>
+    <td style="color: var(--text-muted);">{{ if .Remarks }}{{ .Remarks }}{{ else }}-{{ end }}</td>
+</tr>
+{{ else }}
+<tr>
+    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+        No adjustments found.
+    </td>
+</tr>
+{{ end }}
+{{ end }}

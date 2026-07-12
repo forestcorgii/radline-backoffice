@@ -1,0 +1,33 @@
+{{ define "brand_edit_row.html" }}
+<tr id="brand-row-{{ .ID }}" class="edit-row">
+    <td>{{ .ID }}</td>
+    <td>
+        <input type="text" id="edit-code-{{ .ID }}" name="code" value="{{ .Code }}" required class="form-input">
+    </td>
+    <td>
+        <input type="text" id="edit-name-{{ .ID }}" name="name" value="{{ .Name }}" required class="form-input">
+    </td>
+    <td>
+        <span class="badge {{ if gt .ItemCount 0 }}badge-active{{ else }}badge-inactive{{ end }}">
+            {{ .ItemCount }} items
+        </span>
+    </td>
+    <td>
+        <button class="btn btn-success" 
+                hx-post="/brands/edit/{{ .ID }}" 
+                hx-include="closest tr" 
+                hx-target="#brand-row-{{ .ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Save
+        </button>
+        <button class="btn btn-secondary" 
+                hx-get="/brands/row/{{ .ID }}" 
+                hx-target="#brand-row-{{ .ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Cancel
+        </button>
+    </td>
+</tr>
+{{ end }}

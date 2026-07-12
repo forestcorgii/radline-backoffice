@@ -1,0 +1,29 @@
+{{ define "brand_row.html" }}
+<tr id="brand-row-{{ .ID }}">
+    <td>{{ .ID }}</td>
+    <td>{{ .Code }}</td>
+    <td>{{ .Name }}</td>
+    <td>
+        <span class="badge {{ if gt .ItemCount 0 }}badge-active{{ else }}badge-inactive{{ end }}">
+            {{ .ItemCount }} items
+        </span>
+    </td>
+    <td>
+        <button class="btn btn-secondary" 
+                hx-get="/brands/edit/{{ .ID }}" 
+                hx-target="#brand-row-{{ .ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Edit
+        </button>
+        <button class="btn btn-danger" 
+                hx-delete="/brands/delete/{{ .ID }}" 
+                hx-confirm="Are you sure you want to delete the brand '{{ .Name }}'?"
+                hx-target="#brand-row-{{ .ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Delete
+        </button>
+    </td>
+</tr>
+{{ end }}

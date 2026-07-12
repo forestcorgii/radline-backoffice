@@ -1,0 +1,83 @@
+{{ define "stock_receiving.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div style="margin-bottom: 1.5rem;">
+    <a href="/inventory" hx-get="/inventory" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+        ← Back to Inventory
+    </a>
+</div>
+
+<div class="card mb-4">
+    <h2 class="mb-4">Receive Stock</h2>
+    <form hx-post="/inventory/receiving/add" hx-target="#receiving-tbody" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('receiving-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+            <div class="form-group">
+                <label for="pl_no">Packing List (PL) No.</label>
+                <input type="text" id="pl_no" name="pl_no" class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="supplier">Supplier</label>
+                <select id="supplier" name="supplier" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                    <option value="ASCD">ASCD</option>
+                    <option value="RENOWN">RENOWN</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="date">Delivery Date</label>
+                <input type="date" id="date" name="date" class="form-input" required>
+            </div>
+        </div>
+
+        <div class="mt-4 mb-4" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Items</h3>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Item</th>
+                    <th style="width: 15%;">UOM</th>
+                    <th style="width: 12%;">Qty</th>
+                    <th style="width: 14%;">Unit Cost (Supplier Price)</th>
+                    <th style="width: 14%;">Unit Selling Price</th>
+                    <th style="width: 10%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="receiving-items-tbody">
+                {{ template "receiving_item_row.html" .ReceivingRowData }}
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;" class="mt-4">
+            <button type="button" class="btn btn-secondary" hx-get="/inventory/receiving/new-row" hx-target="#receiving-items-tbody" hx-swap="beforeend">
+                + Add Item Row
+            </button>
+            <button type="submit" class="btn">Receive Stock</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h2>Receiving Logs</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>PL No.</th>
+                <th>Supplier</th>
+                <th>Item Code</th>
+                <th>Qty</th>
+                <th>UOM</th>
+                <th>Selling Price</th>
+                <th>Total Cost</th>
+            </tr>
+        </thead>
+        <tbody id="receiving-tbody">
+            {{ template "receiving_rows.html" .ReceivingLogs }}
+        </tbody>
+    </table>
+</div>
+{{ end }}

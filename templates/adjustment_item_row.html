@@ -1,0 +1,27 @@
+{{ define "adjustment_item_row.html" }}
+<tr>
+    <td>
+        <select name="item_id" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required
+                hx-get="/inventory/adjustments/item-row-details" hx-target="closest tr" hx-swap="outerHTML">
+            <option value="">-- Select Item --</option>
+            {{ range .Items }}
+            <option value="{{ .ID }}" {{ if eq .ID $.SelectedItemID }}selected{{ end }}>{{ .Code }} - {{ .Description }}</option>
+            {{ end }}
+        </select>
+    </td>
+    <td>
+        <input type="text" name="uom" placeholder="e.g. PCS" class="form-input" value="{{ .DefaultUOM }}" required>
+    </td>
+    <td>
+        <input type="number" step="any" name="adjustment_qty" placeholder="e.g. -5 or 10" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required>
+    </td>
+    <td>
+        <input type="number" step="any" name="cost" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" required>
+    </td>
+    <td>
+        <button type="button" class="btn btn-danger" onclick="this.closest('tr').remove()" style="padding: 0.5rem 1rem;">
+            Remove
+        </button>
+    </td>
+</tr>
+{{ end }}

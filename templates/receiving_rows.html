@@ -1,0 +1,20 @@
+{{ define "receiving_rows.html" }}
+{{ range . }}
+<tr>
+    <td>{{ .Date.Format "2006-01-02" }}</td>
+    <td>{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</td>
+    <td><span class="badge" style="background-color: rgba(37, 99, 235, 0.08); color: #1d4ed8; border: 1px solid rgba(37, 99, 235, 0.2);">{{ .Supplier }}</span></td>
+    <td style="font-weight: 500;">{{ .ItemCode }}</td>
+    <td style="color: #15803d; font-weight: 600;">+{{ .Qty }}</td>
+    <td>{{ .UOM }}</td>
+    <td>₱{{ printf "%.2f" .UnitPrice }}</td>
+    <td style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</td>
+</tr>
+{{ else }}
+<tr>
+    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+        No receiving logs found.
+    </td>
+</tr>
+{{ end }}
+{{ end }}

@@ -1,0 +1,79 @@
+package domain
+
+// ItemStock is an aggregate root that manages the inventory transactions for a specific Item.
+type ItemStock struct {
+	Item          Item
+	UomSettings   []UomSetting
+	ReceivingLogs []ReceivingLog
+	SalesDetails  []SalesDetail
+	Adjustments   []InventoryAdjustment
+}
+
+// NewItemStock constructs a new ItemStock aggregate.
+func NewItemStock(item Item, uomSettings []UomSetting, receivingLogs []ReceivingLog, salesDetails []SalesDetail, adjustments []InventoryAdjustment) ItemStock {
+	return ItemStock{
+		Item:          item,
+		UomSettings:   uomSettings,
+		ReceivingLogs: receivingLogs,
+		SalesDetails:  salesDetails,
+		Adjustments:   adjustments,
+	}
+}
+
+// CalculateOnHand calculates stock on hand for a specific supplier.
+func (s ItemStock) CalculateOnHand(supplier string) float64 {
+	totalReceived := 0.0
+	for _, r := range s.ReceivingLogs {
+		if r.Supplier != supplier {
+			continue
+		}
+		factor := s.getConversionFactor(r.UOM)
+		totalReceived += r.Qty * factor
+	}
+
+	totalSold := 0.0
+	for _, sd := range s.SalesDetails {
+		if sd.Supplier != supplier {
+			continue
+		}
+		factor := s.getConversionFactor(sd.UOM)
+		totalSold += sd.Qty * factor
+	}
+
+	return totalReceived - totalSold
+}
+
+// CalculateGlobalOnHand calculates global stock on hand across all suppliers, incorporating adjustments.
+func (s ItemStock) CalculateGlobalOnHand() float64 {
+	totalReceived := 0.0
+	for _, r := range s.ReceivingLogs {
+		factor := s.getConversionFactor(r.UOM)
+		totalReceived += r.Qty * factor
+	}
+
+	totalSold := 0.0
+	for _, sd := range s.SalesDetails {
+		factor := s.getConversionFactor(sd.UOM)
+		totalSold += sd.Qty * factor
+	}
+
+	totalAdjusted := 0.0
+	for _, adj := range s.Adjustments {
+		factor := s.getConversionFactor(adj.UOM)
+		totalAdjusted += adj.AdjustmentQty * factor
+	}
+
+	return totalReceived - totalSold + totalAdjusted
+}
+
+func (s ItemStock) getConversionFactor(uom string) float64 {
+	if uom == s.Item.DefaultUOM {
+		return 1.0
+	}
+	for _, setting := range s.UomSettings {
+		if setting.MUOM == uom {
+			return setting.ConversionFactor
+		}
+	}
+	return 1.0
+}

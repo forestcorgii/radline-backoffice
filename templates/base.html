@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BackOffice System</title>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/index.css?v=1.1">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Radline BackOffice</h1>
+            <nav hx-target="#main-content" hx-push-url="true">
+                <a href="/" hx-get="/">Dashboard</a>
+                <a href="/entry" hx-get="/entry">Data Entry</a>
+                <a href="/brands" hx-get="/brands">Brands</a>
+                <a href="/categories" hx-get="/categories">Categories</a>
+                <a href="/items" hx-get="/items">Items</a>
+                <a href="/inventory" hx-get="/inventory">Inventory</a>
+                <a href="/sales" hx-get="/sales">Sales</a>
+            </nav>
+        </header>
+
+        <main id="main-content">
+            {{ block "content" . }}{{ end }}
+        </main>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+        // Highlight active navigation link
+        function updateActiveNavLink() {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll("nav a").forEach(link => {
+                const href = link.getAttribute("href");
+                const isActive = href === "/" ? currentPath === "/" : currentPath.startsWith(href);
+                if (isActive) {
+                    link.classList.add("active");
+                } else {
+                    link.classList.remove("active");
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", updateActiveNavLink);
+        document.body.addEventListener("htmx:afterOnLoad", updateActiveNavLink);
+        document.body.addEventListener("htmx:historyRestore", updateActiveNavLink);
+
+        // Toast notifications listener for HX-Trigger headers
+        document.body.addEventListener('show-toast', function(evt) {
+            const type = evt.detail.type || 'info';
+            const message = evt.detail.message || '';
+            
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            // Icon based on type
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '❌';
+            if (type === 'warning') icon = '⚠️';
+
+            const iconSpan = document.createElement('span');
+            iconSpan.style.marginRight = '0.5rem';
+            iconSpan.textContent = icon;
+            toast.appendChild(iconSpan);
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = message;
+            toast.appendChild(textSpan);
+            
+            container.appendChild(toast);
+            
+            // Auto-remove toast
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.5s ease forwards';
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 4000);
+        });
+    </script>
+</body>
+</html>

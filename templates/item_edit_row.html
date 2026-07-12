@@ -1,0 +1,52 @@
+{{ define "item_edit_row.html" }}
+<tr id="item-row-{{ .Item.ID }}" class="edit-row">
+    <td>{{ .Item.ID }}</td>
+    <td>
+        <input type="text" name="code" value="{{ .Item.Code }}" required class="form-input" style="font-weight: 500;">
+    </td>
+    <td>
+        <input type="text" name="description" value="{{ .Item.Description }}" required class="form-input">
+    </td>
+    <td>
+        <input type="text" name="model" value="{{ .Item.Model }}" class="form-input">
+    </td>
+    <td>
+        <select name="brand_id" class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
+            <option value="0">-- No Brand --</option>
+            {{ $selectedBrand := derefInt .Item.BrandID }}
+            {{ range .Brands }}
+            <option value="{{ .ID }}" {{ if eq .ID $selectedBrand }}selected{{ end }}>{{ .Name }}</option>
+            {{ end }}
+        </select>
+    </td>
+    <td>
+        <select name="category_id" class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
+            <option value="0">-- No Category --</option>
+            {{ $selectedCategory := derefInt .Item.CategoryID }}
+            {{ range .Categories }}
+            <option value="{{ .ID }}" {{ if eq .ID $selectedCategory }}selected{{ end }}>{{ .Name }}</option>
+            {{ end }}
+        </select>
+    </td>
+    <td>
+        <input type="text" name="default_uom" value="{{ .Item.DefaultUOM }}" required class="form-input">
+    </td>
+    <td>
+        <button class="btn btn-success" 
+                hx-post="/items/edit/{{ .Item.ID }}" 
+                hx-include="closest tr" 
+                hx-target="#item-row-{{ .Item.ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Save
+        </button>
+        <button class="btn btn-secondary" 
+                hx-get="/items/row/{{ .Item.ID }}" 
+                hx-target="#item-row-{{ .Item.ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Cancel
+        </button>
+    </td>
+</tr>
+{{ end }}

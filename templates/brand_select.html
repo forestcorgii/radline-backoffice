@@ -1,0 +1,7 @@
+<select id="brand_id" name="brand_id" class="form-input" style="padding: 0.75rem 1rem; height: auto;"
+        hx-get="/entry/select/brands" hx-trigger="brand-added from:body" hx-swap="outerHTML">
+    <option value="0">-- Select Brand --</option>
+    {{ range . }}
+    <option value="{{ .ID }}">{{ .Name }}</option>
+    {{ end }}
+</select>

@@ -1,0 +1,7 @@
+{{ define "brand_rows.html" }}
+{{ range . }}
+    {{ template "brand_row.html" . }}
+{{ else }}
+<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No brands found.</td></tr>
+{{ end }}
+{{ end }}

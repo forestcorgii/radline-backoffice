@@ -1,0 +1,65 @@
+{{ define "categories.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="card">
+    <h2>Categories List</h2>
+    
+    <div class="search-filter-bar">
+        <div class="flex-grow">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+            <input type="text" name="search" placeholder="Search by code or name..." 
+                   hx-get="/categories" 
+                   hx-trigger="keyup changed delay:300ms, search" 
+                   hx-target="#categories-tbody" 
+                   hx-include="[name='filter'],[name='sort']"
+                   class="form-input">
+        </div>
+        <div style="width: 12rem;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Usage Status</label>
+            <select name="filter" 
+                    hx-get="/categories" 
+                    hx-target="#categories-tbody" 
+                    hx-include="[name='search'],[name='sort']"
+                    hx-trigger="change"
+                    class="form-input">
+                <option value="all">All Usage Statuses</option>
+                <option value="in_use">In Use</option>
+                <option value="unused">Unused</option>
+            </select>
+        </div>
+        <div style="width: 12rem;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
+            <select name="sort" 
+                    hx-get="/categories" 
+                    hx-target="#categories-tbody" 
+                    hx-include="[name='search'],[name='filter']"
+                    hx-trigger="change"
+                    class="form-input">
+                <option value="code_asc">Code (A-Z)</option>
+                <option value="code_desc">Code (Z-A)</option>
+                <option value="name_asc">Name (A-Z)</option>
+                <option value="name_desc">Name (Z-A)</option>
+                <option value="items_desc">Most Items First</option>
+                <option value="items_asc">Least Items First</option>
+            </select>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Items Count</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="categories-tbody">
+            {{ template "category_rows.html" . }}
+        </tbody>
+    </table>
+</div>
+{{ end }}
