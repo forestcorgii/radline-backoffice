@@ -16,7 +16,7 @@
                    hx-include="[name='brand_id_filter'],[name='category_id_filter'],[name='sort']"
                    class="form-input">
         </div>
-        <div style="width: 12rem;">
+        <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Brand Filter</label>
             <select name="brand_id_filter" 
                     hx-get="/items" 
@@ -30,7 +30,7 @@
                 {{ end }}
             </select>
         </div>
-        <div style="width: 12rem;">
+        <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Category Filter</label>
             <select name="category_id_filter" 
                     hx-get="/items" 
@@ -44,7 +44,7 @@
                 {{ end }}
             </select>
         </div>
-        <div style="width: 12rem;">
+        <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
             <select name="sort" 
                     hx-get="/items" 
@@ -60,22 +60,24 @@
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Code</th>
-                <th>Description</th>
-                <th>Model</th>
-                <th>Brand</th>
-                <th>Category</th>
-                <th>Default UOM</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="items-tbody">
-            {{ template "item_rows.html" .Items }}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="table-scroll-md">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Model</th>
+                    <th>Brand</th>
+                    <th>Category</th>
+                    <th>Default UOM</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="items-tbody">
+                {{ template "item_rows.html" .Items }}
+            </tbody>
+        </table>
+    </div>
 </div>
 {{ end }}

@@ -15,7 +15,7 @@
                    hx-include="[name='filter'],[name='sort']"
                    class="form-input">
         </div>
-        <div style="width: 12rem;">
+        <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Usage Status</label>
             <select name="filter" 
                     hx-get="/brands" 
@@ -28,7 +28,7 @@
                 <option value="unused">Unused</option>
             </select>
         </div>
-        <div style="width: 12rem;">
+        <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
             <select name="sort" 
                     hx-get="/brands" 
@@ -46,19 +46,21 @@
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Items Count</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="brands-tbody">
-            {{ template "brand_rows.html" . }}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="table-scroll-md">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Items Count</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="brands-tbody">
+                {{ template "brand_rows.html" . }}
+            </tbody>
+        </table>
+    </div>
 </div>
 {{ end }}

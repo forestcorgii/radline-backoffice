@@ -12,7 +12,7 @@
 <div class="card mb-4">
     <h2 class="mb-4">New Stock Adjustment</h2>
     <form hx-post="/inventory/adjustments/add" hx-target="#adjustment-tbody" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('adjustment-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
-        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+        <div class="grid grid-adj-header">
             <div class="form-group">
                 <label for="adj_date">Adjustment Date</label>
                 <input type="date" id="adj_date" name="date" class="form-input" required>
@@ -27,22 +27,24 @@
             <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Items</h3>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40%;">Item</th>
-                    <th style="width: 15%;">UOM</th>
-                    <th style="width: 17%;">Adj Qty (Negative to subtract)</th>
-                    <th style="width: 17%;">Unit Cost</th>
-                    <th style="width: 11%;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="adjustment-items-tbody">
-                {{ template "adjustment_item_row.html" .AdjustmentRowData }}
-            </tbody>
-        </table>
+        <div class="table-container">
+            <table class="table-scroll-md">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Item</th>
+                        <th style="width: 15%;">UOM</th>
+                        <th style="width: 17%;">Adj Qty (Negative to subtract)</th>
+                        <th style="width: 17%;">Unit Cost</th>
+                        <th style="width: 11%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="adjustment-items-tbody">
+                    {{ template "adjustment_item_row.html" .AdjustmentRowData }}
+                </tbody>
+            </table>
+        </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center;" class="mt-4">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;" class="mt-4">
             <button type="button" class="btn btn-secondary" hx-get="/inventory/adjustments/new-row" hx-target="#adjustment-items-tbody" hx-swap="beforeend">
                 + Add Item Row
             </button>
@@ -53,21 +55,23 @@
 
 <div class="card">
     <h2>Adjustment Logs</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Adj#</th>
-                <th>Date</th>
-                <th>Item Code</th>
-                <th>Adj Qty</th>
-                <th>UOM</th>
-                <th>Cost Impact</th>
-                <th>Remarks</th>
-            </tr>
-        </thead>
-        <tbody id="adjustment-tbody">
-            {{ template "adjustment_rows.html" .AdjustmentLogs }}
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table class="table-scroll-md">
+            <thead>
+                <tr>
+                    <th>Adj#</th>
+                    <th>Date</th>
+                    <th>Item Code</th>
+                    <th>Adj Qty</th>
+                    <th>UOM</th>
+                    <th>Cost Impact</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody id="adjustment-tbody">
+                {{ template "adjustment_rows.html" .AdjustmentLogs }}
+            </tbody>
+        </table>
+    </div>
 </div>
 {{ end }}
