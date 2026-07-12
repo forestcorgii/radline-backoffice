@@ -1,0 +1,28 @@
+{{ define "item_row.html" }}
+<tr id="item-row-{{ .ID }}">
+    <td>{{ .ID }}</td>
+    <td><span class="badge badge-inactive" style="font-weight: 500;">{{ .Code }}</span></td>
+    <td style="font-weight: 500;">{{ .Description }}</td>
+    <td>{{ if .Model }}{{ .Model }}{{ else }}-{{ end }}</td>
+    <td>{{ if .BrandName }}{{ .BrandName }}{{ else }}-{{ end }}</td>
+    <td>{{ if .CategoryName }}{{ .CategoryName }}{{ else }}-{{ end }}</td>
+    <td><span class="badge badge-active">{{ .DefaultUOM }}</span></td>
+    <td>
+        <button class="btn btn-secondary" 
+                hx-get="/items/edit/{{ .ID }}" 
+                hx-target="#item-row-{{ .ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Edit
+        </button>
+        <button class="btn btn-danger" 
+                hx-delete="/items/delete/{{ .ID }}" 
+                hx-confirm="Are you sure you want to delete the item '{{ .Description }}'?"
+                hx-target="#item-row-{{ .ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Delete
+        </button>
+    </td>
+</tr>
+{{ end }}

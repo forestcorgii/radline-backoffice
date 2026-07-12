@@ -1,0 +1,103 @@
+{{ define "dashboard.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="page-header mb-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
+    <h2>Financial Overview</h2>
+    <p class="text-muted">Dynamic monthly and yearly performance metrics</p>
+</div>
+
+<div class="grid grid-cols-4 mb-4">
+    <div class="card" style="border-left: 4px solid #2563eb;">
+        <h6 style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Total Sales</h6>
+        <h3 style="font-size: 1.75rem; font-weight: 700;">₱{{ printf "%.2f" .TotalSales }}</h3>
+        <small style="color: #15803d;"><span style="margin-right: 0.25rem;">📈</span>Actual from sales data</small>
+    </div>
+    
+    <div class="card" style="border-left: 4px solid #dc2626;">
+        <h6 style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Total Costs</h6>
+        <h3 style="font-size: 1.75rem; font-weight: 700;">₱{{ printf "%.2f" .TotalCosts }}</h3>
+        <small style="color: var(--text-muted);"><span style="margin-right: 0.25rem;">📉</span>Actual cost of goods sold</small>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #16a34a;">
+        <h6 style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Gross Profit</h6>
+        <h3 style="font-size: 1.75rem; font-weight: 700;">₱{{ printf "%.2f" .GrossProfit }}</h3>
+        <small style="color: #15803d;"><span style="margin-right: 0.25rem;">💰</span>Net earnings before expenses</small>
+    </div>
+
+    <div class="card" style="border-left: 4px solid #0891b2;">
+        <h6 style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Profit Margin</h6>
+        <h3 style="font-size: 1.75rem; font-weight: 700;">{{ printf "%.1f" .Margin }}%</h3>
+        <div style="display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem;">
+            {{ if ge .Margin 25.0 }}
+            <span class="badge badge-active" style="padding: 0.15rem 0.5rem; font-size: 0.7rem;">On Target</span>
+            {{ else }}
+            <span class="badge badge-inactive" style="padding: 0.15rem 0.5rem; font-size: 0.7rem;">Below Target</span>
+            {{ end }}
+            <small style="color: var(--text-muted);">Target: 25%</small>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-2">
+    <div class="card">
+        <h3 class="mb-4" style="font-size: 1.25rem;">Sales & Profit Trend</h3>
+        <div style="width: 100%; display: flex; justify-content: center;">
+            <svg viewBox="0 0 520 230" style="width: 100%; height: auto; max-height: 230px;">
+                <!-- Grid Lines -->
+                <line x1="30" y1="10" x2="500" y2="10" stroke="var(--border-color)" stroke-dasharray="4" />
+                <line x1="30" y1="70" x2="500" y2="70" stroke="var(--border-color)" stroke-dasharray="4" />
+                <line x1="30" y1="130" x2="500" y2="130" stroke="var(--border-color)" stroke-dasharray="4" />
+                <line x1="30" y1="190" x2="500" y2="190" stroke="var(--border-color)" />
+                
+                {{ range .ChartBars }}
+                <!-- Sales Bar -->
+                <rect x="{{ .SalesX }}" y="{{ .SalesY }}" width="20" height="{{ .SalesHeight }}" rx="3" fill="var(--primary-color)" style="transition: all 0.3s ease; opacity: 0.85;">
+                    <title>{{ .Label }} Sales: ₱{{ printf "%.2f" .Sales }}</title>
+                </rect>
+                
+                <!-- Profit Bar -->
+                <rect x="{{ .ProfitX }}" y="{{ .ProfitY }}" width="20" height="{{ .ProfitHeight }}" rx="3" fill="#16a34a" style="transition: all 0.3s ease; opacity: 0.85;">
+                    <title>{{ .Label }} Profit: ₱{{ printf "%.2f" .Profit }}</title>
+                </rect>
+                
+                <!-- X Axis Label -->
+                <text x="{{ .LabelX }}" y="215" text-anchor="middle" fill="var(--text-muted)" style="font-size: 0.75rem; font-weight: 500;">{{ .Label }}</text>
+                {{ end }}
+            </svg>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: center; font-size: 0.75rem; font-weight: 500;">
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                <div style="width: 12px; height: 12px; background-color: var(--primary-color); border-radius: 3px;"></div>
+                <span style="color: var(--text-muted);">Total Sales</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.25rem;">
+                <div style="width: 12px; height: 12px; background-color: #16a34a; border-radius: 3px;"></div>
+                <span style="color: var(--text-muted);">Gross Profit</span>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <h3 class="mb-4" style="font-size: 1.25rem;">System Summary</h3>
+        <p class="text-muted" style="font-size: 0.875rem; margin-bottom: 0.75rem;">
+            Radline BackOffice is running successfully on high-performance Go and hypermedia-driven HTMX frontend.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem; font-size: 0.875rem;">
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Database:</span>
+                <span style="font-weight: 500;">SQLite (modernc.org)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Server Engine:</span>
+                <span style="font-weight: 500;">Go HTTP Standard Library</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">UI Framework:</span>
+                <span style="font-weight: 500;">HTMX (Hypermedia-driven)</span>
+            </div>
+        </div>
+    </div>
+</div>
+{{ end }}

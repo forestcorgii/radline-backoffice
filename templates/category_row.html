@@ -1,0 +1,29 @@
+{{ define "category_row.html" }}
+<tr id="category-row-{{ .ID }}">
+    <td>{{ .ID }}</td>
+    <td>{{ .Code }}</td>
+    <td>{{ .Name }}</td>
+    <td>
+        <span class="badge {{ if gt .ItemCount 0 }}badge-active{{ else }}badge-inactive{{ end }}">
+            {{ .ItemCount }} items
+        </span>
+    </td>
+    <td>
+        <button class="btn btn-secondary" 
+                hx-get="/categories/edit/{{ .ID }}" 
+                hx-target="#category-row-{{ .ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Edit
+        </button>
+        <button class="btn btn-danger" 
+                hx-delete="/categories/delete/{{ .ID }}" 
+                hx-confirm="Are you sure you want to delete the category '{{ .Name }}'?"
+                hx-target="#category-row-{{ .ID }}" 
+                hx-swap="outerHTML"
+                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
+            Delete
+        </button>
+    </td>
+</tr>
+{{ end }}

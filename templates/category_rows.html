@@ -1,0 +1,7 @@
+{{ define "category_rows.html" }}
+{{ range . }}
+    {{ template "category_row.html" . }}
+{{ else }}
+<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No categories found.</td></tr>
+{{ end }}
+{{ end }}

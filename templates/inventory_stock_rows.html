@@ -1,0 +1,29 @@
+{{ define "inventory_stock_rows.html" }}
+{{ range . }}
+<tr>
+    <td style="font-weight: 600;">{{ .ItemCode }}</td>
+    <td>{{ .Description }}</td>
+    <td><span class="badge" style="background-color: rgba(37, 99, 235, 0.08); color: #1d4ed8; border: 1px solid rgba(37, 99, 235, 0.2);">{{ .DefaultUOM }}</span></td>
+    <td style="color: #15803d; font-weight: 500;">{{ if gt .TotalReceived 0.0 }}+{{ printf "%.2f" .TotalReceived }}{{ else }}0.00{{ end }}</td>
+    <td style="color: #b91c1c; font-weight: 500;">{{ if gt .TotalSold 0.0 }}-{{ printf "%.2f" .TotalSold }}{{ else }}0.00{{ end }}</td>
+    <td {{ if gt .TotalAdjusted 0.0 }}style="font-weight: 500; color: #15803d;"{{ else if lt .TotalAdjusted 0.0 }}style="font-weight: 500; color: #b91c1c;"{{ else }}style="font-weight: 500; color: var(--text-muted);"{{ end }}>
+        {{ if gt .TotalAdjusted 0.0 }}+{{ end }}{{ printf "%.2f" .TotalAdjusted }}
+    </td>
+    <td>
+        {{ if gt .OnHand 0.0 }}
+        <span class="badge badge-active" style="font-size: 0.8125rem; padding: 0.3rem 0.75rem;">{{ printf "%.2f" .OnHand }}</span>
+        {{ else if eq .OnHand 0.0 }}
+        <span class="badge badge-inactive" style="font-size: 0.8125rem; padding: 0.3rem 0.75rem;">0.00</span>
+        {{ else }}
+        <span class="badge badge-inactive" style="font-size: 0.8125rem; padding: 0.3rem 0.75rem;">{{ printf "%.2f" .OnHand }}</span>
+        {{ end }}
+    </td>
+</tr>
+{{ else }}
+<tr>
+    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+        No items found.
+    </td>
+</tr>
+{{ end }}
+{{ end }}

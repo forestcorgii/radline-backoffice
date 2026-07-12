@@ -1,0 +1,453 @@
+package handlers
+
+import (
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
+	"radline/db"
+	"radline/domain"
+	"radline/models"
+)
+
+// stockListQuery returns the SQL query for computing per-item stock levels
+func stockListQuery(search, stockFilter string) (string, []interface{}) {
+	var args []interface{}
+
+	query := `
+		SELECT
+			i.id AS item_id,
+			i.code AS item_code,
+			i.description,
+			i.default_uom,
+			COALESCE(r.total_received, 0) AS total_received,
+			COALESCE(s.total_sold, 0) AS total_sold,
+			COALESCE(a.total_adjusted, 0) AS total_adjusted,
+			(COALESCE(r.total_received, 0) - COALESCE(s.total_sold, 0) + COALESCE(a.total_adjusted, 0)) AS on_hand
+		FROM items i
+		LEFT JOIN (
+			SELECT item_id, SUM(qty) AS total_received FROM receiving_logs GROUP BY item_id
+		) r ON r.item_id = i.id
+		LEFT JOIN (
+			SELECT item_id, SUM(qty) AS total_sold FROM sales_details GROUP BY item_id
+		) s ON s.item_id = i.id
+		LEFT JOIN (
+			SELECT item_id, SUM(adjustment_qty) AS total_adjusted FROM inventory_adjustments GROUP BY item_id
+		) a ON a.item_id = i.id
+	`
+
+	var conditions []string
+	if search != "" {
+		conditions = append(conditions, "(i.code LIKE ? OR i.description LIKE ?)")
+		wildcard := "%" + search + "%"
+		args = append(args, wildcard, wildcard)
+	}
+
+	switch stockFilter {
+	case "in_stock":
+		conditions = append(conditions, "(COALESCE(r.total_received, 0) - COALESCE(s.total_sold, 0) + COALESCE(a.total_adjusted, 0)) > 0")
+	case "out_of_stock":
+		conditions = append(conditions, "(COALESCE(r.total_received, 0) - COALESCE(s.total_sold, 0) + COALESCE(a.total_adjusted, 0)) <= 0")
+	case "low_stock":
+		conditions = append(conditions, "(COALESCE(r.total_received, 0) - COALESCE(s.total_sold, 0) + COALESCE(a.total_adjusted, 0)) > 0 AND (COALESCE(r.total_received, 0) - COALESCE(s.total_sold, 0) + COALESCE(a.total_adjusted, 0)) <= 10")
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	query += " ORDER BY i.code ASC"
+	return query, args
+}
+
+// InventoryHandler renders the inventory landing page with stock list
+func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
+	search := r.URL.Query().Get("search")
+	stockFilter := r.URL.Query().Get("stock_filter")
+
+	query, args := stockListQuery(search, stockFilter)
+	var stockItems []models.ItemStockView
+	_ = db.DB.Select(&stockItems, query, args...)
+
+	// If HTMX request for filtering, return just the rows fragment
+	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
+		app.Render(w, "inventory_stock_rows.html", stockItems)
+		return
+	}
+
+	data := struct {
+		StockItems []models.ItemStockView
+	}{
+		StockItems: stockItems,
+	}
+	app.RenderPage(w, r, "inventory.html", data)
+}
+
+
+// StockReceivingPageHandler renders the standalone stock receiving page
+func (app *App) StockReceivingPageHandler(w http.ResponseWriter, r *http.Request) {
+	var items []models.Item
+	_ = db.DB.Select(&items, "SELECT * FROM items ORDER BY code ASC")
+
+	var receivingLogs []models.ReceivingLogWithItem
+	_ = db.DB.Select(&receivingLogs, `
+		SELECT r.*, i.code as item_code
+		FROM receiving_logs r
+		JOIN items i ON r.item_id = i.id
+		ORDER BY r.date DESC, r.id DESC
+	`)
+
+	data := struct {
+		Items            []models.Item
+		ReceivingLogs    []models.ReceivingLogWithItem
+		ReceivingRowData interface{}
+	}{
+		Items:         items,
+		ReceivingLogs: receivingLogs,
+		ReceivingRowData: map[string]interface{}{
+			"Items": items,
+		},
+	}
+
+	app.RenderPage(w, r, "stock_receiving.html", data)
+}
+
+// StockAdjustmentsPageHandler renders the standalone stock adjustments page
+func (app *App) StockAdjustmentsPageHandler(w http.ResponseWriter, r *http.Request) {
+	var items []models.Item
+	_ = db.DB.Select(&items, "SELECT * FROM items ORDER BY code ASC")
+
+	var adjustmentLogs []models.InventoryAdjustmentWithItem
+	_ = db.DB.Select(&adjustmentLogs, `
+		SELECT a.*, i.code as item_code
+		FROM inventory_adjustments a
+		JOIN items i ON a.item_id = i.id
+		ORDER BY a.date DESC, a.id DESC
+	`)
+
+	data := struct {
+		Items             []models.Item
+		AdjustmentLogs    []models.InventoryAdjustmentWithItem
+		AdjustmentRowData interface{}
+	}{
+		Items:          items,
+		AdjustmentLogs: adjustmentLogs,
+		AdjustmentRowData: map[string]interface{}{
+			"Items": items,
+		},
+	}
+
+	app.RenderPage(w, r, "stock_adjustments.html", data)
+}
+
+// ReceiveStockHandler records incoming inventory
+func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to parse form."}}`)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	supplier := r.FormValue("supplier")
+	plNo := r.FormValue("pl_no")
+	dateStr := r.FormValue("date")
+
+	parsedDate, dateErr := time.Parse("2006-01-02", dateStr)
+	if dateErr != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid date format. Expected YYYY-MM-DD."}}`)
+		http.Error(w, "Invalid date format", http.StatusBadRequest)
+		return
+	}
+
+	itemIDs := r.Form["item_id"]
+	qtys := r.Form["qty"]
+	uoms := r.Form["uom"]
+	costs := r.Form["cost"]
+	unitPrices := r.Form["unit_price"]
+
+	if len(itemIDs) == 0 {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "At least one item is required."}}`)
+		http.Error(w, "At least one item is required", http.StatusBadRequest)
+		return
+	}
+
+	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(costs) || len(itemIDs) != len(unitPrices) {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Mismatch in item fields lengths."}}`)
+		http.Error(w, "Mismatch in item fields lengths", http.StatusBadRequest)
+		return
+	}
+
+	var receiveItems []domain.StockReceiveItem
+	for i := range itemIDs {
+		itemID, err1 := strconv.Atoi(itemIDs[i])
+		qty, err2 := strconv.ParseFloat(qtys[i], 64)
+		cost, err3 := strconv.ParseFloat(costs[i], 64)
+		unitPrice, err4 := strconv.ParseFloat(unitPrices[i], 64)
+		uom := uoms[i]
+
+		if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid numeric input in items."}}`)
+			http.Error(w, "Invalid numeric input in items", http.StatusBadRequest)
+			return
+		}
+
+		receiveItems = append(receiveItems, domain.StockReceiveItem{
+			ItemID:    itemID,
+			Qty:       qty,
+			UOM:       uom,
+			Cost:      cost,
+			UnitPrice: unitPrice,
+		})
+	}
+
+	stockReceive, err := domain.NewStockReceive(plNo, supplier, parsedDate, receiveItems)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "`+err.Error()+`"}}`)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	tx, err := db.DB.Beginx()
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Database transaction failed."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	logs := stockReceive.ToReceivingLogs()
+	for _, rl := range logs {
+		_, err = tx.Exec(`
+			INSERT INTO receiving_logs (supplier, date, pl_no, item_id, qty, uom, unit_price, cost, total_cost, selling_price)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, rl.Supplier, rl.Date, rl.PLNo, rl.ItemID, rl.Qty, rl.UOM, rl.UnitPrice, rl.Cost, rl.TotalCost, rl.SellingPrice)
+		if err != nil {
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save receiving log."}}`)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to commit receiving transaction."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock received successfully!"}}`)
+
+	// Return updated logs table fragment
+	var updatedLogs []models.ReceivingLogWithItem
+	_ = db.DB.Select(&updatedLogs, `
+		SELECT r.*, i.code as item_code
+		FROM receiving_logs r
+		JOIN items i ON r.item_id = i.id
+		ORDER BY r.date DESC, r.id DESC
+	`)
+	app.Render(w, "receiving_rows.html", updatedLogs)
+}
+
+// NewReceivingRowHandler renders a single empty receiving item row template
+func (app *App) NewReceivingRowHandler(w http.ResponseWriter, r *http.Request) {
+	var items []models.Item
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	app.Render(w, "receiving_item_row.html", map[string]interface{}{
+		"Items": items,
+	})
+}
+
+// ReceivingItemRowDetailsHandler renders a single receiving item row template populated with item defaults
+func (app *App) ReceivingItemRowDetailsHandler(w http.ResponseWriter, r *http.Request) {
+	itemIDStr := r.URL.Query().Get("item_id")
+	itemID, _ := strconv.Atoi(itemIDStr)
+
+	var items []models.Item
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var defaultUOM string
+	var lastCost, lastPrice float64
+
+	if itemID > 0 {
+		_ = db.DB.Get(&defaultUOM, "SELECT default_uom FROM items WHERE id = ?", itemID)
+
+		// Get last receiving cost and price
+		var lastRec models.ReceivingLog
+		err := db.DB.Get(&lastRec, "SELECT cost, selling_price FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
+		if err == nil {
+			lastCost = lastRec.Cost
+			lastPrice = lastRec.SellingPrice
+		}
+	}
+
+	app.Render(w, "receiving_item_row.html", map[string]interface{}{
+		"Items":          items,
+		"SelectedItemID": itemID,
+		"DefaultUOM":     defaultUOM,
+		"Cost":           lastCost,
+		"Price":          lastPrice,
+	})
+}
+
+// AdjustStockHandler records a multi-item manual inventory adjustment
+func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to parse form."}}`)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	dateStr := r.FormValue("date")
+	remarks := r.FormValue("remarks")
+
+	parsedDate, dateErr := time.Parse("2006-01-02", dateStr)
+	if dateErr != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid date format. Expected YYYY-MM-DD."}}`)
+		http.Error(w, "Invalid date format", http.StatusBadRequest)
+		return
+	}
+
+	itemIDs := r.Form["item_id"]
+	qtys := r.Form["adjustment_qty"]
+	uoms := r.Form["uom"]
+	costs := r.Form["cost"]
+
+	if len(itemIDs) == 0 {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "At least one item is required."}}`)
+		http.Error(w, "At least one item is required", http.StatusBadRequest)
+		return
+	}
+
+	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(costs) {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Mismatch in item fields lengths."}}`)
+		http.Error(w, "Mismatch in item fields lengths", http.StatusBadRequest)
+		return
+	}
+
+	var adjItems []domain.StockAdjustmentItem
+	for i := range itemIDs {
+		itemID, err1 := strconv.Atoi(itemIDs[i])
+		qty, err2 := strconv.ParseFloat(qtys[i], 64)
+		cost, err3 := strconv.ParseFloat(costs[i], 64)
+		uom := uoms[i]
+
+		if err1 != nil || err2 != nil || err3 != nil {
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid numeric input in items."}}`)
+			http.Error(w, "Invalid numeric input in items", http.StatusBadRequest)
+			return
+		}
+
+		adjItems = append(adjItems, domain.StockAdjustmentItem{
+			ItemID: itemID,
+			Qty:    qty,
+			UOM:    uom,
+			Cost:   cost,
+		})
+	}
+
+	stockAdj, err := domain.NewStockAdjustment(parsedDate, remarks, adjItems)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "`+err.Error()+`"}}`)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	tx, err := db.DB.Beginx()
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Database transaction failed."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Insert the header into stock_adjustments
+	result, err := tx.Exec(`INSERT INTO stock_adjustments (date, remarks) VALUES (?, ?)`, stockAdj.Date, stockAdj.Remarks)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save adjustment header."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	adjustmentID, _ := result.LastInsertId()
+
+	// Insert all item rows
+	adjustments := stockAdj.ToInventoryAdjustments()
+	for _, adj := range adjustments {
+		_, err = tx.Exec(`
+			INSERT INTO inventory_adjustments (adjustment_id, date, item_id, uom, adjustment_qty, cost, remarks)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+		`, adjustmentID, adj.Date, adj.ItemID, adj.UOM, adj.AdjustmentQty, adj.Cost, adj.Remarks)
+		if err != nil {
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save adjustment item."}}`)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to commit adjustment transaction."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock adjusted successfully!"}}`)
+
+	// Return updated adjustment logs fragment
+	var updatedLogs []models.InventoryAdjustmentWithItem
+	_ = db.DB.Select(&updatedLogs, `
+		SELECT a.*, i.code as item_code
+		FROM inventory_adjustments a
+		JOIN items i ON a.item_id = i.id
+		ORDER BY a.date DESC, a.id DESC
+	`)
+	app.Render(w, "adjustment_rows.html", updatedLogs)
+}
+
+// NewAdjustmentRowHandler renders a single empty adjustment item row template
+func (app *App) NewAdjustmentRowHandler(w http.ResponseWriter, r *http.Request) {
+	var items []models.Item
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	app.Render(w, "adjustment_item_row.html", map[string]interface{}{
+		"Items": items,
+	})
+}
+
+// AdjustmentItemRowDetailsHandler renders a populated adjustment item row when an item is selected
+func (app *App) AdjustmentItemRowDetailsHandler(w http.ResponseWriter, r *http.Request) {
+	itemIDStr := r.URL.Query().Get("item_id")
+	itemID, _ := strconv.Atoi(itemIDStr)
+
+	var items []models.Item
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var defaultUOM string
+	if itemID > 0 {
+		_ = db.DB.Get(&defaultUOM, "SELECT default_uom FROM items WHERE id = ?", itemID)
+	}
+
+	app.Render(w, "adjustment_item_row.html", map[string]interface{}{
+		"Items":          items,
+		"SelectedItemID": itemID,
+		"DefaultUOM":     defaultUOM,
+	})
+}
+

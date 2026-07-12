@@ -1,0 +1,81 @@
+{{ define "items.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="card">
+    <h2>Items List</h2>
+    
+    <div class="search-filter-bar">
+        <div class="flex-grow">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+            <input type="text" name="search" placeholder="Search items by code, description, or model..." 
+                   hx-get="/items" 
+                   hx-trigger="keyup changed delay:300ms, search" 
+                   hx-target="#items-tbody" 
+                   hx-include="[name='brand_id_filter'],[name='category_id_filter'],[name='sort']"
+                   class="form-input">
+        </div>
+        <div style="width: 12rem;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Brand Filter</label>
+            <select name="brand_id_filter" 
+                    hx-get="/items" 
+                    hx-target="#items-tbody" 
+                    hx-include="[name='search'],[name='category_id_filter'],[name='sort']"
+                    hx-trigger="change"
+                    class="form-input">
+                <option value="0">All Brands</option>
+                {{ range .Brands }}
+                <option value="{{ .ID }}">{{ .Name }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div style="width: 12rem;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Category Filter</label>
+            <select name="category_id_filter" 
+                    hx-get="/items" 
+                    hx-target="#items-tbody" 
+                    hx-include="[name='search'],[name='brand_id_filter'],[name='sort']"
+                    hx-trigger="change"
+                    class="form-input">
+                <option value="0">All Categories</option>
+                {{ range .Categories }}
+                <option value="{{ .ID }}">{{ .Name }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div style="width: 12rem;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
+            <select name="sort" 
+                    hx-get="/items" 
+                    hx-target="#items-tbody" 
+                    hx-include="[name='search'],[name='brand_id_filter'],[name='category_id_filter']"
+                    hx-trigger="change"
+                    class="form-input">
+                <option value="code_asc">Code (A-Z)</option>
+                <option value="code_desc">Code (Z-A)</option>
+                <option value="description_asc">Description (A-Z)</option>
+                <option value="description_desc">Description (Z-A)</option>
+            </select>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Model</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Default UOM</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="items-tbody">
+            {{ template "item_rows.html" .Items }}
+        </tbody>
+    </table>
+</div>
+{{ end }}

@@ -1,0 +1,156 @@
+{{ define "entry.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="search-filter-bar mb-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; gap: 0.5rem; justify-content: flex-start;">
+    <a href="/entry?tab=sales" hx-get="/entry?tab=sales" hx-target="#main-content" hx-push-url="true" class="btn {{ if eq .ActiveTab "sales" }}btn-primary{{ else }}btn-secondary{{ end }}" style="padding: 0.6rem 1.2rem; text-decoration: none;">
+        Encode Sales
+    </a>
+    <a href="/entry?tab=item" hx-get="/entry?tab=item" hx-target="#main-content" hx-push-url="true" class="btn {{ if eq .ActiveTab "item" }}btn-primary{{ else }}btn-secondary{{ end }}" style="padding: 0.6rem 1.2rem; text-decoration: none;">
+        Add Item
+    </a>
+    <a href="/entry?tab=brand" hx-get="/entry?tab=brand" hx-target="#main-content" hx-push-url="true" class="btn {{ if eq .ActiveTab "brand" }}btn-primary{{ else }}btn-secondary{{ end }}" style="padding: 0.6rem 1.2rem; text-decoration: none;">
+        Add Brand
+    </a>
+    <a href="/entry?tab=category" hx-get="/entry?tab=category" hx-target="#main-content" hx-push-url="true" class="btn {{ if eq .ActiveTab "category" }}btn-primary{{ else }}btn-secondary{{ end }}" style="padding: 0.6rem 1.2rem; text-decoration: none;">
+        Add Category
+    </a>
+</div>
+
+{{ if eq .ActiveTab "sales" }}
+<div class="card">
+    <h2 class="mb-4">Encode Sales</h2>
+    <form hx-post="/sales/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('sales-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
+        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem;">
+            <div class="form-group">
+                <label for="doc_date">Document Date</label>
+                <input type="date" id="doc_date" name="doc_date" required>
+            </div>
+            <div class="form-group">
+                <label for="doc_type">Doc Type</label>
+                <select id="doc_type" name="doc_type" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                    <option value="SI">Sales Invoice (SI)</option>
+                    <option value="DR">Delivery Receipt (DR)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="doc_number">Doc Number</label>
+                <input type="text" id="doc_number" name="doc_number" required>
+            </div>
+            <div class="form-group">
+                <label for="customer_name">Customer Name</label>
+                <input type="text" id="customer_name" name="customer_name">
+            </div>
+            <div class="form-group">
+                <label for="supplier">Supplier</label>
+                <select id="supplier" name="supplier" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                    <option value="ASCD">ASCD</option>
+                    <option value="RENOWN">RENOWN</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="mt-4 mb-4" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Items</h3>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Item</th>
+                    <th style="width: 15%;">UOM</th>
+                    <th style="width: 12%;">Qty</th>
+                    <th style="width: 14%;">Unit Selling Price</th>
+                    <th style="width: 14%;">Unit Cost</th>
+                    <th style="width: 10%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="sales-items-tbody">
+                {{ template "sale_item_row.html" .SalesRowData }}
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;" class="mt-4">
+            <button type="button" class="btn btn-secondary" hx-get="/sales/new-row" hx-target="#sales-items-tbody" hx-swap="beforeend">
+                + Add Item Row
+            </button>
+            <button type="submit" class="btn">Save Sales Log</button>
+        </div>
+    </form>
+</div>
+
+{{ else if eq .ActiveTab "item" }}
+<div class="card">
+    <h2 class="mb-4">Add Item</h2>
+    <form hx-post="/items/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) this.reset()">
+        <div class="grid grid-cols-3">
+            <div class="form-group">
+                <label for="code">Item Code</label>
+                <input type="text" id="code" name="code" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description" required>
+            </div>
+            <div class="form-group">
+                <label for="model">Model</label>
+                <input type="text" id="model" name="model">
+            </div>
+        </div>
+        <div class="grid grid-cols-3 mt-4">
+            <div class="form-group">
+                <label for="brand_id">Brand</label>
+                {{ template "brand_select.html" .Brands }}
+            </div>
+            <div class="form-group">
+                <label for="category_id">Category</label>
+                {{ template "category_select.html" .Categories }}
+            </div>
+            <div class="form-group">
+                <label for="default_uom">Default UOM</label>
+                <input type="text" id="default_uom" name="default_uom" placeholder="e.g. PCS" required>
+            </div>
+        </div>
+        <button type="submit" class="btn mt-4">Save Item</button>
+    </form>
+</div>
+
+{{ else if eq .ActiveTab "brand" }}
+<div class="card">
+    <h2 class="mb-4">Add Brand</h2>
+    <form hx-post="/brands/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) this.reset()">
+        <div class="grid grid-cols-2">
+            <div class="form-group">
+                <label for="code">Brand Code</label>
+                <input type="text" id="code" name="code" required>
+            </div>
+            <div class="form-group">
+                <label for="name">Brand Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+        </div>
+        <button type="submit" class="btn mt-4">Save Brand</button>
+    </form>
+</div>
+
+{{ else if eq .ActiveTab "category" }}
+<div class="card">
+    <h2 class="mb-4">Add Category</h2>
+    <form hx-post="/categories/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) this.reset()">
+        <div class="grid grid-cols-2">
+            <div class="form-group">
+                <label for="code">Category Code</label>
+                <input type="text" id="code" name="code" required>
+            </div>
+            <div class="form-group">
+                <label for="name">Category Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+        </div>
+        <button type="submit" class="btn mt-4">Save Category</button>
+    </form>
+</div>
+{{ end }}
+{{ end }}

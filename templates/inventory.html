@@ -1,0 +1,64 @@
+{{ define "inventory.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h2 style="margin: 0;">Inventory</h2>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="/inventory/receiving" hx-get="/inventory/receiving" hx-target="#main-content" hx-push-url="true" class="btn" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
+            📦 Receive Stock
+        </a>
+        <a href="/inventory/adjustments" hx-get="/inventory/adjustments" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
+            📋 Adjust Stock
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Current Stock Levels</h3>
+
+    <div class="search-filter-bar">
+        <div class="flex-grow">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+            <input type="text" name="search" placeholder="Search by item code or description..."
+                   hx-get="/inventory/stock"
+                   hx-trigger="keyup changed delay:300ms, search"
+                   hx-target="#inventory-stock-tbody"
+                   hx-include="[name='stock_filter']"
+                   class="form-input">
+        </div>
+        <div style="width: 12rem;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Stock Filter</label>
+            <select name="stock_filter"
+                    hx-get="/inventory/stock"
+                    hx-target="#inventory-stock-tbody"
+                    hx-include="[name='search']"
+                    hx-trigger="change"
+                    class="form-input">
+                <option value="all">All Items</option>
+                <option value="in_stock">In Stock Only</option>
+                <option value="out_of_stock">Out of Stock</option>
+                <option value="low_stock">Low Stock (≤ 10)</option>
+            </select>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 18%;">Item Code</th>
+                <th style="width: 32%;">Description</th>
+                <th style="width: 12%;">UOM</th>
+                <th style="width: 14%;">Received</th>
+                <th style="width: 10%;">Sold</th>
+                <th style="width: 14%;">Adjusted</th>
+                <th style="width: 14%;">On Hand</th>
+            </tr>
+        </thead>
+        <tbody id="inventory-stock-tbody">
+            {{ template "inventory_stock_rows.html" .StockItems }}
+        </tbody>
+    </table>
+</div>
+{{ end }}

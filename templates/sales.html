@@ -1,0 +1,68 @@
+{{ define "sales.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="card">
+    <h2>Sales Logs</h2>
+    
+    <div class="search-filter-bar">
+        <div class="flex-grow">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+            <input type="text" name="search" placeholder="Search sales by doc number, customer name, or item code..." 
+                   hx-get="/sales" 
+                   hx-trigger="keyup changed delay:300ms, search" 
+                   hx-target="#sales-tbody" 
+                   hx-include="[name='supplier_filter'],[name='sort']"
+                   class="form-input">
+        </div>
+        <div style="width: 12rem;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier Filter</label>
+            <select name="supplier_filter" 
+                    hx-get="/sales" 
+                    hx-target="#sales-tbody" 
+                    hx-include="[name='search'],[name='sort']"
+                    hx-trigger="change"
+                    class="form-input">
+                <option value="all">All Suppliers</option>
+                <option value="ASCD">ASCD</option>
+                <option value="RENOWN">RENOWN</option>
+                <option value="OTHER">OTHER</option>
+            </select>
+        </div>
+        <div style="width: 12rem;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
+            <select name="sort" 
+                    hx-get="/sales" 
+                    hx-target="#sales-tbody" 
+                    hx-include="[name='search'],[name='supplier_filter']"
+                    hx-trigger="change"
+                    class="form-input">
+                <option value="date_desc">Newest First</option>
+                <option value="date_asc">Oldest First</option>
+                <option value="sales_desc">Highest Sales First</option>
+                <option value="profit_desc">Highest Profit First</option>
+            </select>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Doc No.</th>
+                <th>Supplier</th>
+                <th>Item Code</th>
+                <th>Qty</th>
+                <th>UOM</th>
+                <th>Total Sales</th>
+                <th>Profit</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="sales-tbody">
+            {{ template "sales_rows.html" .Sales }}
+        </tbody>
+    </table>
+</div>
+{{ end }}
