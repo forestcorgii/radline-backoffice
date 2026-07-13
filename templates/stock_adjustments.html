@@ -52,26 +52,4 @@
         </div>
     </form>
 </div>
-
-<div class="card">
-    <h2>Adjustment Logs</h2>
-    <div class="table-container">
-        <table class="table-scroll-md">
-            <thead>
-                <tr>
-                    <th>Adj#</th>
-                    <th>Date</th>
-                    <th>Item Code</th>
-                    <th>Adj Qty</th>
-                    <th>UOM</th>
-                    <th>Cost Impact</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody id="adjustment-tbody">
-                {{ template "adjustment_rows.html" .AdjustmentLogs }}
-            </tbody>
-        </table>
-    </div>
-</div>
 {{ end }}

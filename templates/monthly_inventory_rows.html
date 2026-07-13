@@ -1,0 +1,24 @@
+{{ define "monthly_inventory_rows.html" }}
+{{ range . }}
+<tr>
+    <td><span class="badge" style="background-color: rgba(37, 99, 235, 0.08); color: #1d4ed8; border: 1px solid rgba(37, 99, 235, 0.2);">{{ .Month }}</span></td>
+    <td style="font-weight: 500;">{{ .ItemCode }}</td>
+    <td>{{ .Description }}</td>
+    <td>{{ .DefaultUOM }}</td>
+    <td style="color: #15803d; font-weight: 500;">{{ if gt .QtyReceived 0.0 }}+{{ .QtyReceived }}{{ else }}0{{ end }}</td>
+    <td style="color: #b91c1c; font-weight: 500;">{{ if gt .QtySold 0.0 }}-{{ .QtySold }}{{ else }}0{{ end }}</td>
+    <td style="font-weight: 500; {{ if gt .QtyAdjusted 0.0 }}color: #15803d;{{ else if lt .QtyAdjusted 0.0 }}color: #b91c1c;{{ else }}color: var(--text-muted);{{ end }}">
+        {{ if gt .QtyAdjusted 0.0 }}+{{ end }}{{ .QtyAdjusted }}
+    </td>
+    <td style="font-weight: 600; {{ if gt .NetChange 0.0 }}color: #15803d;{{ else if lt .NetChange 0.0 }}color: #b91c1c;{{ else }}color: var(--text-muted);{{ end }}">
+        {{ if gt .NetChange 0.0 }}+{{ end }}{{ .NetChange }}
+    </td>
+</tr>
+{{ else }}
+<tr>
+    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+        No monthly inventory movements found.
+    </td>
+</tr>
+{{ end }}
+{{ end }}
