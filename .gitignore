@@ -1,1 +1,35 @@
-__debug_bin.exe
+# Compiled binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+__debug_bin*
+
+# Database (contains live/sensitive data)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Go
+vendor/
