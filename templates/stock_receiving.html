@@ -61,27 +61,4 @@
         </div>
     </form>
 </div>
-
-<div class="card">
-    <h2>Receiving Logs</h2>
-    <div class="table-container">
-        <table class="table-scroll-md">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>PL No.</th>
-                    <th>Supplier</th>
-                    <th>Item Code</th>
-                    <th>Qty</th>
-                    <th>UOM</th>
-                    <th>Selling Price</th>
-                    <th>Total Cost</th>
-                </tr>
-            </thead>
-            <tbody id="receiving-tbody">
-                {{ template "receiving_rows.html" .ReceivingLogs }}
-            </tbody>
-        </table>
-    </div>
-</div>
 {{ end }}

@@ -1,5 +1,7 @@
 # Learnings Log
 
+> 📚 **Full Knowledge Vault:** See [[00-index]] for the interconnected Obsidian-style reference docs covering architecture, domain models, handlers, templates, HTMX patterns, and UI design tokens.
+
 ## Context: BackOffice System Go Rewrite
 **Problem**: Migrating from Python Flask to Go + HTMX. Ensuring adherence to the `golang-htmx-dev` rules.
 **Enforced Solution**: 

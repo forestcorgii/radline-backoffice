@@ -58,11 +58,14 @@ func main() {
 	// Inventory (Landing, Receiving & Adjustments)
 	http.HandleFunc("GET /inventory", app.InventoryHandler)
 	http.HandleFunc("GET /inventory/stock", app.InventoryHandler)
+	http.HandleFunc("GET /inventory/monthly", app.MonthlyInventoryHandler)
 	http.HandleFunc("GET /inventory/receiving", app.StockReceivingPageHandler)
+	http.HandleFunc("GET /inventory/receiving/logs", app.ReceivingLogsHandler)
 	http.HandleFunc("POST /inventory/receiving/add", app.ReceiveStockHandler)
 	http.HandleFunc("GET /inventory/receiving/new-row", app.NewReceivingRowHandler)
 	http.HandleFunc("GET /inventory/receiving/item-row-details", app.ReceivingItemRowDetailsHandler)
 	http.HandleFunc("GET /inventory/adjustments", app.StockAdjustmentsPageHandler)
+	http.HandleFunc("GET /inventory/adjustments/logs", app.AdjustmentLogsHandler)
 	http.HandleFunc("POST /inventory/adjustments/add", app.AdjustStockHandler)
 	http.HandleFunc("GET /inventory/adjustments/new-row", app.NewAdjustmentRowHandler)
 	http.HandleFunc("GET /inventory/adjustments/item-row-details", app.AdjustmentItemRowDetailsHandler)
@@ -98,7 +101,12 @@ func parseTemplates() map[string]*template.Template {
 	}
 
 	// Pages that use base.html
-	pages := []string{"dashboard.html", "brands.html", "categories.html", "items.html", "inventory.html", "stock_receiving.html", "stock_adjustments.html", "sales.html", "entry.html"}
+	pages := []string{
+		"dashboard.html", "brands.html", "categories.html", "items.html",
+		"inventory.html", "stock_receiving.html", "stock_adjustments.html",
+		"sales.html", "entry.html", "monthly_inventory.html",
+		"receiving_logs.html", "adjustment_logs.html",
+	}
 
 	for _, page := range pages {
 		t := template.New(page).Funcs(funcMap)
@@ -119,6 +127,12 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/sales_rows.html")
 		} else if page == "entry.html" {
 			files = append(files, "templates/brand_select.html", "templates/category_select.html", "templates/item_select.html", "templates/sale_item_row.html")
+		} else if page == "monthly_inventory.html" {
+			files = append(files, "templates/monthly_inventory_rows.html")
+		} else if page == "receiving_logs.html" {
+			files = append(files, "templates/receiving_rows.html")
+		} else if page == "adjustment_logs.html" {
+			files = append(files, "templates/adjustment_rows.html")
 		}
 		
 		t = template.Must(t.ParseFiles(files...))
@@ -133,6 +147,7 @@ func parseTemplates() map[string]*template.Template {
 		"receiving_rows.html", "adjustment_rows.html", "sales_rows.html", "inventory_stock_rows.html",
 		"brand_select.html", "category_select.html", "item_select.html",
 		"sale_item_row.html", "receiving_item_row.html", "adjustment_item_row.html",
+		"monthly_inventory_rows.html",
 	}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)

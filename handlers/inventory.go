@@ -238,16 +238,8 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock received successfully!"}}`)
-
-	// Return updated logs table fragment
-	var updatedLogs []models.ReceivingLogWithItem
-	_ = db.DB.Select(&updatedLogs, `
-		SELECT r.*, i.code as item_code
-		FROM receiving_logs r
-		JOIN items i ON r.item_id = i.id
-		ORDER BY r.date DESC, r.id DESC
-	`)
-	app.Render(w, "receiving_rows.html", updatedLogs)
+	w.Header().Set("HX-Location", "/inventory/receiving/logs")
+	w.WriteHeader(http.StatusOK)
 }
 
 // NewReceivingRowHandler renders a single empty receiving item row template
@@ -402,16 +394,8 @@ func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock adjusted successfully!"}}`)
-
-	// Return updated adjustment logs fragment
-	var updatedLogs []models.InventoryAdjustmentWithItem
-	_ = db.DB.Select(&updatedLogs, `
-		SELECT a.*, i.code as item_code
-		FROM inventory_adjustments a
-		JOIN items i ON a.item_id = i.id
-		ORDER BY a.date DESC, a.id DESC
-	`)
-	app.Render(w, "adjustment_rows.html", updatedLogs)
+	w.Header().Set("HX-Location", "/inventory/adjustments/logs")
+	w.WriteHeader(http.StatusOK)
 }
 
 // NewAdjustmentRowHandler renders a single empty adjustment item row template
@@ -450,4 +434,211 @@ func (app *App) AdjustmentItemRowDetailsHandler(w http.ResponseWriter, r *http.R
 		"DefaultUOM":     defaultUOM,
 	})
 }
+
+// MonthlyInventoryHandler renders the monthly inventory movement report
+func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) {
+	search := r.URL.Query().Get("search")
+	monthFilter := r.URL.Query().Get("month_filter")
+
+	query := `
+		SELECT 
+			t.month,
+			t.item_id,
+			i.code AS item_code,
+			i.description,
+			i.default_uom,
+			SUM(t.received) AS qty_received,
+			SUM(t.sold) AS qty_sold,
+			SUM(t.adjusted) AS qty_adjusted,
+			(SUM(t.received) - SUM(t.sold) + SUM(t.adjusted)) AS net_change
+		FROM (
+			SELECT strftime('%Y-%m', date) AS month, item_id, qty AS received, 0.0 AS sold, 0.0 AS adjusted FROM receiving_logs
+			UNION ALL
+			SELECT strftime('%Y-%m', doc_date) AS month, item_id, 0.0 AS received, qty AS sold, 0.0 AS adjusted FROM sales_details
+			UNION ALL
+			SELECT strftime('%Y-%m', date) AS month, item_id, 0.0 AS received, 0.0 AS sold, adjustment_qty AS adjusted FROM inventory_adjustments
+		) t
+		JOIN items i ON t.item_id = i.id
+	`
+	var args []interface{}
+	var conditions []string
+
+	if search != "" {
+		conditions = append(conditions, "(i.code LIKE ? OR i.description LIKE ?)")
+		wildcard := "%" + search + "%"
+		args = append(args, wildcard, wildcard)
+	}
+
+	if monthFilter != "" && monthFilter != "all" {
+		conditions = append(conditions, "t.month = ?")
+		args = append(args, monthFilter)
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	query += " GROUP BY t.month, t.item_id ORDER BY t.month DESC, i.code ASC"
+
+	type MonthlyInventoryRow struct {
+		Month        string  `db:"month"`
+		ItemID       int     `db:"item_id"`
+		ItemCode     string  `db:"item_code"`
+		Description  string  `db:"description"`
+		DefaultUOM   string  `db:"default_uom"`
+		QtyReceived  float64 `db:"qty_received"`
+		QtySold      float64 `db:"qty_sold"`
+		QtyAdjusted  float64 `db:"qty_adjusted"`
+		NetChange    float64 `db:"net_change"`
+	}
+
+	var rows []MonthlyInventoryRow
+	err := db.DB.Select(&rows, query, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Get list of unique months for the filter dropdown
+	var months []string
+	_ = db.DB.Select(&months, `
+		SELECT DISTINCT strftime('%Y-%m', date) as m FROM receiving_logs WHERE date IS NOT NULL
+		UNION
+		SELECT DISTINCT strftime('%Y-%m', doc_date) as m FROM sales_details WHERE doc_date IS NOT NULL
+		UNION
+		SELECT DISTINCT strftime('%Y-%m', date) as m FROM inventory_adjustments WHERE date IS NOT NULL
+		ORDER BY m DESC
+	`)
+
+	// If HTMX request for content filter, only render the table rows fragment
+	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
+		app.Render(w, "monthly_inventory_rows.html", rows)
+		return
+	}
+
+	data := struct {
+		Rows        []MonthlyInventoryRow
+		Months      []string
+		MonthFilter string
+	}{
+		Rows:        rows,
+		Months:      months,
+		MonthFilter: monthFilter,
+	}
+
+	app.RenderPage(w, r, "monthly_inventory.html", data)
+}
+
+// ReceivingLogsHandler lists receiving logs with filtering
+func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
+	search := r.URL.Query().Get("search")
+	supplierFilter := r.URL.Query().Get("supplier_filter")
+	sort := r.URL.Query().Get("sort")
+
+	query := `
+		SELECT r.*, i.code as item_code
+		FROM receiving_logs r
+		JOIN items i ON r.item_id = i.id
+	`
+	var args []interface{}
+	var conditions []string
+
+	if search != "" {
+		conditions = append(conditions, "(r.pl_no LIKE ? OR i.code LIKE ?)")
+		wildcard := "%" + search + "%"
+		args = append(args, wildcard, wildcard)
+	}
+
+	if supplierFilter != "" && supplierFilter != "all" {
+		conditions = append(conditions, "r.supplier = ?")
+		args = append(args, supplierFilter)
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	switch sort {
+	case "date_asc":
+		query += " ORDER BY r.date ASC, r.id ASC"
+	case "qty_desc":
+		query += " ORDER BY r.qty DESC"
+	default:
+		query += " ORDER BY r.date DESC, r.id DESC"
+	}
+
+	var receivingLogs []models.ReceivingLogWithItem
+	err := db.DB.Select(&receivingLogs, query, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
+		app.Render(w, "receiving_rows.html", receivingLogs)
+		return
+	}
+
+	data := struct {
+		ReceivingLogs []models.ReceivingLogWithItem
+	}{
+		ReceivingLogs: receivingLogs,
+	}
+
+	app.RenderPage(w, r, "receiving_logs.html", data)
+}
+
+// AdjustmentLogsHandler lists stock adjustments with filtering
+func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
+	search := r.URL.Query().Get("search")
+	sort := r.URL.Query().Get("sort")
+
+	query := `
+		SELECT a.*, i.code as item_code
+		FROM inventory_adjustments a
+		JOIN items i ON a.item_id = i.id
+	`
+	var args []interface{}
+	var conditions []string
+
+	if search != "" {
+		conditions = append(conditions, "(a.remarks LIKE ? OR i.code LIKE ? OR CAST(a.adjustment_id AS TEXT) LIKE ?)")
+		wildcard := "%" + search + "%"
+		args = append(args, wildcard, wildcard, wildcard)
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	switch sort {
+	case "date_asc":
+		query += " ORDER BY a.date ASC, a.id ASC"
+	case "qty_desc":
+		query += " ORDER BY ABS(a.adjustment_qty) DESC"
+	default:
+		query += " ORDER BY a.date DESC, a.id DESC"
+	}
+
+	var adjustmentLogs []models.InventoryAdjustmentWithItem
+	err := db.DB.Select(&adjustmentLogs, query, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
+		app.Render(w, "adjustment_rows.html", adjustmentLogs)
+		return
+	}
+
+	data := struct {
+		AdjustmentLogs []models.InventoryAdjustmentWithItem
+	}{
+		AdjustmentLogs: adjustmentLogs,
+	}
+
+	app.RenderPage(w, r, "adjustment_logs.html", data)
+}
+
 

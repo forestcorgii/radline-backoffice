@@ -12,33 +12,80 @@
     <link rel="stylesheet" href="/static/index.css?v=1.1">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Radline BackOffice</h1>
-            <nav hx-target="#main-content" hx-push-url="true">
-                <a href="/" hx-get="/">Dashboard</a>
-                <a href="/entry" hx-get="/entry">Data Entry</a>
-                <a href="/brands" hx-get="/brands">Brands</a>
-                <a href="/categories" hx-get="/categories">Categories</a>
-                <a href="/items" hx-get="/items">Items</a>
-                <a href="/inventory" hx-get="/inventory">Inventory</a>
-                <a href="/sales" hx-get="/sales">Sales</a>
-            </nav>
-        </header>
+    <div class="app-layout">
+        <!-- Sidebar Backdrop for mobile -->
+        <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleMobileSidebar()"></div>
 
-        <main id="main-content">
-            {{ block "content" . }}{{ end }}
-        </main>
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-brand">
+                <h1>Radline BackOffice</h1>
+                <button class="sidebar-close-btn" onclick="toggleMobileSidebar()" aria-label="Close Sidebar">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
+                <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()">Dashboard</a>
+                <a href="/entry" hx-get="/entry" onclick="closeMobileSidebarOnNav()">Data Entry</a>
+                <a href="/brands" hx-get="/brands" onclick="closeMobileSidebarOnNav()">Brands</a>
+                <a href="/categories" hx-get="/categories" onclick="closeMobileSidebarOnNav()">Categories</a>
+                <a href="/items" hx-get="/items" onclick="closeMobileSidebarOnNav()">Items</a>
+                
+                <div class="sidebar-dropdown" id="inventory-dropdown">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)">
+                        <span>Inventory</span>
+                        <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="/inventory" hx-get="/inventory" onclick="closeMobileSidebarOnNav()">Overview</a>
+                        <a href="/inventory/monthly" hx-get="/inventory/monthly" onclick="closeMobileSidebarOnNav()">Monthly Inventory</a>
+                        <a href="/inventory/receiving" hx-get="/inventory/receiving" onclick="closeMobileSidebarOnNav()">Stock Receiving</a>
+                        <a href="/inventory/adjustments" hx-get="/inventory/adjustments" onclick="closeMobileSidebarOnNav()">Stock Adjustment</a>
+                        <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs" onclick="closeMobileSidebarOnNav()">Receiving Logs</a>
+                        <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs" onclick="closeMobileSidebarOnNav()">Adjustment Logs</a>
+                    </div>
+                </div>
+                
+                <a href="/sales" hx-get="/sales" onclick="closeMobileSidebarOnNav()">Sales</a>
+            </nav>
+        </aside>
+
+        <!-- Main Layout Container -->
+        <div class="main-layout-container">
+            <!-- Mobile top header -->
+            <header class="top-header">
+                <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="top-header-title">Radline BackOffice</div>
+            </header>
+
+            <main id="main-content">
+                {{ block "content" . }}{{ end }}
+            </main>
+        </div>
     </div>
 
     <!-- Toast Notifications Container -->
     <div id="toast-container" class="toast-container"></div>
 
     <script>
-        // Highlight active navigation link
+        // Highlight active navigation link and manage collapsible dropdown state
         function updateActiveNavLink() {
             const currentPath = window.location.pathname;
-            document.querySelectorAll("nav a").forEach(link => {
+            
+            // Highlight main links
+            document.querySelectorAll(".sidebar-nav > a").forEach(link => {
                 const href = link.getAttribute("href");
                 const isActive = href === "/" ? currentPath === "/" : currentPath.startsWith(href);
                 if (isActive) {
@@ -47,6 +94,58 @@
                     link.classList.remove("active");
                 }
             });
+
+            // Highlight dropdown sub-links exactly
+            let dropdownHasActive = false;
+            document.querySelectorAll(".sidebar-dropdown-menu a").forEach(link => {
+                const href = link.getAttribute("href");
+                const isActive = (currentPath === href);
+                if (isActive) {
+                    link.classList.add("active");
+                    dropdownHasActive = true;
+                } else {
+                    link.classList.remove("active");
+                }
+            });
+
+            // Auto-expand Inventory dropdown if active or on inventory path
+            const inventoryDropdown = document.getElementById("inventory-dropdown");
+            if (inventoryDropdown) {
+                if (dropdownHasActive || currentPath.startsWith("/inventory")) {
+                    inventoryDropdown.classList.add("open");
+                } else {
+                    inventoryDropdown.classList.remove("open");
+                }
+            }
+        }
+
+        // Toggle sidebar dropdown on desktop/mobile
+        function toggleSidebarDropdown(event) {
+            event.preventDefault();
+            const dropdown = event.currentTarget.closest(".sidebar-dropdown");
+            if (dropdown) {
+                dropdown.classList.toggle("open");
+            }
+        }
+
+        // Toggle mobile sidebar visibility
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const backdrop = document.getElementById("sidebar-backdrop");
+            if (sidebar && backdrop) {
+                sidebar.classList.toggle("open");
+                backdrop.classList.toggle("show");
+            }
+        }
+
+        // Close mobile sidebar on navigation click
+        function closeMobileSidebarOnNav() {
+            const sidebar = document.getElementById("sidebar");
+            const backdrop = document.getElementById("sidebar-backdrop");
+            if (sidebar && backdrop) {
+                sidebar.classList.remove("open");
+                backdrop.classList.remove("show");
+            }
         }
 
         document.addEventListener("DOMContentLoaded", updateActiveNavLink);
