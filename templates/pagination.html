@@ -1,0 +1,53 @@
+<div id="{{ .TargetID }}-pagination" class="pagination-container" hx-swap-oob="true">
+    {{ if gt .TotalPages 1 }}
+    <div class="pagination-info">
+        Showing {{ .StartRecord }} to {{ .EndRecord }} of {{ .TotalRecords }} entries
+    </div>
+    <div class="pagination-buttons">
+        {{ if .HasPrev }}
+        <button class="pagination-btn" 
+                hx-get="{{ .Path }}?page={{ .PrevPage }}" 
+                hx-target="{{ .Target }}" 
+                hx-include="{{ .Include }}">
+            Prev
+        </button>
+        {{ else }}
+        <button class="pagination-btn" disabled>
+            Prev
+        </button>
+        {{ end }}
+
+        {{ range .Pages }}
+        {{ if eq . $.CurrentPage }}
+        <button class="pagination-btn pagination-btn-active" disabled>
+            {{ . }}
+        </button>
+        {{ else }}
+        <button class="pagination-btn" 
+                hx-get="{{ $.Path }}?page={{ . }}" 
+                hx-target="{{ $.Target }}" 
+                hx-include="{{ $.Include }}">
+            {{ . }}
+        </button>
+        {{ end }}
+        {{ end }}
+
+        {{ if .HasNext }}
+        <button class="pagination-btn" 
+                hx-get="{{ .Path }}?page={{ .NextPage }}" 
+                hx-target="{{ .Target }}" 
+                hx-include="{{ .Include }}">
+            Next
+        </button>
+        {{ else }}
+        <button class="pagination-btn" disabled>
+            Next
+        </button>
+        {{ end }}
+    </div>
+    {{ else if gt .TotalRecords 0 }}
+    <div class="pagination-info">
+        Showing {{ .StartRecord }} to {{ .EndRecord }} of {{ .TotalRecords }} entries
+    </div>
+    {{ end }}
+</div>

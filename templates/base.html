@@ -151,6 +151,11 @@
         document.addEventListener("DOMContentLoaded", updateActiveNavLink);
         document.body.addEventListener("htmx:afterOnLoad", updateActiveNavLink);
         document.body.addEventListener("htmx:historyRestore", updateActiveNavLink);
+        document.body.addEventListener("htmx:afterSwap", function(evt) {
+            if (evt.detail.target.id === "main-content") {
+                window.scrollTo(0, 0);
+            }
+        });
 
         // Toast notifications listener for HX-Trigger headers
         document.body.addEventListener('show-toast', function(evt) {

@@ -12,7 +12,7 @@
             <input type="text" name="search" placeholder="Search by Remarks, Item Code, or Adjustment ID..." 
                    hx-get="/inventory/adjustments/logs" 
                    hx-trigger="keyup changed delay:300ms, search" 
-                   hx-target="#adjustment-tbody" 
+                   hx-target="#adjustment-logs-tbody" 
                    hx-include="[name='sort']"
                    class="form-input">
         </div>
@@ -20,7 +20,7 @@
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
             <select name="sort" 
                     hx-get="/inventory/adjustments/logs" 
-                    hx-target="#adjustment-tbody" 
+                    hx-target="#adjustment-logs-tbody" 
                     hx-include="[name='search']"
                     hx-trigger="change"
                     class="form-input">
@@ -44,10 +44,14 @@
                     <th>Remarks</th>
                 </tr>
             </thead>
-            <tbody id="adjustment-tbody">
+            <tbody id="adjustment-logs-tbody">
                 {{ template "adjustment_rows.html" .AdjustmentLogs }}
             </tbody>
         </table>
+    </div>
+
+    <div id="adjustment-pagination">
+        {{ template "pagination.html" .PaginationView }}
     </div>
 </div>
 {{ end }}

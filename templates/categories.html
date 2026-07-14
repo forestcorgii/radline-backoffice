@@ -66,9 +66,13 @@
                 </tr>
             </thead>
             <tbody id="categories-tbody">
-                {{ template "category_rows.html" . }}
+                {{ template "category_rows.html" .Categories }}
             </tbody>
         </table>
+    </div>
+
+    <div id="categories-pagination">
+        {{ template "pagination.html" .PaginationView }}
     </div>
 </div>
 {{ end }}

@@ -176,4 +176,41 @@
   4. The first log whose received quantity is greater than the remaining `consumed` value has active stock under FIFO. Return its cost and price.
 - **Auto-population in Form Handlers**: In HTMX handlers that fetch pre-filled form detail rows (e.g. `/sales/item-row-details`), fetch the item stock aggregate, run the FIFO calculation, and fall back to the latest receiving log if no stock is currently on hand.
 
+## Context: HTMX Out-of-Band (OOB) Pagination and Implicit Template Registration
+**Problem**: Rendering list views with thousands of items (e.g. Sales, Items) causes UI sluggishness and N+1 query bottlenecks. Adding pagination while preserving user search/filter/sorting states requires updating both the table body and pagination controls without losing input focus.
+**Enforced Solution**:
+- **Implicit Template Fragment**: Define pagination markup in a separate template file (e.g. [pagination.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/pagination.html)) without `{{ define }}` wrappers. This allows the template to be compiled implicitly with its filename as the key.
+- **Fragment Registration**: Register `"pagination.html"` inside the `fragments` list in `main.go` so it is registered standalone in `app.Templates`.
+- **Double Template Rendering**: In handlers on HTMX requests, render the rows template (e.g. `item_rows.html`), and then call `app.Render(w, "pagination.html", paginationView)` to append it.
+- **HTMX OOB Swaps**: The pagination container uses `hx-swap-oob="true"` with a matching DOM ID (e.g. `id="items-pagination"`). HTMX automatically swaps the body rows into the target table body and swaps the pagination block into the footer out-of-band.
+- **Filter Retention**: Pagination buttons use `hx-include` to gather active filter inputs (e.g. search, sort), while filters omit the page parameter (defaulting to 1 on trigger) so that modifying search/sort automatically resets pagination.
+
+
+## Context: Go HTTP Fragment Response Sniffing (Content-Type text/plain)
+**Problem**: Sending HTML fragments starting with table rows `<tr>` or whitespace without setting response headers causes the Go standard library to sniff the content type as `text/plain; charset=utf-8`. HTMX ignores plain text responses, causing requests to hang in the `htmx-request` class.
+**Enforced Solution**:
+- Centrally set the `Content-Type` header to `text/html; charset=utf-8` in all rendering utilities (e.g. `Render` and `RenderPage`) before executing template files.
+
+## Context: SPA Layout Viewport Scroll Reset on Transition
+**Problem**: When navigating between pages using HTMX swaps targeting a main layout container (e.g., `#main-content`), the page scroll position does not reset to the top, remaining at the scroll offset of the previous page.
+**Enforced Solution**:
+- Add a global HTMX swap listener:
+  ```javascript
+  document.body.addEventListener("htmx:afterSwap", function(evt) {
+      if (evt.detail.target.id === "main-content") {
+          window.scrollTo(0, 0);
+      }
+  });
+  ```
+- This resets scroll position back to top on layout transitions, but preserves scroll offsets when searching, paginating, or filtering.
+
+## Context: Batch Querying and Database Indexing for Page Performance
+**Problem**: Fetching domain models individually inside page rendering loops creates an N+1 query pattern, which results in significant page load latency when handling larger datasets.
+**Enforced Solution**:
+- **Batch Querying**: Implement batch loader functions (e.g. `FetchItemsStockBatch(db, itemIDs)`) that execute single SQL `IN (?)` queries across all needed tables rather than executing separate queries per row loop.
+- **Database Indexing**: Add standard indices on search text fields (e.g., `code`) and foreign key columns (`item_id`, `adjustment_id`) in SQLite schema definition to prevent full table scans on group by / filter queries.
+
+
+
+
 

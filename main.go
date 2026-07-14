@@ -115,7 +115,7 @@ func parseTemplates() map[string]*template.Template {
 
 	for _, page := range pages {
 		t := template.New(page).Funcs(funcMap)
-		files := []string{"templates/base.html", "templates/" + page}
+		files := []string{"templates/base.html", "templates/" + page, "templates/pagination.html"}
 		if page == "brands.html" {
 			files = append(files, "templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html")
 		} else if page == "categories.html" {
@@ -146,15 +146,14 @@ func parseTemplates() map[string]*template.Template {
 		templates[page] = t
 	}
 
-	// Fragment templates (rendered standalone without base.html)
 	fragments := []string{
 		"brand_row.html", "brand_rows.html", "brand_edit_row.html",
 		"category_row.html", "category_rows.html", "category_edit_row.html",
 		"item_row.html", "item_rows.html", "item_edit_row.html",
-		"receiving_rows.html", "adjustment_rows.html", "sales_rows.html", "inventory_stock_rows.html",
+		"receiving_logs.html", "receiving_rows.html", "adjustment_rows.html", "sales_rows.html", "inventory_stock_rows.html",
 		"brand_select.html", "category_select.html", "item_select.html",
 		"sale_item_row.html", "receiving_item_row.html", "adjustment_item_row.html",
-		"monthly_inventory_rows.html",
+		"monthly_inventory_rows.html", "pagination.html",
 	}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)
