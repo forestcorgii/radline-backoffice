@@ -1,0 +1,21 @@
+{{ define "adjustment_logs_results.html" }}
+<div class="table-container">
+    <table class="table-scroll-md">
+        <thead>
+            <tr>
+                <th>Adj#</th>
+                <th>Date</th>
+                <th>Item Code</th>
+                <th>Adj Qty</th>
+                <th>UOM</th>
+                <th>Cost Impact</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody id="adjustment-logs-tbody">
+            {{ template "adjustment_rows.html" .AdjustmentLogs }}
+        </tbody>
+    </table>
+</div>
+{{ template "pagination.html" .PaginationView }}
+{{ end }}

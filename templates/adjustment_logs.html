@@ -6,31 +6,37 @@
 <div class="card">
     <h2>Adjustment Logs</h2>
     
+    <form style="display: contents;" onsubmit="return false;">
     <div class="search-filter-bar">
         <div class="flex-grow">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
             <input type="text" name="search" placeholder="Search by Remarks, Item Code, or Adjustment ID..." 
                    hx-get="/inventory/adjustments/logs" 
-                   hx-trigger="keyup changed delay:300ms, search" 
-                   hx-target="#adjustment-logs-tbody" 
-                   hx-include="[name='sort']"
+                   hx-trigger="keyup[key=='Enter'], search" 
+                   hx-target="#adjustment-logs-results" 
+                   hx-include="closest form"
                    class="form-input">
         </div>
         <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
-            <select name="sort" 
-                    hx-get="/inventory/adjustments/logs" 
-                    hx-target="#adjustment-logs-tbody" 
-                    hx-include="[name='search']"
-                    hx-trigger="change"
-                    class="form-input">
+            <select name="sort" class="form-input">
                 <option value="date_desc">Newest First</option>
                 <option value="date_asc">Oldest First</option>
                 <option value="qty_desc">Highest Abs(Quantity) First</option>
             </select>
         </div>
+        <div class="filter-item" style="width: auto;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; visibility: hidden;">Action</label>
+            <button hx-get="/inventory/adjustments/logs" 
+                    hx-target="#adjustment-logs-results" 
+                    hx-include="closest form"
+                    class="btn" style="width: 100%;">
+                Apply
+            </button>
+        </div>
     </div>
 
+        <div id="adjustment-logs-results">
     <div class="table-container">
         <table class="table-scroll-md">
             <thead>
@@ -49,9 +55,9 @@
             </tbody>
         </table>
     </div>
-
-    <div id="adjustment-pagination">
-        {{ template "pagination.html" .PaginationView }}
     </div>
+
+    {{ template "pagination.html" .PaginationView }}
+    </form>
 </div>
 {{ end }}

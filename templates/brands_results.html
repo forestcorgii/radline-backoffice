@@ -1,0 +1,19 @@
+{{ define "brands_results.html" }}
+<div class="table-container">
+    <table class="table-scroll-md">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Items Count</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="brands-tbody">
+            {{ template "brand_rows.html" .Brands }}
+        </tbody>
+    </table>
+</div>
+{{ template "pagination.html" .PaginationView }}
+{{ end }}

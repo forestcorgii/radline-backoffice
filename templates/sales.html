@@ -13,24 +13,20 @@
 <div class="card">
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">All Sales Logs</h3>
     
+    <form style="display: contents;" onsubmit="return false;">
     <div class="search-filter-bar">
         <div class="flex-grow">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
             <input type="text" name="search" placeholder="Search sales by doc number, customer name, or item code..." 
                    hx-get="/sales" 
-                   hx-trigger="keyup changed delay:300ms, search" 
-                   hx-target="#sales-tbody" 
-                   hx-include="[name='supplier_filter'],[name='sort']"
+                   hx-trigger="keyup[key=='Enter'], search" 
+                   hx-target="#sales-results" 
+                   hx-include="closest form"
                    class="form-input">
         </div>
         <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier Filter</label>
-            <select name="supplier_filter" 
-                    hx-get="/sales" 
-                    hx-target="#sales-tbody" 
-                    hx-include="[name='search'],[name='sort']"
-                    hx-trigger="change"
-                    class="form-input">
+            <select name="supplier_filter" class="form-input">
                 <option value="all">All Suppliers</option>
                 <option value="ASCD">ASCD</option>
                 <option value="RENOWN">RENOWN</option>
@@ -39,20 +35,25 @@
         </div>
         <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
-            <select name="sort" 
-                    hx-get="/sales" 
-                    hx-target="#sales-tbody" 
-                    hx-include="[name='search'],[name='supplier_filter']"
-                    hx-trigger="change"
-                    class="form-input">
+            <select name="sort" class="form-input">
                 <option value="date_desc">Newest First</option>
                 <option value="date_asc">Oldest First</option>
                 <option value="sales_desc">Highest Sales First</option>
                 <option value="profit_desc">Highest Profit First</option>
             </select>
         </div>
+        <div class="filter-item" style="width: auto;">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; visibility: hidden;">Action</label>
+            <button hx-get="/sales" 
+                    hx-target="#sales-results" 
+                    hx-include="closest form"
+                    class="btn" style="width: 100%;">
+                Apply
+            </button>
+        </div>
     </div>
 
+        <div id="sales-results">
     <div class="table-container">
         <table class="table-scroll-lg">
             <thead>
@@ -73,9 +74,9 @@
             </tbody>
         </table>
     </div>
-
-    <div id="sales-pagination">
-        {{ template "pagination.html" .PaginationView }}
     </div>
+
+    {{ template "pagination.html" .PaginationView }}
+    </form>
 </div>
 {{ end }}

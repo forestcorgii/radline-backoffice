@@ -1,0 +1,22 @@
+{{ define "items_results.html" }}
+<div class="table-container">
+    <table class="table-scroll-md">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Model</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Default UOM</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="items-tbody">
+            {{ template "item_rows.html" .Items }}
+        </tbody>
+    </table>
+</div>
+{{ template "pagination.html" .PaginationView }}
+{{ end }}
