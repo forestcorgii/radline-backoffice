@@ -155,7 +155,7 @@ func TestNewSalesDetail_Validation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sd, err := domain.NewSalesDetail(1, tt.docType, "POSTED", time.Now(), tt.docNo, "Customer", tt.supplier, 1, tt.qty, tt.uom, tt.price, tt.cost)
+			sd, err := domain.NewSalesDetail(1, tt.docType, "POSTED", time.Now(), tt.docNo, "Customer", tt.supplier, 1, tt.qty, tt.uom, tt.price, tt.cost, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewSalesDetail() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -228,11 +228,11 @@ func TestItemStock_CalculateOnHand(t *testing.T) {
 
 	// Setup Sales Details
 	// 3 PCS sold in Supplier A
-	s1, _ := domain.NewSalesDetail(1, "SI", "POSTED", time.Now(), "INV1", "Cust", "SupplierA", 1, 3.0, "PCS", 120.0, 80.0)
+	s1, _ := domain.NewSalesDetail(1, "SI", "POSTED", time.Now(), "INV1", "Cust", "SupplierA", 1, 3.0, "PCS", 120.0, 80.0, "")
 	// 1 BOX sold in Supplier A (equals 10 PCS)
-	s2, _ := domain.NewSalesDetail(2, "SI", "POSTED", time.Now(), "INV2", "Cust", "SupplierA", 1, 1.0, "BOX", 1200.0, 800.0)
+	s2, _ := domain.NewSalesDetail(2, "SI", "POSTED", time.Now(), "INV2", "Cust", "SupplierA", 1, 1.0, "BOX", 1200.0, 800.0, "")
 	// 2 PCS sold in Supplier B
-	s3, _ := domain.NewSalesDetail(3, "SI", "POSTED", time.Now(), "INV3", "Cust", "SupplierB", 1, 2.0, "PCS", 120.0, 80.0)
+	s3, _ := domain.NewSalesDetail(3, "SI", "POSTED", time.Now(), "INV3", "Cust", "SupplierB", 1, 2.0, "PCS", 120.0, 80.0, "")
 
 	salesDetails := []domain.SalesDetail{s1, s2, s3}
 
@@ -271,5 +271,76 @@ func TestItemStock_CalculateOnHand(t *testing.T) {
 	globalOnHand := stock.CalculateGlobalOnHand()
 	if globalOnHand != 12.0 {
 		t.Errorf("expected Global stock on hand to be 12.0, got %f", globalOnHand)
+	}
+}
+
+func TestItemStock_GetOldestPLWithStock(t *testing.T) {
+	item, err := domain.NewItem(1, "ITM1", "Test Item", "PCS", "M1", 1, 1, "", "")
+	if err != nil {
+		t.Fatalf("failed to setup item: %v", err)
+	}
+
+	// 1. Empty logs
+	stockEmpty := domain.NewItemStock(item, nil, nil, nil, nil)
+	if _, _, _, found := stockEmpty.GetOldestPLWithStock(); found {
+		t.Errorf("expected false for empty receiving logs")
+	}
+
+	// Setup receiving logs:
+	// PL1 on Day 1: 10 PCS @ cost 100, price 150
+	// PL2 on Day 2: 15 PCS @ cost 110, price 160
+	// PL3 on Day 3: 20 PCS @ cost 120, price 170
+	t1 := time.Date(2026, 7, 1, 10, 0, 0, 0, time.UTC)
+	t2 := t1.Add(24 * time.Hour)
+	t3 := t2.Add(24 * time.Hour)
+
+	rl1, _ := domain.NewReceivingLog(1, "SupplierA", t1, "PL1", 1, 10.0, "PCS", 150.0, 100.0)
+	rl2, _ := domain.NewReceivingLog(2, "SupplierA", t2, "PL2", 1, 15.0, "PCS", 160.0, 110.0)
+	rl3, _ := domain.NewReceivingLog(3, "SupplierB", t3, "PL3", 1, 20.0, "PCS", 170.0, 120.0)
+	receivingLogs := []domain.ReceivingLog{rl1, rl2, rl3}
+
+	// Case A: No sales, no adjustments (OnHand = 45)
+	// Oldest PL with stock should be PL1 (cost 100, price 150, plNo PL1)
+	stockA := domain.NewItemStock(item, nil, receivingLogs, nil, nil)
+	costA, priceA, plNoA, foundA := stockA.GetOldestPLWithStock()
+	if !foundA || costA != 100.0 || priceA != 150.0 || plNoA != "PL1" {
+		t.Errorf("Case A failed: got cost %f, price %f, plNo %q, found %t; expected 100.0, 150.0, PL1, true", costA, priceA, plNoA, foundA)
+	}
+
+	// Case B: Sales of 8 PCS (OnHand = 37)
+	// Oldest PL with stock should still be PL1 (PL1 has 2 PCS remaining)
+	sB, _ := domain.NewSalesDetail(1, "SI", "POSTED", t2, "INV1", "Cust", "SupplierA", 1, 8.0, "PCS", 150.0, 100.0, "")
+	stockB := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sB}, nil)
+	costB, priceB, plNoB, foundB := stockB.GetOldestPLWithStock()
+	if !foundB || costB != 100.0 || priceB != 150.0 || plNoB != "PL1" {
+		t.Errorf("Case B failed: got cost %f, price %f, plNo %q, found %t; expected 100.0, 150.0, PL1, true", costB, priceB, plNoB, foundB)
+	}
+
+	// Case C: Sales of 12 PCS (OnHand = 33)
+	// PL1 (10 PCS) is fully consumed. PL2 has 13 PCS remaining.
+	// Oldest PL with stock should be PL2 (cost 110, price 160, plNo PL2)
+	sC, _ := domain.NewSalesDetail(1, "SI", "POSTED", t2, "INV1", "Cust", "SupplierA", 1, 12.0, "PCS", 150.0, 100.0, "")
+	stockC := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sC}, nil)
+	costC, priceC, plNoC, foundC := stockC.GetOldestPLWithStock()
+	if !foundC || costC != 110.0 || priceC != 160.0 || plNoC != "PL2" {
+		t.Errorf("Case C failed: got cost %f, price %f, plNo %q, found %t; expected 110.0, 160.0, PL2, true", costC, priceC, plNoC, foundC)
+	}
+
+	// Case D: Sales of 28 PCS (OnHand = 17)
+	// PL1 (10 PCS) and PL2 (15 PCS) are fully consumed. PL3 has 17 PCS remaining.
+	// Oldest PL with stock should be PL3 (cost 120, price 170, plNo PL3)
+	sD, _ := domain.NewSalesDetail(1, "SI", "POSTED", t3, "INV1", "Cust", "SupplierA", 1, 28.0, "PCS", 150.0, 100.0, "")
+	stockD := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sD}, nil)
+	costD, priceD, plNoD, foundD := stockD.GetOldestPLWithStock()
+	if !foundD || costD != 120.0 || priceD != 170.0 || plNoD != "PL3" {
+		t.Errorf("Case D failed: got cost %f, price %f, plNo %q, found %t; expected 120.0, 170.0, PL3, true", costD, priceD, plNoD, foundD)
+	}
+
+	// Case E: Sales of 45 PCS (OnHand = 0)
+	// All consumed. Returns found = false.
+	sE, _ := domain.NewSalesDetail(1, "SI", "POSTED", t3, "INV1", "Cust", "SupplierA", 1, 45.0, "PCS", 150.0, 100.0, "")
+	stockE := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sE}, nil)
+	if _, _, _, foundE := stockE.GetOldestPLWithStock(); foundE {
+		t.Errorf("expected false when onHand is 0")
 	}
 }

@@ -18,10 +18,12 @@
         <span class="badge badge-inactive" style="font-size: 0.8125rem; padding: 0.3rem 0.75rem;">{{ printf "%.2f" .OnHand }}</span>
         {{ end }}
     </td>
+    <td style="font-weight: 500; color: var(--text-main);">₱{{ printf "%.2f" .CurrentCost }}</td>
+    <td style="font-weight: 500; color: var(--primary-color);">₱{{ printf "%.2f" .CurrentPrice }}</td>
 </tr>
 {{ else }}
 <tr>
-    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">
         No items found.
     </td>
 </tr>

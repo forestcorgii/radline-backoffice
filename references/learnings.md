@@ -166,3 +166,14 @@
 - Safely dereference them in mapper layers (e.g., in `models/stock.go`) before constructing pure domain objects (which require concrete, non-pointer types like `int`).
 - Pointers to standard types are automatically dereferenced in Go's `html/template` package when rendered.
 
+## Context: FIFO Cost & Selling Price Tracking (Oldest PL with Stock)
+**Problem**: Tracking and auto-populating inventory item prices and costs based on the oldest transaction batch (PL/Receiving Log) that still has available stock.
+**Enforced Solution**:
+- **Domain FIFO Computation**: Implement `GetOldestPLWithStock()` on the `ItemStock` domain aggregate:
+  1. Sort all receiving logs chronologically (`Date ASC, ID ASC`).
+  2. Compute net consumed stock `consumed = totalReceived - onHand`.
+  3. Loop through sorted logs, deducting each log's quantity from `consumed`.
+  4. The first log whose received quantity is greater than the remaining `consumed` value has active stock under FIFO. Return its cost and price.
+- **Auto-population in Form Handlers**: In HTMX handlers that fetch pre-filled form detail rows (e.g. `/sales/item-row-details`), fetch the item stock aggregate, run the FIFO calculation, and fall back to the latest receiving log if no stock is currently on hand.
+
+

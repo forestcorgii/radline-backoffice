@@ -10,6 +10,9 @@
         </select>
     </td>
     <td>
+        <input type="text" name="ref_pl" class="form-input" value="{{ .PLNo }}" readonly placeholder="N/A" style="background-color: rgba(0,0,0,0.03); color: var(--text-muted); cursor: not-allowed;">
+    </td>
+    <td>
         <input type="text" name="uom" placeholder="e.g. PCS" class="form-input" value="{{ .DefaultUOM }}" required>
     </td>
     <td>

@@ -86,6 +86,16 @@ func InitDB(datasource string) error {
 		}
 	}
 
+	// Safe migration: add ref_pl column to sales_details if it doesn't exist
+	_, err = DB.Exec("SELECT ref_pl FROM sales_details LIMIT 0")
+	if err != nil {
+		var rowCount int
+		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM sales_details")
+		if errCount == nil {
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN ref_pl TEXT;")
+		}
+	}
+
 	createSchema()
 	return nil
 }
@@ -157,6 +167,7 @@ func createSchema() {
 		cost REAL NOT NULL,
 		total_cost REAL NOT NULL,
 		profit REAL NOT NULL,
+		ref_pl TEXT,
 		FOREIGN KEY(item_id) REFERENCES items(id)
 	);
 
