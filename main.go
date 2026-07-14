@@ -84,6 +84,10 @@ func main() {
 	http.HandleFunc("DELETE /sales/delete/{id}", app.DeleteSalesHandler)
 	http.HandleFunc("GET /sales/item-row-details", app.SaleItemRowDetailsHandler)
 
+	// Import Routing
+	http.HandleFunc("GET /import", app.ImportPageHandler)
+	http.HandleFunc("POST /import/upload", app.ImportUploadHandler)
+
 	log.Println("Server starting on :8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -106,6 +110,7 @@ func parseTemplates() map[string]*template.Template {
 		"inventory.html", "stock_receiving.html", "stock_adjustments.html",
 		"sales.html", "monthly_inventory.html", "receiving_logs.html", "adjustment_logs.html",
 		"brand_new.html", "category_new.html", "item_new.html", "sales_new.html",
+		"import.html",
 	}
 
 	for _, page := range pages {
