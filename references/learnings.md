@@ -145,3 +145,11 @@
 - **Global Sizing**: Enforce a global `font-size: 0.875rem` on the HTML `body` selector to scale all standard elements proportionally.
 - **Sidebar & Viewport**: Reduce the default sidebar width to `220px` (from `260px`) and expand `main#main-content` max-width to `1440px` (from `1200px`) to maximize screen estate utilization on wide monitors.
 - **Spacing Reduction**: Shrink card padding to `1rem`, table cell padding to `0.5rem 0.75rem`, form input paddings to `0.45rem 0.75rem`, button paddings to `0.45rem 1rem`, form group vertical spacing to `0.75rem`, grid gap to `1rem`, and sub-tab margin/paddings.
+
+## Context: Refactoring Consolidated Forms to List-Linked Dedicated Pages
+**Problem**: Placing all data entry forms (Brands, Categories, Items, Sales) on a single consolidated "/entry" tab page made navigation unintuitive, disconnected data entry from list views, and led to bloated HTML and routing.
+**Enforced Solution**:
+- **Surgical Placement**: Added a `.header-bar` at the top of each list page (`brands.html`, `categories.html`, `items.html`, `sales.html`) with a dedicated top-right action button (e.g. `+ Add Brand`) that navigates to its own creation route (e.g. `/brands/new`).
+- **Post-Submission Redirect (HX-Location)**: Rather than rendering inline list updates or leaving the user on a blank form, handlers set the `HX-Trigger` for the toast notification and use `HX-Location` (e.g. `w.Header().Set("HX-Location", "/brands")`) to redirect the user back to the list page upon successful submission.
+- **Dynamic Select Autocomplete Refresh**: Maintained HTMX event listeners (e.g. `hx-trigger="brand-added from:body"`) on selection dropdowns to fetch updated select components (e.g. `/brands/select`) dynamically whenever a dependency object is created elsewhere.
+- **Purge Obsolete Pages**: Deleted the legacy `entry.html` template, removed the `Data Entry` sidebar nav link, and registered the new pages in `main.go`.

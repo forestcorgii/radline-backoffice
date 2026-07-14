@@ -1,5 +1,5 @@
 <select id="category_id" name="category_id" class="form-input" style="padding: 0.75rem 1rem; height: auto;"
-        hx-get="/entry/select/categories" hx-trigger="category-added from:body" hx-swap="outerHTML">
+        hx-get="/categories/select" hx-trigger="category-added from:body" hx-swap="outerHTML">
     <option value="0">-- Select Category --</option>
     {{ range . }}
     <option value="{{ .ID }}">{{ .Name }}</option>

@@ -1,5 +1,5 @@
 <select id="item_id" name="item_id" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required
-        hx-get="/entry/select/items" hx-trigger="item-added from:body" hx-swap="outerHTML">
+        hx-get="/items/select" hx-trigger="item-added from:body" hx-swap="outerHTML">
     <option value="">-- Select Item --</option>
     {{ range . }}
     <option value="{{ .ID }}">{{ .Code }} - {{ .Description }}</option>

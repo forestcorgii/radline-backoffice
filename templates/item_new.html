@@ -1,0 +1,46 @@
+{{ define "item_new.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div style="margin-bottom: 1.5rem;">
+    <a href="/items" hx-get="/items" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+        ← Back to Items
+    </a>
+</div>
+
+<div class="card">
+    <h2 class="mb-4">Add Item</h2>
+    <form hx-post="/items/add" hx-swap="none">
+        <div class="grid grid-cols-3">
+            <div class="form-group">
+                <label for="code">Item Code</label>
+                <input type="text" id="code" name="code" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description" required>
+            </div>
+            <div class="form-group">
+                <label for="model">Model</label>
+                <input type="text" id="model" name="model">
+            </div>
+        </div>
+        <div class="grid grid-cols-3 mt-4">
+            <div class="form-group">
+                <label for="brand_id">Brand</label>
+                {{ template "brand_select.html" .Brands }}
+            </div>
+            <div class="form-group">
+                <label for="category_id">Category</label>
+                {{ template "category_select.html" .Categories }}
+            </div>
+            <div class="form-group">
+                <label for="default_uom">Default UOM</label>
+                <input type="text" id="default_uom" name="default_uom" placeholder="e.g. PCS" required>
+            </div>
+        </div>
+        <button type="submit" class="btn mt-4">Save Item</button>
+    </form>
+</div>
+{{ end }}

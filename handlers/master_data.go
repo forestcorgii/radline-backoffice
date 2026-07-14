@@ -88,17 +88,8 @@ func (app *App) AddBrandHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Brand added successfully!"}, "brand-added": ""}`)
-
-	// Fetch updated list and render just the rows for HTMX swap
-	var brands []models.Brand
-	_ = db.DB.Select(&brands, `
-		SELECT b.id, b.code, b.name, COUNT(i.id) as item_count
-		FROM brands b
-		LEFT JOIN items i ON b.id = i.brand_id
-		GROUP BY b.id, b.code, b.name
-		ORDER BY b.code ASC
-	`)
-	app.Render(w, "brand_rows.html", brands)
+	w.Header().Set("HX-Location", "/brands")
+	w.WriteHeader(http.StatusOK)
 }
 
 // EditBrandFormHandler renders the inline edit form for a brand
@@ -292,16 +283,8 @@ func (app *App) AddCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Category added successfully!"}, "category-added": ""}`)
-
-	var categories []models.Category
-	_ = db.DB.Select(&categories, `
-		SELECT c.id, c.code, c.name, COUNT(i.id) as item_count
-		FROM categories c
-		LEFT JOIN items i ON c.id = i.category_id
-		GROUP BY c.id, c.code, c.name
-		ORDER BY c.code ASC
-	`)
-	app.Render(w, "category_rows.html", categories)
+	w.Header().Set("HX-Location", "/categories")
+	w.WriteHeader(http.StatusOK)
 }
 
 // EditCategoryFormHandler renders the inline edit form for a category
@@ -537,17 +520,8 @@ func (app *App) AddItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Item added successfully!"}, "item-added": ""}`)
-
-	var items []models.ItemWithRelations
-	_ = db.DB.Select(&items, `
-		SELECT i.id, i.code, i.description, i.default_uom, i.model, i.brand_id, i.category_id, i.variation, i.remarks,
-		       COALESCE(b.name, '') as brand_name, COALESCE(c.name, '') as category_name
-		FROM items i
-		LEFT JOIN brands b ON i.brand_id = b.id
-		LEFT JOIN categories c ON i.category_id = c.id
-		ORDER BY i.code ASC
-	`)
-	app.Render(w, "item_rows.html", items)
+	w.Header().Set("HX-Location", "/items")
+	w.WriteHeader(http.StatusOK)
 }
 
 // EditItemFormHandler renders the inline edit form for an item
@@ -698,43 +672,33 @@ func (app *App) DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// EntryHandler renders the consolidated data entry page
-func (app *App) EntryHandler(w http.ResponseWriter, r *http.Request) {
-	tab := r.URL.Query().Get("tab")
-	if tab == "receiving" || tab == "adjustments" {
-		http.Redirect(w, r, "/inventory/"+tab, http.StatusMovedPermanently)
-		return
-	}
-	if tab == "" {
-		tab = "sales" // default tab
-	}
+// NewBrandPageHandler renders the brand creation form
+func (app *App) NewBrandPageHandler(w http.ResponseWriter, r *http.Request) {
+	app.RenderPage(w, r, "brand_new.html", nil)
+}
 
+// NewCategoryPageHandler renders the category creation form
+func (app *App) NewCategoryPageHandler(w http.ResponseWriter, r *http.Request) {
+	app.RenderPage(w, r, "category_new.html", nil)
+}
+
+// NewItemPageHandler renders the item creation form
+func (app *App) NewItemPageHandler(w http.ResponseWriter, r *http.Request) {
 	var brands []models.Brand
 	_ = db.DB.Select(&brands, "SELECT id, code, name FROM brands ORDER BY code ASC")
 
 	var categories []models.Category
 	_ = db.DB.Select(&categories, "SELECT id, code, name FROM categories ORDER BY code ASC")
 
-	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
-
 	data := struct {
-		ActiveTab    string
-		Brands       []models.Brand
-		Categories   []models.Category
-		Items        []models.Item
-		SalesRowData interface{}
+		Brands     []models.Brand
+		Categories []models.Category
 	}{
-		ActiveTab:  tab,
 		Brands:     brands,
 		Categories: categories,
-		Items:      items,
-		SalesRowData: map[string]interface{}{
-			"Items": items,
-		},
 	}
 
-	app.RenderPage(w, r, "entry.html", data)
+	app.RenderPage(w, r, "item_new.html", data)
 }
 
 // SelectBrandsHandler renders the updated brand select fragment
@@ -770,53 +734,5 @@ func (app *App) SelectItemsHandler(w http.ResponseWriter, r *http.Request) {
 	app.Render(w, "item_select.html", items)
 }
 
-// ItemDefaultsHandler returns OOB swaps for UOM, cost, and price based on selected item
-func (app *App) ItemDefaultsHandler(w http.ResponseWriter, r *http.Request) {
-	itemIDStr := r.URL.Query().Get("item_id")
-	itemID, _ := strconv.Atoi(itemIDStr)
-	tab := r.URL.Query().Get("tab")
 
-	var defaultUOM string
-	var lastCost, lastPrice float64
-
-	if itemID > 0 {
-		_ = db.DB.Get(&defaultUOM, "SELECT default_uom FROM items WHERE id = ?", itemID)
-
-		// Get last receiving cost and price
-		var lastRec models.ReceivingLog
-		err := db.DB.Get(&lastRec, "SELECT cost, selling_price FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
-		if err == nil {
-			lastCost = lastRec.Cost
-			lastPrice = lastRec.SellingPrice
-		}
-	}
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if tab == "receiving" {
-		costVal := ""
-		if lastCost > 0 {
-			costVal = strconv.FormatFloat(lastCost, 'f', 2, 64)
-		}
-		priceVal := ""
-		if lastPrice > 0 {
-			priceVal = strconv.FormatFloat(lastPrice, 'f', 2, 64)
-		}
-
-		w.Write([]byte(`
-			<input type="text" id="receiving_uom" name="uom" value="` + defaultUOM + `" placeholder="e.g. BOX, PCS" class="form-input" required hx-swap-oob="true">
-			<input type="number" step="any" id="receiving_cost" name="cost" value="` + costVal + `" class="form-input" required hx-swap-oob="true">
-			<input type="number" step="any" id="receiving_unit_price" name="unit_price" value="` + priceVal + `" class="form-input" required hx-swap-oob="true">
-		`))
-	} else if tab == "adjustments" {
-		costVal := ""
-		if lastCost > 0 {
-			costVal = strconv.FormatFloat(lastCost, 'f', 2, 64)
-		}
-
-		w.Write([]byte(`
-			<input type="text" id="adjustments_uom" name="uom" value="` + defaultUOM + `" placeholder="e.g. PCS" class="form-input" required hx-swap-oob="true">
-			<input type="number" step="any" id="adjustments_cost" name="cost" value="` + costVal + `" class="form-input" required hx-swap-oob="true">
-		`))
-	}
-}
 

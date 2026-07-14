@@ -3,8 +3,15 @@
 {{ end }}
 
 {{ define "content" }}
+<div class="header-bar">
+    <h2 style="margin: 0;">Categories</h2>
+    <a href="/categories/new" hx-get="/categories/new" hx-target="#main-content" hx-push-url="true" class="btn" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
+        + Add Category
+    </a>
+</div>
+
 <div class="card">
-    <h2>Categories List</h2>
+    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Categories List</h3>
     
     <div class="search-filter-bar">
         <div class="flex-grow">
