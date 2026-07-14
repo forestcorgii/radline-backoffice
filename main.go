@@ -33,6 +33,8 @@ func main() {
 	
 	// Brands CRUD
 	http.HandleFunc("GET /brands", app.BrandsHandler)
+	http.HandleFunc("GET /brands/new", app.NewBrandPageHandler)
+	http.HandleFunc("GET /brands/select", app.SelectBrandsHandler)
 	http.HandleFunc("POST /brands/add", app.AddBrandHandler)
 	http.HandleFunc("GET /brands/edit/{id}", app.EditBrandFormHandler)
 	http.HandleFunc("POST /brands/edit/{id}", app.UpdateBrandHandler)
@@ -41,6 +43,8 @@ func main() {
 
 	// Categories CRUD
 	http.HandleFunc("GET /categories", app.CategoriesHandler)
+	http.HandleFunc("GET /categories/new", app.NewCategoryPageHandler)
+	http.HandleFunc("GET /categories/select", app.SelectCategoriesHandler)
 	http.HandleFunc("POST /categories/add", app.AddCategoryHandler)
 	http.HandleFunc("GET /categories/edit/{id}", app.EditCategoryFormHandler)
 	http.HandleFunc("POST /categories/edit/{id}", app.UpdateCategoryHandler)
@@ -49,6 +53,8 @@ func main() {
 
 	// Items CRUD
 	http.HandleFunc("GET /items", app.ItemsHandler)
+	http.HandleFunc("GET /items/new", app.NewItemPageHandler)
+	http.HandleFunc("GET /items/select", app.SelectItemsHandler)
 	http.HandleFunc("POST /items/add", app.AddItemHandler)
 	http.HandleFunc("GET /items/edit/{id}", app.EditItemFormHandler)
 	http.HandleFunc("POST /items/edit/{id}", app.UpdateItemHandler)
@@ -72,16 +78,10 @@ func main() {
 
 	// Sales Routing
 	http.HandleFunc("GET /sales", app.SalesHandler)
+	http.HandleFunc("GET /sales/new", app.NewSalesPageHandler)
 	http.HandleFunc("POST /sales/add", app.AddSalesHandler)
 	http.HandleFunc("GET /sales/new-row", app.NewSaleRowHandler)
 	http.HandleFunc("DELETE /sales/delete/{id}", app.DeleteSalesHandler)
-
-	// Data Entry Routes
-	http.HandleFunc("GET /entry", app.EntryHandler)
-	http.HandleFunc("GET /entry/select/brands", app.SelectBrandsHandler)
-	http.HandleFunc("GET /entry/select/categories", app.SelectCategoriesHandler)
-	http.HandleFunc("GET /entry/select/items", app.SelectItemsHandler)
-	http.HandleFunc("GET /entry/item-defaults", app.ItemDefaultsHandler)
 	http.HandleFunc("GET /sales/item-row-details", app.SaleItemRowDetailsHandler)
 
 	log.Println("Server starting on :8080...")
@@ -104,8 +104,8 @@ func parseTemplates() map[string]*template.Template {
 	pages := []string{
 		"dashboard.html", "brands.html", "categories.html", "items.html",
 		"inventory.html", "stock_receiving.html", "stock_adjustments.html",
-		"sales.html", "entry.html", "monthly_inventory.html",
-		"receiving_logs.html", "adjustment_logs.html",
+		"sales.html", "monthly_inventory.html", "receiving_logs.html", "adjustment_logs.html",
+		"brand_new.html", "category_new.html", "item_new.html", "sales_new.html",
 	}
 
 	for _, page := range pages {
@@ -125,8 +125,10 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/adjustment_rows.html", "templates/item_select.html", "templates/adjustment_item_row.html")
 		} else if page == "sales.html" {
 			files = append(files, "templates/sales_rows.html")
-		} else if page == "entry.html" {
-			files = append(files, "templates/brand_select.html", "templates/category_select.html", "templates/item_select.html", "templates/sale_item_row.html")
+		} else if page == "item_new.html" {
+			files = append(files, "templates/brand_select.html", "templates/category_select.html")
+		} else if page == "sales_new.html" {
+			files = append(files, "templates/item_select.html", "templates/sale_item_row.html")
 		} else if page == "monthly_inventory.html" {
 			files = append(files, "templates/monthly_inventory_rows.html")
 		} else if page == "receiving_logs.html" {

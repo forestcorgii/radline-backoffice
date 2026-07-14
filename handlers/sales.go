@@ -175,18 +175,26 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Sales logged successfully!"}}`)
+	w.Header().Set("HX-Location", "/sales")
+	w.WriteHeader(http.StatusOK)
+}
 
-	// Return updated table rows fragment
-	var sales []models.SalesDetailWithItem
-	_ = db.DB.Select(&sales, `
-		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
-		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost, s.profit,
-		       i.code as item_code
-		FROM sales_details s
-		JOIN items i ON s.item_id = i.id
-		ORDER BY s.doc_date DESC, s.id DESC
-	`)
-	app.Render(w, "sales_rows.html", sales)
+// NewSalesPageHandler renders the standalone sales encoding page
+func (app *App) NewSalesPageHandler(w http.ResponseWriter, r *http.Request) {
+	var items []models.Item
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+
+	data := struct {
+		Items        []models.Item
+		SalesRowData interface{}
+	}{
+		Items: items,
+		SalesRowData: map[string]interface{}{
+			"Items": items,
+		},
+	}
+
+	app.RenderPage(w, r, "sales_new.html", data)
 }
 
 // NewSaleRowHandler renders a single empty sale item row template
