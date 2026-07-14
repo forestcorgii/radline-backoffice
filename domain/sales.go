@@ -22,6 +22,7 @@ type SalesDetail struct {
 	Cost         float64
 	TotalCost    float64
 	Profit       float64
+	RefPL        string
 }
 
 // SaleItem represents an item line in a sale.
@@ -34,6 +35,7 @@ type SaleItem struct {
 	TotalSales float64
 	TotalCost  float64
 	Profit     float64
+	RefPL      string
 }
 
 // Sale represents a sale transaction aggregate.
@@ -96,6 +98,7 @@ func NewSale(docType, docStatus string, docDate time.Time, docNumber, customerNa
 			TotalSales: totalSales,
 			TotalCost:  totalCost,
 			Profit:     profit,
+			RefPL:      item.RefPL,
 		}
 	}
 
@@ -129,13 +132,14 @@ func (s Sale) ToSalesDetails() []SalesDetail {
 			Cost:         item.Cost,
 			TotalCost:    item.TotalCost,
 			Profit:       item.Profit,
+			RefPL:        item.RefPL,
 		}
 	}
 	return details
 }
 
 // NewSalesDetail creates a sales transaction, validating constraints and calculating total sales, cost, and profit.
-func NewSalesDetail(id int, docType, docStatus string, docDate time.Time, docNumber, customerName, supplier string, itemID int, qty float64, uom string, price, cost float64) (SalesDetail, error) {
+func NewSalesDetail(id int, docType, docStatus string, docDate time.Time, docNumber, customerName, supplier string, itemID int, qty float64, uom string, price, cost float64, refPL string) (SalesDetail, error) {
 	if docType == "" {
 		return SalesDetail{}, errors.New("doc type cannot be empty")
 	}
@@ -181,5 +185,6 @@ func NewSalesDetail(id int, docType, docStatus string, docDate time.Time, docNum
 		Cost:         cost,
 		TotalCost:    totalCost,
 		Profit:       profit,
+		RefPL:        refPL,
 	}, nil
 }

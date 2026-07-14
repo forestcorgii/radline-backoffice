@@ -103,6 +103,7 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	uoms := r.Form["uom"]
 	prices := r.Form["price"]
 	costs := r.Form["cost"]
+	refPLs := r.Form["ref_pl"]
 
 	if len(itemIDs) == 0 {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "At least one item is required."}}`)
@@ -110,7 +111,7 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(prices) || len(itemIDs) != len(costs) {
+	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(prices) || len(itemIDs) != len(costs) || len(itemIDs) != len(refPLs) {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Mismatch in item fields lengths."}}`)
 		http.Error(w, "Mismatch in item fields lengths", http.StatusBadRequest)
 		return
@@ -123,6 +124,7 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		price, err3 := strconv.ParseFloat(prices[i], 64)
 		cost, err4 := strconv.ParseFloat(costs[i], 64)
 		uom := uoms[i]
+		refPL := refPLs[i]
 
 		if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid numeric input in items."}}`)
@@ -136,6 +138,7 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 			UOM:    uom,
 			Price:  price,
 			Cost:   cost,
+			RefPL:  refPL,
 		})
 	}
 
@@ -157,9 +160,9 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	details := sale.ToSalesDetails()
 	for _, sd := range details {
 		_, err = tx.Exec(`
-			INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, profit)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, sd.DocType, sd.DocStatus, sd.DocDate, sd.DocNumber, sd.CustomerName, sd.Supplier, sd.ItemID, sd.Qty, sd.UOM, sd.Price, sd.TotalSales, sd.Cost, sd.TotalCost, sd.Profit)
+			INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, profit, ref_pl)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, sd.DocType, sd.DocStatus, sd.DocDate, sd.DocNumber, sd.CustomerName, sd.Supplier, sd.ItemID, sd.Qty, sd.UOM, sd.Price, sd.TotalSales, sd.Cost, sd.TotalCost, sd.Profit, sd.RefPL)
 		if err != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save sale detail."}}`)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -244,16 +247,29 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 
 	var defaultUOM string
 	var lastCost, lastPrice float64
+	var lastPLNo string
 
 	if itemID > 0 {
 		_ = db.DB.Get(&defaultUOM, "SELECT default_uom FROM items WHERE id = ?", itemID)
 
-		// Get last receiving cost and price
-		var lastRec models.ReceivingLog
-		err := db.DB.Get(&lastRec, "SELECT cost, selling_price FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
+		// Get oldest PL with stock available, fallback to last receiving cost and price
+		itemStock, err := models.FetchItemStock(db.DB, itemID)
 		if err == nil {
-			lastCost = lastRec.Cost
-			lastPrice = lastRec.SellingPrice
+			cost, price, plNo, found := itemStock.GetOldestPLWithStock()
+			if found {
+				lastCost = cost
+				lastPrice = price
+				lastPLNo = plNo
+			} else {
+				// Fallback to last receiving log
+				var lastRec models.ReceivingLog
+				err := db.DB.Get(&lastRec, "SELECT cost, selling_price, pl_no FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
+				if err == nil {
+					lastCost = lastRec.Cost
+					lastPrice = lastRec.SellingPrice
+					lastPLNo = lastRec.PLNo
+				}
+			}
 		}
 	}
 
@@ -263,5 +279,6 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 		"DefaultUOM":     defaultUOM,
 		"Cost":           lastCost,
 		"Price":          lastPrice,
+		"PLNo":           lastPLNo,
 	})
 }

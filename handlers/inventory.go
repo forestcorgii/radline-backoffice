@@ -24,7 +24,9 @@ func stockListQuery(search, stockFilter string) (string, []interface{}) {
 			COALESCE(r.total_received, 0) AS total_received,
 			COALESCE(s.total_sold, 0) AS total_sold,
 			COALESCE(a.total_adjusted, 0) AS total_adjusted,
-			(COALESCE(r.total_received, 0) - COALESCE(s.total_sold, 0) + COALESCE(a.total_adjusted, 0)) AS on_hand
+			(COALESCE(r.total_received, 0) - COALESCE(s.total_sold, 0) + COALESCE(a.total_adjusted, 0)) AS on_hand,
+			0.0 AS current_cost,
+			0.0 AS current_price
 		FROM items i
 		LEFT JOIN (
 			SELECT item_id, SUM(qty) AS total_received FROM receiving_logs GROUP BY item_id
@@ -69,6 +71,30 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 	query, args := stockListQuery(search, stockFilter)
 	var stockItems []models.ItemStockView
 	_ = db.DB.Select(&stockItems, query, args...)
+
+	// Populate CurrentCost and CurrentPrice using the oldest PL with stock available (with latest fallback)
+	for i := range stockItems {
+		itemStock, err := models.FetchItemStock(db.DB, stockItems[i].ItemID)
+		if err == nil {
+			cost, price, _, found := itemStock.GetOldestPLWithStock()
+			if found {
+				stockItems[i].CurrentCost = cost
+				stockItems[i].CurrentPrice = price
+			} else {
+				// Fallback to the latest receiving log's cost and price
+				if len(itemStock.ReceivingLogs) > 0 {
+					latestLog := itemStock.ReceivingLogs[0]
+					for _, rl := range itemStock.ReceivingLogs {
+						if rl.Date.After(latestLog.Date) || (rl.Date.Equal(latestLog.Date) && rl.ID > latestLog.ID) {
+							latestLog = rl
+						}
+					}
+					stockItems[i].CurrentCost = latestLog.Cost
+					stockItems[i].CurrentPrice = latestLog.SellingPrice
+				}
+			}
+		}
+	}
 
 	// If HTMX request for filtering, return just the rows fragment
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {

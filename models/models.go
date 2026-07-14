@@ -94,6 +94,7 @@ type SalesDetail struct {
 	Cost         float64   `db:"cost"`
 	TotalCost    float64   `db:"total_cost"`
 	Profit       float64   `db:"profit"`
+	RefPL        *string   `db:"ref_pl"`
 }
 
 type SalesDetailWithItem struct {
@@ -113,6 +114,7 @@ type SalesDetailWithItem struct {
 	TotalCost    float64   `db:"total_cost"`
 	Profit       float64   `db:"profit"`
 	ItemCode     string    `db:"item_code"`
+	RefPL        *string   `db:"ref_pl"`
 }
 
 type InventoryAdjustment struct {
@@ -148,5 +150,7 @@ type ItemStockView struct {
 	TotalSold     float64 `db:"total_sold"`
 	TotalAdjusted float64 `db:"total_adjusted"`
 	OnHand        float64 `db:"on_hand"`
+	CurrentCost   float64 `db:"current_cost"`
+	CurrentPrice  float64 `db:"current_price"`
 }
 
