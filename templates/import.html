@@ -1,0 +1,102 @@
+{{ define "import.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="card">
+    <h2 class="mb-4">Excel Data Import</h2>
+    <p class="text-muted mb-4" style="font-size: 0.875rem;">
+        Upload your Excel master spreadsheet (e.g. <code>Copy of RADLINE REPORT - BACKUP 6_13_26.xlsx</code>) to import your data into the system.
+    </p>
+
+    <form hx-post="/import/upload" 
+          hx-encoding="multipart/form-data" 
+          hx-target="#import-result" 
+          hx-indicator="#import-indicator"
+          style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
+        <!-- File Input -->
+        <div class="form-group">
+            <label for="excel-file" style="font-weight: 500; display: block; margin-bottom: 0.5rem;">Select Excel File (.xlsx)</label>
+            <input type="file" id="excel-file" name="file" accept=".xlsx" required 
+                   style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--surface-color); font-size: 0.875rem;">
+        </div>
+
+        <!-- Sheet selection checkboxes -->
+        <div>
+            <h3 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--text-main);">Sheets to Import</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                    <input type="checkbox" name="import_brands" value="true" checked>
+                    <span>Brands (Sheet: <strong>BRAND</strong>)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                    <input type="checkbox" name="import_categories" value="true" checked>
+                    <span>Categories (Sheet: <strong>CATEGORY</strong>)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                    <input type="checkbox" name="import_items" value="true" checked>
+                    <span>Items (Sheet: <strong>ITEM LIST</strong>)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                    <input type="checkbox" name="import_uoms" value="true" checked>
+                    <span>UOM Settings (Sheet: <strong>UOM SETTINGS</strong>)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                    <input type="checkbox" name="import_receiving" value="true" checked>
+                    <span>Stock Receiving (Sheet: <strong>RECEIVING</strong>)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                    <input type="checkbox" name="import_sales" value="true" checked>
+                    <span>Sales Details (Sheet: <strong>SALES DETAIL</strong>)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; cursor: pointer;">
+                    <input type="checkbox" name="import_adjustments" value="true" checked>
+                    <span>Stock Adjustments (Sheet: <strong>INV. ADJUSTMENT LOG</strong>)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Danger Zone: Clear existing data -->
+        <div style="border: 1px solid #fecaca; background: #fff5f5; border-radius: 6px; padding: 1rem; margin-top: 0.5rem;">
+            <h4 style="color: #dc2626; font-size: 0.875rem; margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.25rem;">
+                ⚠️ Warning / Caution
+            </h4>
+            <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.875rem; cursor: pointer; color: #7f1d1d;">
+                <input type="checkbox" name="clear_existing" value="true" style="margin-top: 0.2rem;">
+                <div>
+                    <strong>Clear existing data before importing</strong>
+                    <div style="font-size: 0.75rem; color: #991b1b; margin-top: 0.15rem;">
+                        This will permanently delete all brands, categories, items, receiving logs, sales details, and adjustments in the database before starting the import. Use with caution!
+                    </div>
+                </div>
+            </label>
+        </div>
+
+        <!-- Actions and loading state -->
+        <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+            <button type="submit" class="btn">Upload and Import</button>
+            <div id="import-indicator" class="htmx-indicator" style="display: none; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-muted);">
+                <div class="spinner" style="width: 16px; height: 16px; border: 2px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <span>Uploading and importing data... Please wait.</span>
+            </div>
+        </div>
+    </form>
+
+    <!-- Import Result Container -->
+    <div id="import-result" class="mt-4"></div>
+</div>
+
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .htmx-request .htmx-indicator {
+        display: inline-flex !important;
+    }
+    .htmx-request button[type="submit"] {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+</style>
+{{ end }}
