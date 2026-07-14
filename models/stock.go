@@ -122,9 +122,13 @@ func CalculateStockOnHand(db *sqlx.DB, itemID int, supplierName string) (float64
 	// Map to domain.InventoryAdjustment
 	var dAdjustments []domain.InventoryAdjustment
 	for _, a := range dbAdjustments {
+		adjID := 0
+		if a.AdjustmentID != nil {
+			adjID = *a.AdjustmentID
+		}
 		da, errA := domain.NewInventoryAdjustment(
 			a.ID,
-			a.AdjustmentID,
+			adjID,
 			a.Date,
 			a.ItemID,
 			a.UOM,

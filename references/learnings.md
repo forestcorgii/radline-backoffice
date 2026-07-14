@@ -153,3 +153,16 @@
 - **Post-Submission Redirect (HX-Location)**: Rather than rendering inline list updates or leaving the user on a blank form, handlers set the `HX-Trigger` for the toast notification and use `HX-Location` (e.g. `w.Header().Set("HX-Location", "/brands")`) to redirect the user back to the list page upon successful submission.
 - **Dynamic Select Autocomplete Refresh**: Maintained HTMX event listeners (e.g. `hx-trigger="brand-added from:body"`) on selection dropdowns to fetch updated select components (e.g. `/brands/select`) dynamically whenever a dependency object is created elsewhere.
 - **Purge Obsolete Pages**: Deleted the legacy `entry.html` template, removed the `Data Entry` sidebar nav link, and registered the new pages in `main.go`.
+
+## Context: Timezone-Safe SQLite Date Extraction
+**Problem**: In SQLite, using `strftime('%Y-%m', date)` on ISO-8601 strings containing timezone offsets (e.g. `+08:00` or `Z`) can return `NULL` or empty, causing database scan errors in Go (e.g. `converting NULL to string is unsupported`).
+**Enforced Solution**:
+- Replace `strftime('%Y-%m', date_column)` with `substr(date_column, 1, 7)` in SQLite queries where YYYY-MM extraction is required. Since ISO-8601 datetimes consistently begin with `YYYY-MM-DD`, substring extraction is timezone-safe, parsing-independent, and extremely robust.
+
+## Context: Nullable Foreign Key DTO Scans
+**Problem**: Database query scans into struct fields (like `adjustment_id` or `brand_id`) fail with `converting NULL to int is unsupported` when records contain `NULL` for those columns (e.g. legacy adjustments without headers).
+**Enforced Solution**:
+- Define database-mapped DTO fields that can be `NULL` as pointer types (e.g. `AdjustmentID *int` instead of `int`).
+- Safely dereference them in mapper layers (e.g., in `models/stock.go`) before constructing pure domain objects (which require concrete, non-pointer types like `int`).
+- Pointers to standard types are automatically dereferenced in Go's `html/template` package when rendered.
+

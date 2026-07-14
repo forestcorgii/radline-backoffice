@@ -452,11 +452,11 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 			SUM(t.adjusted) AS qty_adjusted,
 			(SUM(t.received) - SUM(t.sold) + SUM(t.adjusted)) AS net_change
 		FROM (
-			SELECT strftime('%Y-%m', date) AS month, item_id, qty AS received, 0.0 AS sold, 0.0 AS adjusted FROM receiving_logs
+			SELECT substr(date, 1, 7) AS month, item_id, qty AS received, 0.0 AS sold, 0.0 AS adjusted FROM receiving_logs
 			UNION ALL
-			SELECT strftime('%Y-%m', doc_date) AS month, item_id, 0.0 AS received, qty AS sold, 0.0 AS adjusted FROM sales_details
+			SELECT substr(doc_date, 1, 7) AS month, item_id, 0.0 AS received, qty AS sold, 0.0 AS adjusted FROM sales_details
 			UNION ALL
-			SELECT strftime('%Y-%m', date) AS month, item_id, 0.0 AS received, 0.0 AS sold, adjustment_qty AS adjusted FROM inventory_adjustments
+			SELECT substr(date, 1, 7) AS month, item_id, 0.0 AS received, 0.0 AS sold, adjustment_qty AS adjusted FROM inventory_adjustments
 		) t
 		JOIN items i ON t.item_id = i.id
 	`
@@ -502,11 +502,11 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 	// Get list of unique months for the filter dropdown
 	var months []string
 	_ = db.DB.Select(&months, `
-		SELECT DISTINCT strftime('%Y-%m', date) as m FROM receiving_logs WHERE date IS NOT NULL
+		SELECT DISTINCT substr(date, 1, 7) as m FROM receiving_logs WHERE date IS NOT NULL
 		UNION
-		SELECT DISTINCT strftime('%Y-%m', doc_date) as m FROM sales_details WHERE doc_date IS NOT NULL
+		SELECT DISTINCT substr(doc_date, 1, 7) as m FROM sales_details WHERE doc_date IS NOT NULL
 		UNION
-		SELECT DISTINCT strftime('%Y-%m', date) as m FROM inventory_adjustments WHERE date IS NOT NULL
+		SELECT DISTINCT substr(date, 1, 7) as m FROM inventory_adjustments WHERE date IS NOT NULL
 		ORDER BY m DESC
 	`)
 

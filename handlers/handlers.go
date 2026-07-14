@@ -73,7 +73,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	var trend []MonthlyTrend
 	err = db.DB.Select(&trend, `
-		SELECT strftime('%Y-%m', doc_date) as month, 
+		SELECT substr(doc_date, 1, 7) as month, 
 		       COALESCE(SUM(total_sales), 0.0) as sales, 
 		       COALESCE(SUM(profit), 0.0) as profit
 		FROM sales_details
