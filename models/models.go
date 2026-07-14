@@ -117,7 +117,7 @@ type SalesDetailWithItem struct {
 
 type InventoryAdjustment struct {
 	ID            int       `db:"id"`
-	AdjustmentID  int       `db:"adjustment_id"`
+	AdjustmentID  *int      `db:"adjustment_id"`
 	Date          time.Time `db:"date"`
 	ItemID        int       `db:"item_id"`
 	UOM           string    `db:"uom"`
@@ -128,7 +128,7 @@ type InventoryAdjustment struct {
 
 type InventoryAdjustmentWithItem struct {
 	ID            int       `db:"id"`
-	AdjustmentID  int       `db:"adjustment_id"`
+	AdjustmentID  *int      `db:"adjustment_id"`
 	Date          time.Time `db:"date"`
 	ItemID        int       `db:"item_id"`
 	UOM           string    `db:"uom"`
