@@ -210,7 +210,15 @@
 - **Batch Querying**: Implement batch loader functions (e.g. `FetchItemsStockBatch(db, itemIDs)`) that execute single SQL `IN (?)` queries across all needed tables rather than executing separate queries per row loop.
 - **Database Indexing**: Add standard indices on search text fields (e.g., `code`) and foreign key columns (`item_id`, `adjustment_id`) in SQLite schema definition to prevent full table scans on group by / filter queries.
 
-
-
-
-
+## Context: Conditional HTMX Out-of-Band (OOB) Swaps for SPA Page Transitions
+**Problem**: Marking elements (like a pagination block) with `hx-swap-oob="true"` globally causes HTMX to discard those elements when they are returned as part of a layout transition request targeting `#main-content`, because the target ID of the OOB element does not exist in the DOM before the swap.
+**Enforced Solution**:
+- **Conditional hx-swap-oob**: Use a boolean flag like `IsOOB` in the view data. Render `hx-swap-oob="true"` in the template conditionally:
+  ```html
+  <div id="{{ .TargetID }}-pagination" class="pagination-root"{{ if .IsOOB }} hx-swap-oob="true"{{ end }}>
+  ```
+- **Automatic Request Detection**: Set `IsOOB` dynamically in the view builder function (e.g. `BuildView` or handler mapping) by checking:
+  ```go
+  isOOB := r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content"
+  ```
+  This ensures the element renders as a standard inline component during full page loads and sidebar clicks (targeting `main-content`), while correctly acting as an OOB swap element during inline search, filtering, and page-change updates.

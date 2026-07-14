@@ -30,7 +30,7 @@ func main() {
 
 	// Routes
 	http.HandleFunc("/", app.DashboardHandler)
-	
+
 	// Brands CRUD
 	http.HandleFunc("GET /brands", app.BrandsHandler)
 	http.HandleFunc("GET /brands/new", app.NewBrandPageHandler)
@@ -141,7 +141,7 @@ func parseTemplates() map[string]*template.Template {
 		} else if page == "adjustment_logs.html" {
 			files = append(files, "templates/adjustment_rows.html")
 		}
-		
+
 		t = template.Must(t.ParseFiles(files...))
 		templates[page] = t
 	}
@@ -150,10 +150,13 @@ func parseTemplates() map[string]*template.Template {
 		"brand_row.html", "brand_rows.html", "brand_edit_row.html",
 		"category_row.html", "category_rows.html", "category_edit_row.html",
 		"item_row.html", "item_rows.html", "item_edit_row.html",
-		"receiving_logs.html", "receiving_rows.html", "adjustment_rows.html", "sales_rows.html", "inventory_stock_rows.html",
+		"receiving_rows.html", "adjustment_rows.html", "sales_rows.html", "inventory_stock_rows.html",
 		"brand_select.html", "category_select.html", "item_select.html",
 		"sale_item_row.html", "receiving_item_row.html", "adjustment_item_row.html",
 		"monthly_inventory_rows.html", "pagination.html",
+		"brands_results.html", "categories_results.html", "items_results.html",
+		"inventory_stock_results.html", "sales_results.html", "monthly_inventory_results.html",
+		"receiving_logs_results.html", "adjustment_logs_results.html",
 	}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)
@@ -164,6 +167,22 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/category_row.html")
 		} else if frag == "item_rows.html" {
 			files = append(files, "templates/item_row.html")
+		} else if frag == "brands_results.html" {
+			files = append(files, "templates/brand_row.html", "templates/brand_rows.html", "templates/pagination.html")
+		} else if frag == "categories_results.html" {
+			files = append(files, "templates/category_row.html", "templates/category_rows.html", "templates/pagination.html")
+		} else if frag == "items_results.html" {
+			files = append(files, "templates/item_row.html", "templates/item_rows.html", "templates/pagination.html")
+		} else if frag == "inventory_stock_results.html" {
+			files = append(files, "templates/inventory_stock_rows.html", "templates/pagination.html")
+		} else if frag == "sales_results.html" {
+			files = append(files, "templates/sales_rows.html", "templates/pagination.html")
+		} else if frag == "monthly_inventory_results.html" {
+			files = append(files, "templates/monthly_inventory_rows.html", "templates/pagination.html")
+		} else if frag == "receiving_logs_results.html" {
+			files = append(files, "templates/receiving_rows.html", "templates/pagination.html")
+		} else if frag == "adjustment_logs_results.html" {
+			files = append(files, "templates/adjustment_rows.html", "templates/pagination.html")
 		}
 		t = template.Must(t.ParseFiles(files...))
 		templates[frag] = t

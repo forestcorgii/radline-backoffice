@@ -25,6 +25,38 @@ func (app *App) Render(w http.ResponseWriter, name string, data interface{}) {
 	}
 }
 
+// RenderFragment renders two template fragments in a single response.
+// It writes an HTML comment first to prevent HTMX's makeFragment from
+// wrapping <tr>-based fragments in <table><tbody>, which would corrupt
+// any OOB swap elements (like pagination) that follow.
+func (app *App) RenderFragment(w http.ResponseWriter, first, second string, data1, data2 interface{}) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	t1, ok := app.Templates[first]
+	if !ok {
+		http.Error(w, "Template not found: "+first, http.StatusInternalServerError)
+		return
+	}
+	t2, ok := app.Templates[second]
+	if !ok {
+		http.Error(w, "Template not found: "+second, http.StatusInternalServerError)
+		return
+	}
+	// Write a comment so the response doesn't start with <tr>,
+	// which would cause HTMX's makeFragment to wrap aggressively.
+	// This ensures any OOB swap elements (like the <div> in pagination)
+	// are properly parsed as siblings rather than being trapped inside <tbody>.
+	w.Write([]byte("<!-- htmx-fragment -->"))
+	err := t1.ExecuteTemplate(w, first, data1)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = t2.ExecuteTemplate(w, second, data2)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func (app *App) RenderPage(w http.ResponseWriter, r *http.Request, name string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if r.Header.Get("HX-Request") == "true" {
@@ -69,8 +101,8 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch trend data
 	type MonthlyTrend struct {
-		Month string  `db:"month"`
-		Sales float64 `db:"sales"`
+		Month  string  `db:"month"`
+		Sales  float64 `db:"sales"`
 		Profit float64 `db:"profit"`
 	}
 	var trend []MonthlyTrend

@@ -50,9 +50,8 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := GetPageParam(r)
-	pageSize := 100
-	pagination := NewPagination(page, pageSize, totalRecords)
+	params := GetPaginationParams(r)
+	pagination := BuildPagination(params, totalRecords)
 
 	query := baseQuery
 	switch sort {
@@ -66,7 +65,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 		query += " ORDER BY s.doc_date DESC, s.id DESC"
 	}
 	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
+	selectArgs := append(args, params.PageSize, params.Offset())
 
 	var sales []models.SalesDetailWithItem
 	err = db.DB.Select(&sales, query, selectArgs...)
@@ -75,17 +74,18 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	paginationView := PaginationView{
-		Pagination: pagination,
-		Path:       "/sales",
-		Target:     "#sales-tbody",
-		TargetID:   "sales",
-		Include:    "[name='search'],[name='supplier_filter'],[name='sort']",
-	}
+	paginationView := pagination.BuildView("/sales", "#sales-results", "sales",
+		[]string{"search", "supplier_filter", "sort"}, r)
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
-		app.Render(w, "sales_rows.html", sales)
-		app.Render(w, "pagination.html", paginationView)
+		data := struct {
+			Sales          []models.SalesDetailWithItem
+			PaginationView PaginationView
+		}{
+			Sales:          sales,
+			PaginationView: paginationView,
+		}
+		app.Render(w, "sales_results.html", data)
 	} else {
 		var items []models.Item
 		_ = db.DB.Select(&items, "SELECT * FROM items ORDER BY code ASC")
@@ -279,23 +279,43 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 	if itemID > 0 {
 		_ = db.DB.Get(&defaultUOM, "SELECT default_uom FROM items WHERE id = ?", itemID)
 
-		// Get oldest PL with stock available, fallback to last receiving cost and price
-		itemStock, err := models.FetchItemStock(db.DB, itemID)
+		// Get oldest PL with stock available using a single efficient SQL query
+		// This replaces the old approach of loading ALL transactions into memory via FetchItemStock
+		type CostPriceResult struct {
+			Cost         float64 `db:"cost"`
+			SellingPrice float64 `db:"selling_price"`
+			PLNo         string  `db:"pl_no"`
+		}
+		var result CostPriceResult
+		err := db.DB.Get(&result, `
+			WITH item_stats AS (
+				SELECT
+					COALESCE((SELECT SUM(r.qty) FROM receiving_logs r WHERE r.item_id = ?), 0) AS total_received,
+					COALESCE((SELECT SUM(s.qty) FROM sales_details s WHERE s.item_id = ?), 0) AS total_sold,
+					COALESCE((SELECT SUM(a.adjustment_qty) FROM inventory_adjustments a WHERE a.item_id = ?), 0) AS total_adjusted
+			),
+			oh AS (SELECT (total_received - total_sold + total_adjusted) AS on_hand FROM item_stats)
+			SELECT r.cost, r.selling_price, r.pl_no
+			FROM receiving_logs r, oh
+			WHERE r.item_id = ? AND oh.on_hand > 0
+			  AND (SELECT COALESCE(SUM(r2.qty), 0) FROM receiving_logs r2
+			       WHERE r2.item_id = ? AND (r2.date < r.date OR (r2.date = r.date AND r2.id < r.id)))
+			      < (SELECT COALESCE(SUM(s.qty), 0) FROM sales_details s WHERE s.item_id = ?)
+			ORDER BY r.date ASC, r.id ASC
+			LIMIT 1
+		`, itemID, itemID, itemID, itemID, itemID, itemID)
 		if err == nil {
-			cost, price, plNo, found := itemStock.GetOldestPLWithStock()
-			if found {
-				lastCost = cost
-				lastPrice = price
-				lastPLNo = plNo
-			} else {
-				// Fallback to last receiving log
-				var lastRec models.ReceivingLog
-				err := db.DB.Get(&lastRec, "SELECT cost, selling_price, pl_no FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
-				if err == nil {
-					lastCost = lastRec.Cost
-					lastPrice = lastRec.SellingPrice
-					lastPLNo = lastRec.PLNo
-				}
+			lastCost = result.Cost
+			lastPrice = result.SellingPrice
+			lastPLNo = result.PLNo
+		} else {
+			// Fallback to last receiving log
+			var lastRec models.ReceivingLog
+			err := db.DB.Get(&lastRec, "SELECT cost, selling_price, pl_no FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
+			if err == nil {
+				lastCost = lastRec.Cost
+				lastPrice = lastRec.SellingPrice
+				lastPLNo = lastRec.PLNo
 			}
 		}
 	}

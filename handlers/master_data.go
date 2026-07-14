@@ -49,9 +49,8 @@ func (app *App) BrandsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := GetPageParam(r)
-	pageSize := 100
-	pagination := NewPagination(page, pageSize, totalRecords)
+	params := GetPaginationParams(r)
+	pagination := BuildPagination(params, totalRecords)
 
 	switch sort {
 	case "code_desc":
@@ -69,7 +68,7 @@ func (app *App) BrandsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
+	selectArgs := append(args, params.PageSize, params.Offset())
 
 	var brands []models.Brand
 	err = db.DB.Select(&brands, query, selectArgs...)
@@ -78,17 +77,18 @@ func (app *App) BrandsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	paginationView := PaginationView{
-		Pagination: pagination,
-		Path:       "/brands",
-		Target:     "#brands-tbody",
-		TargetID:   "brands",
-		Include:    "[name='search'],[name='filter'],[name='sort']",
-	}
+	paginationView := pagination.BuildView("/brands", "#brands-results", "brands",
+		[]string{"search", "filter", "sort"}, r)
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
-		app.Render(w, "brand_rows.html", brands)
-		app.Render(w, "pagination.html", paginationView)
+		data := struct {
+			Brands         []models.Brand
+			PaginationView PaginationView
+		}{
+			Brands:         brands,
+			PaginationView: paginationView,
+		}
+		app.Render(w, "brands_results.html", data)
 	} else {
 		data := struct {
 			Brands         []models.Brand
@@ -276,9 +276,8 @@ func (app *App) CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := GetPageParam(r)
-	pageSize := 100
-	pagination := NewPagination(page, pageSize, totalRecords)
+	params := GetPaginationParams(r)
+	pagination := BuildPagination(params, totalRecords)
 
 	switch sort {
 	case "code_desc":
@@ -296,7 +295,7 @@ func (app *App) CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
+	selectArgs := append(args, params.PageSize, params.Offset())
 
 	var categories []models.Category
 	err = db.DB.Select(&categories, query, selectArgs...)
@@ -305,17 +304,18 @@ func (app *App) CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	paginationView := PaginationView{
-		Pagination: pagination,
-		Path:       "/categories",
-		Target:     "#categories-tbody",
-		TargetID:   "categories",
-		Include:    "[name='search'],[name='filter'],[name='sort']",
-	}
+	paginationView := pagination.BuildView("/categories", "#categories-results", "categories",
+		[]string{"search", "filter", "sort"}, r)
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
-		app.Render(w, "category_rows.html", categories)
-		app.Render(w, "pagination.html", paginationView)
+		data := struct {
+			Categories     []models.Category
+			PaginationView PaginationView
+		}{
+			Categories:     categories,
+			PaginationView: paginationView,
+		}
+		app.Render(w, "categories_results.html", data)
 	} else {
 		data := struct {
 			Categories     []models.Category
@@ -511,9 +511,8 @@ func (app *App) ItemsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := GetPageParam(r)
-	pageSize := 100
-	pagination := NewPagination(page, pageSize, totalRecords)
+	params := GetPaginationParams(r)
+	pagination := BuildPagination(params, totalRecords)
 
 	switch sort {
 	case "code_desc":
@@ -527,7 +526,7 @@ func (app *App) ItemsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
+	selectArgs := append(args, params.PageSize, params.Offset())
 
 	var items []models.ItemWithRelations
 	err = db.DB.Select(&items, query, selectArgs...)
@@ -536,17 +535,18 @@ func (app *App) ItemsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	paginationView := PaginationView{
-		Pagination: pagination,
-		Path:       "/items",
-		Target:     "#items-tbody",
-		TargetID:   "items",
-		Include:    "[name='search'],[name='brand_id_filter'],[name='category_id_filter'],[name='sort']",
-	}
+	paginationView := pagination.BuildView("/items", "#items-results", "items",
+		[]string{"search", "brand_id_filter", "category_id_filter", "sort"}, r)
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
-		app.Render(w, "item_rows.html", items)
-		app.Render(w, "pagination.html", paginationView)
+		data := struct {
+			Items          []models.ItemWithRelations
+			PaginationView PaginationView
+		}{
+			Items:          items,
+			PaginationView: paginationView,
+		}
+		app.Render(w, "items_results.html", data)
 	} else {
 		var brands []models.Brand
 		_ = db.DB.Select(&brands, "SELECT * FROM brands ORDER BY name ASC")
@@ -824,6 +824,3 @@ func (app *App) SelectItemsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	app.Render(w, "item_select.html", items)
 }
-
-
-
