@@ -18,6 +18,7 @@ func (app *App) Render(w http.ResponseWriter, name string, data interface{}) {
 		http.Error(w, "Template not found: "+name, http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	err := t.ExecuteTemplate(w, name, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -25,6 +26,7 @@ func (app *App) Render(w http.ResponseWriter, name string, data interface{}) {
 }
 
 func (app *App) RenderPage(w http.ResponseWriter, r *http.Request, name string, data interface{}) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if r.Header.Get("HX-Request") == "true" {
 		t, ok := app.Templates[name]
 		if !ok {

@@ -17,7 +17,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	supplierFilter := r.URL.Query().Get("supplier_filter")
 	sort := r.URL.Query().Get("sort") // date_desc, date_asc, sales_desc, profit_desc
 
-	query := `
+	baseQuery := `
 		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
 		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost, s.profit,
 		       i.code as item_code
@@ -38,9 +38,23 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(whereClauses) > 0 {
-		query += " WHERE " + strings.Join(whereClauses, " AND ")
+		baseQuery += " WHERE " + strings.Join(whereClauses, " AND ")
 	}
 
+	// Count total records
+	countQuery := "SELECT COUNT(*) FROM (" + baseQuery + ")"
+	var totalRecords int
+	err := db.DB.Get(&totalRecords, countQuery, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	page := GetPageParam(r)
+	pageSize := 100
+	pagination := NewPagination(page, pageSize, totalRecords)
+
+	query := baseQuery
 	switch sort {
 	case "date_asc":
 		query += " ORDER BY s.doc_date ASC, s.id ASC"
@@ -51,26 +65,39 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	default: // date_desc or empty
 		query += " ORDER BY s.doc_date DESC, s.id DESC"
 	}
+	query += " LIMIT ? OFFSET ?"
+	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
 
 	var sales []models.SalesDetailWithItem
-	err := db.DB.Select(&sales, query, args...)
+	err = db.DB.Select(&sales, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	paginationView := PaginationView{
+		Pagination: pagination,
+		Path:       "/sales",
+		Target:     "#sales-tbody",
+		TargetID:   "sales",
+		Include:    "[name='search'],[name='supplier_filter'],[name='sort']",
+	}
+
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		app.Render(w, "sales_rows.html", sales)
+		app.Render(w, "pagination.html", paginationView)
 	} else {
 		var items []models.Item
 		_ = db.DB.Select(&items, "SELECT * FROM items ORDER BY code ASC")
 
 		data := struct {
-			Sales []models.SalesDetailWithItem
-			Items []models.Item
+			Sales          []models.SalesDetailWithItem
+			Items          []models.Item
+			PaginationView PaginationView
 		}{
-			Sales: sales,
-			Items: items,
+			Sales:          sales,
+			Items:          items,
+			PaginationView: paginationView,
 		}
 		app.RenderPage(w, r, "sales.html", data)
 	}

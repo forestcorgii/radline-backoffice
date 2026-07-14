@@ -189,6 +189,16 @@ func createSchema() {
 		FOREIGN KEY(adjustment_id) REFERENCES stock_adjustments(id),
 		FOREIGN KEY(item_id) REFERENCES items(id)
 	);
+
+	CREATE INDEX IF NOT EXISTS idx_items_code ON items(code);
+	CREATE INDEX IF NOT EXISTS idx_uom_settings_item_id ON uom_settings(item_id);
+	CREATE INDEX IF NOT EXISTS idx_receiving_logs_item_id ON receiving_logs(item_id);
+	CREATE INDEX IF NOT EXISTS idx_receiving_logs_date ON receiving_logs(date);
+	CREATE INDEX IF NOT EXISTS idx_sales_details_item_id ON sales_details(item_id);
+	CREATE INDEX IF NOT EXISTS idx_sales_details_doc_date ON sales_details(doc_date);
+	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_item_id ON inventory_adjustments(item_id);
+	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_date ON inventory_adjustments(date);
+	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_adj_id ON inventory_adjustments(adjustment_id);
 	`
 	_, err := DB.Exec(schema)
 	if err != nil {

@@ -69,43 +69,75 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 	stockFilter := r.URL.Query().Get("stock_filter")
 
 	query, args := stockListQuery(search, stockFilter)
-	var stockItems []models.ItemStockView
-	_ = db.DB.Select(&stockItems, query, args...)
 
-	// Populate CurrentCost and CurrentPrice using the oldest PL with stock available (with latest fallback)
-	for i := range stockItems {
-		itemStock, err := models.FetchItemStock(db.DB, stockItems[i].ItemID)
+	// Count total records matching search/filters
+	countQuery := "SELECT COUNT(*) FROM (" + query + ")"
+	var totalRecords int
+	_ = db.DB.Get(&totalRecords, countQuery, args...)
+
+	page := GetPageParam(r)
+	pageSize := 100
+	pagination := NewPagination(page, pageSize, totalRecords)
+
+	query += " LIMIT ? OFFSET ?"
+	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
+
+	var stockItems []models.ItemStockView
+	_ = db.DB.Select(&stockItems, query, selectArgs...)
+
+	// Populate CurrentCost and CurrentPrice in batch using the oldest PL with stock available (with latest fallback)
+	if len(stockItems) > 0 {
+		itemIDs := make([]int, len(stockItems))
+		for i, si := range stockItems {
+			itemIDs[i] = si.ItemID
+		}
+		stocksBatch, err := models.FetchItemsStockBatch(db.DB, itemIDs)
 		if err == nil {
-			cost, price, _, found := itemStock.GetOldestPLWithStock()
-			if found {
-				stockItems[i].CurrentCost = cost
-				stockItems[i].CurrentPrice = price
-			} else {
-				// Fallback to the latest receiving log's cost and price
-				if len(itemStock.ReceivingLogs) > 0 {
-					latestLog := itemStock.ReceivingLogs[0]
-					for _, rl := range itemStock.ReceivingLogs {
-						if rl.Date.After(latestLog.Date) || (rl.Date.Equal(latestLog.Date) && rl.ID > latestLog.ID) {
-							latestLog = rl
+			for i := range stockItems {
+				if itemStock, exists := stocksBatch[stockItems[i].ItemID]; exists {
+					cost, price, _, found := itemStock.GetOldestPLWithStock()
+					if found {
+						stockItems[i].CurrentCost = cost
+						stockItems[i].CurrentPrice = price
+					} else {
+						// Fallback to the latest receiving log's cost and price
+						if len(itemStock.ReceivingLogs) > 0 {
+							latestLog := itemStock.ReceivingLogs[0]
+							for _, rl := range itemStock.ReceivingLogs {
+								if rl.Date.After(latestLog.Date) || (rl.Date.Equal(latestLog.Date) && rl.ID > latestLog.ID) {
+									latestLog = rl
+								}
+							}
+							stockItems[i].CurrentCost = latestLog.Cost
+							stockItems[i].CurrentPrice = latestLog.SellingPrice
 						}
 					}
-					stockItems[i].CurrentCost = latestLog.Cost
-					stockItems[i].CurrentPrice = latestLog.SellingPrice
 				}
 			}
 		}
 	}
 
-	// If HTMX request for filtering, return just the rows fragment
+	paginationView := PaginationView{
+		Pagination: pagination,
+		Path:       "/inventory/stock",
+		Target:     "#inventory-stock-tbody",
+		TargetID:   "inventory",
+		Include:    "[name='search'],[name='stock_filter']",
+	}
+
+	// If HTMX request for filtering, return just the rows fragment and pagination
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		app.Render(w, "inventory_stock_rows.html", stockItems)
+		app.Render(w, "pagination.html", paginationView)
 		return
 	}
 
 	data := struct {
-		StockItems []models.ItemStockView
+		StockItems     []models.ItemStockView
+		PaginationView PaginationView
 	}{
-		StockItems: stockItems,
+		StockItems:     stockItems,
+		PaginationView: paginationView,
 	}
 	app.RenderPage(w, r, "inventory.html", data)
 }
@@ -504,7 +536,23 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += " GROUP BY t.month, t.item_id ORDER BY t.month DESC, i.code ASC"
+	query += " GROUP BY t.month, t.item_id"
+
+	// Count total records matching search/filters
+	countQuery := "SELECT COUNT(*) FROM (" + query + ")"
+	var totalRecords int
+	err := db.DB.Get(&totalRecords, countQuery, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	page := GetPageParam(r)
+	pageSize := 100
+	pagination := NewPagination(page, pageSize, totalRecords)
+
+	query += " ORDER BY t.month DESC, i.code ASC LIMIT ? OFFSET ?"
+	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
 
 	type MonthlyInventoryRow struct {
 		Month        string  `db:"month"`
@@ -519,7 +567,7 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var rows []MonthlyInventoryRow
-	err := db.DB.Select(&rows, query, args...)
+	err = db.DB.Select(&rows, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -536,20 +584,31 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 		ORDER BY m DESC
 	`)
 
-	// If HTMX request for content filter, only render the table rows fragment
+	paginationView := PaginationView{
+		Pagination: pagination,
+		Path:       "/inventory/monthly",
+		Target:     "#monthly-inventory-tbody",
+		TargetID:   "monthly-inventory",
+		Include:    "[name='search'],[name='month_filter']",
+	}
+
+	// If HTMX request for content filter, only render the table rows fragment and pagination
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		app.Render(w, "monthly_inventory_rows.html", rows)
+		app.Render(w, "pagination.html", paginationView)
 		return
 	}
 
 	data := struct {
-		Rows        []MonthlyInventoryRow
-		Months      []string
-		MonthFilter string
+		Rows           []MonthlyInventoryRow
+		Months         []string
+		MonthFilter    string
+		PaginationView PaginationView
 	}{
-		Rows:        rows,
-		Months:      months,
-		MonthFilter: monthFilter,
+		Rows:           rows,
+		Months:         months,
+		MonthFilter:    monthFilter,
+		PaginationView: paginationView,
 	}
 
 	app.RenderPage(w, r, "monthly_inventory.html", data)
@@ -561,7 +620,7 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	supplierFilter := r.URL.Query().Get("supplier_filter")
 	sort := r.URL.Query().Get("sort")
 
-	query := `
+	baseQuery := `
 		SELECT r.*, i.code as item_code
 		FROM receiving_logs r
 		JOIN items i ON r.item_id = i.id
@@ -581,9 +640,23 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(conditions) > 0 {
-		query += " WHERE " + strings.Join(conditions, " AND ")
+		baseQuery += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
+	// Count total records
+	countQuery := "SELECT COUNT(*) FROM (" + baseQuery + ")"
+	var totalRecords int
+	err := db.DB.Get(&totalRecords, countQuery, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	page := GetPageParam(r)
+	pageSize := 100
+	pagination := NewPagination(page, pageSize, totalRecords)
+
+	query := baseQuery
 	switch sort {
 	case "date_asc":
 		query += " ORDER BY r.date ASC, r.id ASC"
@@ -592,23 +665,36 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		query += " ORDER BY r.date DESC, r.id DESC"
 	}
+	query += " LIMIT ? OFFSET ?"
+	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
 
 	var receivingLogs []models.ReceivingLogWithItem
-	err := db.DB.Select(&receivingLogs, query, args...)
+	err = db.DB.Select(&receivingLogs, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	paginationView := PaginationView{
+		Pagination: pagination,
+		Path:       "/inventory/receiving/logs",
+		Target:     "#receiving-logs-tbody",
+		TargetID:   "receiving",
+		Include:    "[name='search'],[name='supplier_filter'],[name='sort']",
+	}
+
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		app.Render(w, "receiving_rows.html", receivingLogs)
+		app.Render(w, "pagination.html", paginationView)
 		return
 	}
 
 	data := struct {
-		ReceivingLogs []models.ReceivingLogWithItem
+		ReceivingLogs  []models.ReceivingLogWithItem
+		PaginationView PaginationView
 	}{
-		ReceivingLogs: receivingLogs,
+		ReceivingLogs:  receivingLogs,
+		PaginationView: paginationView,
 	}
 
 	app.RenderPage(w, r, "receiving_logs.html", data)
@@ -619,7 +705,7 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	sort := r.URL.Query().Get("sort")
 
-	query := `
+	baseQuery := `
 		SELECT a.*, i.code as item_code
 		FROM inventory_adjustments a
 		JOIN items i ON a.item_id = i.id
@@ -634,9 +720,23 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(conditions) > 0 {
-		query += " WHERE " + strings.Join(conditions, " AND ")
+		baseQuery += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
+	// Count total records
+	countQuery := "SELECT COUNT(*) FROM (" + baseQuery + ")"
+	var totalRecords int
+	err := db.DB.Get(&totalRecords, countQuery, args...)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	page := GetPageParam(r)
+	pageSize := 100
+	pagination := NewPagination(page, pageSize, totalRecords)
+
+	query := baseQuery
 	switch sort {
 	case "date_asc":
 		query += " ORDER BY a.date ASC, a.id ASC"
@@ -645,23 +745,36 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		query += " ORDER BY a.date DESC, a.id DESC"
 	}
+	query += " LIMIT ? OFFSET ?"
+	selectArgs := append(args, pageSize, (pagination.CurrentPage-1)*pageSize)
 
 	var adjustmentLogs []models.InventoryAdjustmentWithItem
-	err := db.DB.Select(&adjustmentLogs, query, args...)
+	err = db.DB.Select(&adjustmentLogs, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	paginationView := PaginationView{
+		Pagination: pagination,
+		Path:       "/inventory/adjustments/logs",
+		Target:     "#adjustment-logs-tbody",
+		TargetID:   "adjustment",
+		Include:    "[name='search'],[name='sort']",
+	}
+
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		app.Render(w, "adjustment_rows.html", adjustmentLogs)
+		app.Render(w, "pagination.html", paginationView)
 		return
 	}
 
 	data := struct {
 		AdjustmentLogs []models.InventoryAdjustmentWithItem
+		PaginationView PaginationView
 	}{
 		AdjustmentLogs: adjustmentLogs,
+		PaginationView: paginationView,
 	}
 
 	app.RenderPage(w, r, "adjustment_logs.html", data)

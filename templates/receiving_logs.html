@@ -12,7 +12,7 @@
             <input type="text" name="search" placeholder="Search by PL No or item code..." 
                    hx-get="/inventory/receiving/logs" 
                    hx-trigger="keyup changed delay:300ms, search" 
-                   hx-target="#receiving-tbody" 
+                   hx-target="#receiving-logs-tbody" 
                    hx-include="[name='supplier_filter'],[name='sort']"
                    class="form-input">
         </div>
@@ -20,7 +20,7 @@
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier Filter</label>
             <select name="supplier_filter" 
                     hx-get="/inventory/receiving/logs" 
-                    hx-target="#receiving-tbody" 
+                    hx-target="#receiving-logs-tbody" 
                     hx-include="[name='search'],[name='sort']"
                     hx-trigger="change"
                     class="form-input">
@@ -34,7 +34,7 @@
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
             <select name="sort" 
                     hx-get="/inventory/receiving/logs" 
-                    hx-target="#receiving-tbody" 
+                    hx-target="#receiving-logs-tbody" 
                     hx-include="[name='search'],[name='supplier_filter']"
                     hx-trigger="change"
                     class="form-input">
@@ -59,10 +59,14 @@
                     <th>Total Cost</th>
                 </tr>
             </thead>
-            <tbody id="receiving-tbody">
+            <tbody id="receiving-logs-tbody">
                 {{ template "receiving_rows.html" .ReceivingLogs }}
             </tbody>
         </table>
+    </div>
+
+    <div id="receiving-pagination">
+        {{ template "pagination.html" .PaginationView }}
     </div>
 </div>
 {{ end }}

@@ -65,9 +65,13 @@
                 </tr>
             </thead>
             <tbody id="brands-tbody">
-                {{ template "brand_rows.html" . }}
+                {{ template "brand_rows.html" .Brands }}
             </tbody>
         </table>
+    </div>
+    
+    <div id="brands-pagination">
+        {{ template "pagination.html" .PaginationView }}
     </div>
 </div>
 {{ end }}
