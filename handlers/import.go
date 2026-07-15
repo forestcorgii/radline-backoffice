@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xuri/excelize/v2"
 	"radline/db"
+
+	"github.com/xuri/excelize/v2"
 )
 
 // ImportPageHandler renders the import data page
@@ -599,6 +600,8 @@ func getValByHeader(row []string, colMap map[string]int, headerName string) stri
 // Helper: Robust float parsing
 func parseExcelFloat(val string) float64 {
 	val = strings.ReplaceAll(val, ",", "")
+	val = strings.ReplaceAll(val, "$", "")
+	val = strings.ReplaceAll(val, "₱", "")
 	val = strings.TrimSpace(val)
 	if val == "" || val == "-" || strings.ToLower(val) == "none" || strings.ToLower(val) == "null" {
 		return 0.0
@@ -621,7 +624,7 @@ func parseExcelDate(val string) (time.Time, error) {
 		excelEpoch := time.Date(1899, time.December, 30, 0, 0, 0, 0, time.UTC)
 		intDays := int(math.Floor(days))
 		frac := days - float64(intDays)
-		
+
 		t := excelEpoch.AddDate(0, 0, intDays)
 		// Add fraction of day in nanoseconds
 		ns := frac * float64(time.Hour) * 24
