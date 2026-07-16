@@ -19,14 +19,18 @@
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
             <input type="text" name="search" placeholder="Search by code or name..." 
                    hx-get="/categories" 
-                   hx-trigger="keyup[key=='Enter'], search" 
+                   hx-trigger="keyup changed delay:300ms, search" 
                    hx-target="#categories-results"
                    hx-include="closest form"
                    class="form-input">
         </div>
         <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Usage Status</label>
-            <select name="filter" class="form-input">
+            <select name="filter" class="form-input"
+                    hx-get="/categories" 
+                    hx-target="#categories-results" 
+                    hx-include="closest form"
+                    hx-trigger="change">
                 <option value="all">All Usage Statuses</option>
                 <option value="in_use">In Use</option>
                 <option value="unused">Unused</option>
@@ -34,7 +38,11 @@
         </div>
         <div class="filter-item">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
-            <select name="sort" class="form-input">
+            <select name="sort" class="form-input"
+                    hx-get="/categories" 
+                    hx-target="#categories-results" 
+                    hx-include="closest form"
+                    hx-trigger="change">
                 <option value="code_asc">Code (A-Z)</option>
                 <option value="code_desc">Code (Z-A)</option>
                 <option value="name_asc">Name (A-Z)</option>
@@ -43,14 +51,19 @@
                 <option value="items_asc">Least Items First</option>
             </select>
         </div>
-        <div class="filter-item" style="width: auto;">
-            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; visibility: hidden;">Action</label>
-            <button hx-get="/categories" 
-                    hx-target="#categories-results"
+        <div class="filter-item">
+            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show Rows</label>
+            <select name="limit" class="form-input"
+                    hx-get="/categories" 
+                    hx-target="#categories-results" 
                     hx-include="closest form"
-                    class="btn" style="width: 100%;">
-                Apply
-            </button>
+                    hx-trigger="change">
+                <option value="25" selected>Top 25</option>
+                <option value="50">Top 50</option>
+                <option value="100">Top 100</option>
+                <option value="200">Top 200</option>
+                <option value="500">Top 500</option>
+            </select>
         </div>
     </div>
 
@@ -72,8 +85,6 @@
         </table>
     </div>
     </div>
-
-    {{ template "pagination.html" .PaginationView }}
     </form>
 </div>
 {{ end }}

@@ -41,17 +41,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 		baseQuery += " WHERE " + strings.Join(whereClauses, " AND ")
 	}
 
-	// Count total records
-	countQuery := "SELECT COUNT(*) FROM (" + baseQuery + ")"
-	var totalRecords int
-	err := db.DB.Get(&totalRecords, countQuery, args...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	params := GetPaginationParams(r)
-	pagination := BuildPagination(params, totalRecords)
+	limit := GetLimitParam(r)
 
 	query := baseQuery
 	switch sort {
@@ -64,26 +54,21 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	default: // date_desc or empty
 		query += " ORDER BY s.doc_date DESC, s.id DESC"
 	}
-	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, params.PageSize, params.Offset())
+	query += " LIMIT ?"
+	selectArgs := append(args, limit)
 
 	var sales []models.SalesDetailWithItem
-	err = db.DB.Select(&sales, query, selectArgs...)
+	err := db.DB.Select(&sales, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	paginationView := pagination.BuildView("/sales", "#sales-results", "sales",
-		[]string{"search", "supplier_filter", "sort"}, r)
-
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Sales          []models.SalesDetailWithItem
-			PaginationView PaginationView
+			Sales []models.SalesDetailWithItem
 		}{
-			Sales:          sales,
-			PaginationView: paginationView,
+			Sales: sales,
 		}
 		app.Render(w, "sales_results.html", data)
 	} else {
@@ -91,13 +76,11 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 		_ = db.DB.Select(&items, "SELECT * FROM items ORDER BY code ASC")
 
 		data := struct {
-			Sales          []models.SalesDetailWithItem
-			Items          []models.Item
-			PaginationView PaginationView
+			Sales []models.SalesDetailWithItem
+			Items []models.Item
 		}{
-			Sales:          sales,
-			Items:          items,
-			PaginationView: paginationView,
+			Sales: sales,
+			Items: items,
 		}
 		app.RenderPage(w, r, "sales.html", data)
 	}
@@ -214,6 +197,9 @@ func (app *App) NewSalesPageHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
 	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	data := struct {
 		Items        []models.Item
 		SalesRowData interface{}
@@ -221,6 +207,7 @@ func (app *App) NewSalesPageHandler(w http.ResponseWriter, r *http.Request) {
 		Items: items,
 		SalesRowData: map[string]interface{}{
 			"Items": items,
+			"Uoms":  uoms,
 		},
 	}
 
@@ -235,8 +222,13 @@ func (app *App) NewSaleRowHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	app.Render(w, "sale_item_row.html", map[string]interface{}{
 		"Items": items,
+		"Uoms":  uoms,
 	})
 }
 
@@ -320,6 +312,9 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	app.Render(w, "sale_item_row.html", map[string]interface{}{
 		"Items":          items,
 		"SelectedItemID": itemID,
@@ -327,5 +322,6 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 		"Cost":           lastCost,
 		"Price":          lastPrice,
 		"PLNo":           lastPLNo,
+		"Uoms":           uoms,
 	})
 }

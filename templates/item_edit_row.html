@@ -29,7 +29,12 @@
         </select>
     </td>
     <td>
-        <input type="text" name="default_uom" value="{{ .Item.DefaultUOM }}" required class="form-input">
+        <select name="default_uom" required class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
+            {{ $selectedUOM := .Item.DefaultUOM }}
+            {{ range .Uoms }}
+            <option value="{{ .Code }}" {{ if eq .Code $selectedUOM }}selected{{ end }}>{{ .Code }}</option>
+            {{ end }}
+        </select>
     </td>
     <td>
         <div class="actions-cell">

@@ -21,14 +21,18 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search"
                     placeholder="Search sales by doc number, customer name, or item code..." hx-get="/sales"
-                    hx-trigger="keyup[key=='Enter'], search" hx-target="#sales-results" hx-include="closest form"
+                    hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results" hx-include="closest form"
                     class="form-input">
             </div>
             <div class="filter-item">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier
                     Filter</label>
-                <select name="supplier_filter" class="form-input">
+                <select name="supplier_filter" class="form-input"
+                        hx-get="/sales" 
+                        hx-target="#sales-results" 
+                        hx-include="closest form"
+                        hx-trigger="change">
                     <option value="all">All Suppliers</option>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
@@ -39,20 +43,30 @@
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
-                <select name="sort" class="form-input">
+                <select name="sort" class="form-input"
+                        hx-get="/sales" 
+                        hx-target="#sales-results" 
+                        hx-include="closest form"
+                        hx-trigger="change">
                     <option value="date_desc">Newest First</option>
                     <option value="date_asc">Oldest First</option>
                     <option value="sales_desc">Highest Sales First</option>
                     <option value="profit_desc">Highest Profit First</option>
                 </select>
             </div>
-            <div class="filter-item" style="width: auto;">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; visibility: hidden;">Action</label>
-                <button hx-get="/sales" hx-target="#sales-results" hx-include="closest form" class="btn"
-                    style="width: 100%;">
-                    Apply
-                </button>
+            <div class="filter-item">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show Rows</label>
+                <select name="limit" class="form-input"
+                        hx-get="/sales" 
+                        hx-target="#sales-results" 
+                        hx-include="closest form"
+                        hx-trigger="change">
+                    <option value="25" selected>Top 25</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                    <option value="200">Top 200</option>
+                    <option value="500">Top 500</option>
+                </select>
             </div>
         </div>
 
@@ -79,8 +93,6 @@
                 </table>
             </div>
         </div>
-
-        {{ template "pagination.html" .PaginationView }}
     </form>
 </div>
 {{ end }}

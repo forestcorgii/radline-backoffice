@@ -32,8 +32,12 @@
 
         <div class="form-group" style="margin-bottom: 1rem;">
             <label for="muom" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">MUOM (Multiple)</label>
-            <input type="text" id="muom" name="muom" class="form-input" placeholder="e.g. BOX, CASE, PACK" required
-                   style="width: 100%; padding: 0.5rem 0.75rem;">
+            <select id="muom" name="muom" class="form-input" required style="width: 100%; padding: 0.5rem 0.75rem; height: auto;">
+                <option value="">-- Select MUOM --</option>
+                {{ range .Uoms }}
+                <option value="{{ .Code }}">{{ .Code }}</option>
+                {{ end }}
+            </select>
         </div>
 
         <div class="form-group" style="margin-bottom: 1.5rem;">

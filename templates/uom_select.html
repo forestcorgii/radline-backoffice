@@ -1,0 +1,13 @@
+<select id="{{ if .Id }}{{ .Id }}{{ else }}{{ .Name }}{{ end }}" 
+        name="{{ .Name }}" 
+        class="form-input" 
+        style="{{ if .Style }}{{ .Style }}{{ end }}"
+        {{ if .Required }}required{{ end }}
+        hx-get="/uoms/select?name={{ .Name }}" 
+        hx-trigger="uom-added from:body" 
+        hx-swap="outerHTML">
+    <option value="">-- Select UOM --</option>
+    {{ range .Uoms }}
+    <option value="{{ .Code }}" {{ if eq .Code $.SelectedUOM }}selected{{ end }}>{{ .Code }}</option>
+    {{ end }}
+</select>

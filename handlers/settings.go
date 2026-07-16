@@ -32,57 +32,43 @@ func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
 		LEFT JOIN items i ON b.id = i.brand_id
 		GROUP BY b.id, b.code, b.name
 		ORDER BY b.code ASC
-		LIMIT ? OFFSET ?
+		LIMIT ?
 	`
 	var brands []models.Brand
-	_ = db.DB.Select(&brands, brandQuery, DefaultPageSize, 0)
+	_ = db.DB.Select(&brands, brandQuery, DefaultPageSize)
 
-	var totalBrands int
-	_ = db.DB.Get(&totalBrands, "SELECT COUNT(*) FROM brands")
-
-	brandParams := PaginationParams{Page: 1, PageSize: DefaultPageSize}
-	brandPagination := BuildPagination(brandParams, totalBrands)
-	brandPaginationView := brandPagination.BuildView("/brands", "#brands-results", "brands",
-		[]string{"search", "filter", "sort"}, r)
-
-	// 3. Fetch Categories (initial paginated view)
+	// 3. Fetch Categories (initial limited view)
 	categoryQuery := `
 		SELECT c.id, c.code, c.name, COUNT(i.id) as item_count
 		FROM categories c
 		LEFT JOIN items i ON c.id = i.category_id
 		GROUP BY c.id, c.code, c.name
 		ORDER BY c.code ASC
-		LIMIT ? OFFSET ?
+		LIMIT ?
 	`
 	var categories []models.Category
-	_ = db.DB.Select(&categories, categoryQuery, DefaultPageSize, 0)
-
-	var totalCategories int
-	_ = db.DB.Get(&totalCategories, "SELECT COUNT(*) FROM categories")
-
-	categoryParams := PaginationParams{Page: 1, PageSize: DefaultPageSize}
-	categoryPagination := BuildPagination(categoryParams, totalCategories)
-	categoryPaginationView := categoryPagination.BuildView("/categories", "#categories-results", "categories",
-		[]string{"search", "filter", "sort"}, r)
+	_ = db.DB.Select(&categories, categoryQuery, DefaultPageSize)
 
 	// 4. Fetch Items (for inline UOM form dropdown in settings page)
 	var items []models.Item
 	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
 
+	// 5. Fetch Predefined Uoms (initial limited view)
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC LIMIT ?", DefaultPageSize)
+
 	data := struct {
-		UomSettings            []models.UomSettingWithItem
-		Brands                 []models.Brand
-		Categories             []models.Category
-		Items                  []models.Item
-		BrandPaginationView    PaginationView
-		CategoryPaginationView PaginationView
+		UomSettings []models.UomSettingWithItem
+		Brands      []models.Brand
+		Categories  []models.Category
+		Items       []models.Item
+		Uoms        []models.Uom
 	}{
-		UomSettings:            uomSettings,
-		Brands:                 brands,
-		Categories:             categories,
-		Items:                  items,
-		BrandPaginationView:    brandPaginationView,
-		CategoryPaginationView: categoryPaginationView,
+		UomSettings: uomSettings,
+		Brands:      brands,
+		Categories:  categories,
+		Items:       items,
+		Uoms:        uoms,
 	}
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
@@ -101,10 +87,15 @@ func (app *App) NewUomSettingPageHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	data := struct {
 		Items []models.Item
+		Uoms  []models.Uom
 	}{
 		Items: items,
+		Uoms:  uoms,
 	}
 
 	app.RenderPage(w, r, "settings_new.html", data)
@@ -173,7 +164,18 @@ func (app *App) EditUomSettingFormHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	app.Render(w, "uom_setting_edit_row.html", uomSetting)
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
+	data := struct {
+		Setting models.UomSettingWithItem
+		Uoms    []models.Uom
+	}{
+		Setting: uomSetting,
+		Uoms:    uoms,
+	}
+
+	app.Render(w, "uom_setting_edit_row.html", data)
 }
 
 // UpdateUomSettingHandler updates an existing UOM setting

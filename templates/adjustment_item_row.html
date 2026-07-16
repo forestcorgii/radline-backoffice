@@ -33,7 +33,13 @@
         </div>
     </td>
     <td>
-        <input type="text" name="uom" placeholder="e.g. PCS" class="form-input" value="{{ .DefaultUOM }}" required>
+        <select name="uom" class="form-input" required style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;">
+            <option value="">-- Select --</option>
+            {{ $selectedUOM := .DefaultUOM }}
+            {{ range .Uoms }}
+            <option value="{{ .Code }}" {{ if eq .Code $selectedUOM }}selected{{ end }}>{{ .Code }}</option>
+            {{ end }}
+        </select>
     </td>
     <td>
         <input type="number" step="any" name="adjustment_qty" placeholder="e.g. -5 or 10" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required>

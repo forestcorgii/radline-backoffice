@@ -114,6 +114,11 @@ func createSchema() {
 		name TEXT NOT NULL
 	);
 
+	CREATE TABLE IF NOT EXISTS uoms (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		code TEXT UNIQUE NOT NULL
+	);
+
 	CREATE TABLE IF NOT EXISTS items (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		code TEXT UNIQUE NOT NULL,
@@ -203,5 +208,18 @@ func createSchema() {
 	_, err := DB.Exec(schema)
 	if err != nil {
 		log.Fatalf("Failed to create schema: %v", err)
+	}
+
+	// Seed default UOM values if table is empty
+	var uomCount int
+	err = DB.Get(&uomCount, "SELECT COUNT(*) FROM uoms")
+	if err == nil && uomCount == 0 {
+		_, errSeed := DB.Exec(`
+			INSERT INTO uoms (code) VALUES
+			('PC/S'), ('PCS'), ('BOX'), ('PACK/S'), ('PACK'), ('CASE'), ('BAG/S'), ('BAG'), ('BOT'), ('CAN/S'), ('CAN'), ('DOZ'), ('FT'), ('GAL'), ('KG/S'), ('KG'), ('L/S'), ('L'), ('MTR/S'), ('MTR'), ('PAIR/S'), ('ROLL/S'), ('SET/S'), ('UNIT/S')
+		`)
+		if errSeed != nil {
+			log.Printf("Failed to seed default UOMs: %v", errSeed)
+		}
 	}
 }

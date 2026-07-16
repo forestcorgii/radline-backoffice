@@ -164,3 +164,9 @@ type UomSettingWithItem struct {
 	ConversionFactor float64 `db:"conversion_factor"`
 }
 
+type Uom struct {
+	ID   int    `db:"id"`
+	Code string `db:"code"`
+}
+
+
