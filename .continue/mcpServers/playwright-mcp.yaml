@@ -1,10 +1,10 @@
-name: New MCP server
+name: Playwright MCP
 version: 0.0.1
 schema: v1
 mcpServers:
-  - name: New MCP server
+  - name: Playwright MCP
     command: npx
     args:
       - -y
-      - <your-mcp-server>
+      - "@playwright/mcp"
     env: {}

@@ -1,0 +1,332 @@
+- generic [ref=f1e2]:
+  - complementary [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - heading "Radline BackOffice" [level=1] [ref=f1e5]
+      - button "Collapse Sidebar" [ref=f1e6] [cursor=pointer]
+    - navigation [ref=f1e10]:
+      - link "Dashboard" [ref=f1e11] [cursor=pointer]:
+        - /url: /
+      - link "Sales" [ref=f1e19] [cursor=pointer]:
+        - /url: /sales
+      - generic [ref=f1e24]:
+        - button "Inventory" [ref=f1e25] [cursor=pointer]
+        - generic [ref=f1e35]:
+          - link "Overview" [ref=f1e36] [cursor=pointer]:
+            - /url: /inventory
+          - link "Monthly Inventory" [active] [ref=f1e37] [cursor=pointer]:
+            - /url: /inventory/monthly
+          - link "Stock Receiving" [ref=f1e38] [cursor=pointer]:
+            - /url: /inventory/receiving
+          - link "Stock Adjustment" [ref=f1e39] [cursor=pointer]:
+            - /url: /inventory/adjustments
+          - link "Receiving Logs" [ref=f1e40] [cursor=pointer]:
+            - /url: /inventory/receiving/logs
+          - link "Adjustment Logs" [ref=f1e41] [cursor=pointer]:
+            - /url: /inventory/adjustments/logs
+      - button "Masterlist" [ref=f1e43] [cursor=pointer]
+      - link "Import" [ref=f1e52] [cursor=pointer]:
+        - /url: /import
+  - main [ref=f1e59]:
+    - heading "Monthly Inventory Movements" [level=2] [ref=f1e411]
+    - generic [ref=f1e412]:
+      - heading "Inventory Movements by Month" [level=3] [ref=f1e413]
+      - generic [ref=f1e414]:
+        - generic [ref=f1e415]:
+          - generic [ref=f1e416]:
+            - generic [ref=f1e417]: Search Items
+            - textbox "Search by item code or description..." [ref=f1e418]
+          - generic [ref=f1e419]:
+            - generic [ref=f1e420]: Month Filter
+            - combobox [ref=f1e421] [cursor=pointer]:
+              - option "All Months" [selected]
+              - option "2026-06"
+              - option "2026-05"
+              - option "2026-04"
+              - option "2026-03"
+              - option "2026-02"
+              - option "2026-01"
+              - option "2025-12"
+              - option "2025-11"
+              - option "2025-10"
+              - option "2025-09"
+              - option "2025-08"
+              - option "2025-07"
+              - option "2025-06"
+              - option "2025-05"
+              - option "2025-04"
+              - option "2025-03"
+              - option "2025-02"
+              - option "2025-01"
+              - option "2024-12"
+              - option "2024-11"
+              - option "2024-10"
+              - option "2024-09"
+              - option "2024-08"
+              - option "2024-07"
+              - option "2024-06"
+              - option "2024-05"
+              - option "2024-04"
+              - option "2024-03"
+              - option "2024-02"
+              - option "2024-01"
+              - option "2023-12"
+              - option "2023-11"
+              - option "2023-10"
+          - button "Apply" [ref=f1e423] [cursor=pointer]
+        - table [ref=f1e426]:
+          - rowgroup [ref=f1e427]:
+            - row [ref=f1e428]:
+              - columnheader "Month" [ref=f1e429]
+              - columnheader "Item Code" [ref=f1e430]
+              - columnheader "Description" [ref=f1e431]
+              - columnheader "UOM" [ref=f1e432]
+              - columnheader "Received" [ref=f1e433]
+              - columnheader "Sold" [ref=f1e434]
+              - columnheader "Adjusted" [ref=f1e435]
+              - columnheader "Net Change" [ref=f1e436]
+          - rowgroup [ref=f1e437]:
+            - row [ref=f1e438]:
+              - cell "2026-06" [ref=f1e439]
+              - cell "2B-HLSW-20MM" [ref=f1e441]
+              - cell "2B HSS HOLE SAW 20MM" [ref=f1e442]
+              - cell "PC/S" [ref=f1e443]
+              - cell "0" [ref=f1e444]
+              - cell "-1" [ref=f1e445]
+              - cell "0" [ref=f1e446]
+              - cell "-1" [ref=f1e447]
+            - row [ref=f1e448]:
+              - cell "2026-06" [ref=f1e449]
+              - cell "ACCMT-WLDNGCBL-2/0" [ref=f1e451]
+              - cell "ACCUMATE WELDING 2/0 500FT/ROLL" [ref=f1e452]
+              - cell "ROLL/S" [ref=f1e453]
+              - cell "0" [ref=f1e454]
+              - cell "0" [ref=f1e455]
+              - cell "-0.0105" [ref=f1e456]
+              - cell "-0.0105" [ref=f1e457]
+            - row [ref=f1e458]:
+              - cell "2026-06" [ref=f1e459]
+              - cell "ADLN-2.5SGM1.5/21" [ref=f1e461]
+              - cell "ADELINO 2.5SGM1.5/21 (2.5SAM 1.5/21) SUB. SEWAGE PUMP" [ref=f1e462]
+              - cell "UNIT/S" [ref=f1e463]
+              - cell "0" [ref=f1e464]
+              - cell "-1" [ref=f1e465]
+              - cell "0" [ref=f1e466]
+              - cell "-1" [ref=f1e467]
+            - row [ref=f1e468]:
+              - cell "2026-06" [ref=f1e469]
+              - cell "ADLN-SGJW37/AJ37-A" [ref=f1e471]
+              - cell "ADELINO SGJW37/AJ37-A SHALLOW WELL PUMP 1/2HP" [ref=f1e472]
+              - cell "UNIT/S" [ref=f1e473]
+              - cell "0" [ref=f1e474]
+              - cell "0" [ref=f1e475]
+              - cell "-1" [ref=f1e476]
+              - cell "-1" [ref=f1e477]
+            - row [ref=f1e478]:
+              - cell "2026-06" [ref=f1e479]
+              - cell "ADYSN-FLPDSC-G120" [ref=f1e481]
+              - cell "ADYSON FLAP DISC 4\" G120 9120 METAL A120" [ref=f1e482]
+              - cell "PC/S" [ref=f1e483]
+              - cell "0" [ref=f1e484]
+              - cell "-4" [ref=f1e485]
+              - cell "0" [ref=f1e486]
+              - cell "-4" [ref=f1e487]
+            - row [ref=f1e488]:
+              - cell "2026-06" [ref=f1e489]
+              - cell "ADYSN-WLDNGCBL-2/0" [ref=f1e491]
+              - cell "ADYSON WELDING CABLE 2/0 50MM 500FT" [ref=f1e492]
+              - cell "ROLL/S" [ref=f1e493]
+              - cell "0" [ref=f1e494]
+              - cell "-17" [ref=f1e495]
+              - cell "0" [ref=f1e496]
+              - cell "-17" [ref=f1e497]
+            - row [ref=f1e498]:
+              - cell "2026-06" [ref=f1e499]
+              - cell "ALKTR-DRKLNS-#10" [ref=f1e501]
+              - 'cell "AULEKTRO WELDING DARK LENS #10" [ref=f1e502]'
+              - cell "PC/S" [ref=f1e503]
+              - cell "0" [ref=f1e504]
+              - cell "-1" [ref=f1e505]
+              - cell "0" [ref=f1e506]
+              - cell "-1" [ref=f1e507]
+            - row [ref=f1e508]:
+              - cell "2026-06" [ref=f1e509]
+              - cell "ARMK-ELCTRCLTP-01" [ref=f1e511]
+              - cell "ARMAK ELECTRICAL TAPE" [ref=f1e512]
+              - cell "ROLL/S" [ref=f1e513]
+              - cell "0" [ref=f1e514]
+              - cell "-1" [ref=f1e515]
+              - cell "+6" [ref=f1e516]
+              - cell "+5" [ref=f1e517]
+            - row [ref=f1e518]:
+              - cell "2026-06" [ref=f1e519]
+              - cell "BLGL-WLDNGHLMT-W/O LENS" [ref=f1e521]
+              - cell "BLUE EAGLE WELDING HELMET 633P W/O LENS OPEN" [ref=f1e522]
+              - cell "PC/S" [ref=f1e523]
+              - cell "0" [ref=f1e524]
+              - cell "-1" [ref=f1e525]
+              - cell "0" [ref=f1e526]
+              - cell "-1" [ref=f1e527]
+            - row [ref=f1e528]:
+              - cell "2026-06" [ref=f1e529]
+              - cell "BRYNT-P#39" [ref=f1e531]
+              - 'cell "BRYANT SPRAY PAINT #39 BLACK" [ref=f1e532]'
+              - cell "CAN/S" [ref=f1e533]
+              - cell "+6" [ref=f1e534]
+              - cell "-5" [ref=f1e535]
+              - cell "0" [ref=f1e536]
+              - cell "+1" [ref=f1e537]
+            - row [ref=f1e538]:
+              - cell "2026-06" [ref=f1e539]
+              - cell "BSCH-MA118A" [ref=f1e541]
+              - cell "BOSCH MA118A JIGSAW BLADE 2608631781" [ref=f1e542]
+              - cell "PACK/S" [ref=f1e543]
+              - cell "0" [ref=f1e544]
+              - cell "0" [ref=f1e545]
+              - cell "+0.2" [ref=f1e546]
+              - cell "+0.2" [ref=f1e547]
+            - row [ref=f1e548]:
+              - cell "2026-06" [ref=f1e549]
+              - cell "BSCH-T101B" [ref=f1e551]
+              - cell "BOSCH T101B JIGSAW BLADE WOOD 2608630030" [ref=f1e552]
+              - cell "PACK/S" [ref=f1e553]
+              - cell "0" [ref=f1e554]
+              - cell "-1" [ref=f1e555]
+              - cell "0" [ref=f1e556]
+              - cell "-1" [ref=f1e557]
+            - row [ref=f1e558]:
+              - cell "2026-06" [ref=f1e559]
+              - cell "BWS-GRNDNGDSC-4" [ref=f1e561]
+              - cell "BWS GRINDING DISC 4\" METAL" [ref=f1e562]
+              - cell "PC/S" [ref=f1e563]
+              - cell "0" [ref=f1e564]
+              - cell "-4" [ref=f1e565]
+              - cell "0" [ref=f1e566]
+              - cell "-4" [ref=f1e567]
+            - row [ref=f1e568]:
+              - cell "2026-06" [ref=f1e569]
+              - cell "CFX-CF-ID007" [ref=f1e571]
+              - cell "COOFIX CF-ID007 IMPACT DRILL" [ref=f1e572]
+              - cell "UNIT/S" [ref=f1e573]
+              - cell "0" [ref=f1e574]
+              - cell "-1" [ref=f1e575]
+              - cell "0" [ref=f1e576]
+              - cell "-1" [ref=f1e577]
+            - row [ref=f1e578]:
+              - cell "2026-06" [ref=f1e579]
+              - cell "CFX-CFA-05022" [ref=f1e581]
+              - cell "COOFIX CFA-05022 SDS PLUS HAMMER DRILL BIT" [ref=f1e582]
+              - cell "PC/S" [ref=f1e583]
+              - cell "0" [ref=f1e584]
+              - cell "-1" [ref=f1e585]
+              - cell "0" [ref=f1e586]
+              - cell "-1" [ref=f1e587]
+            - row [ref=f1e588]:
+              - cell "2026-06" [ref=f1e589]
+              - cell "CFX-CFH-A12001-24" [ref=f1e591]
+              - cell "COOFIX CFH-A12001-24 BOLT CUTTER 24\" CRV" [ref=f1e592]
+              - cell "PC/S" [ref=f1e593]
+              - cell "0" [ref=f1e594]
+              - cell "0" [ref=f1e595]
+              - cell "+2" [ref=f1e596]
+              - cell "+2" [ref=f1e597]
+            - row [ref=f1e598]:
+              - cell "2026-06" [ref=f1e599]
+              - cell "CFX-CFH-B01010-13" [ref=f1e601]
+              - cell "COOFIX CFH-B01010-13 T-HANDLE SOCKET WRENCH" [ref=f1e602]
+              - cell "PC/S" [ref=f1e603]
+              - cell "0" [ref=f1e604]
+              - cell "-1" [ref=f1e605]
+              - cell "0" [ref=f1e606]
+              - cell "-1" [ref=f1e607]
+            - row [ref=f1e608]:
+              - cell "2026-06" [ref=f1e609]
+              - cell "CFX-CFH-B01010-17" [ref=f1e611]
+              - cell "COOFIX CFH-B01010-17 T-HANDLE SOCKET WRENCH" [ref=f1e612]
+              - cell "PC/S" [ref=f1e613]
+              - cell "0" [ref=f1e614]
+              - cell "-1" [ref=f1e615]
+              - cell "0" [ref=f1e616]
+              - cell "-1" [ref=f1e617]
+            - row [ref=f1e618]:
+              - cell "2026-06" [ref=f1e619]
+              - cell "CFX-CFH-B02201-24" [ref=f1e621]
+              - cell "COOFIX CFH-B02201-24 COMBINATION SPANNER 24" [ref=f1e622]
+              - cell "PC/S" [ref=f1e623]
+              - cell "0" [ref=f1e624]
+              - cell "0" [ref=f1e625]
+              - cell "+1" [ref=f1e626]
+              - cell "+1" [ref=f1e627]
+            - row [ref=f1e628]:
+              - cell "2026-06" [ref=f1e629]
+              - cell "CFX-CFH-B04201-89" [ref=f1e631]
+              - cell "COOFIX CFH-B04201-89 DOUBLE RING SPANNER 8X9 CRV" [ref=f1e632]
+              - cell "PC/S" [ref=f1e633]
+              - cell "0" [ref=f1e634]
+              - cell "0" [ref=f1e635]
+              - cell "+2" [ref=f1e636]
+              - cell "+2" [ref=f1e637]
+            - row [ref=f1e638]:
+              - cell "2026-06" [ref=f1e639]
+              - cell "CFX-CFH-D0375" [ref=f1e641]
+              - cell "COOFIX CFH-D0375 SLOTTED SCREW DRIVER 3X75 CRV" [ref=f1e642]
+              - cell "PC/S" [ref=f1e643]
+              - cell "0" [ref=f1e644]
+              - cell "0" [ref=f1e645]
+              - cell "+1" [ref=f1e646]
+              - cell "+1" [ref=f1e647]
+            - row [ref=f1e648]:
+              - cell "2026-06" [ref=f1e649]
+              - cell "CTWLD-CTTNGTP-H-ACE-2" [ref=f1e651]
+              - 'cell "CUTWELD CUTTING TIP H-ACE #2" [ref=f1e652]'
+              - cell "PC/S" [ref=f1e653]
+              - cell "0" [ref=f1e654]
+              - cell "-3" [ref=f1e655]
+              - cell "0" [ref=f1e656]
+              - cell "-3" [ref=f1e657]
+            - row [ref=f1e658]:
+              - cell "2026-06" [ref=f1e659]
+              - cell "DB1-ANNLRCTTR-38X50" [ref=f1e661]
+              - cell "DB1 ANNULAR CUTTER 38X50" [ref=f1e662]
+              - cell "PC/S" [ref=f1e663]
+              - cell "+1" [ref=f1e664]
+              - cell "0" [ref=f1e665]
+              - cell "0" [ref=f1e666]
+              - cell "+1" [ref=f1e667]
+            - row [ref=f1e668]:
+              - cell "2026-06" [ref=f1e669]
+              - cell "DC-A46T-BF" [ref=f1e671]
+              - cell "DCA A46T-BF CUTTING DISC 4\" GREEN" [ref=f1e672]
+              - cell "PC/S" [ref=f1e673]
+              - cell "0" [ref=f1e674]
+              - cell "-20" [ref=f1e675]
+              - cell "0" [ref=f1e676]
+              - cell "-20" [ref=f1e677]
+            - row [ref=f1e678]:
+              - cell "2026-06" [ref=f1e679]
+              - cell "DC-ADJZ1202E" [ref=f1e681]
+              - cell "DCA ADJZ1202E CORDLESS DRIVER DRILL 12V" [ref=f1e682]
+              - cell "UNIT/S" [ref=f1e683]
+              - cell "0" [ref=f1e684]
+              - cell "-1" [ref=f1e685]
+              - cell "0" [ref=f1e686]
+              - cell "-1" [ref=f1e687]
+        - generic [ref=f1e689]:
+          - generic [ref=f1e690]: Showing 1–25 of 10474
+          - generic [ref=f1e691]:
+            - combobox [ref=f1e693] [cursor=pointer]:
+              - option "25" [selected]
+              - option "50"
+              - option "100"
+              - option "200"
+            - generic [ref=f1e694]:
+              - button "««" [disabled] [ref=f1e695]
+              - button "«" [disabled] [ref=f1e696]
+              - button "1" [disabled] [ref=f1e697]
+              - button "2" [ref=f1e698] [cursor=pointer]
+              - button "3" [ref=f1e699] [cursor=pointer]
+              - button "4" [ref=f1e700] [cursor=pointer]
+              - button "5" [ref=f1e701] [cursor=pointer]
+              - generic [ref=f1e702]: …
+              - button "419" [ref=f1e703] [cursor=pointer]
+              - button "»" [ref=f1e704] [cursor=pointer]
+              - button "»»" [ref=f1e705] [cursor=pointer]

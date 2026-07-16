@@ -266,3 +266,68 @@
 - **A11y Tooltips**: Provided `title` attributes on all icon buttons to guarantee hover clarity and accessibility.
 
 
+## Context: Stitch AI Premium Design System Integration
+**Problem**: Modifying UI colors and themes in static CSS files without a unified, professional design scheme can lead to inconsistent accents, high-contrast borders, and off-brand visual layout fragments.
+**Enforced Solution**:
+- **Design System Generation**: Created a project in Stitch and generated a Material Design Fidelity theme seed using royal indigo (`#4f46e5`).
+- **Core Tokens**: Applied the generated color tokens to `:root` CSS custom properties:
+  - Background: Soft lavender warm off-white (`#fcf8ff`)
+  - Accent brand: Royal Indigo (`#3525cd` / `#4f46e5`)
+  - Card hover scale: Responsive transform lift with an indigo-tinted shadow glow.
+- **Badge and Semantic Utilities**: Standardized all status elements to use semantic utility classes (`.badge-primary`, `.badge-secondary`, `.text-success`, `.text-danger`) rather than hardcoded inline styles.
+- **Refactoring Chart Fills**: Chart colors (e.g. SVG rect elements) and financial summary card borders are dynamically styled using the new CSS variables to preserve uniform brand colors.
+
+## Context: Collapsible Navigation Sidebar with Hover Dropdown Popovers
+**Problem**: Full-width sidebars take up significant horizontal viewport space on desktop, squishing complex grid modules, logs, and spreadsheet tables. Simply collapsing the sidebar off-screen makes navigation tedious.
+**Enforced Solution**:
+- **Icon-Only Collapse State**: Define a `.collapsed` CSS state that shrinks the sidebar from `220px` to `64px`, hides text labels (`.nav-text`), and centers the brand/links navigation icons.
+- **Immediate Inline State Restoring**: Embed an IIFE/synchronous script immediately following the `<aside>` tag:
+  ```javascript
+  if (localStorage.getItem("sidebar-collapsed") === "true") {
+      document.getElementById("sidebar").classList.add("collapsed");
+  }
+  ```
+  This guarantees the layout state is parsed and applied before the first page render, completely preventing Flash of Uncollapsed Layout (FOUT).
+- **Hover Dropdown Popovers**: When collapsed, override vertical inline menu lists to display absolutely as floating popover panels on the right:
+  ```css
+  .sidebar.collapsed .sidebar-dropdown:hover .sidebar-dropdown-menu {
+      display: flex !important;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-hover);
+      z-index: 1001;
+      margin-left: 0.5rem;
+      min-width: 180px;
+  }
+  ```
+- **Click Behavior Suppression**: Block inline dropdown expand/collapse click handlers while the sidebar is collapsed to prevent UI interaction bugs.
+
+## Context: Continue MCP Server Configuration (Playwright & Filesystem)
+**Problem**: The `.continue/mcpServers/` folder contained a placeholder template (`new-mcp-server.yaml`) with `<your-mcp-server>` as the command argument, causing the Continue extension to fail when trying to run `npx <your-mcp-server>` — which is not a real npm package.
+**Enforced Solution**:
+- **Deleted** the invalid placeholder `new-mcp-server.yaml` file.
+- **Created** two proper MCP server config files:
+  1. `playwright-mcp.yaml` — Runs `npx -y @playwright/mcp` for browser automation MCP tools.
+  2. `filesystem-mcp.yaml` — Runs `npx -y @modelcontextprotocol/server-filesystem .` (with `.` as the root argument) for file system access MCP tools.
+- **Config format**: Each `.yaml` follows the `schema: v1` format with `name`, `command: npx`, `args` as a list including `-y` and the server package name, and `env: {}`.
+- **Important**: The Filesystem MCP server requires a directory argument — passing `.` (the project root) ensures it can access all project files from within the project root.
+
+## Context: Sidebar Active Link Contrast Fix
+**Problem**: Active links in the sidebar had poor contrast — blue text (`var(--primary-color)`) on a light blue tinted background (`rgba(53, 37, 205, 0.08)`), making the active state hard to distinguish.
+**Enforced Solution**:
+- Changed both `.sidebar-nav a.active` and `.sidebar-dropdown-menu a.active` to use `color: var(--primary-color)` (indigo) on `background-color: rgba(53, 37, 205, 0.08)` (light indigo) — the indigo text on a light tint provides good contrast while keeping the color family cohesive.
+- Added a left accent bar (`.active::before`) using `var(--primary-color)` as a 4px-wide pill indicator to visually anchor the active item.
+- This approach gives a **clean, modern active indicator** with the accent bar providing the visual weight instead of a heavy gradient fill.
+
+## Context: Sidebar Active Link Duplicate Highlighting
+**Problem**: The `updateActiveNavLink()` JavaScript used `currentPath.startsWith(href)` to match dropdown sub-links, causing `/inventory` (Overview) and `/inventory/monthly` (Monthly Inventory) to both be highlighted simultaneously when on `/inventory/monthly`.
+**Enforced Solution**:
+- Changed dropdown sub-link matching to a two-pass algorithm:
+  1. **First pass**: Mark all links that match via exact match OR `startsWith(href + "/")` (for child pages like `/items/new` matching `/items`).
+  2. **Second pass**: If multiple links in the same dropdown are active, keep only the one with the **longest href** (most specific match) and deactivate the rest.
+- This ensures only one sub-link is active at a time while still supporting parent-link highlighting for sub-pages (e.g., `/items/new` highlights `/items`).
+
+

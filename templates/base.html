@@ -19,9 +19,24 @@
         <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleMobileSidebar()"></div>
 
         <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation -->
         <aside id="sidebar" class="sidebar">
+            <script>
+                if (localStorage.getItem("sidebar-collapsed") === "true") {
+                    document.getElementById("sidebar").classList.add("collapsed");
+                }
+            </script>
             <div class="sidebar-brand">
-                <h1>Radline BackOffice</h1>
+                <h1 class="brand-full">Radline BackOffice</h1>
+                <h1 class="brand-mini">R</h1>
+                <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse Sidebar" title="Collapse Sidebar">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                        <path d="M16 15l-3-3 3-3"></path>
+                    </svg>
+                </button>
                 <button class="sidebar-close-btn" onclick="toggleMobileSidebar()" aria-label="Close Sidebar">
                     <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -32,14 +47,40 @@
             </div>
 
             <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
-                <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()">Dashboard</a>
+                <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()" title="Dashboard">
+                    <span class="nav-icon-text">
+                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="9"></rect>
+                            <rect x="14" y="3" width="7" height="5"></rect>
+                            <rect x="14" y="12" width="7" height="9"></rect>
+                            <rect x="3" y="16" width="7" height="5"></rect>
+                        </svg>
+                        <span class="nav-text">Dashboard</span>
+                    </span>
+                </a>
 
-
-                <a href="/sales" hx-get="/sales" onclick="closeMobileSidebarOnNav()">Sales</a>
+                <a href="/sales" hx-get="/sales" onclick="closeMobileSidebarOnNav()" title="Sales">
+                    <span class="nav-icon-text">
+                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span class="nav-text">Sales</span>
+                    </span>
+                </a>
 
                 <div class="sidebar-dropdown" id="inventory-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)">
-                        <span>Inventory</span>
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Inventory">
+                        <span class="nav-icon-text">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                                <polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon>
+                                <polygon points="12 22.08 12 12 21 6.92 21 17.08 12 22.08"></polygon>
+                                <polygon points="12 2 21 6.92 12 12 3 6.92 12 2"></polygon>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            <span class="nav-text">Inventory</span>
+                        </span>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -61,10 +102,16 @@
                     </div>
                 </div>
 
-
                 <div class="sidebar-dropdown" id="masterlist-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)">
-                        <span>Masterlist</span>
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Masterlist">
+                        <span class="nav-icon-text">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
+                            </svg>
+                            <span class="nav-text">Masterlist</span>
+                        </span>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
                                 d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
@@ -77,7 +124,16 @@
                     </div>
                 </div>
 
-                <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()">Import</a>
+                <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()" title="Import">
+                    <span class="nav-icon-text">
+                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span class="nav-text">Import</span>
+                    </span>
+                </a>
 
             </nav>
         </aside>
@@ -126,17 +182,32 @@
             // Highlight dropdown links dynamically and auto-expand active dropdowns
             document.querySelectorAll(".sidebar-dropdown").forEach(dropdown => {
                 let hasActive = false;
-                dropdown.querySelectorAll(".sidebar-dropdown-menu a").forEach(link => {
+                const links = dropdown.querySelectorAll(".sidebar-dropdown-menu a");
+                // First pass: check for exact matches or child-page matches (/items/new -> /items)
+                links.forEach(link => {
                     const href = link.getAttribute("href");
-                    // Active if matches exactly or starts with href (to handle sub-pages like /items/new)
-                    const isActive = currentPath === href || (href !== "/" && currentPath.startsWith(href));
-                    if (isActive) {
+                    if (currentPath === href || currentPath.startsWith(href + "/")) {
                         link.classList.add("active");
                         hasActive = true;
                     } else {
                         link.classList.remove("active");
                     }
                 });
+                // Second pass: if multiple links are active (e.g. /inventory + /inventory/monthly),
+                // keep only the most specific (longest href) match
+                const activeLinks = dropdown.querySelectorAll(".sidebar-dropdown-menu a.active");
+                if (activeLinks.length > 1) {
+                    let longest = activeLinks[0];
+                    activeLinks.forEach(link => {
+                        if (link.getAttribute("href").length > longest.getAttribute("href").length) {
+                            longest = link;
+                        }
+                    });
+                    activeLinks.forEach(link => {
+                        if (link !== longest) link.classList.remove("active");
+                    });
+                    hasActive = true;
+                }
                 if (hasActive) {
                     dropdown.classList.add("open");
                 } else {
@@ -148,9 +219,23 @@
         // Toggle sidebar dropdown on desktop/mobile
         function toggleSidebarDropdown(event) {
             event.preventDefault();
+            // In collapsed sidebar state on desktop, dropdown menus should only be hovered, not clicked
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar && sidebar.classList.contains("collapsed")) {
+                return;
+            }
             const dropdown = event.currentTarget.closest(".sidebar-dropdown");
             if (dropdown) {
                 dropdown.classList.toggle("open");
+            }
+        }
+
+        // Toggle desktop sidebar collapse state
+        function toggleSidebarCollapse() {
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar) {
+                const isCollapsed = sidebar.classList.toggle("collapsed");
+                localStorage.setItem("sidebar-collapsed", isCollapsed ? "true" : "false");
             }
         }
 

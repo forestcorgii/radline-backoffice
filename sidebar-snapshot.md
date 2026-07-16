@@ -1,0 +1,75 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - heading "Radline BackOffice" [level=1] [ref=e5]
+      - button "Collapse Sidebar" [ref=e6] [cursor=pointer]
+    - navigation [ref=e10]:
+      - link "Dashboard" [ref=e11] [cursor=pointer]:
+        - /url: /
+      - link "Sales" [ref=e19] [cursor=pointer]:
+        - /url: /sales
+      - button "Inventory" [ref=e25] [cursor=pointer]
+      - button "Masterlist" [ref=e36] [cursor=pointer]
+      - link "Import" [ref=e45] [cursor=pointer]:
+        - /url: /import
+  - main [ref=e52]:
+    - generic [ref=e53]:
+      - heading "Financial Overview" [level=2] [ref=e54]
+      - paragraph [ref=e55]: Dynamic monthly and yearly performance metrics
+    - generic [ref=e56]:
+      - generic [ref=e57]:
+        - heading "Total Sales" [level=6] [ref=e58]
+        - heading "₱13283103.82" [level=3] [ref=e59]
+        - generic [ref=e60]: 📈Actual from sales data
+      - generic [ref=e61]:
+        - heading "Total Costs" [level=6] [ref=e62]
+        - heading "₱10508004.98" [level=3] [ref=e63]
+        - generic [ref=e64]: 📉Actual cost of goods sold
+      - generic [ref=e65]:
+        - heading "Gross Profit" [level=6] [ref=e66]
+        - heading "₱2775098.84" [level=3] [ref=e67]
+        - generic [ref=e68]: 💰Net earnings before expenses
+      - generic [ref=e69]:
+        - heading "Profit Margin" [level=6] [ref=e70]
+        - heading "20.9%" [level=3] [ref=e71]
+        - generic [ref=e72]:
+          - generic [ref=e73]: Below Target
+          - generic [ref=e74]: "Target: 25%"
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - heading "Sales & Profit Trend" [level=3] [ref=e77]
+        - img [ref=e79]:
+          - 'generic "Oct Sales: ₱18746.75" [ref=e80]'
+          - 'generic "Oct Profit: ₱3049.75" [ref=e81]'
+          - generic [ref=e82]: Oct
+          - 'generic "Nov Sales: ₱130442.80" [ref=e83]'
+          - 'generic "Nov Profit: ₱50248.98" [ref=e84]'
+          - generic [ref=e85]: Nov
+          - 'generic "Dec Sales: ₱251770.00" [ref=e86]'
+          - 'generic "Dec Profit: ₱56626.87" [ref=e87]'
+          - generic [ref=e88]: Dec
+          - 'generic "Jan Sales: ₱117155.00" [ref=e89]'
+          - 'generic "Jan Profit: ₱21092.52" [ref=e90]'
+          - generic [ref=e91]: Jan
+          - 'generic "Feb Sales: ₱203010.00" [ref=e92]'
+          - 'generic "Feb Profit: ₱50756.93" [ref=e93]'
+          - generic [ref=e94]: Feb
+          - 'generic "Mar Sales: ₱294446.00" [ref=e95]'
+          - 'generic "Mar Profit: ₱97111.53" [ref=e96]'
+          - generic [ref=e97]: Mar
+        - generic [ref=e98]:
+          - generic [ref=e99]: Total Sales
+          - generic [ref=e102]: Gross Profit
+      - generic [ref=e105]:
+        - heading "System Summary" [level=3] [ref=e106]
+        - paragraph [ref=e107]: Radline BackOffice is running successfully on high-performance Go and hypermedia-driven HTMX frontend.
+        - generic [ref=e108]:
+          - generic [ref=e109]:
+            - generic [ref=e110]: "Database:"
+            - generic [ref=e111]: SQLite (modernc.org)
+          - generic [ref=e112]:
+            - generic [ref=e113]: "Server Engine:"
+            - generic [ref=e114]: Go HTTP Standard Library
+          - generic [ref=e115]:
+            - generic [ref=e116]: "UI Framework:"
+            - generic [ref=e117]: HTMX (Hypermedia-driven)
