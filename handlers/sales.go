@@ -20,7 +20,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	baseQuery := `
 		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
 		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost, s.profit,
-		       i.code as item_code
+		       i.code as item_code, i.description as item_description
 		FROM sales_details s
 		JOIN items i ON s.item_id = i.id
 	`
@@ -28,8 +28,8 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	var whereClauses []string
 
 	if search != "" {
-		whereClauses = append(whereClauses, "(s.doc_number LIKE ? OR s.customer_name LIKE ? OR i.code LIKE ?)")
-		args = append(args, "%"+search+"%", "%"+search+"%", "%"+search+"%")
+		whereClauses = append(whereClauses, "(s.doc_number LIKE ? OR s.customer_name LIKE ? OR i.code LIKE ? OR i.description LIKE ?)")
+		args = append(args, "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
 	if supplierFilter != "" && supplierFilter != "all" {

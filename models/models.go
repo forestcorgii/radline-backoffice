@@ -114,6 +114,7 @@ type SalesDetailWithItem struct {
 	TotalCost    float64   `db:"total_cost"`
 	Profit       float64   `db:"profit"`
 	ItemCode     string    `db:"item_code"`
+	Description  string    `db:"item_description"`
 	RefPL        *string   `db:"ref_pl"`
 }
 
@@ -168,5 +169,3 @@ type Uom struct {
 	ID   int    `db:"id"`
 	Code string `db:"code"`
 }
-
-
