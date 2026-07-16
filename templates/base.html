@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,9 @@
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/index.css?v=1.1">
+    <link rel="stylesheet" href="/static/index.css?v=1.4">
 </head>
+
 <body>
     <div class="app-layout">
         <!-- Sidebar Backdrop for mobile -->
@@ -21,38 +23,62 @@
             <div class="sidebar-brand">
                 <h1>Radline BackOffice</h1>
                 <button class="sidebar-close-btn" onclick="toggleMobileSidebar()" aria-label="Close Sidebar">
-                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
             </div>
-            
+
             <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
                 <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()">Dashboard</a>
-                <a href="/brands" hx-get="/brands" onclick="closeMobileSidebarOnNav()">Brands</a>
-                <a href="/categories" hx-get="/categories" onclick="closeMobileSidebarOnNav()">Categories</a>
-                <a href="/items" hx-get="/items" onclick="closeMobileSidebarOnNav()">Items</a>
-                
+
+
+                <a href="/sales" hx-get="/sales" onclick="closeMobileSidebarOnNav()">Sales</a>
+
                 <div class="sidebar-dropdown" id="inventory-dropdown">
                     <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)">
                         <span>Inventory</span>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
                         <a href="/inventory" hx-get="/inventory" onclick="closeMobileSidebarOnNav()">Overview</a>
-                        <a href="/inventory/monthly" hx-get="/inventory/monthly" onclick="closeMobileSidebarOnNav()">Monthly Inventory</a>
-                        <a href="/inventory/receiving" hx-get="/inventory/receiving" onclick="closeMobileSidebarOnNav()">Stock Receiving</a>
-                        <a href="/inventory/adjustments" hx-get="/inventory/adjustments" onclick="closeMobileSidebarOnNav()">Stock Adjustment</a>
-                        <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs" onclick="closeMobileSidebarOnNav()">Receiving Logs</a>
-                        <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs" onclick="closeMobileSidebarOnNav()">Adjustment Logs</a>
+                        <a href="/inventory/monthly" hx-get="/inventory/monthly"
+                            onclick="closeMobileSidebarOnNav()">Monthly Inventory</a>
+                        <a href="/inventory/receiving" hx-get="/inventory/receiving"
+                            onclick="closeMobileSidebarOnNav()">Stock Receiving</a>
+                        <a href="/inventory/adjustments" hx-get="/inventory/adjustments"
+                            onclick="closeMobileSidebarOnNav()">Stock Adjustment</a>
+                        <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs"
+                            onclick="closeMobileSidebarOnNav()">Receiving Logs</a>
+                        <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs"
+                            onclick="closeMobileSidebarOnNav()">Adjustment Logs</a>
                     </div>
                 </div>
-                
-                <a href="/sales" hx-get="/sales" onclick="closeMobileSidebarOnNav()">Sales</a>
+
+
+                <div class="sidebar-dropdown" id="masterlist-dropdown">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)">
+                        <span>Masterlist</span>
+                        <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="/items" hx-get="/items" onclick="closeMobileSidebarOnNav()">Items</a>
+                        <a href="/settings" hx-get="/settings" onclick="closeMobileSidebarOnNav()">Settings</a>
+                    </div>
+                </div>
+
                 <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()">Import</a>
+
             </nav>
         </aside>
 
@@ -60,8 +86,10 @@
         <div class="main-layout-container">
             <!-- Mobile top header -->
             <header class="top-header">
-                <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleMobileSidebar()" aria-label="Toggle Sidebar">
-                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleMobileSidebar()"
+                    aria-label="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="3" y1="12" x2="21" y2="12"></line>
                         <line x1="3" y1="6" x2="21" y2="6"></line>
                         <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -83,8 +111,8 @@
         // Highlight active navigation link and manage collapsible dropdown state
         function updateActiveNavLink() {
             const currentPath = window.location.pathname;
-            
-            // Highlight main links
+
+            // Highlight main links (excluding dropdown links)
             document.querySelectorAll(".sidebar-nav > a").forEach(link => {
                 const href = link.getAttribute("href");
                 const isActive = href === "/" ? currentPath === "/" : currentPath.startsWith(href);
@@ -95,28 +123,26 @@
                 }
             });
 
-            // Highlight dropdown sub-links exactly
-            let dropdownHasActive = false;
-            document.querySelectorAll(".sidebar-dropdown-menu a").forEach(link => {
-                const href = link.getAttribute("href");
-                const isActive = (currentPath === href);
-                if (isActive) {
-                    link.classList.add("active");
-                    dropdownHasActive = true;
+            // Highlight dropdown links dynamically and auto-expand active dropdowns
+            document.querySelectorAll(".sidebar-dropdown").forEach(dropdown => {
+                let hasActive = false;
+                dropdown.querySelectorAll(".sidebar-dropdown-menu a").forEach(link => {
+                    const href = link.getAttribute("href");
+                    // Active if matches exactly or starts with href (to handle sub-pages like /items/new)
+                    const isActive = currentPath === href || (href !== "/" && currentPath.startsWith(href));
+                    if (isActive) {
+                        link.classList.add("active");
+                        hasActive = true;
+                    } else {
+                        link.classList.remove("active");
+                    }
+                });
+                if (hasActive) {
+                    dropdown.classList.add("open");
                 } else {
-                    link.classList.remove("active");
+                    dropdown.classList.remove("open");
                 }
             });
-
-            // Auto-expand Inventory dropdown if active or on inventory path
-            const inventoryDropdown = document.getElementById("inventory-dropdown");
-            if (inventoryDropdown) {
-                if (dropdownHasActive || currentPath.startsWith("/inventory")) {
-                    inventoryDropdown.classList.add("open");
-                } else {
-                    inventoryDropdown.classList.remove("open");
-                }
-            }
         }
 
         // Toggle sidebar dropdown on desktop/mobile
@@ -151,23 +177,23 @@
         document.addEventListener("DOMContentLoaded", updateActiveNavLink);
         document.body.addEventListener("htmx:afterOnLoad", updateActiveNavLink);
         document.body.addEventListener("htmx:historyRestore", updateActiveNavLink);
-        document.body.addEventListener("htmx:afterSwap", function(evt) {
+        document.body.addEventListener("htmx:afterSwap", function (evt) {
             if (evt.detail.target.id === "main-content") {
                 window.scrollTo(0, 0);
             }
         });
 
         // Toast notifications listener for HX-Trigger headers
-        document.body.addEventListener('show-toast', function(evt) {
+        document.body.addEventListener('show-toast', function (evt) {
             const type = evt.detail.type || 'info';
             const message = evt.detail.message || '';
-            
+
             const container = document.getElementById('toast-container');
             if (!container) return;
 
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
-            
+
             // Icon based on type
             let icon = 'ℹ️';
             if (type === 'success') icon = '✅';
@@ -182,9 +208,9 @@
             const textSpan = document.createElement('span');
             textSpan.textContent = message;
             toast.appendChild(textSpan);
-            
+
             container.appendChild(toast);
-            
+
             // Auto-remove toast
             setTimeout(() => {
                 toast.style.animation = 'fadeOut 0.5s ease forwards';
@@ -193,6 +219,190 @@
                 }, 500);
             }, 4000);
         });
+
+        // Searchable Dropdown functions
+        function showDropdown(input) {
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            const list = container.querySelector('.dropdown-list');
+            if (list) {
+                document.querySelectorAll('.dropdown-list').forEach(l => {
+                    if (l !== list) l.style.display = 'none';
+                });
+                list.style.display = 'block';
+                container.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('active'));
+            }
+        }
+
+        function hideDropdown(input) {
+            setTimeout(() => {
+                const container = input.closest('.searchable-dropdown');
+                if (!container) return;
+                const list = container.querySelector('.dropdown-list');
+                if (list) {
+                    list.style.display = 'none';
+                    const hidden = container.querySelector('input[type="hidden"]');
+                    if (input.value.trim() === '') {
+                        if (hidden && hidden.value !== '') {
+                            hidden.value = '';
+                            hidden.dispatchEvent(new Event('change'));
+                        }
+                    } else {
+                        const currentText = input.value;
+                        const items = container.querySelectorAll('.dropdown-item');
+                        let match = null;
+                        for (const item of items) {
+                            if (item.getAttribute('data-description') === currentText) {
+                                match = item;
+                                break;
+                            }
+                        }
+                        if (match) {
+                            const selectedId = match.getAttribute('data-id');
+                            if (hidden && hidden.value !== selectedId) {
+                                hidden.value = selectedId;
+                                hidden.dispatchEvent(new Event('change'));
+                            }
+                        } else {
+                            let ciMatch = null;
+                            for (const item of items) {
+                                if (item.getAttribute('data-description').toLowerCase() === currentText.toLowerCase()) {
+                                    ciMatch = item;
+                                    break;
+                                }
+                            }
+                            if (ciMatch) {
+                                input.value = ciMatch.getAttribute('data-description');
+                                const selectedId = ciMatch.getAttribute('data-id');
+                                if (hidden && hidden.value !== selectedId) {
+                                    hidden.value = selectedId;
+                                    hidden.dispatchEvent(new Event('change'));
+                                }
+                            } else {
+                                const selectedId = hidden ? hidden.value : '';
+                                if (selectedId) {
+                                    let found = false;
+                                    for (const item of items) {
+                                        if (item.getAttribute('data-id') === selectedId) {
+                                            input.value = item.getAttribute('data-description');
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!found) input.value = '';
+                                } else {
+                                    input.value = '';
+                                }
+                            }
+                        }
+                    }
+                }
+            }, 200);
+        }
+
+        function filterDropdown(input) {
+            const filter = input.value.toLowerCase();
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            const items = container.querySelectorAll('.dropdown-item');
+            let firstVisible = null;
+            items.forEach(item => {
+                const text = item.getAttribute('data-description').toLowerCase();
+                if (text.includes(filter)) {
+                    item.style.display = 'block';
+                    if (!firstVisible) firstVisible = item;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            items.forEach(item => item.classList.remove('active'));
+            if (firstVisible) {
+                firstVisible.classList.add('active');
+            }
+        }
+
+        function selectDropdownItem(item) {
+            const container = item.closest('.searchable-dropdown');
+            if (!container) return;
+            const input = container.querySelector('.dropdown-search');
+            const hidden = container.querySelector('input[type="hidden"]');
+            
+            const selectedId = item.getAttribute('data-id');
+            const description = item.getAttribute('data-description');
+            const uom = item.getAttribute('data-uom');
+            
+            if (input) input.value = description;
+            if (hidden) {
+                const oldVal = hidden.value;
+                hidden.value = selectedId;
+                if (oldVal !== selectedId) {
+                    hidden.dispatchEvent(new Event('change'));
+                }
+            }
+            
+            if (uom) {
+                const uomInput = container.closest('form')?.querySelector('#uom');
+                if (uomInput) {
+                    uomInput.value = uom;
+                }
+            }
+            
+            const list = container.querySelector('.dropdown-list');
+            if (list) list.style.display = 'none';
+        }
+
+        function handleDropdownKeydown(event, input) {
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            const list = container.querySelector('.dropdown-list');
+            if (!list || list.style.display === 'none') {
+                if (event.key === 'ArrowDown' || event.key === 'Enter') {
+                    showDropdown(input);
+                    event.preventDefault();
+                }
+                return;
+            }
+            
+            const visibleItems = Array.from(container.querySelectorAll('.dropdown-item')).filter(item => item.style.display !== 'none');
+            if (visibleItems.length === 0) return;
+            
+            let activeIndex = visibleItems.findIndex(item => item.classList.contains('active'));
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (activeIndex >= 0) visibleItems[activeIndex].classList.remove('active');
+                activeIndex = (activeIndex + 1) % visibleItems.length;
+                visibleItems[activeIndex].classList.add('active');
+                visibleItems[activeIndex].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (activeIndex >= 0) visibleItems[activeIndex].classList.remove('active');
+                activeIndex = (activeIndex - 1 + visibleItems.length) % visibleItems.length;
+                visibleItems[activeIndex].classList.add('active');
+                visibleItems[activeIndex].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (activeIndex >= 0) {
+                    selectDropdownItem(visibleItems[activeIndex]);
+                } else {
+                    selectDropdownItem(visibleItems[0]);
+                }
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                list.style.display = 'none';
+                input.blur();
+            }
+        }
+
+        // Global click listener to close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.searchable-dropdown')) {
+                document.querySelectorAll('.dropdown-list').forEach(list => {
+                    list.style.display = 'none';
+                });
+            }
+        });
     </script>
 </body>
+
 </html>

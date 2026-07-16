@@ -1,0 +1,70 @@
+{{ define "settings_new.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div style="margin-bottom: 1.5rem;">
+    <a href="/settings" hx-get="/settings" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
+        ← Back to Settings
+    </a>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2 class="mb-4" style="font-size: 1.25rem; font-weight: 600;">Add UOM Setting</h2>
+    <form hx-post="/uom-settings/add" hx-swap="none">
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="item_id" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Select Item</label>
+            <div class="searchable-dropdown">
+                <input type="text" 
+                       class="form-input dropdown-search" 
+                       placeholder="Search Item..." 
+                       value=""
+                       onfocus="showDropdown(this)"
+                       onblur="hideDropdown(this)"
+                       oninput="filterDropdown(this)"
+                       onkeydown="handleDropdownKeydown(event, this)"
+                       style="width: 100%; padding: 0.5rem 0.75rem; height: auto;" 
+                       required>
+                <input type="hidden" 
+                       id="item_id"
+                       name="item_id" 
+                       value="">
+                <div class="dropdown-list">
+                    {{ range .Items }}
+                    <div class="dropdown-item" 
+                         data-id="{{ .ID }}" 
+                         data-description="{{ .Description }}"
+                         data-uom="{{ .DefaultUOM }}"
+                         onmousedown="selectDropdownItem(this)">
+                        {{ .Description }}
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="uom" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">UOM (Base)</label>
+            <input type="text" id="uom" name="uom" class="form-input" readonly placeholder="Select an item first..." 
+                   style="width: 100%; background-color: rgba(0,0,0,0.03); color: var(--text-muted); cursor: not-allowed; padding: 0.5rem 0.75rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="muom" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">MUOM (Multiple)</label>
+            <input type="text" id="muom" name="muom" class="form-input" placeholder="e.g. BOX, CASE, PACK" required
+                   style="width: 100%; padding: 0.5rem 0.75rem;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="conversion_factor" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Conversion Rate</label>
+            <input type="number" step="any" id="conversion_factor" name="conversion_factor" class="form-input" placeholder="e.g. 10.0" required
+                   style="width: 100%; padding: 0.5rem 0.75rem;">
+        </div>
+
+        <div style="display: flex; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+            <button type="submit" class="btn">Save Setting</button>
+            <a href="/settings" hx-get="/settings" hx-target="#main-content" class="btn btn-secondary" style="text-decoration: none; text-align: center; display: inline-block; padding: 0.5rem 1rem;">Cancel</a>
+        </div>
+    </form>
+</div>
+{{ end }}

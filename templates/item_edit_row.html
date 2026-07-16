@@ -32,21 +32,28 @@
         <input type="text" name="default_uom" value="{{ .Item.DefaultUOM }}" required class="form-input">
     </td>
     <td>
-        <button class="btn btn-success" 
-                hx-post="/items/edit/{{ .Item.ID }}" 
-                hx-include="closest tr" 
-                hx-target="#item-row-{{ .Item.ID }}" 
-                hx-swap="outerHTML"
-                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
-            Save
-        </button>
-        <button class="btn btn-secondary" 
-                hx-get="/items/row/{{ .Item.ID }}" 
-                hx-target="#item-row-{{ .Item.ID }}" 
-                hx-swap="outerHTML"
-                style="padding: 0.5rem 1rem; font-size: 0.75rem;">
-            Cancel
-        </button>
+        <div class="actions-cell">
+            <button class="btn btn-success btn-icon" 
+                    hx-post="/items/edit/{{ .Item.ID }}" 
+                    hx-include="closest tr" 
+                    hx-target="#item-row-{{ .Item.ID }}" 
+                    hx-swap="outerHTML"
+                    title="Save">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </button>
+            <button class="btn btn-secondary btn-icon" 
+                    hx-get="/items/row/{{ .Item.ID }}" 
+                    hx-target="#item-row-{{ .Item.ID }}" 
+                    hx-swap="outerHTML"
+                    title="Cancel">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
     </td>
 </tr>
 {{ end }}

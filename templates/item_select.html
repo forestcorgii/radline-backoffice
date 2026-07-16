@@ -1,7 +1,28 @@
-<select id="item_id" name="item_id" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required
-        hx-get="/items/select" hx-trigger="item-added from:body" hx-swap="outerHTML">
-    <option value="">-- Select Item --</option>
-    {{ range . }}
-    <option value="{{ .ID }}">{{ .Code }} - {{ .Description }}</option>
-    {{ end }}
-</select>
+<div class="searchable-dropdown" style="position: relative; width: 100%;"
+     hx-get="/items/select" hx-trigger="item-added from:body" hx-swap="outerHTML">
+    <input type="text" 
+           class="form-input dropdown-search" 
+           placeholder="Search Item..." 
+           value=""
+           onfocus="showDropdown(this)"
+           onblur="hideDropdown(this)"
+           oninput="filterDropdown(this)"
+           onkeydown="handleDropdownKeydown(event, this)"
+           style="width: 100%; padding: 0.75rem 1rem; height: auto;" 
+           required>
+    <input type="hidden" 
+           id="item_id"
+           name="item_id" 
+           value="">
+    <div class="dropdown-list">
+        {{ range . }}
+        <div class="dropdown-item" 
+             data-id="{{ .ID }}" 
+             data-description="{{ .Description }}"
+             data-uom="{{ .DefaultUOM }}"
+             onmousedown="selectDropdownItem(this)">
+            {{ .Description }}
+        </div>
+        {{ end }}
+    </div>
+</div>

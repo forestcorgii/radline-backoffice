@@ -195,13 +195,14 @@ func (p Pagination) BuildView(path, target, targetID string, qsPreserve []string
 }
 
 // PreservedParams returns a comma-separated list of CSS selectors for hx-include.
+// It scopes selectors to the specific target card to prevent naming collisions when multiple paginated cards exist on the same page.
 func (pv PaginationView) PreservedParams() string {
 	if len(pv.QSPreserve) == 0 {
 		return ""
 	}
 	selectors := make([]string, len(pv.QSPreserve))
 	for i, p := range pv.QSPreserve {
-		selectors[i] = fmt.Sprintf("[name='%s']", p)
+		selectors[i] = fmt.Sprintf("#%s-card [name='%s']", pv.TargetID, p)
 	}
 	return strings.Join(selectors, ",")
 }

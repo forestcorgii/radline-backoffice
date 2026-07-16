@@ -9,25 +9,25 @@
 </div>
 
 <div class="grid grid-cols-4 mb-4">
-    <div class="card" style="border-left: 4px solid #2563eb;">
+    <div class="card" style="border-left: 4px solid var(--primary-color);">
         <h6 style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Total Sales</h6>
         <h3 style="font-size: 1.75rem; font-weight: 700;">₱{{ printf "%.2f" .TotalSales }}</h3>
-        <small style="color: #15803d;"><span style="margin-right: 0.25rem;">📈</span>Actual from sales data</small>
+        <small class="text-success"><span style="margin-right: 0.25rem;">📈</span>Actual from sales data</small>
     </div>
     
-    <div class="card" style="border-left: 4px solid #dc2626;">
+    <div class="card" style="border-left: 4px solid var(--danger-color);">
         <h6 style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Total Costs</h6>
         <h3 style="font-size: 1.75rem; font-weight: 700;">₱{{ printf "%.2f" .TotalCosts }}</h3>
-        <small style="color: var(--text-muted);"><span style="margin-right: 0.25rem;">📉</span>Actual cost of goods sold</small>
+        <small class="text-muted"><span style="margin-right: 0.25rem;">📉</span>Actual cost of goods sold</small>
     </div>
 
-    <div class="card" style="border-left: 4px solid #16a34a;">
+    <div class="card" style="border-left: 4px solid var(--success-color);">
         <h6 style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Gross Profit</h6>
         <h3 style="font-size: 1.75rem; font-weight: 700;">₱{{ printf "%.2f" .GrossProfit }}</h3>
-        <small style="color: #15803d;"><span style="margin-right: 0.25rem;">💰</span>Net earnings before expenses</small>
+        <small class="text-success"><span style="margin-right: 0.25rem;">💰</span>Net earnings before expenses</small>
     </div>
 
-    <div class="card" style="border-left: 4px solid #0891b2;">
+    <div class="card" style="border-left: 4px solid var(--info-color);">
         <h6 style="text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem;">Profit Margin</h6>
         <h3 style="font-size: 1.75rem; font-weight: 700;">{{ printf "%.1f" .Margin }}%</h3>
         <div style="display: flex; align-items: center; gap: 0.35rem; margin-top: 0.25rem;">
@@ -36,7 +36,7 @@
             {{ else }}
             <span class="badge badge-inactive" style="padding: 0.15rem 0.5rem; font-size: 0.7rem;">Below Target</span>
             {{ end }}
-            <small style="color: var(--text-muted);">Target: 25%</small>
+            <small class="text-muted">Target: 25%</small>
         </div>
     </div>
 </div>
@@ -59,23 +59,23 @@
                 </rect>
                 
                 <!-- Profit Bar -->
-                <rect x="{{ .ProfitX }}" y="{{ .ProfitY }}" width="20" height="{{ .ProfitHeight }}" rx="3" fill="#16a34a" style="transition: all 0.3s ease; opacity: 0.85;">
+                <rect x="{{ .ProfitX }}" y="{{ .ProfitY }}" width="20" height="{{ .ProfitHeight }}" rx="3" fill="var(--success-color)" style="transition: all 0.3s ease; opacity: 0.85;">
                     <title>{{ .Label }} Profit: ₱{{ printf "%.2f" .Profit }}</title>
                 </rect>
                 
                 <!-- X Axis Label -->
-                <text x="{{ .LabelX }}" y="215" text-anchor="middle" fill="var(--text-muted)" style="font-size: 0.75rem; font-weight: 500;">{{ .Label }}</text>
+                <text x="{{ .LabelX }}" y="215" text-anchor="middle" class="text-muted" style="font-size: 0.75rem; font-weight: 500;">{{ .Label }}</text>
                 {{ end }}
             </svg>
         </div>
         <div style="display: flex; gap: 1rem; margin-top: 1rem; justify-content: center; font-size: 0.75rem; font-weight: 500;">
             <div style="display: flex; align-items: center; gap: 0.25rem;">
                 <div style="width: 12px; height: 12px; background-color: var(--primary-color); border-radius: 3px;"></div>
-                <span style="color: var(--text-muted);">Total Sales</span>
+                <span class="text-muted">Total Sales</span>
             </div>
             <div style="display: flex; align-items: center; gap: 0.25rem;">
-                <div style="width: 12px; height: 12px; background-color: #16a34a; border-radius: 3px;"></div>
-                <span style="color: var(--text-muted);">Gross Profit</span>
+                <div style="width: 12px; height: 12px; background-color: var(--success-color); border-radius: 3px;"></div>
+                <span class="text-muted">Gross Profit</span>
             </div>
         </div>
     </div>

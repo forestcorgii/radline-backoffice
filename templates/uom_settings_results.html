@@ -1,0 +1,19 @@
+{{ define "uom_settings_results.html" }}
+<div class="table-container">
+    <table class="table-scroll-md">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Item</th>
+                <th>UOM (Base)</th>
+                <th>MUOM</th>
+                <th>Conversion Rate</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="uom-settings-tbody">
+            {{ template "uom_setting_rows.html" .UomSettings }}
+        </tbody>
+    </table>
+</div>
+{{ end }}

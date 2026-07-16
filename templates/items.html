@@ -10,7 +10,8 @@
     </a>
 </div>
 
-<div class="card">
+<!-- Non-collapsible Items List Card occupying the full width -->
+<div class="card" id="items-card">
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Items List</h3>
     
     <form style="display: contents;" onsubmit="return false;">
@@ -63,25 +64,25 @@
     </div>
 
     <div id="items-results">
-    <div class="table-container">
-        <table class="table-scroll-md">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Code</th>
-                    <th>Description</th>
-                    <th>Model</th>
-                    <th>Brand</th>
-                    <th>Category</th>
-                    <th>Default UOM</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="items-tbody">
-                {{ template "item_rows.html" .Items }}
-            </tbody>
-        </table>
-    </div>
+        <div class="table-container">
+            <table class="table-scroll-md">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Description</th>
+                        <th>Model</th>
+                        <th>Brand</th>
+                        <th>Category</th>
+                        <th>Default UOM</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="items-tbody">
+                    {{ template "item_rows.html" .Items }}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     {{ template "pagination.html" .PaginationView }}

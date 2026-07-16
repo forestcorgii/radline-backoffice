@@ -1,0 +1,37 @@
+{{ define "uom_setting_edit_row.html" }}
+<tr id="uom-row-{{ .ID }}" class="edit-row">
+    <td>{{ .ID }}</td>
+    <td><strong>{{ .ItemCode }}</strong> - {{ .ItemDescription }}</td>
+    <td>{{ .UOM }}</td>
+    <td>
+        <input type="text" name="muom" value="{{ .MUOM }}" required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    </td>
+    <td>
+        <input type="number" step="any" name="conversion_factor" value="{{ .ConversionFactor }}" required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    </td>
+    <td>
+        <div class="actions-cell">
+            <button class="btn btn-success btn-icon" 
+                    hx-post="/uom-settings/edit/{{ .ID }}" 
+                    hx-include="closest tr" 
+                    hx-target="#uom-row-{{ .ID }}" 
+                    hx-swap="outerHTML"
+                    title="Save">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </button>
+            <button class="btn btn-secondary btn-icon" 
+                    hx-get="/uom-settings/row/{{ .ID }}" 
+                    hx-target="#uom-row-{{ .ID }}" 
+                    hx-swap="outerHTML"
+                    title="Cancel">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </td>
+</tr>
+{{ end }}
