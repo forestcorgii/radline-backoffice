@@ -90,14 +90,7 @@ func (app *App) BrandsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		app.Render(w, "brands_results.html", data)
 	} else {
-		data := struct {
-			Brands         []models.Brand
-			PaginationView PaginationView
-		}{
-			Brands:         brands,
-			PaginationView: paginationView,
-		}
-		app.RenderPage(w, r, "brands.html", data)
+		http.Redirect(w, r, "/settings", http.StatusMovedPermanently)
 	}
 }
 
@@ -120,7 +113,7 @@ func (app *App) AddBrandHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Brand added successfully!"}, "brand-added": ""}`)
-	w.Header().Set("HX-Location", "/brands")
+	w.Header().Set("HX-Location", "/settings")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -317,14 +310,7 @@ func (app *App) CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		app.Render(w, "categories_results.html", data)
 	} else {
-		data := struct {
-			Categories     []models.Category
-			PaginationView PaginationView
-		}{
-			Categories:     categories,
-			PaginationView: paginationView,
-		}
-		app.RenderPage(w, r, "categories.html", data)
+		http.Redirect(w, r, "/settings", http.StatusMovedPermanently)
 	}
 }
 
@@ -347,7 +333,7 @@ func (app *App) AddCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Category added successfully!"}, "category-added": ""}`)
-	w.Header().Set("HX-Location", "/categories")
+	w.Header().Set("HX-Location", "/settings")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -817,7 +803,7 @@ func (app *App) SelectCategoriesHandler(w http.ResponseWriter, r *http.Request) 
 // SelectItemsHandler renders the updated item select fragment
 func (app *App) SelectItemsHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

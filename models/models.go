@@ -154,3 +154,13 @@ type ItemStockView struct {
 	CurrentPrice  float64 `db:"current_price"`
 }
 
+type UomSettingWithItem struct {
+	ID               int     `db:"id"`
+	ItemID           int     `db:"item_id"`
+	ItemCode         string  `db:"item_code"`
+	ItemDescription  string  `db:"item_description"`
+	UOM              string  `db:"uom"`
+	MUOM             string  `db:"muom"`
+	ConversionFactor float64 `db:"conversion_factor"`
+}
+

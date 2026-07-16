@@ -84,6 +84,15 @@ func main() {
 	http.HandleFunc("DELETE /sales/delete/{id}", app.DeleteSalesHandler)
 	http.HandleFunc("GET /sales/item-row-details", app.SaleItemRowDetailsHandler)
 
+	// Settings CRUD
+	http.HandleFunc("GET /settings", app.SettingsHandler)
+	http.HandleFunc("GET /uom-settings/new", app.NewUomSettingPageHandler)
+	http.HandleFunc("POST /uom-settings/add", app.AddUomSettingHandler)
+	http.HandleFunc("GET /uom-settings/edit/{id}", app.EditUomSettingFormHandler)
+	http.HandleFunc("POST /uom-settings/edit/{id}", app.UpdateUomSettingHandler)
+	http.HandleFunc("GET /uom-settings/row/{id}", app.UomSettingRowHandler)
+	http.HandleFunc("DELETE /uom-settings/delete/{id}", app.DeleteUomSettingHandler)
+
 	// Import Routing
 	http.HandleFunc("GET /import", app.ImportPageHandler)
 	http.HandleFunc("POST /import/upload", app.ImportUploadHandler)
@@ -110,7 +119,7 @@ func parseTemplates() map[string]*template.Template {
 		"inventory.html", "stock_receiving.html", "stock_adjustments.html",
 		"sales.html", "monthly_inventory.html", "receiving_logs.html", "adjustment_logs.html",
 		"brand_new.html", "category_new.html", "item_new.html", "sales_new.html",
-		"import.html",
+		"import.html", "settings.html", "settings_new.html",
 	}
 
 	for _, page := range pages {
@@ -140,6 +149,14 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/receiving_rows.html")
 		} else if page == "adjustment_logs.html" {
 			files = append(files, "templates/adjustment_rows.html")
+		} else if page == "settings.html" {
+			files = append(files, 
+				"templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html",
+				"templates/category_row.html", "templates/category_rows.html", "templates/category_edit_row.html",
+				"templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html",
+			)
+		} else if page == "settings_new.html" {
+			files = append(files, "templates/item_select.html")
 		}
 
 		t = template.Must(t.ParseFiles(files...))
@@ -157,6 +174,7 @@ func parseTemplates() map[string]*template.Template {
 		"brands_results.html", "categories_results.html", "items_results.html",
 		"inventory_stock_results.html", "sales_results.html", "monthly_inventory_results.html",
 		"receiving_logs_results.html", "adjustment_logs_results.html",
+		"uom_setting_row.html", "uom_setting_rows.html", "uom_setting_edit_row.html", "uom_settings_results.html",
 	}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)
@@ -183,6 +201,10 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/receiving_rows.html", "templates/pagination.html")
 		} else if frag == "adjustment_logs_results.html" {
 			files = append(files, "templates/adjustment_rows.html", "templates/pagination.html")
+		} else if frag == "uom_setting_rows.html" {
+			files = append(files, "templates/uom_setting_row.html")
+		} else if frag == "uom_settings_results.html" {
+			files = append(files, "templates/uom_setting_row.html", "templates/uom_setting_rows.html")
 		}
 		t = template.Must(t.ParseFiles(files...))
 		templates[frag] = t

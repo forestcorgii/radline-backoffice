@@ -1,10 +1,10 @@
 {{ define "adjustment_rows.html" }}
 {{ range . }}
 <tr>
-    <td><span class="badge" style="background-color: rgba(139, 92, 246, 0.08); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.2);">{{ if .AdjustmentID }}ADJ-{{ .AdjustmentID }}{{ else }}-{{ end }}</span></td>
+    <td><span class="badge badge-secondary">{{ if .AdjustmentID }}ADJ-{{ .AdjustmentID }}{{ else }}-{{ end }}</span></td>
     <td>{{ .Date.Format "2006-01-02" }}</td>
     <td style="font-weight: 500;">{{ .ItemCode }}</td>
-    <td style="font-weight: 600; {{ if gt .AdjustmentQty 0.0 }}color: #15803d;{{ else }}color: #b91c1c;{{ end }}">
+    <td style="font-weight: 600;" class="{{ if gt .AdjustmentQty 0.0 }}text-success{{ else }}text-danger{{ end }}">
         {{ if gt .AdjustmentQty 0.0 }}+{{ end }}{{ .AdjustmentQty }}
     </td>
     <td>{{ .UOM }}</td>

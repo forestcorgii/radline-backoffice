@@ -222,3 +222,47 @@
   isOOB := r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content"
   ```
   This ensures the element renders as a standard inline component during full page loads and sidebar clicks (targeting `main-content`), while correctly acting as an OOB swap element during inline search, filtering, and page-change updates.
+
+## Context: Inline Add Forms in Settings Section (No Navigate-Away)
+**Problem**: Clicking "+ Add Brand/Category/UOM Setting" in the Settings page navigated to separate `/brands/new`, `/categories/new`, or `/uom-settings/new` pages, requiring a round-trip and losing context of where the user was.
+**Enforced Solution**: 
+- **Inline Toggle Forms**: Replaced `<a>` navigation links in `settings.html` with `<button>` elements that toggle a hidden inline form (`display: none <-> block`) within the same card section via `toggleAddForm(formId)` JavaScript.
+- **Form Contents**: Each inline form is a compact card with a dashed border and light blue background, placed directly above the search/filter bar. It contains the minimal fields needed, styled to match the existing compact design.
+- **Post-Submit Cleanup**: Forms use `hx-swap="none"` and `onsubmit="setTimeout(function(){ cancelAddForm('form-id') }, 100)"` to hide the form briefly after submission, before `HX-Location` redirects back to `/settings`.
+- **Items for Inline UOM Form**: The `SettingsHandler` now also fetches `.Items` (from `items` table) to populate the searchable dropdown in the inline UOM setting form.
+- **Searchable Dropdown Reuse**: The dropdown JavaScript functions (`showDropdown`, `filterDropdown`, `selectDropdownItem`, etc.) were duplicated from `settings_new.html` into `settings.html`'s script block for the inline UOM item selector.
+- The standalone pages (`brand_new.html`, `category_new.html`, `uom_settings_new.html`, `settings_new.html`) are preserved for direct URL access but no longer linked from the Settings page.
+
+## Context: Action Column Buttons to Icon-Based Buttons
+**Problem**: Textual buttons ("Edit", "Delete", "Save", "Cancel", "Remove") in table rows and Actions columns take up significant horizontal screen space, squishing inputs and tables on smaller viewports.
+**Enforced Solution**:
+- **CSS Utility Classes**: Added `.btn-icon` and `.actions-cell` helper classes in [index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css):
+  ```css
+  .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      width: 1.85rem;
+      height: 1.85rem;
+      min-width: 1.85rem;
+      border-radius: 0.375rem;
+  }
+  .btn-icon svg {
+      width: 0.9rem;
+      height: 0.9rem;
+  }
+  .actions-cell {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+  }
+  ```
+- **Lucide Inline SVGs**: Replaced text inside buttons with lightweight, inline SVG icons (using `stroke="currentColor"` to dynamically inherit parent text colors) in all row/edit templates:
+  - **Edit**: secondary pencil icon
+  - **Delete / Remove**: red trash icon
+  - **Save**: green checkmark icon
+  - **Cancel**: secondary X icon
+- **A11y Tooltips**: Provided `title` attributes on all icon buttons to guarantee hover clarity and accessibility.
+
+

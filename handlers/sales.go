@@ -230,7 +230,7 @@ func (app *App) NewSalesPageHandler(w http.ResponseWriter, r *http.Request) {
 // NewSaleRowHandler renders a single empty sale item row template
 func (app *App) NewSaleRowHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -266,7 +266,7 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 	itemID, _ := strconv.Atoi(itemIDStr)
 
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

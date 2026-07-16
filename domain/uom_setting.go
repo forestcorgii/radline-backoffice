@@ -21,3 +21,16 @@ func NewUomSetting(muom string, factor float64) (UomSetting, error) {
 		ConversionFactor: factor,
 	}, nil
 }
+
+// ConvertToBase converts multiple units quantity to base units quantity.
+func (u UomSetting) ConvertToBase(qty float64) float64 {
+	return qty * u.ConversionFactor
+}
+
+// ConvertToMultiple converts base units quantity to multiple units quantity.
+func (u UomSetting) ConvertToMultiple(qty float64) float64 {
+	if u.ConversionFactor == 0 {
+		return 0
+	}
+	return qty / u.ConversionFactor
+}
