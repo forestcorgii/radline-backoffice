@@ -70,16 +70,10 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	query, args := stockListQuery(search, stockFilter)
 
-	// Count total records matching search/filters
-	countQuery := "SELECT COUNT(*) FROM (" + query + ")"
-	var totalRecords int
-	_ = db.DB.Get(&totalRecords, countQuery, args...)
+	limit := GetLimitParam(r)
 
-	params := GetPaginationParams(r)
-	pagination := BuildPagination(params, totalRecords)
-
-	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, params.PageSize, params.Offset())
+	query += " LIMIT ?"
+	selectArgs := append(args, limit)
 
 	var stockItems []models.ItemStockView
 	_ = db.DB.Select(&stockItems, query, selectArgs...)
@@ -127,28 +121,21 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	paginationView := pagination.BuildView("/inventory/stock", "#inventory-stock-results", "inventory",
-		[]string{"search", "stock_filter"}, r)
-
-	// If HTMX request for filtering, return just the rows fragment and pagination
+	// If HTMX request for filtering, return just the rows fragment
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			StockItems     []models.ItemStockView
-			PaginationView PaginationView
+			StockItems []models.ItemStockView
 		}{
-			StockItems:     stockItems,
-			PaginationView: paginationView,
+			StockItems: stockItems,
 		}
 		app.Render(w, "inventory_stock_results.html", data)
 		return
 	}
 
 	data := struct {
-		StockItems     []models.ItemStockView
-		PaginationView PaginationView
+		StockItems []models.ItemStockView
 	}{
-		StockItems:     stockItems,
-		PaginationView: paginationView,
+		StockItems: stockItems,
 	}
 	app.RenderPage(w, r, "inventory.html", data)
 }
@@ -166,16 +153,22 @@ func (app *App) StockReceivingPageHandler(w http.ResponseWriter, r *http.Request
 		ORDER BY r.date DESC, r.id DESC
 	`)
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	data := struct {
 		Items            []models.Item
 		ReceivingLogs    []models.ReceivingLogWithItem
 		ReceivingRowData interface{}
+		Uoms             []models.Uom
 	}{
 		Items:         items,
 		ReceivingLogs: receivingLogs,
 		ReceivingRowData: map[string]interface{}{
 			"Items": items,
+			"Uoms":  uoms,
 		},
+		Uoms: uoms,
 	}
 
 	app.RenderPage(w, r, "stock_receiving.html", data)
@@ -194,16 +187,22 @@ func (app *App) StockAdjustmentsPageHandler(w http.ResponseWriter, r *http.Reque
 		ORDER BY a.date DESC, a.id DESC
 	`)
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	data := struct {
 		Items             []models.Item
 		AdjustmentLogs    []models.InventoryAdjustmentWithItem
 		AdjustmentRowData interface{}
+		Uoms              []models.Uom
 	}{
 		Items:          items,
 		AdjustmentLogs: adjustmentLogs,
 		AdjustmentRowData: map[string]interface{}{
 			"Items": items,
+			"Uoms":  uoms,
 		},
+		Uoms: uoms,
 	}
 
 	app.RenderPage(w, r, "stock_adjustments.html", data)
@@ -318,8 +317,13 @@ func (app *App) NewReceivingRowHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	app.Render(w, "receiving_item_row.html", map[string]interface{}{
 		"Items": items,
+		"Uoms":  uoms,
 	})
 }
 
@@ -350,12 +354,16 @@ func (app *App) ReceivingItemRowDetailsHandler(w http.ResponseWriter, r *http.Re
 		}
 	}
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	app.Render(w, "receiving_item_row.html", map[string]interface{}{
 		"Items":          items,
 		"SelectedItemID": itemID,
 		"DefaultUOM":     defaultUOM,
 		"Cost":           lastCost,
 		"Price":          lastPrice,
+		"Uoms":           uoms,
 	})
 }
 
@@ -474,8 +482,13 @@ func (app *App) NewAdjustmentRowHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	app.Render(w, "adjustment_item_row.html", map[string]interface{}{
 		"Items": items,
+		"Uoms":  uoms,
 	})
 }
 
@@ -496,10 +509,14 @@ func (app *App) AdjustmentItemRowDetailsHandler(w http.ResponseWriter, r *http.R
 		_ = db.DB.Get(&defaultUOM, "SELECT default_uom FROM items WHERE id = ?", itemID)
 	}
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	app.Render(w, "adjustment_item_row.html", map[string]interface{}{
 		"Items":          items,
 		"SelectedItemID": itemID,
 		"DefaultUOM":     defaultUOM,
+		"Uoms":           uoms,
 	})
 }
 
@@ -548,20 +565,10 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 
 	query += " GROUP BY t.month, t.item_id"
 
-	// Count total records matching search/filters
-	countQuery := "SELECT COUNT(*) FROM (" + query + ")"
-	var totalRecords int
-	err := db.DB.Get(&totalRecords, countQuery, args...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	limit := GetLimitParam(r)
 
-	params := GetPaginationParams(r)
-	pagination := BuildPagination(params, totalRecords)
-
-	query += " ORDER BY t.month DESC, i.code ASC LIMIT ? OFFSET ?"
-	selectArgs := append(args, params.PageSize, params.Offset())
+	query += " ORDER BY t.month DESC, i.code ASC LIMIT ?"
+	selectArgs := append(args, limit)
 
 	type MonthlyInventoryRow struct {
 		Month       string  `db:"month"`
@@ -576,7 +583,7 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var rows []MonthlyInventoryRow
-	err = db.DB.Select(&rows, query, selectArgs...)
+	err := db.DB.Select(&rows, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -593,32 +600,25 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 		ORDER BY m DESC
 	`)
 
-	paginationView := pagination.BuildView("/inventory/monthly", "#monthly-inventory-results", "monthly-inventory",
-		[]string{"search", "month_filter"}, r)
-
-	// If HTMX request for content filter, only render the table rows fragment and pagination
+	// If HTMX request for content filter, only render the table rows fragment
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Rows           []MonthlyInventoryRow
-			PaginationView PaginationView
+			Rows []MonthlyInventoryRow
 		}{
-			Rows:           rows,
-			PaginationView: paginationView,
+			Rows: rows,
 		}
 		app.Render(w, "monthly_inventory_results.html", data)
 		return
 	}
 
 	data := struct {
-		Rows           []MonthlyInventoryRow
-		Months         []string
-		MonthFilter    string
-		PaginationView PaginationView
+		Rows        []MonthlyInventoryRow
+		Months      []string
+		MonthFilter string
 	}{
-		Rows:           rows,
-		Months:         months,
-		MonthFilter:    monthFilter,
-		PaginationView: paginationView,
+		Rows:        rows,
+		Months:      months,
+		MonthFilter: monthFilter,
 	}
 
 	app.RenderPage(w, r, "monthly_inventory.html", data)
@@ -653,17 +653,7 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 		baseQuery += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	// Count total records
-	countQuery := "SELECT COUNT(*) FROM (" + baseQuery + ")"
-	var totalRecords int
-	err := db.DB.Get(&totalRecords, countQuery, args...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	params := GetPaginationParams(r)
-	pagination := BuildPagination(params, totalRecords)
+	limit := GetLimitParam(r)
 
 	query := baseQuery
 	switch sort {
@@ -674,37 +664,30 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		query += " ORDER BY r.date DESC, r.id DESC"
 	}
-	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, params.PageSize, params.Offset())
+	query += " LIMIT ?"
+	selectArgs := append(args, limit)
 
 	var receivingLogs []models.ReceivingLogWithItem
-	err = db.DB.Select(&receivingLogs, query, selectArgs...)
+	err := db.DB.Select(&receivingLogs, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	paginationView := pagination.BuildView("/inventory/receiving/logs", "#receiving-logs-results", "receiving",
-		[]string{"search", "supplier_filter", "sort"}, r)
-
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			ReceivingLogs  []models.ReceivingLogWithItem
-			PaginationView PaginationView
+			ReceivingLogs []models.ReceivingLogWithItem
 		}{
-			ReceivingLogs:  receivingLogs,
-			PaginationView: paginationView,
+			ReceivingLogs: receivingLogs,
 		}
 		app.Render(w, "receiving_logs_results.html", data)
 		return
 	}
 
 	data := struct {
-		ReceivingLogs  []models.ReceivingLogWithItem
-		PaginationView PaginationView
+		ReceivingLogs []models.ReceivingLogWithItem
 	}{
-		ReceivingLogs:  receivingLogs,
-		PaginationView: paginationView,
+		ReceivingLogs: receivingLogs,
 	}
 
 	app.RenderPage(w, r, "receiving_logs.html", data)
@@ -733,17 +716,7 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 		baseQuery += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	// Count total records
-	countQuery := "SELECT COUNT(*) FROM (" + baseQuery + ")"
-	var totalRecords int
-	err := db.DB.Get(&totalRecords, countQuery, args...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	params := GetPaginationParams(r)
-	pagination := BuildPagination(params, totalRecords)
+	limit := GetLimitParam(r)
 
 	query := baseQuery
 	switch sort {
@@ -754,26 +727,21 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		query += " ORDER BY a.date DESC, a.id DESC"
 	}
-	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, params.PageSize, params.Offset())
+	query += " LIMIT ?"
+	selectArgs := append(args, limit)
 
 	var adjustmentLogs []models.InventoryAdjustmentWithItem
-	err = db.DB.Select(&adjustmentLogs, query, selectArgs...)
+	err := db.DB.Select(&adjustmentLogs, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	paginationView := pagination.BuildView("/inventory/adjustments/logs", "#adjustment-logs-results", "adjustment",
-		[]string{"search", "sort"}, r)
-
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
 			AdjustmentLogs []models.InventoryAdjustmentWithItem
-			PaginationView PaginationView
 		}{
 			AdjustmentLogs: adjustmentLogs,
-			PaginationView: paginationView,
 		}
 		app.Render(w, "adjustment_logs_results.html", data)
 		return
@@ -781,10 +749,8 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		AdjustmentLogs []models.InventoryAdjustmentWithItem
-		PaginationView PaginationView
 	}{
 		AdjustmentLogs: adjustmentLogs,
-		PaginationView: paginationView,
 	}
 
 	app.RenderPage(w, r, "adjustment_logs.html", data)

@@ -40,17 +40,7 @@ func (app *App) BrandsHandler(w http.ResponseWriter, r *http.Request) {
 		query += " HAVING COUNT(i.id) = 0"
 	}
 
-	// Count total records matching search/filters
-	countQuery := "SELECT COUNT(*) FROM (" + query + ")"
-	var totalRecords int
-	err := db.DB.Get(&totalRecords, countQuery, args...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	params := GetPaginationParams(r)
-	pagination := BuildPagination(params, totalRecords)
+	limit := GetLimitParam(r)
 
 	switch sort {
 	case "code_desc":
@@ -67,26 +57,21 @@ func (app *App) BrandsHandler(w http.ResponseWriter, r *http.Request) {
 		query += " ORDER BY b.code ASC"
 	}
 
-	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, params.PageSize, params.Offset())
+	query += " LIMIT ?"
+	selectArgs := append(args, limit)
 
 	var brands []models.Brand
-	err = db.DB.Select(&brands, query, selectArgs...)
+	err := db.DB.Select(&brands, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	paginationView := pagination.BuildView("/brands", "#brands-results", "brands",
-		[]string{"search", "filter", "sort"}, r)
-
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Brands         []models.Brand
-			PaginationView PaginationView
+			Brands []models.Brand
 		}{
-			Brands:         brands,
-			PaginationView: paginationView,
+			Brands: brands,
 		}
 		app.Render(w, "brands_results.html", data)
 	} else {
@@ -260,17 +245,7 @@ func (app *App) CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		query += " HAVING COUNT(i.id) = 0"
 	}
 
-	// Count total records matching search/filters
-	countQuery := "SELECT COUNT(*) FROM (" + query + ")"
-	var totalRecords int
-	err := db.DB.Get(&totalRecords, countQuery, args...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	params := GetPaginationParams(r)
-	pagination := BuildPagination(params, totalRecords)
+	limit := GetLimitParam(r)
 
 	switch sort {
 	case "code_desc":
@@ -287,26 +262,21 @@ func (app *App) CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		query += " ORDER BY c.code ASC"
 	}
 
-	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, params.PageSize, params.Offset())
+	query += " LIMIT ?"
+	selectArgs := append(args, limit)
 
 	var categories []models.Category
-	err = db.DB.Select(&categories, query, selectArgs...)
+	err := db.DB.Select(&categories, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	paginationView := pagination.BuildView("/categories", "#categories-results", "categories",
-		[]string{"search", "filter", "sort"}, r)
-
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Categories     []models.Category
-			PaginationView PaginationView
+			Categories []models.Category
 		}{
-			Categories:     categories,
-			PaginationView: paginationView,
+			Categories: categories,
 		}
 		app.Render(w, "categories_results.html", data)
 	} else {
@@ -488,17 +458,7 @@ func (app *App) ItemsHandler(w http.ResponseWriter, r *http.Request) {
 		query += " WHERE " + strings.Join(whereClauses, " AND ")
 	}
 
-	// Count total records matching search/filters
-	countQuery := "SELECT COUNT(*) FROM (" + query + ")"
-	var totalRecords int
-	err := db.DB.Get(&totalRecords, countQuery, args...)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	params := GetPaginationParams(r)
-	pagination := BuildPagination(params, totalRecords)
+	limit := GetLimitParam(r)
 
 	switch sort {
 	case "code_desc":
@@ -511,26 +471,21 @@ func (app *App) ItemsHandler(w http.ResponseWriter, r *http.Request) {
 		query += " ORDER BY i.code ASC"
 	}
 
-	query += " LIMIT ? OFFSET ?"
-	selectArgs := append(args, params.PageSize, params.Offset())
+	query += " LIMIT ?"
+	selectArgs := append(args, limit)
 
 	var items []models.ItemWithRelations
-	err = db.DB.Select(&items, query, selectArgs...)
+	err := db.DB.Select(&items, query, selectArgs...)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	paginationView := pagination.BuildView("/items", "#items-results", "items",
-		[]string{"search", "brand_id_filter", "category_id_filter", "sort"}, r)
-
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Items          []models.ItemWithRelations
-			PaginationView PaginationView
+			Items []models.ItemWithRelations
 		}{
-			Items:          items,
-			PaginationView: paginationView,
+			Items: items,
 		}
 		app.Render(w, "items_results.html", data)
 	} else {
@@ -541,15 +496,13 @@ func (app *App) ItemsHandler(w http.ResponseWriter, r *http.Request) {
 		_ = db.DB.Select(&categories, "SELECT * FROM categories ORDER BY name ASC")
 
 		data := struct {
-			Items          []models.ItemWithRelations
-			Brands         []models.Brand
-			Categories     []models.Category
-			PaginationView PaginationView
+			Items      []models.ItemWithRelations
+			Brands     []models.Brand
+			Categories []models.Category
 		}{
-			Items:          items,
-			Brands:         brands,
-			Categories:     categories,
-			PaginationView: paginationView,
+			Items:      items,
+			Brands:     brands,
+			Categories: categories,
 		}
 		app.RenderPage(w, r, "items.html", data)
 	}
@@ -623,14 +576,19 @@ func (app *App) EditItemFormHandler(w http.ResponseWriter, r *http.Request) {
 	var categories []models.Category
 	_ = db.DB.Select(&categories, "SELECT * FROM categories ORDER BY name ASC")
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	data := struct {
 		Item       models.Item
 		Brands     []models.Brand
 		Categories []models.Category
+		Uoms       []models.Uom
 	}{
 		Item:       item,
 		Brands:     brands,
 		Categories: categories,
+		Uoms:       uoms,
 	}
 
 	app.Render(w, "item_edit_row.html", data)
@@ -767,12 +725,17 @@ func (app *App) NewItemPageHandler(w http.ResponseWriter, r *http.Request) {
 	var categories []models.Category
 	_ = db.DB.Select(&categories, "SELECT id, code, name FROM categories ORDER BY code ASC")
 
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	data := struct {
 		Brands     []models.Brand
 		Categories []models.Category
+		Uoms       []models.Uom
 	}{
 		Brands:     brands,
 		Categories: categories,
+		Uoms:       uoms,
 	}
 
 	app.RenderPage(w, r, "item_new.html", data)

@@ -330,4 +330,15 @@
   2. **Second pass**: If multiple links in the same dropdown are active, keep only the one with the **longest href** (most specific match) and deactivate the rest.
 - This ensures only one sub-link is active at a time while still supporting parent-link highlighting for sub-pages (e.g., `/items/new` highlights `/items`).
 
+## Context: Ditching Pagination in favor of Limit Selector and Instant Auto-Submission Filtering
+**Problem**: Traditional pagination adds complexity (page counts, offsets, navigation buttons, out-of-band updates) and friction for user searches. Need a simpler way to view the top rows of filtered datasets and query/filter instantly without a manual submit button.
+**Enforced Solution**:
+- **Ditch Pagination**: Delete all page navigation elements and templates (such as `pagination.html`), and remove pagination-related parsing configurations from `main.go`.
+- **Add Limit Selector**: Introduce a dropdown in all filter bars named `limit` that lets users select how many top rows to display (e.g., options `25`, `50`, `100`, `200`, `500` rows, defaulting to `25`).
+- **Simplify Queries**: Replace `LIMIT ? OFFSET ?` in SQL statements with `LIMIT ?`, passing the parsed limit directly. Remove count queries (e.g. `SELECT COUNT(*)`) completely from the list handlers.
+- **Enable Auto-Submission**: Remove manual "Apply"/"Go" buttons from filter forms. Trigger filtering instantly using HTMX attributes on the inputs:
+  - Text search: `hx-trigger="keyup changed delay:300ms, search"` (includes debounce delay).
+  - Select filters (including the new limit dropdown): `hx-trigger="change"` (triggers immediately).
+  - Ensure all inputs target the table results container and specify `hx-include="closest form"` to preserve the values of other filter elements.
+
 

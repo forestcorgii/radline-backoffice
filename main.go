@@ -93,6 +93,14 @@ func main() {
 	http.HandleFunc("GET /uom-settings/row/{id}", app.UomSettingRowHandler)
 	http.HandleFunc("DELETE /uom-settings/delete/{id}", app.DeleteUomSettingHandler)
 
+	// UOM Predefined List CRUD
+	http.HandleFunc("GET /uoms", app.UomsHandler)
+	http.HandleFunc("POST /uoms/add", app.AddUomHandler)
+	http.HandleFunc("GET /uoms/row/{id}", app.UomRowHandler)
+	http.HandleFunc("DELETE /uoms/delete/{id}", app.DeleteUomHandler)
+	http.HandleFunc("GET /uoms/select", app.SelectUomsHandler)
+
+
 	// Import Routing
 	http.HandleFunc("GET /import", app.ImportPageHandler)
 	http.HandleFunc("POST /import/upload", app.ImportUploadHandler)
@@ -124,7 +132,7 @@ func parseTemplates() map[string]*template.Template {
 
 	for _, page := range pages {
 		t := template.New(page).Funcs(funcMap)
-		files := []string{"templates/base.html", "templates/" + page, "templates/pagination.html"}
+		files := []string{"templates/base.html", "templates/" + page}
 		if page == "brands.html" {
 			files = append(files, "templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html")
 		} else if page == "categories.html" {
@@ -140,7 +148,7 @@ func parseTemplates() map[string]*template.Template {
 		} else if page == "sales.html" {
 			files = append(files, "templates/sales_rows.html")
 		} else if page == "item_new.html" {
-			files = append(files, "templates/brand_select.html", "templates/category_select.html")
+			files = append(files, "templates/brand_select.html", "templates/category_select.html", "templates/uom_select.html")
 		} else if page == "sales_new.html" {
 			files = append(files, "templates/item_select.html", "templates/sale_item_row.html")
 		} else if page == "monthly_inventory.html" {
@@ -154,6 +162,7 @@ func parseTemplates() map[string]*template.Template {
 				"templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html",
 				"templates/category_row.html", "templates/category_rows.html", "templates/category_edit_row.html",
 				"templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html",
+				"templates/uom_row.html", "templates/uom_rows.html", "templates/uoms_results.html", "templates/uom_select.html",
 			)
 		} else if page == "settings_new.html" {
 			files = append(files, "templates/item_select.html")
@@ -170,11 +179,12 @@ func parseTemplates() map[string]*template.Template {
 		"receiving_rows.html", "adjustment_rows.html", "sales_rows.html", "inventory_stock_rows.html",
 		"brand_select.html", "category_select.html", "item_select.html",
 		"sale_item_row.html", "receiving_item_row.html", "adjustment_item_row.html",
-		"monthly_inventory_rows.html", "pagination.html",
+		"monthly_inventory_rows.html",
 		"brands_results.html", "categories_results.html", "items_results.html",
 		"inventory_stock_results.html", "sales_results.html", "monthly_inventory_results.html",
 		"receiving_logs_results.html", "adjustment_logs_results.html",
 		"uom_setting_row.html", "uom_setting_rows.html", "uom_setting_edit_row.html", "uom_settings_results.html",
+		"uom_row.html", "uom_rows.html", "uoms_results.html", "uom_select.html",
 	}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)
@@ -186,25 +196,29 @@ func parseTemplates() map[string]*template.Template {
 		} else if frag == "item_rows.html" {
 			files = append(files, "templates/item_row.html")
 		} else if frag == "brands_results.html" {
-			files = append(files, "templates/brand_row.html", "templates/brand_rows.html", "templates/pagination.html")
+			files = append(files, "templates/brand_row.html", "templates/brand_rows.html")
 		} else if frag == "categories_results.html" {
-			files = append(files, "templates/category_row.html", "templates/category_rows.html", "templates/pagination.html")
+			files = append(files, "templates/category_row.html", "templates/category_rows.html")
 		} else if frag == "items_results.html" {
-			files = append(files, "templates/item_row.html", "templates/item_rows.html", "templates/pagination.html")
+			files = append(files, "templates/item_row.html", "templates/item_rows.html")
 		} else if frag == "inventory_stock_results.html" {
-			files = append(files, "templates/inventory_stock_rows.html", "templates/pagination.html")
+			files = append(files, "templates/inventory_stock_rows.html")
 		} else if frag == "sales_results.html" {
-			files = append(files, "templates/sales_rows.html", "templates/pagination.html")
+			files = append(files, "templates/sales_rows.html")
 		} else if frag == "monthly_inventory_results.html" {
-			files = append(files, "templates/monthly_inventory_rows.html", "templates/pagination.html")
+			files = append(files, "templates/monthly_inventory_rows.html")
 		} else if frag == "receiving_logs_results.html" {
-			files = append(files, "templates/receiving_rows.html", "templates/pagination.html")
+			files = append(files, "templates/receiving_rows.html")
 		} else if frag == "adjustment_logs_results.html" {
-			files = append(files, "templates/adjustment_rows.html", "templates/pagination.html")
+			files = append(files, "templates/adjustment_rows.html")
 		} else if frag == "uom_setting_rows.html" {
 			files = append(files, "templates/uom_setting_row.html")
 		} else if frag == "uom_settings_results.html" {
 			files = append(files, "templates/uom_setting_row.html", "templates/uom_setting_rows.html")
+		} else if frag == "uom_rows.html" {
+			files = append(files, "templates/uom_row.html")
+		} else if frag == "uoms_results.html" {
+			files = append(files, "templates/uom_row.html", "templates/uom_rows.html")
 		}
 		t = template.Must(t.ParseFiles(files...))
 		templates[frag] = t

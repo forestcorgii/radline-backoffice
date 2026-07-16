@@ -6,6 +6,7 @@
 <style>
     #brands-results .table-container,
     #categories-results .table-container,
+    #uoms-results .table-container,
     #uom-settings-results .table-container {
         max-height: 32vh;
         overflow-y: auto;
@@ -14,6 +15,7 @@
 
     #brands-results thead th,
     #categories-results thead th,
+    #uoms-results thead th,
     #uom-settings-results thead th {
         position: sticky;
         top: 0;
@@ -72,20 +74,28 @@
                 <div style="flex-grow: 1;">
                     <input type="text" name="search" placeholder="Search brands..." 
                            hx-get="/brands" 
-                           hx-trigger="keyup[key=='Enter'], search" 
+                           hx-trigger="keyup changed delay:300ms, search" 
                            hx-target="#brands-results" 
                            hx-include="closest form"
                            class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
                 </div>
                 <div>
-                    <select name="filter" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;">
+                    <select name="filter" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/brands" 
+                            hx-target="#brands-results" 
+                            hx-include="closest form"
+                            hx-trigger="change">
                         <option value="all">All</option>
                         <option value="in_use">In Use</option>
                         <option value="unused">Unused</option>
                     </select>
                 </div>
                 <div>
-                    <select name="sort" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;">
+                    <select name="sort" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/brands" 
+                            hx-target="#brands-results" 
+                            hx-include="closest form"
+                            hx-trigger="change">
                         <option value="code_asc">Code A-Z</option>
                         <option value="code_desc">Code Z-A</option>
                         <option value="name_asc">Name A-Z</option>
@@ -93,12 +103,17 @@
                     </select>
                 </div>
                 <div>
-                    <button hx-get="/brands" 
+                    <select name="limit" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/brands" 
                             hx-target="#brands-results" 
                             hx-include="closest form"
-                            class="btn" style="padding: 0.35rem 0.65rem; font-size: 0.8125rem;">
-                        Go
-                    </button>
+                            hx-trigger="change">
+                        <option value="25" selected>Top 25</option>
+                        <option value="50">Top 50</option>
+                        <option value="100">Top 100</option>
+                        <option value="200">Top 200</option>
+                        <option value="500">Top 500</option>
+                    </select>
                 </div>
             </div>
 
@@ -119,7 +134,6 @@
                         </tbody>
                     </table>
                 </div>
-                {{ template "pagination.html" .BrandPaginationView }}
             </div>
         </form>
     </div>
@@ -170,20 +184,28 @@
                 <div style="flex-grow: 1;">
                     <input type="text" name="search" placeholder="Search categories..." 
                            hx-get="/categories" 
-                           hx-trigger="keyup[key=='Enter'], search" 
+                           hx-trigger="keyup changed delay:300ms, search" 
                            hx-target="#categories-results" 
                            hx-include="closest form"
                            class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
                 </div>
                 <div>
-                    <select name="filter" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;">
+                    <select name="filter" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/categories" 
+                            hx-target="#categories-results" 
+                            hx-include="closest form"
+                            hx-trigger="change">
                         <option value="all">All</option>
                         <option value="in_use">In Use</option>
                         <option value="unused">Unused</option>
                     </select>
                 </div>
                 <div>
-                    <select name="sort" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;">
+                    <select name="sort" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/categories" 
+                            hx-target="#categories-results" 
+                            hx-include="closest form"
+                            hx-trigger="change">
                         <option value="code_asc">Code A-Z</option>
                         <option value="code_desc">Code Z-A</option>
                         <option value="name_asc">Name A-Z</option>
@@ -191,12 +213,17 @@
                     </select>
                 </div>
                 <div>
-                    <button hx-get="/categories" 
+                    <select name="limit" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/categories" 
                             hx-target="#categories-results" 
                             hx-include="closest form"
-                            class="btn" style="padding: 0.35rem 0.65rem; font-size: 0.8125rem;">
-                        Go
-                    </button>
+                            hx-trigger="change">
+                        <option value="25" selected>Top 25</option>
+                        <option value="50">Top 50</option>
+                        <option value="100">Top 100</option>
+                        <option value="200">Top 200</option>
+                        <option value="500">Top 500</option>
+                    </select>
                 </div>
             </div>
 
@@ -217,13 +244,101 @@
                         </tbody>
                     </table>
                 </div>
-                {{ template "pagination.html" .CategoryPaginationView }}
             </div>
         </form>
     </div>
 </div>
 
-<!-- 3. UOM Calculator Card (Collapsible, Collapsed by Default) -->
+<!-- 3. UOMs Card (Collapsible, Collapsed by Default) -->
+<div class="card mb-4" id="uoms-card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;" onclick="toggleCardCollapse('uoms-card')">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="chevron-icon" id="uoms-card-chevron" style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+            UOM List
+        </h3>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button onclick="event.stopPropagation(); toggleAddForm('uom-list-add-form')" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
+                + Add UOM
+            </button>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Click to toggle</span>
+        </div>
+    </div>
+    <div class="card-body" id="uoms-card-body" style="display: none;">
+        <!-- Inline Add UOM Form -->
+        <div id="uom-list-add-form" class="inline-add-form" style="display: none;">
+            <div style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">Add New UOM</h4>
+                <form hx-post="/uoms/add" hx-swap="none" onsubmit="setTimeout(function(){ cancelAddForm('uom-list-add-form') }, 100)">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                        <div style="flex: 1; min-width: 140px;">
+                            <label for="uom-code" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Code</label>
+                            <input type="text" id="uom-code" name="code" placeholder="e.g. BOX" required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
+                        <button type="button" onclick="cancelAddForm('uom-list-add-form')" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <form style="display: contents;" onsubmit="return false;">
+            <div class="search-filter-bar" style="gap: 0.5rem; margin-bottom: 0.75rem;">
+                <div style="flex-grow: 1;">
+                    <input type="text" name="search" placeholder="Search UOMs..." 
+                           hx-get="/uoms" 
+                           hx-trigger="keyup changed delay:300ms, search" 
+                           hx-target="#uoms-results" 
+                           hx-include="closest form"
+                           class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
+                </div>
+                <div>
+                    <select name="filter" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/uoms" 
+                            hx-target="#uoms-results" 
+                            hx-include="closest form"
+                            hx-trigger="change">
+                        <option value="all">All</option>
+                        <option value="in_use">In Use</option>
+                        <option value="unused">Unused</option>
+                    </select>
+                </div>
+                <div>
+                    <select name="sort" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/uoms" 
+                            hx-target="#uoms-results" 
+                            hx-include="closest form"
+                            hx-trigger="change">
+                        <option value="code_asc">Code A-Z</option>
+                        <option value="code_desc">Code Z-A</option>
+                    </select>
+                </div>
+                <div>
+                    <select name="limit" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
+                            hx-get="/uoms" 
+                            hx-target="#uoms-results" 
+                            hx-include="closest form"
+                            hx-trigger="change">
+                        <option value="25" selected>Top 25</option>
+                        <option value="50">Top 50</option>
+                        <option value="100">Top 100</option>
+                        <option value="200">Top 200</option>
+                        <option value="500">Top 500</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="uoms-results">
+                {{ template "uoms_results.html" . }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 4. UOM Calculator Card (Collapsible, Collapsed by Default) -->
 <div class="card mb-4" id="uom-calculator-card">
     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;" onclick="toggleCardCollapse('uom-calculator-card')">
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
@@ -310,7 +425,13 @@
                         </div>
                         <div style="flex: 1; min-width: 100px;">
                             <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">MUOM</label>
-                            <input type="text" name="muom" placeholder="e.g. BOX" required class="form-input" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+                            <select id="uom-inline-muom" name="muom" required class="form-input" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;"
+                                    hx-get="/uoms/select?name=muom&id=uom-inline-muom" hx-trigger="uom-added from:body" hx-swap="outerHTML">
+                                <option value="">-- Select --</option>
+                                {{ range .Uoms }}
+                                <option value="{{ .Code }}">{{ .Code }}</option>
+                                {{ end }}
+                            </select>
                         </div>
                         <div style="flex: 1; min-width: 100px;">
                             <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Rate</label>
