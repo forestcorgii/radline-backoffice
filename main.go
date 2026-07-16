@@ -100,12 +100,11 @@ func main() {
 	http.HandleFunc("DELETE /uoms/delete/{id}", app.DeleteUomHandler)
 	http.HandleFunc("GET /uoms/select", app.SelectUomsHandler)
 
-
 	// Import Routing
 	http.HandleFunc("GET /import", app.ImportPageHandler)
 	http.HandleFunc("POST /import/upload", app.ImportUploadHandler)
 
-	log.Println("Server starting on :8080...")
+	log.Println("Server starting on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
@@ -158,7 +157,7 @@ func parseTemplates() map[string]*template.Template {
 		} else if page == "adjustment_logs.html" {
 			files = append(files, "templates/adjustment_rows.html")
 		} else if page == "settings.html" {
-			files = append(files, 
+			files = append(files,
 				"templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html",
 				"templates/category_row.html", "templates/category_rows.html", "templates/category_edit_row.html",
 				"templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html",

@@ -31,15 +31,22 @@
 
 <!-- 1. Brands Card (Collapsible, Collapsed by Default) -->
 <div class="card mb-4" id="brands-card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;" onclick="toggleCardCollapse('brands-card')">
+    <div class="card-header"
+        style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;"
+        onclick="toggleCardCollapse('brands-card')">
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-            <svg class="chevron-icon" id="brands-card-chevron" style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            <svg class="chevron-icon" id="brands-card-chevron"
+                style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);"
+                viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd" />
             </svg>
             Brands
         </h3>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <button onclick="event.stopPropagation(); toggleAddForm('brand-add-form')" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
+            <button onclick="event.stopPropagation(); toggleAddForm('brand-add-form')" class="btn btn-secondary"
+                style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
                 + Add Brand
             </button>
             <span style="font-size: 0.75rem; color: var(--text-muted);">Click to toggle</span>
@@ -48,22 +55,31 @@
     <div class="card-body" id="brands-card-body" style="display: none;">
         <!-- Inline Add Brand Form -->
         <div id="brand-add-form" class="inline-add-form" style="display: none;">
-            <div style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
-                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">Add New Brand</h4>
-                <form hx-post="/brands/add" hx-swap="none" onsubmit="setTimeout(function(){ cancelAddForm('brand-add-form') }, 100)">
+            <div
+                style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">
+                    Add New Brand</h4>
+                <form hx-post="/brands/add" hx-swap="none"
+                    onsubmit="setTimeout(function(){ cancelAddForm('brand-add-form') }, 100)">
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                         <div style="flex: 1; min-width: 140px;">
-                            <label for="brand-code" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Code</label>
-                            <input type="text" id="brand-code" name="code" required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+                            <label for="brand-code"
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Code</label>
+                            <input type="text" id="brand-code" name="code" required class="form-input"
+                                style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
                         </div>
                         <div style="flex: 2; min-width: 180px;">
-                            <label for="brand-name" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Name</label>
-                            <input type="text" id="brand-name" name="name" required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+                            <label for="brand-name"
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Name</label>
+                            <input type="text" id="brand-name" name="name" required class="form-input"
+                                style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button type="submit" class="btn" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
-                        <button type="button" onclick="cancelAddForm('brand-add-form')" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
+                        <button type="submit" class="btn"
+                            style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
+                        <button type="button" onclick="cancelAddForm('brand-add-form')" class="btn btn-secondary"
+                            style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -72,30 +88,24 @@
         <form style="display: contents;" onsubmit="return false;">
             <div class="search-filter-bar" style="gap: 0.5rem; margin-bottom: 0.75rem;">
                 <div style="flex-grow: 1;">
-                    <input type="text" name="search" placeholder="Search brands..." 
-                           hx-get="/brands" 
-                           hx-trigger="keyup changed delay:300ms, search" 
-                           hx-target="#brands-results" 
-                           hx-include="closest form"
-                           class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
+                    <input type="text" name="search" placeholder="Search brands..." hx-get="/brands"
+                        hx-trigger="keyup changed delay:300ms, search" hx-target="#brands-results"
+                        hx-include="closest form" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
                 </div>
                 <div>
-                    <select name="filter" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/brands" 
-                            hx-target="#brands-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="filter" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/brands"
+                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change">
                         <option value="all">All</option>
                         <option value="in_use">In Use</option>
                         <option value="unused">Unused</option>
                     </select>
                 </div>
                 <div>
-                    <select name="sort" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/brands" 
-                            hx-target="#brands-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="sort" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/brands"
+                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change">
                         <option value="code_asc">Code A-Z</option>
                         <option value="code_desc">Code Z-A</option>
                         <option value="name_asc">Name A-Z</option>
@@ -103,11 +113,9 @@
                     </select>
                 </div>
                 <div>
-                    <select name="limit" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/brands" 
-                            hx-target="#brands-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="limit" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/brands"
+                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change">
                         <option value="25" selected>Top 25</option>
                         <option value="50">Top 50</option>
                         <option value="100">Top 100</option>
@@ -122,7 +130,6 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>Items</th>
@@ -141,15 +148,22 @@
 
 <!-- 2. Categories Card (Collapsible, Collapsed by Default) -->
 <div class="card mb-4" id="categories-card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;" onclick="toggleCardCollapse('categories-card')">
+    <div class="card-header"
+        style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;"
+        onclick="toggleCardCollapse('categories-card')">
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-            <svg class="chevron-icon" id="categories-card-chevron" style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            <svg class="chevron-icon" id="categories-card-chevron"
+                style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);"
+                viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd" />
             </svg>
             Categories
         </h3>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <button onclick="event.stopPropagation(); toggleAddForm('category-add-form')" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
+            <button onclick="event.stopPropagation(); toggleAddForm('category-add-form')" class="btn btn-secondary"
+                style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
                 + Add Category
             </button>
             <span style="font-size: 0.75rem; color: var(--text-muted);">Click to toggle</span>
@@ -158,22 +172,31 @@
     <div class="card-body" id="categories-card-body" style="display: none;">
         <!-- Inline Add Category Form -->
         <div id="category-add-form" class="inline-add-form" style="display: none;">
-            <div style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
-                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">Add New Category</h4>
-                <form hx-post="/categories/add" hx-swap="none" onsubmit="setTimeout(function(){ cancelAddForm('category-add-form') }, 100)">
+            <div
+                style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">
+                    Add New Category</h4>
+                <form hx-post="/categories/add" hx-swap="none"
+                    onsubmit="setTimeout(function(){ cancelAddForm('category-add-form') }, 100)">
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                         <div style="flex: 1; min-width: 140px;">
-                            <label for="category-code" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Code</label>
-                            <input type="text" id="category-code" name="code" required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+                            <label for="category-code"
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Code</label>
+                            <input type="text" id="category-code" name="code" required class="form-input"
+                                style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
                         </div>
                         <div style="flex: 2; min-width: 180px;">
-                            <label for="category-name" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Name</label>
-                            <input type="text" id="category-name" name="name" required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+                            <label for="category-name"
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Name</label>
+                            <input type="text" id="category-name" name="name" required class="form-input"
+                                style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button type="submit" class="btn" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
-                        <button type="button" onclick="cancelAddForm('category-add-form')" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
+                        <button type="submit" class="btn"
+                            style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
+                        <button type="button" onclick="cancelAddForm('category-add-form')" class="btn btn-secondary"
+                            style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -182,30 +205,24 @@
         <form style="display: contents;" onsubmit="return false;">
             <div class="search-filter-bar" style="gap: 0.5rem; margin-bottom: 0.75rem;">
                 <div style="flex-grow: 1;">
-                    <input type="text" name="search" placeholder="Search categories..." 
-                           hx-get="/categories" 
-                           hx-trigger="keyup changed delay:300ms, search" 
-                           hx-target="#categories-results" 
-                           hx-include="closest form"
-                           class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
+                    <input type="text" name="search" placeholder="Search categories..." hx-get="/categories"
+                        hx-trigger="keyup changed delay:300ms, search" hx-target="#categories-results"
+                        hx-include="closest form" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
                 </div>
                 <div>
-                    <select name="filter" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/categories" 
-                            hx-target="#categories-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="filter" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/categories"
+                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change">
                         <option value="all">All</option>
                         <option value="in_use">In Use</option>
                         <option value="unused">Unused</option>
                     </select>
                 </div>
                 <div>
-                    <select name="sort" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/categories" 
-                            hx-target="#categories-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="sort" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/categories"
+                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change">
                         <option value="code_asc">Code A-Z</option>
                         <option value="code_desc">Code Z-A</option>
                         <option value="name_asc">Name A-Z</option>
@@ -213,11 +230,9 @@
                     </select>
                 </div>
                 <div>
-                    <select name="limit" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/categories" 
-                            hx-target="#categories-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="limit" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/categories"
+                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change">
                         <option value="25" selected>Top 25</option>
                         <option value="50">Top 50</option>
                         <option value="100">Top 100</option>
@@ -232,7 +247,6 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>Items</th>
@@ -249,17 +263,117 @@
     </div>
 </div>
 
-<!-- 3. UOMs Card (Collapsible, Collapsed by Default) -->
-<div class="card mb-4" id="uoms-card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;" onclick="toggleCardCollapse('uoms-card')">
+<!-- 3. UOM Settings Card (Collapsible, Collapsed by Default) -->
+<div class="card" id="uom_settings-card">
+    <div class="card-header"
+        style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;"
+        onclick="toggleCardCollapse('uom_settings-card')">
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-            <svg class="chevron-icon" id="uoms-card-chevron" style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            <svg class="chevron-icon" id="uom_settings-card-chevron"
+                style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);"
+                viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd" />
+            </svg>
+            UOM Settings
+        </h3>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button onclick="event.stopPropagation(); toggleAddForm('uom-add-form')" class="btn btn-secondary"
+                style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
+                + Add UOM Setting
+            </button>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Click to toggle</span>
+        </div>
+    </div>
+    <div class="card-body" id="uom_settings-card-body" style="display: none;">
+        <!-- Inline Add UOM Setting Form -->
+        <div id="uom-add-form" class="inline-add-form" style="display: none;">
+            <div
+                style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">
+                    Add New UOM Setting</h4>
+                <form hx-post="/uom-settings/add" hx-swap="none"
+                    onsubmit="setTimeout(function(){ cancelAddForm('uom-add-form') }, 100)">
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                        <div style="flex: 2; min-width: 160px;">
+                            <label
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Item</label>
+                            <div class="searchable-dropdown">
+                                <input type="text" class="form-input dropdown-search" placeholder="Search Item..."
+                                    style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem;"
+                                    onfocus="showDropdown(this)" onblur="hideDropdown(this)"
+                                    oninput="filterDropdown(this)" onkeydown="handleDropdownKeydown(event, this)">
+                                <input type="hidden" name="item_id" value="">
+                                <div class="dropdown-list">
+                                    {{ range .Items }}
+                                    <div class="dropdown-item" data-id="{{ .ID }}" data-description="{{ .Description }}"
+                                        data-uom="{{ .DefaultUOM }}" onmousedown="selectDropdownItem(this)">{{
+                                        .Description }}</div>
+                                    {{ end }}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="flex: 1; min-width: 100px;">
+                            <label
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">UOM
+                                (Base)</label>
+                            <input type="text" id="uom-inline-uom" class="form-input" readonly placeholder="Auto"
+                                style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem; background-color: rgba(0,0,0,0.03);">
+                        </div>
+                        <div style="flex: 1; min-width: 100px;">
+                            <label
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">MUOM</label>
+                            <select id="uom-inline-muom" name="muom" required class="form-input"
+                                style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;"
+                                hx-get="/uoms/select?name=muom&id=uom-inline-muom" hx-trigger="uom-added from:body"
+                                hx-swap="outerHTML">
+                                <option value="">-- Select --</option>
+                                {{ range .Uoms }}
+                                <option value="{{ .Code }}">{{ .Code }}</option>
+                                {{ end }}
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 100px;">
+                            <label
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Rate</label>
+                            <input type="number" step="any" name="conversion_factor" placeholder="e.g. 10" required
+                                class="form-input" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="submit" class="btn"
+                            style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
+                        <button type="button" onclick="cancelAddForm('uom-add-form')" class="btn btn-secondary"
+                            style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="uom-settings-results">
+            {{ template "uom_settings_results.html" . }}
+        </div>
+    </div>
+</div>
+
+<!-- 4. UOMs Card (Collapsible, Collapsed by Default) -->
+<div class="card mb-4" id="uoms-card">
+    <div class="card-header"
+        style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;"
+        onclick="toggleCardCollapse('uoms-card')">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="chevron-icon" id="uoms-card-chevron"
+                style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);"
+                viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd" />
             </svg>
             UOM List
         </h3>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <button onclick="event.stopPropagation(); toggleAddForm('uom-list-add-form')" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
+            <button onclick="event.stopPropagation(); toggleAddForm('uom-list-add-form')" class="btn btn-secondary"
+                style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
                 + Add UOM
             </button>
             <span style="font-size: 0.75rem; color: var(--text-muted);">Click to toggle</span>
@@ -268,18 +382,25 @@
     <div class="card-body" id="uoms-card-body" style="display: none;">
         <!-- Inline Add UOM Form -->
         <div id="uom-list-add-form" class="inline-add-form" style="display: none;">
-            <div style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
-                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">Add New UOM</h4>
-                <form hx-post="/uoms/add" hx-swap="none" onsubmit="setTimeout(function(){ cancelAddForm('uom-list-add-form') }, 100)">
+            <div
+                style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
+                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">
+                    Add New UOM</h4>
+                <form hx-post="/uoms/add" hx-swap="none"
+                    onsubmit="setTimeout(function(){ cancelAddForm('uom-list-add-form') }, 100)">
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                         <div style="flex: 1; min-width: 140px;">
-                            <label for="uom-code" style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Code</label>
-                            <input type="text" id="uom-code" name="code" placeholder="e.g. BOX" required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+                            <label for="uom-code"
+                                style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Code</label>
+                            <input type="text" id="uom-code" name="code" placeholder="e.g. BOX" required
+                                class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
-                        <button type="submit" class="btn" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
-                        <button type="button" onclick="cancelAddForm('uom-list-add-form')" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
+                        <button type="submit" class="btn"
+                            style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
+                        <button type="button" onclick="cancelAddForm('uom-list-add-form')" class="btn btn-secondary"
+                            style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -288,40 +409,32 @@
         <form style="display: contents;" onsubmit="return false;">
             <div class="search-filter-bar" style="gap: 0.5rem; margin-bottom: 0.75rem;">
                 <div style="flex-grow: 1;">
-                    <input type="text" name="search" placeholder="Search UOMs..." 
-                           hx-get="/uoms" 
-                           hx-trigger="keyup changed delay:300ms, search" 
-                           hx-target="#uoms-results" 
-                           hx-include="closest form"
-                           class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
+                    <input type="text" name="search" placeholder="Search UOMs..." hx-get="/uoms"
+                        hx-trigger="keyup changed delay:300ms, search" hx-target="#uoms-results"
+                        hx-include="closest form" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
                 </div>
                 <div>
-                    <select name="filter" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/uoms" 
-                            hx-target="#uoms-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="filter" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/uoms"
+                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change">
                         <option value="all">All</option>
                         <option value="in_use">In Use</option>
                         <option value="unused">Unused</option>
                     </select>
                 </div>
                 <div>
-                    <select name="sort" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/uoms" 
-                            hx-target="#uoms-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="sort" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/uoms"
+                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change">
                         <option value="code_asc">Code A-Z</option>
                         <option value="code_desc">Code Z-A</option>
                     </select>
                 </div>
                 <div>
-                    <select name="limit" class="form-input" style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;"
-                            hx-get="/uoms" 
-                            hx-target="#uoms-results" 
-                            hx-include="closest form"
-                            hx-trigger="change">
+                    <select name="limit" class="form-input"
+                        style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/uoms"
+                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change">
                         <option value="25" selected>Top 25</option>
                         <option value="50">Top 50</option>
                         <option value="100">Top 100</option>
@@ -338,12 +451,18 @@
     </div>
 </div>
 
-<!-- 4. UOM Calculator Card (Collapsible, Collapsed by Default) -->
+<!-- 5. UOM Calculator Card (Collapsible, Collapsed by Default) -->
 <div class="card mb-4" id="uom-calculator-card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;" onclick="toggleCardCollapse('uom-calculator-card')">
+    <div class="card-header"
+        style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;"
+        onclick="toggleCardCollapse('uom-calculator-card')">
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-            <svg class="chevron-icon" id="uom-calculator-card-chevron" style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            <svg class="chevron-icon" id="uom-calculator-card-chevron"
+                style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);"
+                viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd" />
             </svg>
             UOM Calculator
         </h3>
@@ -352,101 +471,42 @@
     <div class="card-body" id="uom-calculator-card-body" style="display: none;">
         <div class="grid grid-cols-5" style="align-items: end;">
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="calc-select" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Select UOM Rule</label>
-                <select id="calc-select" class="form-input" onchange="initCalculator()" style="width: 100%; height: auto; padding: 0.45rem 0.75rem;">
+                <label for="calc-select"
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Select
+                    UOM Rule</label>
+                <select id="calc-select" class="form-input" onchange="initCalculator()"
+                    style="width: 100%; height: auto; padding: 0.45rem 0.75rem;">
                     <option value="">-- Select Rule --</option>
                     {{ range .UomSettings }}
-                    <option value="{{ .ID }}" 
-                            data-uom="{{ .UOM }}" 
-                            data-muom="{{ .MUOM }}" 
-                            data-factor="{{ .ConversionFactor }}">{{ .ItemCode }} (1 {{ .MUOM }} = {{ printf "%.4f" .ConversionFactor }} {{ .UOM }})</option>
+                    <option value="{{ .ID }}" data-uom="{{ .UOM }}" data-muom="{{ .MUOM }}"
+                        data-factor="{{ .ConversionFactor }}">{{ .ItemCode }} (1 {{ .MUOM }} = {{ printf "%.4f"
+                        .ConversionFactor }} {{ .UOM }})</option>
                     {{ end }}
                 </select>
             </div>
 
             <div style="grid-column: span 2;">
-                <div id="calc-formula" style="font-size: 0.8125rem; color: var(--primary-color); font-weight: 500; min-height: 1.25rem; padding: 0.45rem 0.75rem; background: rgba(37, 99, 235, 0.05); border-radius: 4px; border-left: 3px solid var(--primary-color); line-height: 1.2; overflow-wrap: break-word;">
+                <div id="calc-formula"
+                    style="font-size: 0.8125rem; color: var(--primary-color); font-weight: 500; min-height: 1.25rem; padding: 0.45rem 0.75rem; background: rgba(37, 99, 235, 0.05); border-radius: 4px; border-left: 3px solid var(--primary-color); line-height: 1.2; overflow-wrap: break-word;">
                     Select a UOM rule to enable calculations.
                 </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-                <label id="calc-uom-label" for="calc-uom-val" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">UOM Value (Base)</label>
-                <input type="number" step="any" id="calc-uom-val" class="form-input" placeholder="Enter base units..." disabled oninput="calculateMUOM()" style="width: 100%;">
+                <label id="calc-uom-label" for="calc-uom-val"
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">UOM
+                    Value (Base)</label>
+                <input type="number" step="any" id="calc-uom-val" class="form-input" placeholder="Enter base units..."
+                    disabled oninput="calculateMUOM()" style="width: 100%;">
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
-                <label id="calc-muom-label" for="calc-muom-val" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">MUOM Value</label>
-                <input type="number" step="any" id="calc-muom-val" class="form-input" placeholder="Enter multiple units..." disabled oninput="calculateUOM()" style="width: 100%;">
+                <label id="calc-muom-label" for="calc-muom-val"
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">MUOM
+                    Value</label>
+                <input type="number" step="any" id="calc-muom-val" class="form-input"
+                    placeholder="Enter multiple units..." disabled oninput="calculateUOM()" style="width: 100%;">
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- 4. UOM Settings Rules Card (Collapsible, Collapsed by Default) -->
-<div class="card" id="uom_settings-card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;" onclick="toggleCardCollapse('uom_settings-card')">
-        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-            <svg class="chevron-icon" id="uom_settings-card-chevron" style="width: 18px; height: 18px; transition: transform 0.2s; transform: rotate(-90deg);" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-            </svg>
-            UOM Rules
-        </h3>
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <button onclick="event.stopPropagation(); toggleAddForm('uom-add-form')" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; cursor: pointer; border: none;">
-                + Add UOM Setting
-            </button>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">Click to toggle</span>
-        </div>
-    </div>
-    <div class="card-body" id="uom_settings-card-body" style="display: none;">
-        <!-- Inline Add UOM Setting Form -->
-        <div id="uom-add-form" class="inline-add-form" style="display: none;">
-            <div style="padding: 0.75rem 1rem; margin-bottom: 0.75rem; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); border-radius: 0.5rem;">
-                <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--primary-color);">Add New UOM Setting</h4>
-                <form hx-post="/uom-settings/add" hx-swap="none" onsubmit="setTimeout(function(){ cancelAddForm('uom-add-form') }, 100)">
-                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
-                        <div style="flex: 2; min-width: 160px;">
-                            <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Item</label>
-                            <div class="searchable-dropdown">
-                                <input type="text" class="form-input dropdown-search" placeholder="Search Item..." style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem;"
-                                       onfocus="showDropdown(this)" onblur="hideDropdown(this)" oninput="filterDropdown(this)" onkeydown="handleDropdownKeydown(event, this)">
-                                <input type="hidden" name="item_id" value="">
-                                <div class="dropdown-list">
-                                {{ range .Items }}
-                                    <div class="dropdown-item" data-id="{{ .ID }}" data-description="{{ .Description }}" data-uom="{{ .DefaultUOM }}" onmousedown="selectDropdownItem(this)">{{ .Description }}</div>
-                                {{ end }}
-                                </div>
-                            </div>
-                        </div>
-                        <div style="flex: 1; min-width: 100px;">
-                            <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">UOM (Base)</label>
-                            <input type="text" id="uom-inline-uom" class="form-input" readonly placeholder="Auto" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem; background-color: rgba(0,0,0,0.03);">
-                        </div>
-                        <div style="flex: 1; min-width: 100px;">
-                            <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">MUOM</label>
-                            <select id="uom-inline-muom" name="muom" required class="form-input" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;"
-                                    hx-get="/uoms/select?name=muom&id=uom-inline-muom" hx-trigger="uom-added from:body" hx-swap="outerHTML">
-                                <option value="">-- Select --</option>
-                                {{ range .Uoms }}
-                                <option value="{{ .Code }}">{{ .Code }}</option>
-                                {{ end }}
-                            </select>
-                        </div>
-                        <div style="flex: 1; min-width: 100px;">
-                            <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Rate</label>
-                            <input type="number" step="any" name="conversion_factor" placeholder="e.g. 10" required class="form-input" style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button type="submit" class="btn" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Save</button>
-                        <button type="button" onclick="cancelAddForm('uom-add-form')" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.75rem;">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div id="uom-settings-results">
-            {{ template "uom_settings_results.html" . }}
         </div>
     </div>
 </div>
@@ -458,7 +518,7 @@
         const body = document.getElementById(cardId + '-body');
         const chevron = document.getElementById(cardId + '-chevron');
         if (!body) return;
-        
+
         if (body.style.display === 'none') {
             body.style.display = 'block';
             if (chevron) chevron.style.transform = 'rotate(0deg)';
@@ -482,13 +542,13 @@
     function initCalculator() {
         const select = document.getElementById('calc-select');
         const option = select.options[select.selectedIndex];
-        
+
         const formulaDiv = document.getElementById('calc-formula');
         const uomValInput = document.getElementById('calc-uom-val');
         const muomValInput = document.getElementById('calc-muom-val');
         const uomLabel = document.getElementById('calc-uom-label');
         const muomLabel = document.getElementById('calc-muom-label');
-        
+
         if (!option || option.value === '') {
             formulaDiv.textContent = 'Select a UOM rule to enable calculations.';
             uomValInput.disabled = true;
@@ -499,17 +559,17 @@
             muomLabel.textContent = 'MUOM Value';
             return;
         }
-        
+
         const uom = option.getAttribute('data-uom');
         const muom = option.getAttribute('data-muom');
         const factor = parseFloat(option.getAttribute('data-factor'));
-        
+
         formulaDiv.innerHTML = `Conversion Rule: <strong>1 ${muom} = ${factor} ${uom}</strong>`;
         uomValInput.disabled = false;
         muomValInput.disabled = false;
         uomLabel.textContent = `${uom} Quantity (Base)`;
         muomLabel.textContent = `${muom} Quantity`;
-        
+
         if (uomValInput.value !== '') {
             calculateMUOM();
         } else if (muomValInput.value !== '') {
@@ -519,38 +579,38 @@
             calculateMUOM();
         }
     }
-    
+
     function calculateMUOM() {
         const select = document.getElementById('calc-select');
         const option = select.options[select.selectedIndex];
         if (!option || option.value === '') return;
-        
+
         const factor = parseFloat(option.getAttribute('data-factor'));
         const uomVal = parseFloat(document.getElementById('calc-uom-val').value);
         const muomValInput = document.getElementById('calc-muom-val');
-        
+
         if (isNaN(uomVal) || uomVal < 0) {
             muomValInput.value = '';
             return;
         }
-        
+
         muomValInput.value = Number((uomVal / factor).toFixed(4));
     }
-    
+
     function calculateUOM() {
         const select = document.getElementById('calc-select');
         const option = select.options[select.selectedIndex];
         if (!option || option.value === '') return;
-        
+
         const factor = parseFloat(option.getAttribute('data-factor'));
         const muomVal = parseFloat(document.getElementById('calc-muom-val').value);
         const uomValInput = document.getElementById('calc-uom-val');
-        
+
         if (isNaN(muomVal) || muomVal < 0) {
             uomValInput.value = '';
             return;
         }
-        
+
         uomValInput.value = Number((muomVal * factor).toFixed(4));
     }
 

@@ -20,7 +20,7 @@
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search"
-                    placeholder="Search sales by doc number, customer name, or item code..." hx-get="/sales"
+                    placeholder="Search sales by doc number, customer name, or item description..." hx-get="/sales"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results" hx-include="closest form"
                     class="form-input">
             </div>
@@ -28,11 +28,8 @@
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier
                     Filter</label>
-                <select name="supplier_filter" class="form-input"
-                        hx-get="/sales" 
-                        hx-target="#sales-results" 
-                        hx-include="closest form"
-                        hx-trigger="change">
+                <select name="supplier_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
+                    hx-include="closest form" hx-trigger="change">
                     <option value="all">All Suppliers</option>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
@@ -43,11 +40,8 @@
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
-                <select name="sort" class="form-input"
-                        hx-get="/sales" 
-                        hx-target="#sales-results" 
-                        hx-include="closest form"
-                        hx-trigger="change">
+                <select name="sort" class="form-input" hx-get="/sales" hx-target="#sales-results"
+                    hx-include="closest form" hx-trigger="change">
                     <option value="date_desc">Newest First</option>
                     <option value="date_asc">Oldest First</option>
                     <option value="sales_desc">Highest Sales First</option>
@@ -55,12 +49,11 @@
                 </select>
             </div>
             <div class="filter-item">
-                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show Rows</label>
-                <select name="limit" class="form-input"
-                        hx-get="/sales" 
-                        hx-target="#sales-results" 
-                        hx-include="closest form"
-                        hx-trigger="change">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
+                    Rows</label>
+                <select name="limit" class="form-input" hx-get="/sales" hx-target="#sales-results"
+                    hx-include="closest form" hx-trigger="change">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -78,7 +71,7 @@
                             <th>Date</th>
                             <th>Doc No.</th>
                             <th>Supplier</th>
-                            <th>Item Code</th>
+                            <th>Item Description</th>
                             <th>Qty</th>
                             <th>UOM</th>
                             <th>Price</th>
