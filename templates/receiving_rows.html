@@ -4,7 +4,7 @@
     <td>{{ .Date.Format "2006-01-02" }}</td>
     <td>{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</td>
     <td><span class="badge badge-primary">{{ .Supplier }}</span></td>
-    <td style="font-weight: 500;">{{ .ItemCode }}</td>
+    <td style="font-weight: 500;">{{ .ItemDescription }}</td>
     <td class="text-success" style="font-weight: 600;">+{{ .Qty }}</td>
     <td>{{ .UOM }}</td>
     <td>₱{{ printf "%.2f" .UnitPrice }}</td>

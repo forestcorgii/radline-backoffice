@@ -412,7 +412,8 @@ input:focus {
 /* Tables */
 .table-container {
 	width: 100%;
-	overflow: visible;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
 	margin-top: 1rem;
 }
 
@@ -452,6 +453,7 @@ td {
 	text-align: left;
 	border-bottom: 1px solid var(--border-color);
 	font-size: 0.875rem;
+	white-space: nowrap;
 }
 
 th {

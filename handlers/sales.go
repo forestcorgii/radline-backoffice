@@ -14,6 +14,7 @@ import (
 // SalesHandler lists all sales records with search, filter, and sort
 func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
+	docTypeFilter := r.URL.Query().Get("doc_type_filter")
 	supplierFilter := r.URL.Query().Get("supplier_filter")
 	sort := r.URL.Query().Get("sort") // date_desc, date_asc, sales_desc, profit_desc
 
@@ -35,6 +36,11 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	if supplierFilter != "" && supplierFilter != "all" {
 		whereClauses = append(whereClauses, "s.supplier = ?")
 		args = append(args, supplierFilter)
+	}
+
+	if docTypeFilter != "" && docTypeFilter != "all" {
+		whereClauses = append(whereClauses, "s.doc_type = ?")
+		args = append(args, docTypeFilter)
 	}
 
 	if len(whereClauses) > 0 {

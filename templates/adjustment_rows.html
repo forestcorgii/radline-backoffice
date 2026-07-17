@@ -1,9 +1,10 @@
 {{ define "adjustment_rows.html" }}
 {{ range . }}
 <tr>
-    <td><span class="badge badge-secondary">{{ if .AdjustmentID }}ADJ-{{ .AdjustmentID }}{{ else }}-{{ end }}</span></td>
+    <td><span class="badge badge-secondary">{{ if .AdjustmentID }}ADJ-{{ .AdjustmentID }}{{ else }}-{{ end }}</span>
+    </td>
     <td>{{ .Date.Format "2006-01-02" }}</td>
-    <td style="font-weight: 500;">{{ .ItemCode }}</td>
+    <td style="font-weight: 500;">{{ .Description }}</td>
     <td style="font-weight: 600;" class="{{ if gt .AdjustmentQty 0.0 }}text-success{{ else }}text-danger{{ end }}">
         {{ if gt .AdjustmentQty 0.0 }}+{{ end }}{{ .AdjustmentQty }}
     </td>

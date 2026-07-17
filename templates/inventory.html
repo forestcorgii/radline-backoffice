@@ -6,10 +6,12 @@
 <div class="header-bar">
     <h2 style="margin: 0;">Inventory</h2>
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="/inventory/receiving" hx-get="/inventory/receiving" hx-target="#main-content" hx-push-url="true" class="btn" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
+        <a href="/inventory/receiving" hx-get="/inventory/receiving" hx-target="#main-content" hx-push-url="true"
+            class="btn" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
             📦 Receive Stock
         </a>
-        <a href="/inventory/adjustments" hx-get="/inventory/adjustments" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
+        <a href="/inventory/adjustments" hx-get="/inventory/adjustments" hx-target="#main-content" hx-push-url="true"
+            class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
             📋 Adjust Stock
         </a>
     </div>
@@ -19,67 +21,62 @@
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Current Stock Levels</h3>
 
     <form style="display: contents;" onsubmit="return false;">
-    <div class="search-filter-bar">
-        <div class="flex-grow">
-            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
-            <input type="text" name="search" placeholder="Search by item code or description..."
-                   hx-get="/inventory/stock"
-                   hx-trigger="keyup changed delay:300ms, search"
-                   hx-target="#inventory-stock-results" 
-                   hx-include="closest form"
-                   class="form-input">
+        <div class="search-filter-bar">
+            <div class="flex-grow">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+                <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/stock"
+                    hx-trigger="keyup changed delay:300ms, search" hx-target="#inventory-stock-results"
+                    hx-include="closest form" class="form-input">
+            </div>
+            <div class="filter-item">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Stock
+                    Filter</label>
+                <select name="stock_filter" class="form-input" hx-get="/inventory/stock"
+                    hx-target="#inventory-stock-results" hx-include="closest form" hx-trigger="change">
+                    <option value="all">All Items</option>
+                    <option value="in_stock">In Stock Only</option>
+                    <option value="out_of_stock">Out of Stock</option>
+                    <option value="low_stock">Low Stock (≤ 10)</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
+                    Rows</label>
+                <select name="limit" class="form-input" hx-get="/inventory/stock" hx-target="#inventory-stock-results"
+                    hx-include="closest form" hx-trigger="change">
+                    <option value="25" selected>Top 25</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                    <option value="200">Top 200</option>
+                    <option value="500">Top 500</option>
+                </select>
+            </div>
         </div>
-        <div class="filter-item">
-            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Stock Filter</label>
-            <select name="stock_filter" class="form-input"
-                    hx-get="/inventory/stock"
-                    hx-target="#inventory-stock-results" 
-                    hx-include="closest form"
-                    hx-trigger="change">
-                <option value="all">All Items</option>
-                <option value="in_stock">In Stock Only</option>
-                <option value="out_of_stock">Out of Stock</option>
-                <option value="low_stock">Low Stock (≤ 10)</option>
-            </select>
-        </div>
-        <div class="filter-item">
-            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show Rows</label>
-            <select name="limit" class="form-input"
-                    hx-get="/inventory/stock"
-                    hx-target="#inventory-stock-results" 
-                    hx-include="closest form"
-                    hx-trigger="change">
-                <option value="25" selected>Top 25</option>
-                <option value="50">Top 50</option>
-                <option value="100">Top 100</option>
-                <option value="200">Top 200</option>
-                <option value="500">Top 500</option>
-            </select>
-        </div>
-    </div>
 
-    <div id="inventory-stock-results">
-    <div class="table-container">
-        <table class="table-scroll-md">
-            <thead>
-                <tr>
-                    <th style="width: 12%;">Item Code</th>
-                    <th style="width: 24%;">Description</th>
-                    <th style="width: 8%;">UOM</th>
-                    <th style="width: 10%;">Received</th>
-                    <th style="width: 8%;">Sold</th>
-                    <th style="width: 10%;">Adjusted</th>
-                    <th style="width: 10%;">On Hand</th>
-                    <th style="width: 9%;">Current Cost</th>
-                    <th style="width: 9%;">Current Price</th>
-                </tr>
-            </thead>
-            <tbody id="inventory-stock-tbody">
-                {{ template "inventory_stock_rows.html" .StockItems }}
-            </tbody>
-        </table>
-    </div>
-    </div>
+        <div id="inventory-stock-results">
+            <div class="table-container">
+                <table class="table-scroll-md">
+                    <thead>
+                        <tr>
+                            <th style="width: 36%;">Description</th>
+                            <th style="width: 8%;">UOM</th>
+                            <th style="width: 10%;">Received</th>
+                            <th style="width: 8%;">Sold</th>
+                            <th style="width: 10%;">Adjusted</th>
+                            <th style="width: 10%;">On Hand</th>
+                            <th style="width: 9%;">Current Cost</th>
+                            <th style="width: 9%;">Current Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-stock-tbody">
+                        {{ template "inventory_stock_rows.html" .StockItems }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </form>
 </div>
 {{ end }}

@@ -181,7 +181,7 @@ func (app *App) StockAdjustmentsPageHandler(w http.ResponseWriter, r *http.Reque
 
 	var adjustmentLogs []models.InventoryAdjustmentWithItem
 	_ = db.DB.Select(&adjustmentLogs, `
-		SELECT a.*, i.code as item_code
+		SELECT a.*, i.code as item_code, i.description as item_description
 		FROM inventory_adjustments a
 		JOIN items i ON a.item_id = i.id
 		ORDER BY a.date DESC, a.id DESC
@@ -699,7 +699,7 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	sort := r.URL.Query().Get("sort")
 
 	baseQuery := `
-		SELECT a.*, i.code as item_code
+		SELECT a.*, i.code as item_code, i.description as item_description
 		FROM inventory_adjustments a
 		JOIN items i ON a.item_id = i.id
 	`
@@ -707,7 +707,7 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	var conditions []string
 
 	if search != "" {
-		conditions = append(conditions, "(a.remarks LIKE ? OR i.code LIKE ? OR CAST(a.adjustment_id AS TEXT) LIKE ?)")
+		conditions = append(conditions, "(a.remarks LIKE ? OR i.description LIKE ? OR CAST(a.adjustment_id AS TEXT) LIKE ?)")
 		wildcard := "%" + search + "%"
 		args = append(args, wildcard, wildcard, wildcard)
 	}
