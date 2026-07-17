@@ -104,6 +104,10 @@ func main() {
 	http.HandleFunc("GET /import", app.ImportPageHandler)
 	http.HandleFunc("POST /import/upload", app.ImportUploadHandler)
 
+	// Receipt Scanner Routing
+	http.HandleFunc("GET /tools/receipt-scanner", app.ReceiptScannerHandler)
+	http.HandleFunc("POST /tools/receipt-scanner/parse", app.ReceiptScannerParseHandler)
+
 	log.Println("Server starting on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -127,6 +131,7 @@ func parseTemplates() map[string]*template.Template {
 		"sales.html", "monthly_inventory.html", "receiving_logs.html", "adjustment_logs.html",
 		"brand_new.html", "category_new.html", "item_new.html", "sales_new.html",
 		"import.html", "settings.html", "settings_new.html",
+		"receipt_scanner.html",
 	}
 
 	for _, page := range pages {
@@ -184,6 +189,7 @@ func parseTemplates() map[string]*template.Template {
 		"receiving_logs_results.html", "adjustment_logs_results.html",
 		"uom_setting_row.html", "uom_setting_rows.html", "uom_setting_edit_row.html", "uom_settings_results.html",
 		"uom_row.html", "uom_rows.html", "uoms_results.html", "uom_select.html",
+		"receipt_scanner_results.html",
 	}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)

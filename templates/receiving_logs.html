@@ -1,84 +1,73 @@
-{{ define "receiving_logs.html" }}
+{{ define "adjustment_logs.html" }}
 {{ template "base.html" . }}
 {{ end }}
 
 {{ define "content" }}
 <div class="card">
-    <h2>Receiving Logs</h2>
-    
-    <form style="display: contents;" onsubmit="return false;">
-    <div class="search-filter-bar">
-        <div class="flex-grow">
-            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
-            <input type="text" name="search" placeholder="Search by PL No or item code..." 
-                   hx-get="/inventory/receiving/logs" 
-                   hx-trigger="keyup changed delay:300ms, search" 
-                   hx-target="#receiving-logs-results" 
-                   hx-include="closest form"
-                   class="form-input">
-        </div>
-        <div class="filter-item">
-            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier Filter</label>
-            <select name="supplier_filter" class="form-input"
-                    hx-get="/inventory/receiving/logs" 
-                    hx-target="#receiving-logs-results" 
-                    hx-include="closest form"
-                    hx-trigger="change">
-                <option value="all">All Suppliers</option>
-                <option value="ASCD">ASCD</option>
-                <option value="RENOWN">RENOWN</option>
-                <option value="OTHER">OTHER</option>
-            </select>
-        </div>
-        <div class="filter-item">
-            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
-            <select name="sort" class="form-input"
-                    hx-get="/inventory/receiving/logs" 
-                    hx-target="#receiving-logs-results" 
-                    hx-include="closest form"
-                    hx-trigger="change">
-                <option value="date_desc">Newest First</option>
-                <option value="date_asc">Oldest First</option>
-                <option value="qty_desc">Highest Quantity First</option>
-            </select>
-        </div>
-        <div class="filter-item">
-            <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show Rows</label>
-            <select name="limit" class="form-input"
-                    hx-get="/inventory/receiving/logs" 
-                    hx-target="#receiving-logs-results" 
-                    hx-include="closest form"
-                    hx-trigger="change">
-                <option value="25" selected>Top 25</option>
-                <option value="50">Top 50</option>
-                <option value="100">Top 100</option>
-                <option value="200">Top 200</option>
-                <option value="500">Top 500</option>
-            </select>
-        </div>
-    </div>
+    <h2>Adjustment Logs</h2>
 
-    <div id="receiving-logs-results">
-    <div class="table-container">
-        <table class="table-scroll-md">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>PL No.</th>
-                    <th>Supplier</th>
-                    <th>Item Code</th>
-                    <th>Qty</th>
-                    <th>UOM</th>
-                    <th>Selling Price</th>
-                    <th>Total Cost</th>
-                </tr>
-            </thead>
-            <tbody id="receiving-logs-tbody">
-                {{ template "receiving_rows.html" .ReceivingLogs }}
-            </tbody>
-        </table>
-    </div>
-    </div>
+    <form style="display: contents;" onsubmit="return false;">
+        <div class="search-filter-bar">
+            <div class="flex-grow">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+                <input type="text" name="search" placeholder="Search by Remarks, Item Description, or Adjustment ID..."
+                    hx-get="/inventory/adjustments/logs" hx-trigger="keyup changed delay:300ms, search"
+                    hx-target="#adjustment-logs-results" hx-include="closest form" class="form-input">
+            </div>
+            <div class="filter-item">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
+                    By</label>
+                <select name="sort" class="form-input" hx-get="/inventory/adjustments/logs"
+                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change">
+                    <option value="date_desc">Newest First</option>
+                    <option value="date_asc">Oldest First</option>
+                    <option value="qty_desc">Highest Abs(Quantity) First</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
+                    Rows</label>
+                <select name="limit" class="form-input" hx-get="/inventory/adjustments/logs"
+                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change">
+                    <option value="25" selected>Top 25</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                    <option value="200">Top 200</option>
+                    <option value="500">Top 500</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="adjustment-logs-results">
+            <div class="table-container">
+                <table class="table-scroll-md">
+                    <thead>
+                        <tr>
+
+
+
+
+
+
+
+                            <th style="width: 10%;">Adj#</th>
+                            <th style="width: 14%;">Date</th>
+                            <th style="width: 16%;">Description</th>
+                            <th style="width: 10%;">Adj Qty</th>
+                            <th style="width: 8%;">UOM</th>
+                            <th style="width: 12%;">Cost Impact</th>
+                            <th style="width: 30%;">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adjustment-logs-tbody">
+                        {{ template "adjustment_rows.html" .AdjustmentLogs }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </form>
 </div>
 {{ end }}

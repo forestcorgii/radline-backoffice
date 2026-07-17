@@ -1,0 +1,229 @@
+{{ define "content" }}
+<div class="card" style="padding: 1.5rem;">
+    <div class="header-bar">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"
+                stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.5rem;">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Receipt Scanner
+        </h2>
+        <span class="badge badge-info">Scan & Encode</span>
+    </div>
+
+    <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.875rem;">
+        Upload or capture a photo of a receipt or sales invoice to extract data for encoding.
+    </p>
+
+    <!-- Upload Area -->
+    <div id="scanner-upload-area" class="scanner-upload-area"
+         hx-target="#extracted-data"
+         hx-swap="innerHTML">
+        <form id="receipt-form" hx-post="/tools/receipt-scanner/parse" hx-encoding="multipart/form-data" hx-target="#extracted-data" hx-swap="innerHTML">
+            <div class="scanner-dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+                <div class="scanner-dropzone-content">
+                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--text-muted)" stroke-width="1.5" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p style="color: var(--text-muted); font-weight: 500;">Click to upload or drag & drop</p>
+                    <p style="color: var(--text-muted); font-size: 0.75rem;">PNG, JPG, JPEG (max 10MB)</p>
+                </div>
+                <input id="file-input" type="file" name="receipt_image" accept="image/png,image/jpeg,image/jpg"
+                    style="display: none;" onchange="previewReceiptImage(event)" />
+            </div>
+
+            <!-- Image Preview -->
+            <div id="image-preview-container" class="scanner-preview-container" style="display: none;">
+                <img id="image-preview" class="scanner-preview" alt="Receipt preview" />
+                <button type="button" class="btn btn-secondary" onclick="removeImage()" style="margin-top: 0.75rem;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.35rem;">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    Remove & retake
+                </button>
+            </div>
+
+            <div class="scanner-actions" style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center;">
+                <button type="submit" class="btn" onclick="return validateImage()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.35rem;">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Scan Receipt
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="scan-loading" class="scan-loading" style="display: none; text-align: center; padding: 2rem;">
+        <div class="scan-spinner"></div>
+        <p style="color: var(--text-muted); margin-top: 1rem;">Analyzing receipt... Please wait.</p>
+    </div>
+
+    <!-- Extracted Data Results -->
+    <div id="extracted-data" style="margin-top: 1.5rem;"></div>
+</div>
+
+<script>
+    function previewReceiptImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const preview = document.getElementById('image-preview');
+        const container = document.getElementById('image-preview-container');
+        const dropzone = document.querySelector('.scanner-dropzone');
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            container.style.display = 'block';
+            if (dropzone) dropzone.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeImage() {
+        const fileInput = document.getElementById('file-input');
+        const preview = document.getElementById('image-preview');
+        const container = document.getElementById('image-preview-container');
+        const dropzone = document.querySelector('.scanner-dropzone');
+        const extracted = document.getElementById('extracted-data');
+
+        fileInput.value = '';
+        preview.src = '';
+        container.style.display = 'none';
+        if (dropzone) dropzone.style.display = 'flex';
+        if (extracted) extracted.innerHTML = '';
+    }
+
+    function validateImage() {
+        const fileInput = document.getElementById('file-input');
+        if (!fileInput.files || !fileInput.files[0]) {
+            alert('Please select an image first.');
+            return false;
+        }
+        // Show loading
+        document.getElementById('scan-loading').style.display = 'block';
+        document.querySelector('.scanner-actions').style.display = 'none';
+        return true;
+    }
+
+    // HTMX: re-enable form after scan completes
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        if (evt.detail.target && evt.detail.target.id === 'extracted-data') {
+            document.getElementById('scan-loading').style.display = 'none';
+            const actions = document.querySelector('.scanner-actions');
+            if (actions) actions.style.display = 'flex';
+        }
+    });
+
+    document.body.addEventListener('htmx:responseError', function(evt) {
+        if (evt.detail.target && evt.detail.target.id === 'extracted-data') {
+            document.getElementById('scan-loading').style.display = 'none';
+            const actions = document.querySelector('.scanner-actions');
+            if (actions) actions.style.display = 'flex';
+        }
+    });
+
+    // Drag and drop support
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropzone = document.getElementById('dropzone');
+        if (!dropzone) return;
+
+        dropzone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropzone.classList.add('scanner-dragover');
+        });
+
+        dropzone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('scanner-dragover');
+        });
+
+        dropzone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('scanner-dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const fileInput = document.getElementById('file-input');
+                fileInput.files = files;
+                previewReceiptImage({ target: { files: files } });
+            }
+        });
+    });
+</script>
+
+<style>
+    .scanner-dropzone {
+        border: 2px dashed var(--border-color);
+        border-radius: 0.75rem;
+        padding: 2.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--surface-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .scanner-dropzone:hover,
+    .scanner-dragover {
+        border-color: var(--primary-color);
+        background-color: rgba(53, 37, 205, 0.04);
+    }
+
+    .scanner-dropzone-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .scanner-preview-container {
+        text-align: center;
+        padding: 1rem;
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+    }
+
+    .scanner-preview {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow);
+        object-fit: contain;
+    }
+
+    .scan-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .scan-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: scanSpin 0.8s linear infinite;
+    }
+
+    @keyframes scanSpin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{{ end }}

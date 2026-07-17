@@ -76,6 +76,7 @@ type ReceivingLogWithItem struct {
 	TotalCost    float64   `db:"total_cost"`
 	SellingPrice float64   `db:"selling_price"`
 	ItemCode     string    `db:"item_code"`
+	Description  string    `db:"item_description"`
 }
 
 type SalesDetail struct {
@@ -139,6 +140,7 @@ type InventoryAdjustmentWithItem struct {
 	Cost          float64   `db:"cost"`
 	Remarks       string    `db:"remarks"`
 	ItemCode      string    `db:"item_code"`
+	Description   string    `db:"item_description"`
 }
 
 // ItemStockView is a read model for the inventory stock list view

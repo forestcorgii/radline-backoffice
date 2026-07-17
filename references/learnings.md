@@ -341,4 +341,11 @@
   - Select filters (including the new limit dropdown): `hx-trigger="change"` (triggers immediately).
   - Ensure all inputs target the table results container and specify `hx-include="closest form"` to preserve the values of other filter elements.
 
+## Context: Enforcing Table Cell Text Wrap Prevention with Responsive Scrolling
+**Problem**: Text columns and data cells inside table list views (such as items description, categories, supplier names) wrap into multiple lines when the table gets squeezed or on smaller viewports, making the rows overly tall and layout cluttered.
+**Enforced Solution**:
+- **Table Container Overflow**: Set `.table-container` to `overflow-x: auto; -webkit-overflow-scrolling: touch;` to enable horizontal scrolling when tables exceed container width, matching mobile-responsive standards.
+- **Prevent Cell Wrap**: Add `white-space: nowrap;` to the global `th` and `td` stylesheet definitions. This forces columns to expand dynamically to fit their content perfectly without line breaks.
+
+
 

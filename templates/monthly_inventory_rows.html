@@ -2,15 +2,17 @@
 {{ range . }}
 <tr>
     <td><span class="badge badge-primary">{{ .Month }}</span></td>
-    <td style="font-weight: 500;">{{ .ItemCode }}</td>
-    <td>{{ .Description }}</td>
+    <td style="font-weight: 500;">{{ .Description }}</td>
     <td>{{ .DefaultUOM }}</td>
-    <td class="text-success" style="font-weight: 500;">{{ if gt .QtyReceived 0.0 }}+{{ .QtyReceived }}{{ else }}0{{ end }}</td>
+    <td class="text-success" style="font-weight: 500;">{{ if gt .QtyReceived 0.0 }}+{{ .QtyReceived }}{{ else }}0{{ end
+        }}</td>
     <td class="text-danger" style="font-weight: 500;">{{ if gt .QtySold 0.0 }}-{{ .QtySold }}{{ else }}0{{ end }}</td>
-    <td style="font-weight: 500;" class="{{ if gt .QtyAdjusted 0.0 }}text-success{{ else if lt .QtyAdjusted 0.0 }}text-danger{{ else }}text-muted{{ end }}">
+    <td style="font-weight: 500;"
+        class="{{ if gt .QtyAdjusted 0.0 }}text-success{{ else if lt .QtyAdjusted 0.0 }}text-danger{{ else }}text-muted{{ end }}">
         {{ if gt .QtyAdjusted 0.0 }}+{{ end }}{{ .QtyAdjusted }}
     </td>
-    <td style="font-weight: 600;" class="{{ if gt .NetChange 0.0 }}text-success{{ else if lt .NetChange 0.0 }}text-danger{{ else }}text-muted{{ end }}">
+    <td style="font-weight: 600;"
+        class="{{ if gt .NetChange 0.0 }}text-success{{ else if lt .NetChange 0.0 }}text-danger{{ else }}text-muted{{ end }}">
         {{ if gt .NetChange 0.0 }}+{{ end }}{{ .NetChange }}
     </td>
 </tr>

@@ -26,6 +26,20 @@
             </div>
             <div class="filter-item">
                 <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Doc
+                    Type</label>
+                <select name="doc_type_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
+                    hx-include="closest form" hx-trigger="change">
+                    <option value="all">All Doc Types</option>
+                    <option value="SI">Sales Invoice (SI)</option>
+                    <option value="DR">Delivery Receipt (DR)</option>
+                    <option value="SU">Store Use (SU)</option>
+                    <option value="PU">Pull Out (PU)</option>
+                    <option value="RI">Request Invoice (RI)</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier
                     Filter</label>
                 <select name="supplier_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
@@ -69,13 +83,13 @@
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Doc No.</th>
+                            <th>Doc Type / Number</th>
                             <th>Supplier</th>
                             <th>Item Description</th>
                             <th>Qty</th>
                             <th>UOM</th>
-                            <th>Price</th>
-                            <th>Cost</th>
+                            <th>Total Sales</th>
+                            <th>Total Cost</th>
                             <th>Profit</th>
                             <th>Actions</th>
                         </tr>

@@ -8,3 +8,4 @@ mcpServers:
       - -y
       - "@playwright/mcp"
     env: {}
+
