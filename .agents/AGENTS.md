@@ -47,7 +47,7 @@ When writing core logic or validating code behavior, strictly isolate your engin
 
 * **Dynamic Optimizations & Historical Fixes:**
   * *Trigger Keywords:* All code changes, debugging loops, self-corrections, or engineering updates.
-  * [cite_start]*Action:* Consult `references/learnings.md` before generating code to absorb past session behaviors and preferences[cite: 30].
+  * [cite_start]*Action:* Consult `references/00-index.md` before generating code to absorb past session behaviors and preferences[cite: 30].
 * **UI/UX & Design Tokens:**
   * [cite_start]*Trigger Keywords:* UI, UX, layouts, CSS, Tailwind, components, micro-interactions, or HTMX states[cite: 154].
   * [cite_start]*Action:* Consult `references/ui-design-tokens.md` (or `references/htmx-ux-patterns.md`) to extract rigid layout data, loading states, and transition schemas[cite: 158, 159].
@@ -56,8 +56,8 @@ When writing core logic or validating code behavior, strictly isolate your engin
 
 ## Ⅳ. The Self-Improving Evolution Loop
 
-[cite_start]You are strictly prohibited from modifying this `GEMINI.md` file to avoid destroying core activation triggers[cite: 15, 17]. Instead, log all evolving repository context dynamically:
+[cite_start]You are strictly prohibited from modifying this `AGENTS.md` file to avoid destroying core activation triggers[cite: 15, 17]. Instead, log all evolving repository context dynamically:
 
 1. [cite_start]**Detection:** When you resolve a subtle domain bug, establish a standard pattern (e.g., specific GoLang/HTMX toast handlers, domain event patterns), or receive explicit style feedback from the user[cite: 31, 164].
-2. [cite_start]**Persistence:** Use your standard file-writing capabilities to append the discovery to the bottom of `references/learnings.md` in standard Markdown format[cite: 31, 40]. 
-3. [cite_start]**Format:** Log entries cleanly under a descriptive `### Context` or `### Heading`, ensuring structural density (tables, lists, and bold text) for easy parsing in future sessions[cite: 31, 75].
+2. [cite_start]**Persistence:** Do not append to `references/learnings.md` or `references/00-index.md`. Instead, append the discovery to the bottom of a related markdown file in the `references/` directory (e.g., `references/routing.md`, `references/ui-design-tokens.md`, etc.). If no related note exists, create a new topic-specific markdown file (e.g., `references/new-topic.md`) and add a link to it in the map of contents in `references/00-index.md`[cite: 31, 40].
+3. [cite_start]**Format:** Log entries cleanly under a descriptive `### Context: <Topic Title>` header, stating the **Problem** and **Enforced Solution**, ensuring structural density (tables, lists, and bold text) for easy parsing in future sessions[cite: 31, 75].

@@ -79,6 +79,16 @@ cd radline
 go test ./domain/ -v
 ```
 
+## Learnings
+
+### Context: DDD Domain Isolation and Testing Strategy
+**Problem**: Embedding database querying logic or framework-specific DTOs directly within business calculations violates domain model sovereignty and makes unit testing complex or impossible without active database/mocking structures.
+**Enforced Solution**:
+- Implement pure domain models under a `domain` package, completely free of `db` tag structures, SQL engines, or UI templates.
+- Define complex business concepts as aggregates (such as `domain.ItemStock`), value objects, or entities that encapsulate their invariants and compute metrics purely in memory.
+- Within persistence and integration wrappers (e.g. `models/stock.go`), load the necessary data from database tables, map the data to the pure domain objects, run the calculations, and return the outputs.
+- Write unit tests (`*_test.go`) exclusively within the `domain` package, keeping them fast, self-contained, and isolated from external dependencies.
+
 ## Related
 - [[domain-overview]] — Domain layer philosophy
 - [[domain-stock]] — Stock calculation under test

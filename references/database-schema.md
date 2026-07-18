@@ -133,6 +133,19 @@ SQLite does **not** enforce foreign keys by default. The `PRAGMA foreign_keys = 
 - Deleting a brand/category that has items
 - Deleting an item that has receiving logs, sales, or adjustments
 
+## Learnings
+
+### Context: Timezone-Safe SQLite Date Extraction
+**Problem**: In SQLite, using `strftime('%Y-%m', date)` on ISO-8601 strings containing timezone offsets (e.g. `+08:00` or `Z`) can return `NULL` or empty, causing database scan errors in Go (e.g. `converting NULL to string is unsupported`).
+**Enforced Solution**:
+- Replace `strftime('%Y-%m', date_column)` with `substr(date_column, 1, 7)` in SQLite queries where YYYY-MM extraction is required. Since ISO-8601 datetimes consistently begin with `YYYY-MM-DD`, substring extraction is timezone-safe, parsing-independent, and extremely robust.
+
+### Context: Batch Querying and Database Indexing for Page Performance
+**Problem**: Fetching domain models individually inside page rendering loops creates an N+1 query pattern, which results in significant page load latency when handling larger datasets.
+**Enforced Solution**:
+- **Batch Querying**: Implement batch loader functions (e.g. `FetchItemsStockBatch(db, itemIDs)`) that execute single SQL `IN (?)` queries across all needed tables rather than executing separate queries per row loop.
+- **Database Indexing**: Add standard indices on search text fields (e.g., `code`) and foreign key columns (`item_id`, `adjustment_id`) in SQLite schema definition to prevent full table scans on group by / filter queries.
+
 ## Related
 - [[database-migrations]] — How schema evolves at startup
 - [[models-layer]] — DTO structs mapping these tables

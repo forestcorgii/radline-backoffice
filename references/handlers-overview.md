@@ -84,6 +84,21 @@ This three-way check handles:
 2. **HTMX navigation** (`HX-Target: main-content`) — Render content block only
 3. **HTMX filter/search** (`HX-Target: tbody`) — Render rows fragment only
 
+## Learnings
+
+### Context: Refactoring Consolidated Forms to List-Linked Dedicated Pages
+**Problem**: Placing all data entry forms (Brands, Categories, Items, Sales) on a single consolidated "/entry" tab page made navigation unintuitive, disconnected data entry from list views, and led to bloated HTML and routing.
+**Enforced Solution**:
+- **Surgical Placement**: Added a `.header-bar` at the top of each list page (`brands.html`, `categories.html`, `items.html`, `sales.html`) with a dedicated top-right action button (e.g. `+ Add Brand`) that navigates to its own creation route (e.g. `/brands/new`).
+- **Post-Submission Redirect (HX-Location)**: Rather than rendering inline list updates or leaving the user on a blank form, handlers set the `HX-Trigger` for the toast notification and use `HX-Location` (e.g. `w.Header().Set("HX-Location", "/brands")`) to redirect the user back to the list page upon successful submission.
+- **Dynamic Select Autocomplete Refresh**: Maintained HTMX event listeners (e.g. `hx-trigger="brand-added from:body"`) on selection dropdowns to fetch updated select components (e.g. `/brands/select`) dynamically whenever a dependency object is created elsewhere.
+- **Purge Obsolete Pages**: Deleted the legacy `entry.html` template, removed the `Data Entry` sidebar nav link, and registered the new pages in `main.go`.
+
+### Context: Go HTTP Fragment Response Sniffing (Content-Type text/plain)
+**Problem**: Sending HTML fragments starting with table rows `<tr>` or whitespace without setting response headers causes the Go standard library to sniff the content type as `text/plain; charset=utf-8`. HTMX ignores plain text responses, causing requests to hang in the `htmx-request` class.
+**Enforced Solution**:
+- Centrally set the `Content-Type` header to `text/html; charset=utf-8` in all rendering utilities (e.g. `Render` and `RenderPage`) before executing template files.
+
 ## Related
 - [[routing]] — Route-to-handler mapping
 - [[templates-overview]] — Template hierarchy and parsing
