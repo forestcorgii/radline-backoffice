@@ -74,6 +74,17 @@ When evolving the schema:
 2. Update `createSchema()` to include the new column in the `CREATE TABLE` statement
 3. The migration block handles existing databases; the schema handles new databases
 
+## Learnings
+
+### Context: Safe Dynamic SQLite Column Renaming in Go Startups
+**Problem**: Renaming a table column requires schema updates. Doing so without migration frameworks (like golang-migrate) or manual CLI scripts can cause existing deployments to fail or crash if the column name doesn't exist yet, or cause data loss if handled incorrectly.
+**Enforced Solution**:
+- Implement inline dynamic check-and-run queries inside database startup initialization:
+  1. Try querying the new column with a `LIMIT 0` query.
+  2. If it errors (indicating the column does not exist), check if the old column exists.
+  3. If the old column exists, execute `ALTER TABLE ... RENAME COLUMN old_col TO new_col;`.
+  4. This handles both new database schema generation (which directly uses the new column name) and existing database schemas dynamically on server startup.
+
 ## Related
 - [[database-schema]] — Current table definitions
 - [[tech-stack]] — Why no migration framework

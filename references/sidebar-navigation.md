@@ -100,6 +100,51 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
 | `.sidebar-nav a.active` | Blue bg + white text | Same |
 | `.sidebar-dropdown-menu a.active` | Blue text + light blue bg | Same |
 
+## Learnings
+
+### Context: Collapsible Navigation Sidebar with Hover Dropdown Popovers
+**Problem**: Full-width sidebars take up significant horizontal viewport space on desktop, squishing complex grid modules, logs, and spreadsheet tables. Simply collapsing the sidebar off-screen makes navigation tedious.
+**Enforced Solution**:
+- **Icon-Only Collapse State**: Define a `.collapsed` CSS state that shrinks the sidebar from `220px` to `64px`, hides text labels (`.nav-text`), and centers the brand/links navigation icons.
+- **Immediate Inline State Restoring**: Embed an IIFE/synchronous script immediately following the `<aside>` tag:
+  ```javascript
+  if (localStorage.getItem("sidebar-collapsed") === "true") {
+      document.getElementById("sidebar").classList.add("collapsed");
+  }
+  ```
+  This guarantees the layout state is parsed and applied before the first page render, completely preventing Flash of Uncollapsed Layout (FOUT).
+- **Hover Dropdown Popovers**: When collapsed, override vertical inline menu lists to display absolutely as floating popover panels on the right:
+  ```css
+  .sidebar.collapsed .sidebar-dropdown:hover .sidebar-dropdown-menu {
+      display: flex !important;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-hover);
+      z-index: 1001;
+      margin-left: 0.5rem;
+      min-width: 180px;
+  }
+  ```
+- **Click Behavior Suppression**: Block inline dropdown expand/collapse click handlers while the sidebar is collapsed to prevent UI interaction bugs.
+
+### Context: Sidebar Active Link Contrast Fix
+**Problem**: Active links in the sidebar had poor contrast — blue text (`var(--primary-color)`) on a light blue tinted background (`rgba(53, 37, 205, 0.08)`), making the active state hard to distinguish.
+**Enforced Solution**:
+- Changed both `.sidebar-nav a.active` and `.sidebar-dropdown-menu a.active` to use `color: var(--primary-color)` (indigo) on `background-color: rgba(53, 37, 205, 0.08)` (light indigo) — the indigo text on a light tint provides good contrast while keeping the color family cohesive.
+- Added a left accent bar (`.active::before`) using `var(--primary-color)` as a 4px-wide pill indicator to visually anchor the active item.
+- This approach gives a **clean, modern active indicator** with the accent bar providing the visual weight instead of a heavy gradient fill.
+
+### Context: Sidebar Active Link Duplicate Highlighting
+**Problem**: The `updateActiveNavLink()` JavaScript used `currentPath.startsWith(href)` to match dropdown sub-links, causing `/inventory` (Overview) and `/inventory/monthly` (Monthly Inventory) to both be highlighted simultaneously when on `/inventory/monthly`.
+**Enforced Solution**:
+- Changed dropdown sub-link matching to a two-pass algorithm:
+  1. **First pass**: Mark all links that match via exact match OR `startsWith(href + "/")` (for child pages like `/items/new` matching `/items`).
+  2. **Second pass**: If multiple links in the same dropdown are active, keep only the one with the **longest href** (most specific match) and deactivate the rest.
+- This ensures only one sub-link is active at a time while still supporting parent-link highlighting for sub-pages (e.g., `/items/new` highlights `/items`).
+
 ## Related
 - [[ui-design-tokens]] — CSS classes and variables
 - [[responsive-design]] — Mobile breakpoints

@@ -76,6 +76,18 @@ This keeps the domain calculation pure and the DB loading in the infrastructure 
 - **`CalculateGlobalOnHand` DOES include adjustments** — used for the inventory overview page
 - The SQL-based stock view in [[handlers-inventory|`stockListQuery`]] uses raw SQL aggregation for the overview table, which is a simpler (but less domain-pure) approach
 
+## Learnings
+
+### Context: FIFO Cost & Selling Price Tracking (Oldest PL with Stock)
+**Problem**: Tracking and auto-populating inventory item prices and costs based on the oldest transaction batch (PL/Receiving Log) that still has available stock.
+**Enforced Solution**:
+- **Domain FIFO Computation**: Implement `GetOldestPLWithStock()` on the `ItemStock` domain aggregate:
+  1. Sort all receiving logs chronologically (`Date ASC, ID ASC`).
+  2. Compute net consumed stock `consumed = totalReceived - onHand`.
+  3. Loop through sorted logs, deducting each log's quantity from `consumed`.
+  4. The first log whose received quantity is greater than the remaining `consumed` value has active stock under FIFO. Return its cost and price.
+- **Auto-population in Form Handlers**: In HTMX handlers that fetch pre-filled form detail rows (e.g. `/sales/item-row-details`), fetch the item stock aggregate, run the FIFO calculation, and fall back to the latest receiving log if no stock is currently on hand.
+
 ## Related
 - [[domain-item]] — `Item` and `UomSetting` definitions
 - [[domain-receiving]] — `ReceivingLog` entity

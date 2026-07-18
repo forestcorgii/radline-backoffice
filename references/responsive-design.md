@@ -84,6 +84,22 @@ At `≤ 480px`:
 .toast { width: 100%; }
 ```
 
+## Learnings
+
+### Context: Mobile-Responsive Spreadsheet Tables and Form Elements
+**Problem**: Tabular forms and logs containing inputs, selects, and many data cells compress to unusable widths or overflow card blocks on mobile viewports.
+**Enforced Solution**:
+- Wrap all wide tables in a layout container with horizontal overflow support: `.table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }`.
+- Style scrollbars with subtle, custom styled WebKit tracks to keep the UX sleek and premium.
+- Apply min-width constraints (e.g. `.table-scroll-md` at 800px, `.table-scroll-lg` at 1000px) directly to the table element to prevent input squishing and preserve tabular layout integrity on mobile devices.
+- Replace hardcoded filter widths with responsive `.filter-item` wrappers, and grid layouts with responsive media-query classes (e.g. `.grid-cols-2`, `.grid-cols-3`, `.grid-cols-5`) to stack vertically on mobile and span horizontally on desktop.
+
+### Context: Enforcing Table Cell Text Wrap Prevention with Responsive Scrolling
+**Problem**: Text columns and data cells inside table list views (such as items description, categories, supplier names) wrap into multiple lines when the table gets squeezed or on smaller viewports, making the rows overly tall and layout cluttered.
+**Enforced Solution**:
+- **Table Container Overflow**: Set `.table-container` to `overflow-x: auto; -webkit-overflow-scrolling: touch;` to enable horizontal scrolling when tables exceed container width, matching mobile-responsive standards.
+- **Prevent Cell Wrap**: Add `white-space: nowrap;` to the global `th` and `td` stylesheet definitions. This forces columns to expand dynamically to fit their content perfectly without line breaks.
+
 ## Related
 - [[ui-design-tokens]] — Full CSS reference
 - [[sidebar-navigation]] — Mobile sidebar behavior

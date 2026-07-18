@@ -72,6 +72,15 @@ if dbItem.BrandID != nil {
 ```
 This is used because [[domain-item|domain entities]] use `int` (0 = unset) while models use `*int` (nil = SQL NULL).
 
+## Learnings
+
+### Context: Nullable Foreign Key DTO Scans
+**Problem**: Database query scans into struct fields (like `adjustment_id` or `brand_id`) fail with `converting NULL to int is unsupported` when records contain `NULL` for those columns (e.g. legacy adjustments without headers).
+**Enforced Solution**:
+- Define database-mapped DTO fields that can be `NULL` as pointer types (e.g. `AdjustmentID *int` instead of `int`).
+- Safely dereference them in mapper layers (e.g., in `models/stock.go`) before constructing pure domain objects (which require concrete, non-pointer types like `int`).
+- Pointers to standard types are automatically dereferenced in Go's `html/template` package when rendered.
+
 ## Related
 - [[domain-overview]] — Pure domain types that models map to
 - [[domain-stock]] — `ItemStock.CalculateOnHand` called from `CalculateStockOnHand`

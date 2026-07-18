@@ -83,6 +83,20 @@ Form POST → Handler parses multi-value fields
 
 See [[handlers-inventory]] for the `ReceiveStockHandler` implementation.
 
+## Learnings
+
+### Context: Multi-Item Stock Receiving UI
+**Problem**: Previously the receiving form only allowed a single item per stocktake, requiring users to submit repeatedly. Need a dynamic table to add multiple items in one transaction.
+**Enforced Solution**:
+- Created `receiving_item_row.html` fragment with HTMX-driven item selection and defaults.
+- Updated `inventory.html` to render a multi-item table with “Add Item Row” and removal.
+- Added routes `/inventory/receiving/new-row` and `/inventory/receiving/item-row-details`.
+- Implemented `NewReceivingRowHandler` and `ReceivingItemRowDetailsHandler`.
+- Added `StockReceive` aggregate in `domain/receiving.go` with validation and conversion to `ReceivingLog`.
+- Updated `ReceiveStockHandler` to parse array form fields, validate via domain, and insert within a transaction.
+- Updated template parsing to include `receiving_item_row.html`.
+- Added unit tests for `StockReceive`.
+
 ## Related
 - [[domain-stock]] — ReceivingLogs feed into stock calculations
 - [[domain-item]] — Items referenced by ItemID
