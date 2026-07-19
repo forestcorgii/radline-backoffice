@@ -1,0 +1,359 @@
+﻿
+<div class="card">
+    <h2>Receiving Logs</h2>
+
+    <form style="display: contents;" onsubmit="return false;">
+        <div class="search-filter-bar">
+            <div class="flex-grow">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+                <input type="text" name="search" placeholder="Search by PL No. or Item Code..."
+                    hx-get="/inventory/receiving/logs" hx-trigger="keyup changed delay:300ms, search"
+                    hx-target="#receiving-logs-results" hx-include="closest form" class="form-input">
+            </div>
+            <div class="filter-item">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier</label>
+                <select name="supplier_filter" class="form-input" hx-get="/inventory/receiving/logs"
+                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change">
+                    <option value="all">All Suppliers</option>
+                    
+                    <option value="ASCD" >ASCD</option>
+                    
+                    <option value="ASCD SERVICE" >ASCD SERVICE</option>
+                    
+                    <option value="OTHER" >OTHER</option>
+                    
+                    <option value="RENOWN" >RENOWN</option>
+                    
+                </select>
+            </div>
+            <div class="filter-item">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
+                    By</label>
+                <select name="sort" class="form-input" hx-get="/inventory/receiving/logs"
+                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change">
+                    <option value="date_desc">Newest First</option>
+                    <option value="date_asc">Oldest First</option>
+                    <option value="qty_desc">Highest Quantity First</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
+                    Rows</label>
+                <select name="limit" class="form-input" hx-get="/inventory/receiving/logs"
+                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change">
+                    <option value="25" selected>Top 25</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                    <option value="200">Top 200</option>
+                    <option value="500">Top 500</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="receiving-logs-results">
+            
+<div class="table-container">
+    <table class="table-scroll-md">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>PL No.</th>
+                <th>Supplier</th>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>UOM</th>
+                <th>Selling Price</th>
+                <th>Total Cost</th>
+            </tr>
+        </thead>
+        <tbody id="receiving-logs-tbody">
+            
+
+<tr>
+    <td>2026-07-08</td>
+    <td>PL100</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">Test Product Item</td>
+    <td class="text-success" style="font-weight: 600;">+10</td>
+    <td>PCS</td>
+    <td>₱150.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱1000.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-11</td>
+    <td>105031</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA AZG15 ARMATURE</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱1340.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-11</td>
+    <td>105044</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA AZZ02-130 DIAMOND DRILL W/ WATER SOURCE</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>UNIT/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱9900.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-11</td>
+    <td>105044</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">WADFOW WACC1528 CORNER LAMP</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱510.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-11</td>
+    <td>105044</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">WADFOW WTB3316 16&#34; PLASTIC TOOL BOX</td>
+    <td class="text-success" style="font-weight: 600;">+3</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱930.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-11</td>
+    <td>105044</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">WADFOW WSQ1513 SAFETY HARNESS 12MMX1.5M</td>
+    <td class="text-success" style="font-weight: 600;">+4</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱2880.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-11</td>
+    <td>105044</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA DIAMOND CORE BIT 89X370 30271100014</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱975.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-11</td>
+    <td>105044</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA DIAMOND CORE BIT 63X370 30271100011</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱700.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-10</td>
+    <td>105019</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">BRYANT SPRAY PAINT #39 BLACK</td>
+    <td class="text-success" style="font-weight: 600;">+6</td>
+    <td>CAN/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱480.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-10</td>
+    <td>105019</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">TATARA CSBW-080060 CIR. SAW BLADE 8X60 WOOD</td>
+    <td class="text-success" style="font-weight: 600;">+3</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱2700.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-10</td>
+    <td>105019</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA FLUSH TRIM ROUTER BIT 1/4X5/16</td>
+    <td class="text-success" style="font-weight: 600;">+10</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱1950.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-10</td>
+    <td>105019</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA FLUSH TRIM ROUTER BIT 1/4X3/8</td>
+    <td class="text-success" style="font-weight: 600;">+10</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱1950.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-10</td>
+    <td>105019</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA FLUSH TRIM ROUTER BIT 1/4X1/4</td>
+    <td class="text-success" style="font-weight: 600;">+10</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱1950.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-10</td>
+    <td>105018</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA POLY V-BELT #45 AMB110</td>
+    <td class="text-success" style="font-weight: 600;">+10</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱550.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-09</td>
+    <td>105007</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">TACOMA HGC80 PLATE COMPACTOR 80</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>UNIT/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱19000.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-08</td>
+    <td>104983</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">POWERHOUSE TURBOMAXX-550 PLUS SYNERGIC TYPE WELD</td>
+    <td class="text-success" style="font-weight: 600;">+2</td>
+    <td>UNIT/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱20690.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-06</td>
+    <td>104971</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">VESPA AIR COMPRESSOR 1HP</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>UNIT/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱15640.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-03</td>
+    <td>104926</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">LABOR</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱500.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-03</td>
+    <td>104926</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">GREENFIELD BATTERY FOR GPS400W</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱3470.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-03</td>
+    <td>104924</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">NIHONWELD N6011 WELDING ROD 3/32 2.5 (10KG/BOX)</td>
+    <td class="text-success" style="font-weight: 600;">+1</td>
+    <td>BOX</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱1590.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-03</td>
+    <td>104924</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">WADFOW WPE1912 PLASTERING TROWEL</td>
+    <td class="text-success" style="font-weight: 600;">+4</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱564.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-03</td>
+    <td>104924</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">NIHONWELD N6013 WELDING ROD 3/32 (10KG/BOX)</td>
+    <td class="text-success" style="font-weight: 600;">+2</td>
+    <td>BOX</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱2830.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-03</td>
+    <td>104924</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">WADFOW WGA1540 AIR SPRAY 400CC GRAVITY</td>
+    <td class="text-success" style="font-weight: 600;">+4</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱1900.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-03</td>
+    <td>104924</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">DCA ASB03-100S ORBITAL SANDER 240W</td>
+    <td class="text-success" style="font-weight: 600;">+4</td>
+    <td>UNIT/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱5100.00</td>
+</tr>
+
+<tr>
+    <td>2026-06-03</td>
+    <td>104924</td>
+    <td><span class="badge badge-primary">ASCD</span></td>
+    <td style="font-weight: 500;">TATARA STB-14014 STRAIGHT ROUTER BIT 1/4X1/4</td>
+    <td class="text-success" style="font-weight: 600;">+10</td>
+    <td>PC/S</td>
+    <td>₱0.00</td>
+    <td class="text-danger" style="font-weight: 500;">₱950.00</td>
+</tr>
+
+
+        </tbody>
+    </table>
+</div>
+
+        </div>
+    </form>
+</div>
+
