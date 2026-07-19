@@ -6,21 +6,21 @@
 <div class="card">
     <h2>Adjustment Logs</h2>
 
-    <form style="display: contents;" onsubmit="return false;">
+    <form style="display: contents;" onsubmit="return false;" hx-indicator="#adjustment-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search by Remarks, Item Description, or Adjustment ID..."
                     hx-get="/inventory/adjustments/logs" hx-trigger="keyup changed delay:300ms, search"
-                    hx-target="#adjustment-logs-results" hx-include="closest form" class="form-input">
+                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-indicator="#adjustment-loading-indicator" class="form-input">
             </div>
             <div class="filter-item">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
                 <select name="sort" class="form-input" hx-get="/inventory/adjustments/logs"
-                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change">
+                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change" hx-indicator="#adjustment-loading-indicator">
                     <option value="date_desc">Newest First</option>
                     <option value="date_asc">Oldest First</option>
                     <option value="qty_desc">Highest Abs(Quantity) First</option>
@@ -31,7 +31,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
                 <select name="limit" class="form-input" hx-get="/inventory/adjustments/logs"
-                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change">
+                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change" hx-indicator="#adjustment-loading-indicator">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -39,6 +39,11 @@
                     <option value="500">Top 500</option>
                 </select>
             </div>
+        </div>
+
+        <div id="adjustment-loading-indicator" class="htmx-indicator">
+            <div class="spinner-sm"></div>
+            <span>Searching & filtering adjustment logs...</span>
         </div>
 
         <div id="adjustment-logs-results">

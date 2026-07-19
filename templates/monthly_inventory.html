@@ -10,7 +10,7 @@
 <div class="card">
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Inventory Movements by Month</h3>
 
-    <form style="display: contents;" onsubmit="return false;">
+    <form style="display: contents;" onsubmit="return false;" hx-indicator="#monthly-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow">
                 <label
@@ -18,14 +18,15 @@
                     Items</label>
                 <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/monthly"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#monthly-inventory-results"
-                    hx-include="closest form" class="form-input">
+                    hx-include="closest form" hx-indicator="#monthly-loading-indicator" class="form-input">
             </div>
             <div class="filter-item">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Month
                     Filter</label>
                 <select name="month_filter" class="form-input" hx-get="/inventory/monthly"
-                    hx-target="#monthly-inventory-results" hx-include="closest form" hx-trigger="change">
+                    hx-target="#monthly-inventory-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#monthly-loading-indicator">
                     <option value="all">All Months</option>
                     {{ range .Months }}
                     <option value="{{ . }}">{{ . }}</option>
@@ -37,7 +38,8 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
                 <select name="limit" class="form-input" hx-get="/inventory/monthly"
-                    hx-target="#monthly-inventory-results" hx-include="closest form" hx-trigger="change">
+                    hx-target="#monthly-inventory-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#monthly-loading-indicator">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -45,6 +47,11 @@
                     <option value="500">Top 500</option>
                 </select>
             </div>
+        </div>
+
+        <div id="monthly-loading-indicator" class="htmx-indicator">
+            <div class="spinner-sm"></div>
+            <span>Searching & filtering monthly inventory...</span>
         </div>
 
         <div id="monthly-inventory-results">

@@ -68,13 +68,14 @@
 <div class="card" id="items-card">
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Items List</h3>
 
-    <form style="display: contents;" onsubmit="return false;">
+    <form style="display: contents;" onsubmit="return false;" hx-indicator="#items-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search item description, or model..." hx-get="/items"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#items-results" hx-include="closest form"
+                    hx-indicator="#items-loading-indicator"
                     class="form-input">
             </div>
             <div class="filter-item">
@@ -82,7 +83,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Brand
                     Filter</label>
                 <select name="brand_id_filter" class="form-input" hx-get="/items" hx-target="#items-results"
-                    hx-include="closest form" hx-trigger="change">
+                    hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
                     <option value="0">All Brands</option>
                     {{ range .Brands }}
                     <option value="{{ .ID }}">{{ .Name }}</option>
@@ -94,7 +95,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Category
                     Filter</label>
                 <select name="category_id_filter" class="form-input" hx-get="/items" hx-target="#items-results"
-                    hx-include="closest form" hx-trigger="change">
+                    hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
                     <option value="0">All Categories</option>
                     {{ range .Categories }}
                     <option value="{{ .ID }}">{{ .Name }}</option>
@@ -106,7 +107,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
                 <select name="sort" class="form-input" hx-get="/items" hx-target="#items-results"
-                    hx-include="closest form" hx-trigger="change">
+                    hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
                     <option value="code_asc">Code (A-Z)</option>
                     <option value="code_desc">Code (Z-A)</option>
                     <option value="description_asc">Description (A-Z)</option>
@@ -118,7 +119,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
                 <select name="limit" class="form-input" hx-get="/items" hx-target="#items-results"
-                    hx-include="closest form" hx-trigger="change">
+                    hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -126,6 +127,11 @@
                     <option value="500">Top 500</option>
                 </select>
             </div>
+        </div>
+
+        <div id="items-loading-indicator" class="htmx-indicator">
+            <div class="spinner-sm"></div>
+            <span>Searching & filtering items...</span>
         </div>
 
         <div id="items-results">

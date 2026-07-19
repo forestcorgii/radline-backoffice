@@ -129,21 +129,22 @@
 <div class="card">
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Current Stock Levels</h3>
 
-    <form style="display: contents;" onsubmit="return false;">
+    <form style="display: contents;" onsubmit="return false;" hx-indicator="#inventory-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/stock"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#inventory-stock-results"
-                    hx-include="closest form" class="form-input">
+                    hx-include="closest form" hx-indicator="#inventory-loading-indicator" class="form-input">
             </div>
             <div class="filter-item">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Stock
                     Filter</label>
                 <select name="stock_filter" class="form-input" hx-get="/inventory/stock"
-                    hx-target="#inventory-stock-results" hx-include="closest form" hx-trigger="change">
+                    hx-target="#inventory-stock-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#inventory-loading-indicator">
                     <option value="all">All Items</option>
                     <option value="in_stock">In Stock Only</option>
                     <option value="out_of_stock">Out of Stock</option>
@@ -155,7 +156,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
                 <select name="limit" class="form-input" hx-get="/inventory/stock" hx-target="#inventory-stock-results"
-                    hx-include="closest form" hx-trigger="change">
+                    hx-include="closest form" hx-trigger="change" hx-indicator="#inventory-loading-indicator">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -163,6 +164,11 @@
                     <option value="500">Top 500</option>
                 </select>
             </div>
+        </div>
+
+        <div id="inventory-loading-indicator" class="htmx-indicator">
+            <div class="spinner-sm"></div>
+            <span>Searching & filtering inventory stock...</span>
         </div>
 
         <div id="inventory-stock-results">

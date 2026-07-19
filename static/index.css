@@ -715,6 +715,62 @@ tr:hover td {
 	padding-right: 2.5rem;
 }
 
+/* HTMX Loading Indicator Styles */
+.htmx-indicator {
+	display: none;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: var(--primary-color);
+	background-color: rgba(53, 37, 205, 0.06);
+	border: 1px solid rgba(53, 37, 205, 0.15);
+	padding: 0.375rem 0.75rem;
+	border-radius: 0.375rem;
+	margin-bottom: 0.75rem;
+	transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+	display: inline-flex !important;
+	animation: fadeIn 0.15s ease-in;
+}
+
+.spinner-sm {
+	width: 14px;
+	height: 14px;
+	border: 2px solid rgba(53, 37, 205, 0.2);
+	border-top-color: var(--primary-color);
+	border-radius: 50%;
+	animation: spin 0.6s linear infinite;
+	flex-shrink: 0;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(-2px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+/* Subtle dimming effect on target results while loading */
+.htmx-request#sales-results,
+.htmx-request#inventory-stock-results,
+.htmx-request#monthly-inventory-results,
+.htmx-request#receiving-logs-results,
+.htmx-request#adjustment-logs-results,
+.htmx-request#items-results,
+.htmx-request#brands-results,
+.htmx-request#categories-results,
+.htmx-request#uoms-results {
+	opacity: 0.5;
+	pointer-events: none;
+	transition: opacity 0.2s ease;
+}
+
 /* Badges */
 .badge {
 	display: inline-flex;
