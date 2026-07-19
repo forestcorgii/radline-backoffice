@@ -1,19 +1,19 @@
 {{ define "sales_rows.html" }}
 {{ range . }}
 <tr id="sale-row-{{ .ID }}">
-    <td>{{ .DocDate.Format "2006-01-02" }}</td>
-    <td>
+    <td data-col="doc_date">{{ .DocDate.Format "2006-01-02" }}</td>
+    <td data-col="doc_type_number">
         <span class="badge badge-secondary">{{ .DocType }}</span>
         {{ .DocNumber }}
     </td>
-    <td><span class="badge badge-primary">{{ .Supplier }}</span></td>
-    <td style="font-weight: 500;">{{ .Description }}</td>
-    <td style="font-weight: 600;">{{ .Qty }}</td>
-    <td>{{ .UOM }}</td>
-    <td class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales }}</td>
-    <td class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</td>
-    <td class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }}</td>
-    <td>
+    <td data-col="supplier"><span class="badge badge-primary">{{ .Supplier }}</span></td>
+    <td data-col="item_description" style="font-weight: 500;">{{ .Description }}</td>
+    <td data-col="qty" style="font-weight: 600;">{{ .Qty }}</td>
+    <td data-col="uom">{{ .UOM }}</td>
+    <td data-col="total_sales" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales }}</td>
+    <td data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</td>
+    <td data-col="profit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }}</td>
+    <td data-col="actions">
         <div class="actions-cell">
             <button class="btn btn-danger btn-icon" hx-delete="/sales/delete/{{ .ID }}"
                 hx-confirm="Are you sure you want to delete this sale log?" hx-target="#sale-row-{{ .ID }}"
@@ -31,7 +31,7 @@
 </tr>
 {{ else }}
 <tr>
-    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+    <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 3rem;">
         No sales records found.
     </td>
 </tr>

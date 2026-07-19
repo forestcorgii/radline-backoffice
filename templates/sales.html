@@ -5,10 +5,97 @@
 {{ define "content" }}
 <div class="header-bar">
     <h2 style="margin: 0;">Sales Logs</h2>
-    <a href="/sales/new" hx-get="/sales/new" hx-target="#main-content" hx-push-url="true" class="btn"
-        style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
-        + Encode Sales
-    </a>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <!-- Customize View Button & Popover -->
+        <div class="customize-view-container">
+            <button type="button" class="btn btn-secondary" onclick="toggleCustomizeViewPopover(event)"
+                style="padding: 0.5rem 0.85rem; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 0.35rem;"
+                title="Customize Visible Columns and Filters">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Customize View</span>
+            </button>
+
+            <div id="customize-view-popover" class="customize-view-popover">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    <span style="font-weight: 600; font-size: 0.875rem;">Sales Page View</span>
+                    <button type="button" onclick="resetSalesViewSettings()"
+                        style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                </div>
+
+                <div class="customize-section-title">Table Columns</div>
+                <div class="customize-checkbox-grid">
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="doc_date" onchange="onSalesViewSettingChange()">
+                        <span>Doc Date</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="doc_type_number" onchange="onSalesViewSettingChange()">
+                        <span>Doc Type / Number</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="item_description" onchange="onSalesViewSettingChange()">
+                        <span>Item Description</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="supplier" onchange="onSalesViewSettingChange()">
+                        <span>Supplier</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="qty" onchange="onSalesViewSettingChange()">
+                        <span>Quantity (Qty)</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="uom" onchange="onSalesViewSettingChange()">
+                        <span>UOM</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="total_sales" onchange="onSalesViewSettingChange()">
+                        <span>Total Sales</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="total_cost" onchange="onSalesViewSettingChange()">
+                        <span>Total Cost</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="profit" onchange="onSalesViewSettingChange()">
+                        <span>Profit</span>
+                    </label>
+                </div>
+
+                <div class="customize-section-title">Visible Filters</div>
+                <div class="customize-checkbox-grid">
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="search" onchange="onSalesViewSettingChange()">
+                        <span>Search Bar</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="doc_type" onchange="onSalesViewSettingChange()">
+                        <span>Doc Type Filter</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="supplier" onchange="onSalesViewSettingChange()">
+                        <span>Supplier Filter</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="sort" onchange="onSalesViewSettingChange()">
+                        <span>Sort By</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="limit" onchange="onSalesViewSettingChange()">
+                        <span>Show Rows (Limit)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <a href="/sales/new" hx-get="/sales/new" hx-target="#main-content" hx-push-url="true" class="btn"
+            style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
+            + Encode Sales
+        </a>
+    </div>
 </div>
 
 <div class="card">
@@ -16,7 +103,7 @@
 
     <form style="display: contents;" onsubmit="return false;">
         <div class="search-filter-bar">
-            <div class="flex-grow">
+            <div class="flex-grow" data-filter="search">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search"
@@ -24,7 +111,7 @@
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results" hx-include="closest form"
                     class="form-input">
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="doc_type">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Doc
                     Type</label>
@@ -38,7 +125,7 @@
                     <option value="RI">Request Invoice (RI)</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="supplier">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier
                     Filter</label>
@@ -50,7 +137,7 @@
                     <option value="OTHER">OTHER</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="sort">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
@@ -62,7 +149,7 @@
                     <option value="profit_desc">Highest Profit First</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="limit">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
@@ -82,16 +169,16 @@
                 <table class="table-scroll-lg">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Doc Type / Number</th>
-                            <th>Supplier</th>
-                            <th>Item Description</th>
-                            <th>Qty</th>
-                            <th>UOM</th>
-                            <th>Total Sales</th>
-                            <th>Total Cost</th>
-                            <th>Profit</th>
-                            <th>Actions</th>
+                            <th data-col="doc_date">Date</th>
+                            <th data-col="doc_type_number">Doc Type / Number</th>
+                            <th data-col="supplier">Supplier</th>
+                            <th data-col="item_description">Item Description</th>
+                            <th data-col="qty">Qty</th>
+                            <th data-col="uom">UOM</th>
+                            <th data-col="total_sales">Total Sales</th>
+                            <th data-col="total_cost">Total Cost</th>
+                            <th data-col="profit">Profit</th>
+                            <th data-col="actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="sales-tbody">
@@ -102,4 +189,131 @@
         </div>
     </form>
 </div>
+
+<script>
+    (function () {
+        const DEFAULT_SALES_VIEW_CONFIG = {
+            columns: {
+                doc_date: true,
+                doc_type_number: true,
+                item_description: true,
+                supplier: false,
+                qty: false,
+                uom: false,
+                total_sales: false,
+                total_cost: false,
+                profit: false,
+                actions: true
+            },
+            filters: {
+                search: true,
+                doc_type: true,
+                supplier: true,
+                sort: true,
+                limit: true
+            }
+        };
+
+        function getSalesViewConfig() {
+            try {
+                const stored = localStorage.getItem('radline_sales_view_config');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    return {
+                        columns: Object.assign({}, DEFAULT_SALES_VIEW_CONFIG.columns, parsed.columns || {}),
+                        filters: Object.assign({}, DEFAULT_SALES_VIEW_CONFIG.filters, parsed.filters || {})
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to parse sales view config', e);
+            }
+            return DEFAULT_SALES_VIEW_CONFIG;
+        }
+
+        function saveSalesViewConfig(config) {
+            localStorage.setItem('radline_sales_view_config', JSON.stringify(config));
+        }
+
+        window.applySalesViewSettings = function () {
+            const config = getSalesViewConfig();
+
+            // 1. Sync popover checkboxes with config
+            document.querySelectorAll('[data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                cb.checked = !!config.columns[colKey];
+            });
+            document.querySelectorAll('[data-target-filter]').forEach(cb => {
+                const filterKey = cb.getAttribute('data-target-filter');
+                cb.checked = !!config.filters[filterKey];
+            });
+
+            // 2. Toggle column visibility in table (th & td)
+            Object.keys(config.columns).forEach(colKey => {
+                const isVisible = config.columns[colKey];
+                const elements = document.querySelectorAll(`[data-col="${colKey}"]`);
+                elements.forEach(el => {
+                    el.style.display = isVisible ? '' : 'none';
+                });
+            });
+
+            // 3. Toggle filter visibility in search bar
+            Object.keys(config.filters).forEach(filterKey => {
+                const isVisible = config.filters[filterKey];
+                const elements = document.querySelectorAll(`[data-filter="${filterKey}"]`);
+                elements.forEach(el => {
+                    el.style.display = isVisible ? '' : 'none';
+                });
+            });
+        };
+
+        window.onSalesViewSettingChange = function () {
+            const config = { columns: {}, filters: {} };
+            document.querySelectorAll('[data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                config.columns[colKey] = cb.checked;
+            });
+            config.columns.actions = true; // Always keep actions enabled
+
+            document.querySelectorAll('[data-target-filter]').forEach(cb => {
+                const filterKey = cb.getAttribute('data-target-filter');
+                config.filters[filterKey] = cb.checked;
+            });
+
+            saveSalesViewConfig(config);
+            window.applySalesViewSettings();
+        };
+
+        window.resetSalesViewSettings = function () {
+            saveSalesViewConfig(DEFAULT_SALES_VIEW_CONFIG);
+            window.applySalesViewSettings();
+        };
+
+        window.toggleCustomizeViewPopover = function (event) {
+            event.stopPropagation();
+            const popover = document.getElementById('customize-view-popover');
+            if (popover) {
+                popover.classList.toggle('show');
+            }
+        };
+
+        // Close popover when clicking outside
+        document.addEventListener('click', function (event) {
+            const container = document.querySelector('.customize-view-container');
+            const popover = document.getElementById('customize-view-popover');
+            if (container && popover && !container.contains(event.target)) {
+                popover.classList.remove('show');
+            }
+        });
+
+        // Apply immediately
+        window.applySalesViewSettings();
+    })();
+
+    // Re-apply settings on HTMX swaps
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applySalesViewSettings === 'function') {
+            window.applySalesViewSettings();
+        }
+    });
+</script>
 {{ end }}
