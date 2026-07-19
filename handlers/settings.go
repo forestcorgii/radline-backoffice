@@ -78,27 +78,9 @@ func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// NewUomSettingPageHandler renders the UOM setting creation page
+// NewUomSettingPageHandler redirects to uom-settings list page
 func (app *App) NewUomSettingPageHandler(w http.ResponseWriter, r *http.Request) {
-	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
-
-	data := struct {
-		Items []models.Item
-		Uoms  []models.Uom
-	}{
-		Items: items,
-		Uoms:  uoms,
-	}
-
-	app.RenderPage(w, r, "settings_new.html", data)
+	http.Redirect(w, r, "/uom-settings", http.StatusSeeOther)
 }
 
 // AddUomSettingHandler inserts a new UOM setting into the database
@@ -137,8 +119,7 @@ func (app *App) AddUomSettingHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "UOM Setting added successfully!"}}`)
-	w.Header().Set("HX-Location", "/settings")
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "UOM Setting added successfully!"}, "uom-setting-added": ""}`)
 	w.WriteHeader(http.StatusOK)
 }
 

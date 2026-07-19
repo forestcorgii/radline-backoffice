@@ -1,0 +1,45 @@
+{{ define "receiving_log_row.html" }}
+<tr id="receiving-log-row-{{ .ID }}">
+    <td>{{ .Date.Format "2006-01-02" }}</td>
+    <td>{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</td>
+    <td><span class="badge badge-primary">{{ .Supplier }}</span></td>
+    <td class="text-success" style="font-weight: 600;">+{{ .Qty }}</td>
+    <td style="font-weight: 500;">{{ .Description }}</td>
+    <td>{{ .UOM }}</td>
+    <td>₱{{ printf "%.2f" .UnitPrice }}</td>
+    <td>{{ if gt .Less1 0.0 }}{{ printf "%.1f" .Less1 }}%{{ else }}-{{ end }}</td>
+    <td>{{ if gt .Less2 0.0 }}{{ printf "%.1f" .Less2 }}%{{ else }}-{{ end }}</td>
+    <td>₱{{ printf "%.2f" .Cost }}</td>
+    <td class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</td>
+    <td>{{ printf "%.0f" .Markup }}%</td>
+    <td style="font-weight: 500;">₱{{ printf "%.2f" .SellingPrice }}</td>
+    <td>{{ if .Remarks }}{{ .Remarks }}{{ else }}-{{ end }}</td>
+    <td>
+        <div class="actions-cell">
+            <button type="button" class="btn btn-secondary btn-icon"
+                hx-get="/inventory/receiving/logs/edit/{{ .ID }}"
+                hx-target="#receiving-log-row-{{ .ID }}"
+                hx-swap="outerHTML"
+                title="Edit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+            </button>
+            <button type="button" class="btn btn-danger btn-icon"
+                hx-delete="/inventory/receiving/logs/delete/{{ .ID }}"
+                hx-target="#receiving-log-row-{{ .ID }}"
+                hx-swap="outerHTML"
+                hx-confirm="Delete this receiving log?"
+                title="Delete">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </button>
+        </div>
+    </td>
+</tr>
+{{ end }}

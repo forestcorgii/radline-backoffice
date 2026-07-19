@@ -5,10 +5,59 @@
 {{ define "content" }}
 <div class="header-bar">
     <h2 style="margin: 0;">Items</h2>
-    <a href="/items/new" hx-get="/items/new" hx-target="#main-content" hx-push-url="true" class="btn"
-        style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
+    <button type="button" class="btn" onclick="toggleAddItemForm()" style="padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer;">
         + Add Item
-    </a>
+    </button>
+</div>
+
+<!-- Add Item Form Card (hidden by default, shown when + Add Item is clicked) -->
+<div class="card mb-4" id="add-item-card" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add New Item</h3>
+        <button type="button" class="btn btn-secondary" onclick="toggleAddItemForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+            ✕ Close
+        </button>
+    </div>
+    <form hx-post="/items/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddItemForm(); }">
+        <div class="grid grid-cols-3">
+            <div class="form-group">
+                <label for="item_code">Item Code</label>
+                <input type="text" id="item_code" name="code" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="item_description">Description</label>
+                <input type="text" id="item_description" name="description" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="item_model">Model</label>
+                <input type="text" id="item_model" name="model" class="form-input">
+            </div>
+        </div>
+        <div class="grid grid-cols-3 mt-4">
+            <div class="form-group">
+                <label for="brand_id">Brand</label>
+                {{ template "brand_select.html" .Brands }}
+            </div>
+            <div class="form-group">
+                <label for="category_id">Category</label>
+                {{ template "category_select.html" .Categories }}
+            </div>
+            <div class="form-group">
+                <label for="default_uom">Default UOM</label>
+                <select id="default_uom" name="default_uom" class="form-input" required
+                        hx-get="/uoms/select?name=default_uom" hx-trigger="uom-added from:body" hx-swap="outerHTML">
+                    <option value="">-- Select UOM --</option>
+                    {{ range .Uoms }}
+                    <option value="{{ .Code }}">{{ .Code }}</option>
+                    {{ end }}
+                </select>
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;" class="mt-4">
+            <button type="submit" class="btn">Save Item</button>
+            <button type="button" onclick="toggleAddItemForm()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </form>
 </div>
 
 <!-- Non-collapsible Items List Card occupying the full width -->
@@ -96,4 +145,24 @@
         </div>
     </form>
 </div>
+
+<script>
+    function toggleAddItemForm() {
+        const card = document.getElementById('add-item-card');
+        if (!card) return;
+        if (card.style.display === 'none' || card.style.display === '') {
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            card.style.display = 'none';
+        }
+    }
+
+    document.body.addEventListener('item-added', function () {
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            htmx.trigger(searchInput, 'search');
+        }
+    });
+</script>
 {{ end }}

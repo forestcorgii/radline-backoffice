@@ -215,3 +215,10 @@ See [[htmx-patterns]] for the toast protocol.
 - [[sidebar-navigation]] — Sidebar-specific CSS
 - [[htmx-patterns]] — Toast notification styling
 - [[templates-overview]] — HTML templates using these classes
+
+### Context: Sales Page Encode Button & Filter Bar Customize View Icon Button
+**Problem**: The Sales page had the "+ Encode Sales" button in a multi-button group next to the full-text "Customize View" button in the header bar, differing from the header layout in Brands/Categories and taking up extra header space.
+**Enforced Solution**:
+- **Header Alignment**: Placed `+ Encode Sales` directly in the header bar (matching Brands/Categories pages) which toggles an inline, collapsible form card (`#encode-sales-card`) directly above the filters.
+- **Filter-Bar Icon Buttons**: Removed textual label from the "Customize View" button, converting it into a compact icon-only button (`<svg>` polygon filter icon) situated at the far right end of `.search-filter-bar`.
+

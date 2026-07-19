@@ -1,0 +1,56 @@
+{{ define "receiving_log_edit_row.html" }}
+<tr id="receiving-log-row-{{ .ID }}" class="editing-row" style="background: var(--bg-secondary);">
+    <td>{{ .Date.Format "2006-01-02" }}</td>
+    <td>{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</td>
+    <td><span class="badge badge-primary">{{ .Supplier }}</span></td>
+    <td>
+        <input type="number" step="any" name="qty" form="edit-form-{{ .ID }}" class="form-input" value="{{ .Qty }}" style="width: 5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    </td>
+    <td style="font-weight: 500;">{{ .Description }}</td>
+    <td>{{ .UOM }}</td>
+    <td>
+        <input type="number" step="any" name="unit_price" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.2f" .UnitPrice }}" style="width: 6rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    </td>
+    <td>
+        <input type="number" step="any" name="less1" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.1f" .Less1 }}" style="width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    </td>
+    <td>
+        <input type="number" step="any" name="less2" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.1f" .Less2 }}" style="width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    </td>
+    <td>₱{{ printf "%.2f" .Cost }}</td>
+    <td>₱{{ printf "%.2f" .TotalCost }}</td>
+    <td>
+        <input type="number" step="any" name="markup" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.0f" .Markup }}" style="width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    </td>
+    <td>₱{{ printf "%.2f" .SellingPrice }}</td>
+    <td>
+        <input type="text" name="remarks" form="edit-form-{{ .ID }}" class="form-input" value="{{ .Remarks }}" style="width: 7rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    </td>
+    <td>
+        <form id="edit-form-{{ .ID }}"
+            hx-post="/inventory/receiving/logs/edit/{{ .ID }}"
+            hx-target="#receiving-log-row-{{ .ID }}"
+            hx-swap="outerHTML"
+            style="display: contents;">
+        </form>
+        <div class="actions-cell">
+            <button type="submit" form="edit-form-{{ .ID }}" class="btn btn-icon" title="Save" style="background: var(--success-color); color: white;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </button>
+            <button type="button" class="btn btn-secondary btn-icon"
+                hx-get="/inventory/receiving/logs/edit/{{ .ID }}"
+                hx-target="#receiving-log-row-{{ .ID }}"
+                hx-swap="outerHTML"
+                onclick="location.reload()"
+                title="Cancel">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </td>
+</tr>
+{{ end }}

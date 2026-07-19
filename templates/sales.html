@@ -5,97 +5,81 @@
 {{ define "content" }}
 <div class="header-bar">
     <h2 style="margin: 0;">Sales Logs</h2>
-    <div style="display: flex; gap: 0.5rem; align-items: center;">
-        <!-- Customize View Button & Popover -->
-        <div class="customize-view-container">
-            <button type="button" class="btn btn-secondary" onclick="toggleCustomizeViewPopover(event)"
-                style="padding: 0.5rem 0.85rem; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 0.35rem;"
-                title="Customize Visible Columns and Filters">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                </svg>
-                <span>Customize View</span>
-            </button>
+    <button type="button" class="btn" onclick="toggleEncodeSalesForm()"
+        style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem; cursor: pointer;">
+        + Encode Sales
+    </button>
+</div>
 
-            <div id="customize-view-popover" class="customize-view-popover">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                    <span style="font-weight: 600; font-size: 0.875rem;">Sales Page View</span>
-                    <button type="button" onclick="resetSalesViewSettings()"
-                        style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
-                </div>
-
-                <div class="customize-section-title">Table Columns</div>
-                <div class="customize-checkbox-grid">
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="doc_date" onchange="onSalesViewSettingChange()">
-                        <span>Doc Date</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="doc_type_number" onchange="onSalesViewSettingChange()">
-                        <span>Doc Type / Number</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="item_description" onchange="onSalesViewSettingChange()">
-                        <span>Item Description</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="supplier" onchange="onSalesViewSettingChange()">
-                        <span>Supplier</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="qty" onchange="onSalesViewSettingChange()">
-                        <span>Quantity (Qty)</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="uom" onchange="onSalesViewSettingChange()">
-                        <span>UOM</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="total_sales" onchange="onSalesViewSettingChange()">
-                        <span>Total Sales</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="total_cost" onchange="onSalesViewSettingChange()">
-                        <span>Total Cost</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="profit" onchange="onSalesViewSettingChange()">
-                        <span>Profit</span>
-                    </label>
-                </div>
-
-                <div class="customize-section-title">Visible Filters</div>
-                <div class="customize-checkbox-grid">
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="search" onchange="onSalesViewSettingChange()">
-                        <span>Search Bar</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="doc_type" onchange="onSalesViewSettingChange()">
-                        <span>Doc Type Filter</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="supplier" onchange="onSalesViewSettingChange()">
-                        <span>Supplier Filter</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="sort" onchange="onSalesViewSettingChange()">
-                        <span>Sort By</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="limit" onchange="onSalesViewSettingChange()">
-                        <span>Show Rows (Limit)</span>
-                    </label>
-                </div>
+<!-- Encode Sales Form Card (hidden by default, shown when + Encode Sales is clicked) -->
+<div class="card mb-4" id="encode-sales-card" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Encode Sales</h3>
+        <button type="button" class="btn btn-secondary" onclick="toggleEncodeSalesForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+            ✕ Close
+        </button>
+    </div>
+    <form hx-post="/sales/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('sales-items-tbody'); if (tbody) { while(tbody.rows.length > 1) { tbody.deleteRow(1); } } toggleEncodeSalesForm(); }">
+        <div class="grid grid-cols-5">
+            <div class="form-group">
+                <label for="doc_date">Document Date</label>
+                <input type="date" id="doc_date" name="doc_date" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="doc_type">Doc Type</label>
+                <select id="doc_type" name="doc_type" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                    <option value="SI">Sales Invoice (SI)</option>
+                    <option value="DR">Delivery Receipt (DR)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="doc_number">Doc Number</label>
+                <input type="text" id="doc_number" name="doc_number" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="customer_name">Customer Name</label>
+                <input type="text" id="customer_name" name="customer_name" class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="supplier">Supplier</label>
+                <select id="supplier" name="supplier" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                    <option value="ASCD">ASCD</option>
+                    <option value="RENOWN">RENOWN</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
             </div>
         </div>
 
-        <a href="/sales/new" hx-get="/sales/new" hx-target="#main-content" hx-push-url="true" class="btn"
-            style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
-            + Encode Sales
-        </a>
-    </div>
+        <div class="mt-4 mb-4" style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Items</h3>
+        </div>
+
+        <div class="table-container">
+            <table class="table-scroll-md">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Item</th>
+                        <th style="width: 12%;">PL No</th>
+                        <th style="width: 12%;">UOM</th>
+                        <th style="width: 10%;">Qty</th>
+                        <th style="width: 13%;">Unit Selling Price</th>
+                        <th style="width: 13%;">Unit Cost</th>
+                        <th style="width: 10%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="sales-items-tbody">
+                    {{ template "sale_item_row.html" .SalesRowData }}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;" class="mt-4">
+            <button type="button" class="btn btn-secondary" hx-get="/sales/new-row" hx-target="#sales-items-tbody" hx-swap="beforeend">
+                + Add Item Row
+            </button>
+            <button type="submit" class="btn">Save Sales Log</button>
+        </div>
+    </form>
 </div>
 
 <div class="card">
@@ -161,6 +145,91 @@
                     <option value="200">Top 200</option>
                     <option value="500">Top 500</option>
                 </select>
+            </div>
+            <!-- Customize View Button & Popover at right side of filter -->
+            <div class="filter-item" style="width: auto; align-self: flex-end;">
+                <div class="customize-view-container">
+                    <button type="button" class="btn btn-secondary" onclick="toggleCustomizeViewPopover(event)"
+                        style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; justify-content: center; height: 38px;"
+                        title="Customize Visible Columns and Filters">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                    </button>
+
+                    <div id="customize-view-popover" class="customize-view-popover">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                            <span style="font-weight: 600; font-size: 0.875rem;">Sales Page View</span>
+                            <button type="button" onclick="resetSalesViewSettings()"
+                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                        </div>
+
+                        <div class="customize-section-title">Table Columns</div>
+                        <div class="customize-checkbox-grid">
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="doc_date" onchange="onSalesViewSettingChange()">
+                                <span>Doc Date</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="doc_type_number" onchange="onSalesViewSettingChange()">
+                                <span>Doc Type / Number</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="item_description" onchange="onSalesViewSettingChange()">
+                                <span>Item Description</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="supplier" onchange="onSalesViewSettingChange()">
+                                <span>Supplier</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="qty" onchange="onSalesViewSettingChange()">
+                                <span>Quantity (Qty)</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="uom" onchange="onSalesViewSettingChange()">
+                                <span>UOM</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="total_sales" onchange="onSalesViewSettingChange()">
+                                <span>Total Sales</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="total_cost" onchange="onSalesViewSettingChange()">
+                                <span>Total Cost</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="profit" onchange="onSalesViewSettingChange()">
+                                <span>Profit</span>
+                            </label>
+                        </div>
+
+                        <div class="customize-section-title">Visible Filters</div>
+                        <div class="customize-checkbox-grid">
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="search" onchange="onSalesViewSettingChange()">
+                                <span>Search Bar</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="doc_type" onchange="onSalesViewSettingChange()">
+                                <span>Doc Type Filter</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="supplier" onchange="onSalesViewSettingChange()">
+                                <span>Supplier Filter</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="sort" onchange="onSalesViewSettingChange()">
+                                <span>Sort By</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="limit" onchange="onSalesViewSettingChange()">
+                                <span>Show Rows (Limit)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -288,6 +357,17 @@
             window.applySalesViewSettings();
         };
 
+        window.toggleEncodeSalesForm = function () {
+            const card = document.getElementById('encode-sales-card');
+            if (!card) return;
+            if (card.style.display === 'none' || card.style.display === '') {
+                card.style.display = 'block';
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                card.style.display = 'none';
+            }
+        };
+
         window.toggleCustomizeViewPopover = function (event) {
             event.stopPropagation();
             const popover = document.getElementById('customize-view-popover');
@@ -313,6 +393,13 @@
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         if (typeof window.applySalesViewSettings === 'function') {
             window.applySalesViewSettings();
+        }
+    });
+
+    document.body.addEventListener('sales-added', function () {
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            htmx.trigger(searchInput, 'search');
         }
     });
 </script>

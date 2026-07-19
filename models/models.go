@@ -58,9 +58,13 @@ type ReceivingLog struct {
 	Qty          float64   `db:"qty"`
 	UOM          string    `db:"uom"`
 	UnitPrice    float64   `db:"unit_price"`
+	Less1        float64   `db:"less1"`
+	Less2        float64   `db:"less2"`
 	Cost         float64   `db:"cost"`
 	TotalCost    float64   `db:"total_cost"`
+	Markup       float64   `db:"markup"`
 	SellingPrice float64   `db:"selling_price"`
+	Remarks      string    `db:"remarks"`
 }
 
 type ReceivingLogWithItem struct {
@@ -72,9 +76,13 @@ type ReceivingLogWithItem struct {
 	Qty          float64   `db:"qty"`
 	UOM          string    `db:"uom"`
 	UnitPrice    float64   `db:"unit_price"`
+	Less1        float64   `db:"less1"`
+	Less2        float64   `db:"less2"`
 	Cost         float64   `db:"cost"`
 	TotalCost    float64   `db:"total_cost"`
+	Markup       float64   `db:"markup"`
 	SellingPrice float64   `db:"selling_price"`
+	Remarks      string    `db:"remarks"`
 	ItemCode     string    `db:"item_code"`
 	Description  string    `db:"item_description"`
 }

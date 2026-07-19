@@ -76,7 +76,11 @@ func CalculateStockOnHand(db *sqlx.DB, itemID int, supplierName string) (float64
 			r.Qty,
 			r.UOM,
 			r.UnitPrice,
+			r.Less1,
+			r.Less2,
 			r.Cost,
+			r.Markup,
+			r.Remarks,
 		)
 		if errR == nil {
 			dReceivingLogs = append(dReceivingLogs, dr)
@@ -219,7 +223,11 @@ func FetchItemStock(db *sqlx.DB, itemID int) (domain.ItemStock, error) {
 			r.Qty,
 			r.UOM,
 			r.UnitPrice,
+			r.Less1,
+			r.Less2,
 			r.Cost,
+			r.Markup,
+			r.Remarks,
 		)
 		if errR == nil {
 			dReceivingLogs = append(dReceivingLogs, dr)
@@ -423,7 +431,11 @@ func FetchItemsStockBatch(db *sqlx.DB, itemIDs []int) (map[int]domain.ItemStock,
 				r.Qty,
 				r.UOM,
 				r.UnitPrice,
+				r.Less1,
+				r.Less2,
 				r.Cost,
+				r.Markup,
+				r.Remarks,
 			)
 			if errR == nil {
 				dReceivingLogs = append(dReceivingLogs, dr)

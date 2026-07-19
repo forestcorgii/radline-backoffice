@@ -91,10 +91,6 @@
                         <a href="/inventory" hx-get="/inventory" onclick="closeMobileSidebarOnNav()">Overview</a>
                         <a href="/inventory/monthly" hx-get="/inventory/monthly"
                             onclick="closeMobileSidebarOnNav()">Monthly Inventory</a>
-                        <a href="/inventory/receiving" hx-get="/inventory/receiving"
-                            onclick="closeMobileSidebarOnNav()">Stock Receiving</a>
-                        <a href="/inventory/adjustments" hx-get="/inventory/adjustments"
-                            onclick="closeMobileSidebarOnNav()">Stock Adjustment</a>
                         <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs"
                             onclick="closeMobileSidebarOnNav()">Receiving Logs</a>
                         <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs"
@@ -124,17 +120,6 @@
                     </div>
                 </div>
 
-                <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()" title="Import">
-                    <span class="nav-icon-text">
-                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        <span class="nav-text">Import</span>
-                    </span>
-                </a>
-
                 <!-- Tools Dropdown -->
                 <div class="sidebar-dropdown" id="tools-dropdown">
                     <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Tools">
@@ -151,6 +136,7 @@
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
+                        <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()">Import</a>
                         <a href="/tools/receipt-scanner" hx-get="/tools/receipt-scanner"
                             onclick="closeMobileSidebarOnNav()">Receipt Scanner</a>
                     </div>
