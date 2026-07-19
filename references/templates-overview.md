@@ -120,3 +120,15 @@ See [[sidebar-navigation]] and [[htmx-patterns]] for details.
 - [[htmx-patterns]] — How HTMX triggers fragment rendering
 - [[ui-design-tokens]] — CSS classes used in templates
 - [[sidebar-navigation]] — Base template navigation structure
+
+## Learnings
+
+### Context: Correct Template Context Mapping and Matching Database Fields
+**Problem**: After copy-pasting code or templates from another page (e.g., `receiving_logs.html` copied from `adjustment_logs.html`), the rendered table did not load because:
+- The template referenced incorrect context fields (`.AdjustmentLogs` instead of `.ReceivingLogs`).
+- The query in `inventory.go` did not select all required columns (`i.description as item_description`), causing the fields to be empty.
+- The template `receiving_rows.html` referenced a non-existent struct field `.ItemDescription` instead of `.Description`.
+**Enforced Solution**:
+- **Strict Context Mapping**: Ensure all templates match the exact data structure returned by the Go HTTP handler.
+- **Select All Required Columns**: Keep SQL queries aligned with destination DTO/Model structs by selecting all fields explicitly (e.g., `i.description as item_description` to map to `db:"item_description"` tag).
+- **Correct Go Struct Field Reference**: Access fields in html templates using the exact case-sensitive Go struct field name (e.g., `.Description`), not the database tag name or a mismatched name.

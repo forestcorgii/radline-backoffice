@@ -158,7 +158,7 @@ func parseTemplates() map[string]*template.Template {
 		} else if page == "monthly_inventory.html" {
 			files = append(files, "templates/monthly_inventory_rows.html")
 		} else if page == "receiving_logs.html" {
-			files = append(files, "templates/receiving_rows.html")
+			files = append(files, "templates/receiving_rows.html", "templates/receiving_logs_results.html")
 		} else if page == "adjustment_logs.html" {
 			files = append(files, "templates/adjustment_rows.html")
 		} else if page == "settings.html" {

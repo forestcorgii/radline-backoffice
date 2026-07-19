@@ -631,7 +631,7 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	sort := r.URL.Query().Get("sort")
 
 	baseQuery := `
-		SELECT r.*, i.code as item_code
+		SELECT r.*, i.code as item_code, i.description as item_description
 		FROM receiving_logs r
 		JOIN items i ON r.item_id = i.id
 	`
@@ -674,6 +674,13 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var suppliers []string
+	err = db.DB.Select(&suppliers, "SELECT DISTINCT supplier FROM receiving_logs WHERE supplier != '' ORDER BY supplier ASC")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
 			ReceivingLogs []models.ReceivingLogWithItem
@@ -685,9 +692,13 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		ReceivingLogs []models.ReceivingLogWithItem
+		ReceivingLogs  []models.ReceivingLogWithItem
+		Suppliers      []string
+		SupplierFilter string
 	}{
-		ReceivingLogs: receivingLogs,
+		ReceivingLogs:  receivingLogs,
+		Suppliers:      suppliers,
+		SupplierFilter: supplierFilter,
 	}
 
 	app.RenderPage(w, r, "receiving_logs.html", data)
