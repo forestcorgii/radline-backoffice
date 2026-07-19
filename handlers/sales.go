@@ -17,6 +17,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	docTypeFilter := r.URL.Query().Get("doc_type_filter")
 	supplierFilter := r.URL.Query().Get("supplier_filter")
 	sort := r.URL.Query().Get("sort") // date_desc, date_asc, sales_desc, profit_desc
+	isEdit := r.FormValue("is_edit") == "1" || r.URL.Query().Get("is_edit") == "1"
 
 	baseQuery := `
 		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
@@ -70,27 +71,37 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var items []models.Item
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Sales []models.SalesDetailWithItem
+			Sales  []models.SalesDetailWithItem
+			IsEdit bool
+			Items  []models.Item
+			Uoms   []models.Uom
 		}{
-			Sales: sales,
+			Sales:  sales,
+			IsEdit: isEdit,
+			Items:  items,
+			Uoms:   uoms,
 		}
 		app.Render(w, "sales_results.html", data)
 	} else {
-		var items []models.Item
-		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
-
-		var uoms []models.Uom
-		_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
-
 		data := struct {
 			Sales        []models.SalesDetailWithItem
+			IsEdit       bool
 			Items        []models.Item
+			Uoms         []models.Uom
 			SalesRowData interface{}
 		}{
-			Sales: sales,
-			Items: items,
+			Sales:  sales,
+			IsEdit: isEdit,
+			Items:  items,
+			Uoms:   uoms,
 			SalesRowData: map[string]interface{}{
 				"Items": items,
 				"Uoms":  uoms,
@@ -320,4 +331,98 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 		"PLNo":           lastPLNo,
 		"Uoms":           uoms,
 	})
+}
+
+// UpdateSalesHandler updates an existing sales detail record
+func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid sale log ID."}}`)
+		http.Error(w, "Invalid sale log ID", http.StatusBadRequest)
+		return
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to parse form."}}`)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	docDateStr := r.FormValue("doc_date")
+	docType := r.FormValue("doc_type")
+	docNumber := r.FormValue("doc_number")
+	customerName := r.FormValue("customer_name")
+	supplier := r.FormValue("supplier")
+	itemIDStr := r.FormValue("item_id")
+	qtyStr := r.FormValue("qty")
+	uom := r.FormValue("uom")
+	priceStr := r.FormValue("price")
+	costStr := r.FormValue("cost")
+
+	itemID, errItem := strconv.Atoi(itemIDStr)
+	qty, errQty := strconv.ParseFloat(qtyStr, 64)
+	price, errPrice := strconv.ParseFloat(priceStr, 64)
+	cost, errCost := strconv.ParseFloat(costStr, 64)
+
+	parsedDate, dateErr := time.Parse("2006-01-02", docDateStr)
+	if dateErr != nil || errItem != nil || errQty != nil || errPrice != nil || errCost != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid numeric or date input."}}`)
+		http.Error(w, "Invalid numeric or date input", http.StatusBadRequest)
+		return
+	}
+
+	salesDetail, err := domain.NewSalesDetail(id, docType, "POSTED", parsedDate, docNumber, customerName, supplier, itemID, qty, uom, price, cost, "")
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "` + err.Error() + `"}}`)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.DB.Exec(`
+		UPDATE sales_details 
+		SET doc_type = ?, doc_date = ?, doc_number = ?, customer_name = ?, supplier = ?, item_id = ?, qty = ?, uom = ?, price = ?, total_sales = ?, cost = ?, total_cost = ?, profit = ?
+		WHERE id = ?
+	`, salesDetail.DocType, salesDetail.DocDate, salesDetail.DocNumber, salesDetail.CustomerName, salesDetail.Supplier, salesDetail.ItemID, salesDetail.Qty, salesDetail.UOM, salesDetail.Price, salesDetail.TotalSales, salesDetail.Cost, salesDetail.TotalCost, salesDetail.Profit, id)
+
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update sale log."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var updatedSale models.SalesDetailWithItem
+	err = db.DB.Get(&updatedSale, `
+		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
+		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost, s.profit,
+		       i.code as item_code, i.description as item_description
+		FROM sales_details s
+		JOIN items i ON s.item_id = i.id
+		WHERE s.id = ?
+	`, id)
+
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to retrieve updated sale record."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Sale log updated successfully!"}}`)
+
+	isEdit := r.FormValue("is_edit") == "1"
+	if isEdit {
+		var items []models.Item
+		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+		var uoms []models.Uom
+		_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
+		app.Render(w, "sale_edit_row.html", map[string]interface{}{
+			"Sale":  updatedSale,
+			"Items": items,
+			"Uoms":  uoms,
+		})
+	} else {
+		app.Render(w, "sale_row.html", updatedSale)
+	}
 }

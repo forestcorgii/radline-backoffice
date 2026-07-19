@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"html/template"
 	"log"
 	"net/http"
@@ -83,6 +84,7 @@ func main() {
 	http.HandleFunc("GET /sales", app.SalesHandler)
 	http.HandleFunc("GET /sales/new", app.NewSalesPageHandler)
 	http.HandleFunc("POST /sales/add", app.AddSalesHandler)
+	http.HandleFunc("POST /sales/edit/{id}", app.UpdateSalesHandler)
 	http.HandleFunc("GET /sales/new-row", app.NewSaleRowHandler)
 	http.HandleFunc("DELETE /sales/delete/{id}", app.DeleteSalesHandler)
 	http.HandleFunc("GET /sales/item-row-details", app.SaleItemRowDetailsHandler)
@@ -125,15 +127,29 @@ func parseTemplates() map[string]*template.Template {
 			}
 			return *p
 		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
 	}
 
 	// Pages that use base.html
 	pages := []string{
-		"dashboard.html", "brands.html", "categories.html", "items.html",
+		"dashboard.html", "brands.html", "categories.html", "items.html", "uom_settings.html",
 		"inventory.html", "stock_receiving.html", "stock_adjustments.html",
 		"sales.html", "monthly_inventory.html", "receiving_logs.html", "adjustment_logs.html",
 		"brand_new.html", "category_new.html", "item_new.html", "sales_new.html",
-		"import.html", "settings.html", "settings_new.html",
+		"import.html", "settings.html", "settings_new.html", "uom_settings_new.html",
 		"receipt_scanner.html",
 	}
 
@@ -141,11 +157,13 @@ func parseTemplates() map[string]*template.Template {
 		t := template.New(page).Funcs(funcMap)
 		files := []string{"templates/base.html", "templates/" + page}
 		if page == "brands.html" {
-			files = append(files, "templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html")
+			files = append(files, "templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html", "templates/brands_results.html")
 		} else if page == "categories.html" {
-			files = append(files, "templates/category_row.html", "templates/category_rows.html", "templates/category_edit_row.html")
+			files = append(files, "templates/category_row.html", "templates/category_rows.html", "templates/category_edit_row.html", "templates/categories_results.html")
 		} else if page == "items.html" {
-			files = append(files, "templates/item_row.html", "templates/item_rows.html", "templates/item_edit_row.html")
+			files = append(files, "templates/item_row.html", "templates/item_rows.html", "templates/item_edit_row.html", "templates/brand_select.html", "templates/category_select.html", "templates/uom_select.html", "templates/items_results.html")
+		} else if page == "uom_settings.html" {
+			files = append(files, "templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html")
 		} else if page == "inventory.html" {
 			files = append(files, "templates/inventory_stock_rows.html", "templates/receiving_item_row.html", "templates/adjustment_item_row.html")
 		} else if page == "stock_receiving.html" {
@@ -153,7 +171,7 @@ func parseTemplates() map[string]*template.Template {
 		} else if page == "stock_adjustments.html" {
 			files = append(files, "templates/adjustment_rows.html", "templates/item_select.html", "templates/adjustment_item_row.html")
 		} else if page == "sales.html" {
-			files = append(files, "templates/sales_rows.html", "templates/sale_item_row.html")
+			files = append(files, "templates/sales_rows.html", "templates/sale_item_row.html", "templates/sales_results.html", "templates/item_select.html", "templates/uom_select.html", "templates/sale_row.html", "templates/sale_edit_row.html")
 		} else if page == "item_new.html" {
 			files = append(files, "templates/brand_select.html", "templates/category_select.html", "templates/uom_select.html")
 		} else if page == "sales_new.html" {
@@ -171,7 +189,7 @@ func parseTemplates() map[string]*template.Template {
 				"templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html",
 				"templates/uom_row.html", "templates/uom_rows.html", "templates/uoms_results.html", "templates/uom_select.html",
 			)
-		} else if page == "settings_new.html" {
+		} else if page == "settings_new.html" || page == "uom_settings_new.html" {
 			files = append(files, "templates/item_select.html")
 		}
 
@@ -194,6 +212,7 @@ func parseTemplates() map[string]*template.Template {
 		"uom_setting_row.html", "uom_setting_rows.html", "uom_setting_edit_row.html", "uom_settings_results.html",
 		"uom_row.html", "uom_rows.html", "uoms_results.html", "uom_select.html",
 		"receipt_scanner_results.html",
+		"sale_row.html", "sale_edit_row.html",
 	}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)
@@ -212,8 +231,10 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/item_row.html", "templates/item_rows.html")
 		} else if frag == "inventory_stock_results.html" {
 			files = append(files, "templates/inventory_stock_rows.html")
+		} else if frag == "sales_rows.html" {
+			files = append(files, "templates/sale_row.html", "templates/sale_edit_row.html")
 		} else if frag == "sales_results.html" {
-			files = append(files, "templates/sales_rows.html")
+			files = append(files, "templates/sales_rows.html", "templates/sale_row.html", "templates/sale_edit_row.html")
 		} else if frag == "monthly_inventory_results.html" {
 			files = append(files, "templates/monthly_inventory_rows.html")
 		} else if frag == "receiving_logs_results.html" {
