@@ -12,8 +12,10 @@ func TestNewStockReceive_Validation(t *testing.T) {
 		ItemID:    1,
 		Qty:       10.0,
 		UOM:       "PCS",
-		UnitPrice: 150.0,
-		Cost:      100.0,
+		UnitPrice: 100.0,
+		Less1:     0,
+		Less2:     0,
+		Markup:    130,
 	}
 
 	tests := []struct {
@@ -40,7 +42,7 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			date:     time.Now(),
 			items: []domain.StockReceiveItem{
 				validItem,
-				{ItemID: 2, Qty: 5.0, UOM: "BOX", UnitPrice: 500.0, Cost: 400.0},
+				{ItemID: 2, Qty: 5.0, UOM: "BOX", UnitPrice: 500.0, Markup: 130},
 			},
 			wantErr: false,
 		},
@@ -77,7 +79,7 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			supplier: "ASCD",
 			date:     time.Now(),
 			items: []domain.StockReceiveItem{
-				{ItemID: 0, Qty: 10.0, UOM: "PCS", UnitPrice: 150.0, Cost: 100.0},
+				{ItemID: 0, Qty: 10.0, UOM: "PCS", UnitPrice: 150.0, Markup: 130},
 			},
 			wantErr: true,
 			errMsg:  "item ID must be valid",
@@ -88,7 +90,7 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			supplier: "ASCD",
 			date:     time.Now(),
 			items: []domain.StockReceiveItem{
-				{ItemID: -5, Qty: 10.0, UOM: "PCS", UnitPrice: 150.0, Cost: 100.0},
+				{ItemID: -5, Qty: 10.0, UOM: "PCS", UnitPrice: 150.0, Markup: 130},
 			},
 			wantErr: true,
 			errMsg:  "item ID must be valid",
@@ -99,7 +101,7 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			supplier: "ASCD",
 			date:     time.Now(),
 			items: []domain.StockReceiveItem{
-				{ItemID: 1, Qty: 0, UOM: "PCS", UnitPrice: 150.0, Cost: 100.0},
+				{ItemID: 1, Qty: 0, UOM: "PCS", UnitPrice: 150.0, Markup: 130},
 			},
 			wantErr: true,
 			errMsg:  "quantity must be greater than zero",
@@ -110,7 +112,7 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			supplier: "ASCD",
 			date:     time.Now(),
 			items: []domain.StockReceiveItem{
-				{ItemID: 1, Qty: -2.5, UOM: "PCS", UnitPrice: 150.0, Cost: 100.0},
+				{ItemID: 1, Qty: -2.5, UOM: "PCS", UnitPrice: 150.0, Markup: 130},
 			},
 			wantErr: true,
 			errMsg:  "quantity must be greater than zero",
@@ -121,7 +123,7 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			supplier: "ASCD",
 			date:     time.Now(),
 			items: []domain.StockReceiveItem{
-				{ItemID: 1, Qty: 10.0, UOM: "", UnitPrice: 150.0, Cost: 100.0},
+				{ItemID: 1, Qty: 10.0, UOM: "", UnitPrice: 150.0, Markup: 130},
 			},
 			wantErr: true,
 			errMsg:  "UOM cannot be empty",
@@ -132,21 +134,10 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			supplier: "ASCD",
 			date:     time.Now(),
 			items: []domain.StockReceiveItem{
-				{ItemID: 1, Qty: 10.0, UOM: "PCS", UnitPrice: -10.0, Cost: 100.0},
+				{ItemID: 1, Qty: 10.0, UOM: "PCS", UnitPrice: -10.0, Markup: 130},
 			},
 			wantErr: true,
 			errMsg:  "unit price cannot be negative",
-		},
-		{
-			name:     "negative cost",
-			plNo:     "PL100",
-			supplier: "ASCD",
-			date:     time.Now(),
-			items: []domain.StockReceiveItem{
-				{ItemID: 1, Qty: 10.0, UOM: "PCS", UnitPrice: 150.0, Cost: -5.0},
-			},
-			wantErr: true,
-			errMsg:  "cost cannot be negative",
 		},
 	}
 
@@ -167,8 +158,8 @@ func TestNewStockReceive_Validation(t *testing.T) {
 func TestStockReceive_ToReceivingLogs(t *testing.T) {
 	date := time.Now()
 	items := []domain.StockReceiveItem{
-		{ItemID: 1, Qty: 10.0, UOM: "PCS", UnitPrice: 150.0, Cost: 100.0},
-		{ItemID: 2, Qty: 5.0, UOM: "BOX", UnitPrice: 500.0, Cost: 400.0},
+		{ItemID: 1, Qty: 10.0, UOM: "PCS", UnitPrice: 100.0, Less1: 10, Less2: 5, Markup: 130},
+		{ItemID: 2, Qty: 5.0, UOM: "BOX", UnitPrice: 500.0, Less1: 0, Less2: 0, Markup: 150},
 	}
 
 	sr, err := domain.NewStockReceive("PL999", "RENOWN", date, items)
@@ -182,6 +173,10 @@ func TestStockReceive_ToReceivingLogs(t *testing.T) {
 	}
 
 	// Verify first item log mapping
+	// UnitPrice=100, Less1=10%, Less2=5%
+	// UnitCost = 100 * (1-0.10) * (1-0.05) = 100 * 0.9 * 0.95 = 85.5
+	// TotalCost = 10 * 85.5 = 855
+	// SellingPrice = 85.5 * 130/100 = 111.15
 	log1 := logs[0]
 	if log1.Supplier != "RENOWN" {
 		t.Errorf("expected Supplier RENOWN, got %s", log1.Supplier)
@@ -201,20 +196,35 @@ func TestStockReceive_ToReceivingLogs(t *testing.T) {
 	if log1.UOM != "PCS" {
 		t.Errorf("expected UOM PCS, got %s", log1.UOM)
 	}
-	if log1.UnitPrice != 150.0 {
-		t.Errorf("expected UnitPrice 150.0, got %f", log1.UnitPrice)
+	if log1.UnitPrice != 100.0 {
+		t.Errorf("expected UnitPrice 100.0, got %f", log1.UnitPrice)
 	}
-	if log1.Cost != 100.0 {
-		t.Errorf("expected Cost 100.0, got %f", log1.Cost)
+	if log1.Less1 != 10.0 {
+		t.Errorf("expected Less1 10.0, got %f", log1.Less1)
 	}
-	if log1.TotalCost != 1000.0 {
-		t.Errorf("expected TotalCost 1000.0, got %f", log1.TotalCost)
+	if log1.Less2 != 5.0 {
+		t.Errorf("expected Less2 5.0, got %f", log1.Less2)
 	}
-	if log1.SellingPrice != 150.0 {
-		t.Errorf("expected SellingPrice 150.0, got %f", log1.SellingPrice)
+	expectedCost1 := 85.5
+	if log1.Cost != expectedCost1 {
+		t.Errorf("expected Cost %f, got %f", expectedCost1, log1.Cost)
+	}
+	expectedTotal1 := 855.0
+	if log1.TotalCost != expectedTotal1 {
+		t.Errorf("expected TotalCost %f, got %f", expectedTotal1, log1.TotalCost)
+	}
+	if log1.Markup != 130.0 {
+		t.Errorf("expected Markup 130.0, got %f", log1.Markup)
+	}
+	expectedSelling1 := 85.5 * 130 / 100 // 111.15
+	if log1.SellingPrice != expectedSelling1 {
+		t.Errorf("expected SellingPrice %f, got %f", expectedSelling1, log1.SellingPrice)
 	}
 
 	// Verify second item log mapping
+	// UnitPrice=500, Less1=0, Less2=0 → UnitCost=500
+	// TotalCost = 5 * 500 = 2500
+	// SellingPrice = 500 * 150/100 = 750
 	log2 := logs[1]
 	if log2.ItemID != 2 {
 		t.Errorf("expected ItemID 2, got %d", log2.ItemID)
@@ -222,7 +232,16 @@ func TestStockReceive_ToReceivingLogs(t *testing.T) {
 	if log2.Qty != 5.0 {
 		t.Errorf("expected Qty 5.0, got %f", log2.Qty)
 	}
-	if log2.TotalCost != 2000.0 {
-		t.Errorf("expected TotalCost 2000.0, got %f", log2.TotalCost)
+	if log2.Cost != 500.0 {
+		t.Errorf("expected Cost 500.0, got %f", log2.Cost)
+	}
+	if log2.TotalCost != 2500.0 {
+		t.Errorf("expected TotalCost 2500.0, got %f", log2.TotalCost)
+	}
+	if log2.Markup != 150.0 {
+		t.Errorf("expected Markup 150.0, got %f", log2.Markup)
+	}
+	if log2.SellingPrice != 750.0 {
+		t.Errorf("expected SellingPrice 750.0, got %f", log2.SellingPrice)
 	}
 }

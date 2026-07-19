@@ -98,7 +98,6 @@ func (app *App) AddBrandHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Brand added successfully!"}, "brand-added": ""}`)
-	w.Header().Set("HX-Location", "/settings")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -303,7 +302,6 @@ func (app *App) AddCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Category added successfully!"}, "category-added": ""}`)
-	w.Header().Set("HX-Location", "/settings")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -550,7 +548,6 @@ func (app *App) AddItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Item added successfully!"}, "item-added": ""}`)
-	w.Header().Set("HX-Location", "/items")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -707,38 +704,19 @@ func (app *App) DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// NewBrandPageHandler renders the brand creation form
+// NewBrandPageHandler redirects to brands list page
 func (app *App) NewBrandPageHandler(w http.ResponseWriter, r *http.Request) {
-	app.RenderPage(w, r, "brand_new.html", nil)
+	http.Redirect(w, r, "/brands", http.StatusSeeOther)
 }
 
-// NewCategoryPageHandler renders the category creation form
+// NewCategoryPageHandler redirects to categories list page
 func (app *App) NewCategoryPageHandler(w http.ResponseWriter, r *http.Request) {
-	app.RenderPage(w, r, "category_new.html", nil)
+	http.Redirect(w, r, "/categories", http.StatusSeeOther)
 }
 
-// NewItemPageHandler renders the item creation form
+// NewItemPageHandler redirects to items list page
 func (app *App) NewItemPageHandler(w http.ResponseWriter, r *http.Request) {
-	var brands []models.Brand
-	_ = db.DB.Select(&brands, "SELECT id, code, name FROM brands ORDER BY code ASC")
-
-	var categories []models.Category
-	_ = db.DB.Select(&categories, "SELECT id, code, name FROM categories ORDER BY code ASC")
-
-	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
-
-	data := struct {
-		Brands     []models.Brand
-		Categories []models.Category
-		Uoms       []models.Uom
-	}{
-		Brands:     brands,
-		Categories: categories,
-		Uoms:       uoms,
-	}
-
-	app.RenderPage(w, r, "item_new.html", data)
+	http.Redirect(w, r, "/items", http.StatusSeeOther)
 }
 
 // SelectBrandsHandler renders the updated brand select fragment

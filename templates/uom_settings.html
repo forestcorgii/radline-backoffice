@@ -5,10 +5,56 @@
 {{ define "content" }}
 <div class="header-bar">
     <h2 style="margin: 0;">UOM Settings</h2>
-    <a href="/uom-settings/new" hx-get="/uom-settings/new" hx-target="#main-content" hx-push-url="true" class="btn"
-        style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem;">
+    <button type="button" class="btn" onclick="toggleAddUomSettingForm()" style="padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer;">
         + Add UOM Setting
-    </a>
+    </button>
+</div>
+
+<!-- Add UOM Setting Form Card (hidden by default, shown when + Add UOM Setting is clicked) -->
+<div class="card mb-4" id="add-uom-setting-card" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add UOM Setting</h3>
+        <button type="button" class="btn btn-secondary" onclick="toggleAddUomSettingForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+            ✕ Close
+        </button>
+    </div>
+    <form hx-post="/uom-settings/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddUomSettingForm(); }">
+        <div class="grid grid-cols-4">
+            <div class="form-group">
+                <label for="uom_item_id">Select Item</label>
+                <select id="uom_item_id" name="item_id" class="form-input" required 
+                        onchange="const opt = this.options[this.selectedIndex]; document.getElementById('uom_base_val').value = opt.getAttribute('data-uom') || '';"
+                        style="width: 100%; padding: 0.5rem 0.75rem; height: auto;">
+                    <option value="">-- Select Item --</option>
+                    {{ range .Items }}
+                    <option value="{{ .ID }}" data-uom="{{ .DefaultUOM }}">{{ .Code }} - {{ .Description }}</option>
+                    {{ end }}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="uom_base_val">UOM (Base)</label>
+                <input type="text" id="uom_base_val" name="uom" class="form-input" readonly placeholder="Select item first..." 
+                       style="width: 100%; background-color: rgba(0,0,0,0.03); color: var(--text-muted); cursor: not-allowed;">
+            </div>
+            <div class="form-group">
+                <label for="uom_muom">MUOM (Multiple)</label>
+                <select id="uom_muom" name="muom" class="form-input" required style="width: 100%; padding: 0.5rem 0.75rem; height: auto;">
+                    <option value="">-- Select MUOM --</option>
+                    {{ range .Uoms }}
+                    <option value="{{ .Code }}">{{ .Code }}</option>
+                    {{ end }}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="uom_conv_factor">Conversion Rate</label>
+                <input type="number" step="any" id="uom_conv_factor" name="conversion_factor" class="form-input" placeholder="e.g. 10.0" required style="width: 100%;">
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;" class="mt-4">
+            <button type="submit" class="btn">Save Setting</button>
+            <button type="button" onclick="toggleAddUomSettingForm()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </form>
 </div>
 
 <!-- UOM Settings List Card: Sits below -->
@@ -171,5 +217,25 @@
         // uom = muom * factor
         uomValInput.value = Number((muomVal * factor).toFixed(4));
     }
+
+    function toggleAddUomSettingForm() {
+        const card = document.getElementById('add-uom-setting-card');
+        if (!card) return;
+        if (card.style.display === 'none' || card.style.display === '') {
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            card.style.display = 'none';
+        }
+    }
+
+    document.body.addEventListener('uom-setting-added', function () {
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            htmx.trigger(searchInput, 'search');
+        } else {
+            htmx.ajax('GET', '/uom-settings', '#uom-settings-results');
+        }
+    });
 </script>
 {{ end }}

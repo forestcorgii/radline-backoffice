@@ -88,7 +88,6 @@ func (app *App) AddUomHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "UOM added successfully!"}, "uom-added": ""}`)
-	w.Header().Set("HX-Location", "/settings")
 	w.WriteHeader(http.StatusOK)
 }
 

@@ -132,80 +132,41 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var items []models.Item
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
+	rowData := map[string]interface{}{
+		"Items": items,
+		"Uoms":  uoms,
+	}
+
 	data := struct {
-		StockItems []models.ItemStockView
+		StockItems        []models.ItemStockView
+		Items             []models.Item
+		Uoms              []models.Uom
+		ReceivingRowData  interface{}
+		AdjustmentRowData interface{}
 	}{
-		StockItems: stockItems,
+		StockItems:        stockItems,
+		Items:             items,
+		Uoms:              uoms,
+		ReceivingRowData:  rowData,
+		AdjustmentRowData: rowData,
 	}
 	app.RenderPage(w, r, "inventory.html", data)
 }
 
-// StockReceivingPageHandler renders the standalone stock receiving page
+// StockReceivingPageHandler redirects to inventory overview page
 func (app *App) StockReceivingPageHandler(w http.ResponseWriter, r *http.Request) {
-	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT * FROM items ORDER BY code ASC")
-
-	var receivingLogs []models.ReceivingLogWithItem
-	_ = db.DB.Select(&receivingLogs, `
-		SELECT r.*, i.code as item_code
-		FROM receiving_logs r
-		JOIN items i ON r.item_id = i.id
-		ORDER BY r.date DESC, r.id DESC
-	`)
-
-	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
-
-	data := struct {
-		Items            []models.Item
-		ReceivingLogs    []models.ReceivingLogWithItem
-		ReceivingRowData interface{}
-		Uoms             []models.Uom
-	}{
-		Items:         items,
-		ReceivingLogs: receivingLogs,
-		ReceivingRowData: map[string]interface{}{
-			"Items": items,
-			"Uoms":  uoms,
-		},
-		Uoms: uoms,
-	}
-
-	app.RenderPage(w, r, "stock_receiving.html", data)
+	http.Redirect(w, r, "/inventory", http.StatusSeeOther)
 }
 
-// StockAdjustmentsPageHandler renders the standalone stock adjustments page
+// StockAdjustmentsPageHandler redirects to inventory overview page
 func (app *App) StockAdjustmentsPageHandler(w http.ResponseWriter, r *http.Request) {
-	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT * FROM items ORDER BY code ASC")
-
-	var adjustmentLogs []models.InventoryAdjustmentWithItem
-	_ = db.DB.Select(&adjustmentLogs, `
-		SELECT a.*, i.code as item_code, i.description as item_description
-		FROM inventory_adjustments a
-		JOIN items i ON a.item_id = i.id
-		ORDER BY a.date DESC, a.id DESC
-	`)
-
-	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
-
-	data := struct {
-		Items             []models.Item
-		AdjustmentLogs    []models.InventoryAdjustmentWithItem
-		AdjustmentRowData interface{}
-		Uoms              []models.Uom
-	}{
-		Items:          items,
-		AdjustmentLogs: adjustmentLogs,
-		AdjustmentRowData: map[string]interface{}{
-			"Items": items,
-			"Uoms":  uoms,
-		},
-		Uoms: uoms,
-	}
-
-	app.RenderPage(w, r, "stock_adjustments.html", data)
+	http.Redirect(w, r, "/inventory", http.StatusSeeOther)
 }
 
 // ReceiveStockHandler records incoming inventory
@@ -231,8 +192,11 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 	itemIDs := r.Form["item_id"]
 	qtys := r.Form["qty"]
 	uoms := r.Form["uom"]
-	costs := r.Form["cost"]
 	unitPrices := r.Form["unit_price"]
+	less1s := r.Form["less1"]
+	less2s := r.Form["less2"]
+	markups := r.Form["markup"]
+	remarksList := r.Form["remarks"]
 
 	if len(itemIDs) == 0 {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "At least one item is required."}}`)
@@ -240,7 +204,7 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(costs) || len(itemIDs) != len(unitPrices) {
+	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(unitPrices) {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Mismatch in item fields lengths."}}`)
 		http.Error(w, "Mismatch in item fields lengths", http.StatusBadRequest)
 		return
@@ -250,22 +214,43 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 	for i := range itemIDs {
 		itemID, err1 := strconv.Atoi(itemIDs[i])
 		qty, err2 := strconv.ParseFloat(qtys[i], 64)
-		cost, err3 := strconv.ParseFloat(costs[i], 64)
-		unitPrice, err4 := strconv.ParseFloat(unitPrices[i], 64)
+		unitPrice, err3 := strconv.ParseFloat(unitPrices[i], 64)
 		uom := uoms[i]
 
-		if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+		if err1 != nil || err2 != nil || err3 != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid numeric input in items."}}`)
 			http.Error(w, "Invalid numeric input in items", http.StatusBadRequest)
 			return
+		}
+
+		var less1, less2, markup float64
+		if i < len(less1s) && less1s[i] != "" {
+			less1, _ = strconv.ParseFloat(less1s[i], 64)
+		}
+		if i < len(less2s) && less2s[i] != "" {
+			less2, _ = strconv.ParseFloat(less2s[i], 64)
+		}
+		if i < len(markups) && markups[i] != "" {
+			markup, _ = strconv.ParseFloat(markups[i], 64)
+		}
+		if markup <= 0 {
+			markup = 130
+		}
+
+		var remarksVal string
+		if i < len(remarksList) {
+			remarksVal = remarksList[i]
 		}
 
 		receiveItems = append(receiveItems, domain.StockReceiveItem{
 			ItemID:    itemID,
 			Qty:       qty,
 			UOM:       uom,
-			Cost:      cost,
 			UnitPrice: unitPrice,
+			Less1:     less1,
+			Less2:     less2,
+			Markup:    markup,
+			Remarks:   remarksVal,
 		})
 	}
 
@@ -287,9 +272,9 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 	logs := stockReceive.ToReceivingLogs()
 	for _, rl := range logs {
 		_, err = tx.Exec(`
-			INSERT INTO receiving_logs (supplier, date, pl_no, item_id, qty, uom, unit_price, cost, total_cost, selling_price)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, rl.Supplier, rl.Date, rl.PLNo, rl.ItemID, rl.Qty, rl.UOM, rl.UnitPrice, rl.Cost, rl.TotalCost, rl.SellingPrice)
+			INSERT INTO receiving_logs (supplier, date, pl_no, item_id, qty, uom, unit_price, less1, less2, cost, total_cost, markup, selling_price, remarks)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, rl.Supplier, rl.Date, rl.PLNo, rl.ItemID, rl.Qty, rl.UOM, rl.UnitPrice, rl.Less1, rl.Less2, rl.Cost, rl.TotalCost, rl.Markup, rl.SellingPrice, rl.Remarks)
 		if err != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save receiving log."}}`)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -304,8 +289,7 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock received successfully!"}}`)
-	w.Header().Set("HX-Location", "/inventory/receiving/logs")
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock received successfully!"}, "stock-received": ""}`)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -340,18 +324,24 @@ func (app *App) ReceivingItemRowDetailsHandler(w http.ResponseWriter, r *http.Re
 	}
 
 	var defaultUOM string
-	var lastCost, lastPrice float64
+	var lastPrice, lastLess1, lastLess2, lastMarkup float64
 
 	if itemID > 0 {
 		_ = db.DB.Get(&defaultUOM, "SELECT default_uom FROM items WHERE id = ?", itemID)
 
-		// Get last receiving cost and price
+		// Get last receiving pricing data
 		var lastRec models.ReceivingLog
-		err := db.DB.Get(&lastRec, "SELECT cost, selling_price FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
+		err := db.DB.Get(&lastRec, "SELECT unit_price, less1, less2, markup FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
 		if err == nil {
-			lastCost = lastRec.Cost
-			lastPrice = lastRec.SellingPrice
+			lastPrice = lastRec.UnitPrice
+			lastLess1 = lastRec.Less1
+			lastLess2 = lastRec.Less2
+			lastMarkup = lastRec.Markup
 		}
+	}
+
+	if lastMarkup <= 0 {
+		lastMarkup = 130
 	}
 
 	var uoms []models.Uom
@@ -361,8 +351,10 @@ func (app *App) ReceivingItemRowDetailsHandler(w http.ResponseWriter, r *http.Re
 		"Items":          items,
 		"SelectedItemID": itemID,
 		"DefaultUOM":     defaultUOM,
-		"Cost":           lastCost,
 		"Price":          lastPrice,
+		"Less1":          lastLess1,
+		"Less2":          lastLess2,
+		"Markup":         lastMarkup,
 		"Uoms":           uoms,
 	})
 }
@@ -469,8 +461,7 @@ func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock adjusted successfully!"}}`)
-	w.Header().Set("HX-Location", "/inventory/adjustments/logs")
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock adjusted successfully!"}, "stock-adjusted": ""}`)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -765,4 +756,96 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.RenderPage(w, r, "adjustment_logs.html", data)
+}
+
+// DeleteReceivingLogHandler deletes a receiving log by ID
+func (app *App) DeleteReceivingLogHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "Missing ID", http.StatusBadRequest)
+		return
+	}
+
+	_, err := db.DB.Exec("DELETE FROM receiving_logs WHERE id = ?", id)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to delete receiving log."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Receiving log deleted."}}`)
+	w.WriteHeader(http.StatusOK)
+}
+
+// EditReceivingLogHandler returns an inline edit form row for a receiving log
+func (app *App) EditReceivingLogHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "Missing ID", http.StatusBadRequest)
+		return
+	}
+
+	var log models.ReceivingLogWithItem
+	err := db.DB.Get(&log, `
+		SELECT r.*, i.code as item_code, i.description as item_description
+		FROM receiving_logs r
+		JOIN items i ON r.item_id = i.id
+		WHERE r.id = ?
+	`, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	app.Render(w, "receiving_log_edit_row.html", log)
+}
+
+// UpdateReceivingLogHandler updates a receiving log inline
+func (app *App) UpdateReceivingLogHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "Missing ID", http.StatusBadRequest)
+		return
+	}
+
+	unitPrice, _ := strconv.ParseFloat(r.FormValue("unit_price"), 64)
+	less1, _ := strconv.ParseFloat(r.FormValue("less1"), 64)
+	less2, _ := strconv.ParseFloat(r.FormValue("less2"), 64)
+	markup, _ := strconv.ParseFloat(r.FormValue("markup"), 64)
+	remarks := r.FormValue("remarks")
+	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
+
+	if markup <= 0 {
+		markup = 130
+	}
+
+	unitCost := unitPrice * (1 - less1/100) * (1 - less2/100)
+	totalCost := qty * unitCost
+	sellingPrice := unitCost * markup / 100
+
+	_, err := db.DB.Exec(`
+		UPDATE receiving_logs
+		SET unit_price = ?, less1 = ?, less2 = ?, cost = ?, total_cost = ?, markup = ?, selling_price = ?, remarks = ?, qty = ?
+		WHERE id = ?
+	`, unitPrice, less1, less2, unitCost, totalCost, markup, sellingPrice, remarks, qty, id)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update receiving log."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var log models.ReceivingLogWithItem
+	err = db.DB.Get(&log, `
+		SELECT r.*, i.code as item_code, i.description as item_description
+		FROM receiving_logs r
+		JOIN items i ON r.item_id = i.id
+		WHERE r.id = ?
+	`, id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Receiving log updated."}}`)
+	app.Render(w, "receiving_log_row.html", log)
 }

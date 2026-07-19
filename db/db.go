@@ -66,6 +66,15 @@ func InitDB(datasource string) error {
 		}
 	}
 
+	// Safe migration: add less1, less2, markup, remarks columns to receiving_logs
+	_, err = DB.Exec("SELECT less1 FROM receiving_logs LIMIT 0")
+	if err != nil {
+		_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN less1 REAL NOT NULL DEFAULT 0;")
+		_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN less2 REAL NOT NULL DEFAULT 0;")
+		_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN markup REAL NOT NULL DEFAULT 130;")
+		_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN remarks TEXT NOT NULL DEFAULT '';")
+	}
+
 	// Safe migration check for sales_details: rename channel to supplier
 	_, err = DB.Exec("SELECT supplier FROM sales_details LIMIT 0")
 	if err != nil {
@@ -150,9 +159,13 @@ func createSchema() {
 		qty REAL NOT NULL,
 		uom TEXT NOT NULL,
 		unit_price REAL,
+		less1 REAL NOT NULL DEFAULT 0,
+		less2 REAL NOT NULL DEFAULT 0,
 		cost REAL NOT NULL,
 		total_cost REAL NOT NULL,
+		markup REAL NOT NULL DEFAULT 130,
 		selling_price REAL,
+		remarks TEXT NOT NULL DEFAULT '',
 		FOREIGN KEY(item_id) REFERENCES items(id)
 	);
 

@@ -45,10 +45,19 @@
         <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required>
     </td>
     <td>
-        <input type="number" step="any" name="cost" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" required>
+        <input type="number" step="any" name="unit_price" class="form-input" value="{{ if .Price }}{{ printf "%.2f" .Price }}{{ end }}" required>
     </td>
     <td>
-        <input type="number" step="any" name="unit_price" class="form-input" value="{{ if .Price }}{{ printf "%.2f" .Price }}{{ end }}" required>
+        <input type="number" step="any" name="less1" class="form-input" value="{{ if .Less1 }}{{ printf "%.1f" .Less1 }}{{ else }}0{{ end }}" placeholder="0">
+    </td>
+    <td>
+        <input type="number" step="any" name="less2" class="form-input" value="{{ if .Less2 }}{{ printf "%.1f" .Less2 }}{{ else }}0{{ end }}" placeholder="0">
+    </td>
+    <td>
+        <input type="number" step="any" name="markup" class="form-input" value="{{ if .Markup }}{{ printf "%.0f" .Markup }}{{ else }}130{{ end }}" placeholder="130">
+    </td>
+    <td>
+        <input type="text" name="remarks" class="form-input" value="" placeholder="">
     </td>
     <td>
         <div class="actions-cell">

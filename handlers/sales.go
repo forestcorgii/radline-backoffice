@@ -79,14 +79,22 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 		app.Render(w, "sales_results.html", data)
 	} else {
 		var items []models.Item
-		_ = db.DB.Select(&items, "SELECT * FROM items ORDER BY code ASC")
+		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+
+		var uoms []models.Uom
+		_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
 		data := struct {
-			Sales []models.SalesDetailWithItem
-			Items []models.Item
+			Sales        []models.SalesDetailWithItem
+			Items        []models.Item
+			SalesRowData interface{}
 		}{
 			Sales: sales,
 			Items: items,
+			SalesRowData: map[string]interface{}{
+				"Items": items,
+				"Uoms":  uoms,
+			},
 		}
 		app.RenderPage(w, r, "sales.html", data)
 	}
@@ -193,31 +201,13 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Sales logged successfully!"}}`)
-	w.Header().Set("HX-Location", "/sales")
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Sales logged successfully!"}, "sales-added": ""}`)
 	w.WriteHeader(http.StatusOK)
 }
 
-// NewSalesPageHandler renders the standalone sales encoding page
+// NewSalesPageHandler redirects to sales list page
 func (app *App) NewSalesPageHandler(w http.ResponseWriter, r *http.Request) {
-	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
-
-	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
-
-	data := struct {
-		Items        []models.Item
-		SalesRowData interface{}
-	}{
-		Items: items,
-		SalesRowData: map[string]interface{}{
-			"Items": items,
-			"Uoms":  uoms,
-		},
-	}
-
-	app.RenderPage(w, r, "sales_new.html", data)
+	http.Redirect(w, r, "/sales", http.StatusSeeOther)
 }
 
 // NewSaleRowHandler renders a single empty sale item row template
