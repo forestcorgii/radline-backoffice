@@ -25,12 +25,17 @@ Radline BackOffice is a **server-side rendered (SSR) web application** for manag
 │  │ main.go — Routes & Template Parsing  │       │
 │  └──────────────────┬───────────────────┘       │
 │                     │                            │
-│  ┌──────────────────▼───────────────────┐       │
+│  ┌──────────────────────────────────────┐       │
 │  │ handlers/  — HTTP Handlers (App)     │       │
 │  │   handlers.go   (Render, Dashboard)  │       │
 │  │   master_data.go (Brands/Cat/Items)  │       │
 │  │   inventory.go  (Stock/Recv/Adj)     │       │
 │  │   sales.go      (Sales CRUD)         │       │
+│  │   import.go     (Excel Data Import)  │       │
+│  │   settings.go   (System Config/UOMs) │       │
+│  │   uom_settings.go (UOM Conversions)  │       │
+│  │   receipt_scanner.go (OCR Scanner)   │       │
+│  │   pagination.go (Limit helper)       │       │
 │  └──────────┬───────────────────────────┘       │
 │             │ uses                               │
 │  ┌──────────▼──────────┐  ┌─────────────────┐   │

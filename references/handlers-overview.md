@@ -46,9 +46,14 @@ The dashboard aggregates financial data:
 | File | Domain Area | Handlers |
 |---|---|---|
 | [handlers.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/handlers.go) | Core + Dashboard | `Render`, `RenderPage`, `DashboardHandler` |
-| [master_data.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/master_data.go) | Brands, Categories, Items, Entry | 20+ handlers → [[handlers-master-data]] |
-| [inventory.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/inventory.go) | Inventory, Receiving, Adjustments | 12 handlers → [[handlers-inventory]] |
-| [sales.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/sales.go) | Sales | 5 handlers → [[handlers-sales]] |
+| [master_data.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/master_data.go) | Brands, Categories, Items | CRUD page and rows handlers |
+| [inventory.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/inventory.go) | Inventory, Receiving, Adjustments | Overview, receiving, adjustments, logs, rows handlers |
+| [sales.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/sales.go) | Sales | Sales list, page, new-row, delete, details handlers |
+| [import.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/import.go) | Excel Import | Import page and Excel file upload processing |
+| [settings.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/settings.go) | System Settings & UOM | Configuration views and UOM list handlers |
+| [uom_settings.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/uom_settings.go) | UOM Settings | UOM conversion multiplier settings CRUD |
+| [receipt_scanner.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/receipt_scanner.go) | OCR Tools | Receipt scanner upload and text parsing logic |
+| [pagination.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/pagination.go) | Core Utilities | `GetLimitParam` request limit parser |
 
 ## Common Handler Patterns
 

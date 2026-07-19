@@ -9,20 +9,19 @@
 
 ```html
 <div class="app-layout">
-    <div id="sidebar-backdrop" onclick="toggleMobileSidebar()">
+    <div id="sidebar-backdrop" onclick="toggleMobileSidebar()"></div>
     
     <aside id="sidebar" class="sidebar">
         <div class="sidebar-brand">
-            <h1>Radline BackOffice</h1>            <!-- Gradient text -->
-            <button class="sidebar-close-btn">     <!-- Mobile only -->
+            <h1 class="brand-full">Radline BackOffice</h1>    <!-- Gradient text -->
+            <h1 class="brand-mini">R</h1>
+            <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">...</button>
+            <button class="sidebar-close-btn" onclick="toggleMobileSidebar()">...</button>     <!-- Mobile only -->
         </div>
         
         <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
             <a href="/">Dashboard</a>
-            <a href="/entry">Data Entry</a>
-            <a href="/brands">Brands</a>
-            <a href="/categories">Categories</a>
-            <a href="/items">Items</a>
+            <a href="/sales">Sales</a>
             
             <div class="sidebar-dropdown" id="inventory-dropdown">
                 <button class="sidebar-dropdown-trigger">
@@ -37,8 +36,27 @@
                     <a href="/inventory/adjustments/logs">Adjustment Logs</a>
                 </div>
             </div>
-            
-            <a href="/sales">Sales</a>
+
+            <div class="sidebar-dropdown" id="masterlist-dropdown">
+                <button class="sidebar-dropdown-trigger">
+                    Masterlist ▼
+                </button>
+                <div class="sidebar-dropdown-menu">
+                    <a href="/items">Items</a>
+                    <a href="/settings">Settings</a>
+                </div>
+            </div>
+
+            <a href="/import">Import</a>
+
+            <div class="sidebar-dropdown" id="tools-dropdown">
+                <button class="sidebar-dropdown-trigger">
+                    Tools ▼
+                </button>
+                <div class="sidebar-dropdown-menu">
+                    <a href="/tools/receipt-scanner">Receipt Scanner</a>
+                </div>
+            </div>
         </nav>
     </aside>
 
@@ -55,11 +73,12 @@
 ```
 
 ## Desktop Behavior
-- Sidebar is a fixed 260px column, sticky to viewport
+- Sidebar is a fixed 220px column, sticky to viewport
+- Can be collapsed to a 64px icon-only sidebar via the collapse button (stored in `localStorage`)
 - Glassmorphic background with `backdrop-filter: blur(16px)`
-- Active link gets blue background with shadow
-- Inventory dropdown toggles open/closed via `toggleSidebarDropdown()`
-- Dropdown auto-opens when any `/inventory/*` URL is active
+- Active link gets blue/indigo background with shadow (active accent indicator bar on the left)
+- Sidebar dropdowns toggle open/closed via `toggleSidebarDropdown()`
+- Dropdown auto-opens when any sub-link URL is active
 
 ## Mobile Behavior (≤ 768px)
 - Sidebar is hidden off-screen (`transform: translateX(-100%)`)
@@ -92,13 +111,14 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
 
 | Class | Desktop | Mobile |
 |---|---|---|
-| `.sidebar` | `position: sticky; width: 260px` | `position: fixed; transform: translateX(-100%)` |
+| `.sidebar` | `position: sticky; width: 220px` | `position: fixed; transform: translateX(-100%)` |
+| `.sidebar.collapsed` | `width: 64px` | — |
 | `.sidebar.open` | — | `transform: translateX(0)` |
 | `.sidebar-close-btn` | `display: none` | `display: flex` |
 | `.top-header` | `display: none` | `display: flex` |
 | `.sidebar-backdrop.show` | — | `display: block; opacity: 1` |
-| `.sidebar-nav a.active` | Blue bg + white text | Same |
-| `.sidebar-dropdown-menu a.active` | Blue text + light blue bg | Same |
+| `.sidebar-nav a.active` | Indigo text + light indigo bg + left accent | Same |
+| `.sidebar-dropdown-menu a.active` | Indigo text + light indigo bg | Same |
 
 ## Learnings
 
