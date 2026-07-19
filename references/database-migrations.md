@@ -60,6 +60,10 @@ if err != nil {
 - Checks if `adjustment_id` column exists
 - If missing → `ALTER TABLE ... ADD COLUMN adjustment_id INTEGER`
 
+### 6. `sales_details` — Add `ref_pl`
+- Checks if `ref_pl` column exists
+- If missing → `ALTER TABLE ... ADD COLUMN ref_pl TEXT`
+
 ## Ordering Rules
 
 1. Migrations run **before** `createSchema()` — so they fix existing tables first

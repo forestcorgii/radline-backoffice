@@ -91,6 +91,7 @@ func InitDB(datasource string) error {
 | `cost` | REAL | NOT NULL |
 | `total_cost` | REAL | NOT NULL |
 | `profit` | REAL | NOT NULL |
+| `ref_pl` | TEXT | — |
 
 ### `stock_adjustments` (Header)
 | Column | Type | Constraints |

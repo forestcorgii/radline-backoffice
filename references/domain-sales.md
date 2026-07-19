@@ -24,6 +24,7 @@ type SalesDetail struct {
     Cost         float64       // Cost per unit
     TotalCost    float64       // Auto: Qty * Cost
     Profit       float64       // Auto: TotalSales - TotalCost
+    RefPL        string        // Reference Packing List
 }
 ```
 
@@ -64,6 +65,7 @@ type SaleItem struct {
     TotalSales float64    // Auto: Qty * Price
     TotalCost  float64    // Auto: Qty * Cost
     Profit     float64    // Auto: TotalSales - TotalCost
+    RefPL      string     // Reference Packing List
 }
 ```
 

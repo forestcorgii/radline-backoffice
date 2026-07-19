@@ -13,6 +13,7 @@ All test files live in the `domain` package using `package domain_test` (black-b
 | File | Covers | Key Tests |
 |---|---|---|
 | [stock_test.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/stock_test.go) | Brand, Category, Item, UomSetting, ReceivingLog, SalesDetail, InventoryAdjustment validation + `ItemStock.CalculateOnHand` + `ItemStock.CalculateGlobalOnHand` | 7 test functions |
+| [uom_setting_test.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/uom_setting_test.go) | `UomSetting` validation and multiplier conversions | 2 test functions |
 | [receiving_test.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/receiving_test.go) | `StockReceive` aggregate validation + `ToReceivingLogs` mapping | 2 test functions (11 subtests + 1 mapping) |
 | [sales_test.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/sales_test.go) | `Sale` aggregate validation + `ToSalesDetails` mapping | 2 test functions (13 subtests + 1 mapping) |
 | [adjustment_test.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/adjustment_test.go) | `StockAdjustment` aggregate validation + `ToInventoryAdjustments` mapping | 2 test functions (11 subtests + 1 mapping) |
