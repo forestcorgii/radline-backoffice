@@ -38,7 +38,7 @@
 
 <div class="card">
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Brands List</h3>
-    <form style="display: contents;" onsubmit="return false;">
+    <form style="display: contents;" onsubmit="return false;" hx-indicator="#brands-loading-indicator">
     <div class="search-filter-bar">
         <div class="flex-grow">
             <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
@@ -47,6 +47,7 @@
                    hx-trigger="keyup changed delay:300ms, search" 
                    hx-target="#brands-results" 
                    hx-include="closest form"
+                   hx-indicator="#brands-loading-indicator"
                    class="form-input">
         </div>
         <div class="filter-item">
@@ -55,7 +56,8 @@
                     hx-get="/brands" 
                     hx-target="#brands-results" 
                     hx-include="closest form"
-                    hx-trigger="change">
+                    hx-trigger="change"
+                    hx-indicator="#brands-loading-indicator">
                 <option value="all">All Usage Statuses</option>
                 <option value="in_use">In Use</option>
                 <option value="unused">Unused</option>
@@ -67,7 +69,8 @@
                     hx-get="/brands" 
                     hx-target="#brands-results" 
                     hx-include="closest form"
-                    hx-trigger="change">
+                    hx-trigger="change"
+                    hx-indicator="#brands-loading-indicator">
                 <option value="code_asc">Code (A-Z)</option>
                 <option value="code_desc">Code (Z-A)</option>
                 <option value="name_asc">Name (A-Z)</option>
@@ -82,7 +85,8 @@
                     hx-get="/brands" 
                     hx-target="#brands-results" 
                     hx-include="closest form"
-                    hx-trigger="change">
+                    hx-trigger="change"
+                    hx-indicator="#brands-loading-indicator">
                 <option value="25" selected>Top 25</option>
                 <option value="50">Top 50</option>
                 <option value="100">Top 100</option>
@@ -90,6 +94,11 @@
                 <option value="500">Top 500</option>
             </select>
         </div>
+    </div>
+
+    <div id="brands-loading-indicator" class="htmx-indicator">
+        <div class="spinner-sm"></div>
+        <span>Searching & filtering brands...</span>
     </div>
 
     <div id="brands-results">

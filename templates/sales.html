@@ -85,7 +85,7 @@
 <div class="card">
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">All Sales Logs</h3>
 
-    <form id="sales-filter-form" style="display: contents;" onsubmit="return false;">
+    <form id="sales-filter-form" style="display: contents;" onsubmit="return false;" hx-indicator="#sales-loading-indicator">
         <input type="hidden" name="is_edit" id="is_edit_input" value="0">
         <div class="search-filter-bar">
             <div class="flex-grow" data-filter="search">
@@ -94,6 +94,7 @@
                 <input type="text" name="search"
                     placeholder="Search sales by doc number, customer name, or item description..." hx-get="/sales"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results" hx-include="#sales-filter-form"
+                    hx-indicator="#sales-loading-indicator"
                     class="form-input">
             </div>
             <div class="filter-item" data-filter="doc_type">
@@ -101,7 +102,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Doc
                     Type</label>
                 <select name="doc_type_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change">
+                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
                     <option value="all">All Doc Types</option>
                     <option value="SI">Sales Invoice (SI)</option>
                     <option value="DR">Delivery Receipt (DR)</option>
@@ -115,7 +116,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier
                     Filter</label>
                 <select name="supplier_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change">
+                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
                     <option value="all">All Suppliers</option>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
@@ -127,7 +128,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
                 <select name="sort" class="form-input" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change">
+                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
                     <option value="date_desc">Newest First</option>
                     <option value="date_asc">Oldest First</option>
                     <option value="sales_desc">Highest Sales First</option>
@@ -139,7 +140,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
                 <select name="limit" class="form-input" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change">
+                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -243,6 +244,11 @@
             </div>
         </div>
     </form>
+
+    <div id="sales-loading-indicator" class="htmx-indicator">
+        <div class="spinner-sm"></div>
+        <span id="sales-loading-text">Searching & filtering sales logs...</span>
+    </div>
 
     <div id="sales-results">
         <div class="table-container">
@@ -371,6 +377,7 @@
             const editInput = document.getElementById('is_edit_input');
             const btn = document.getElementById('edit-mode-btn');
             const btnText = document.getElementById('edit-mode-btn-text');
+            const loadingText = document.getElementById('sales-loading-text');
             if (!editInput) return;
 
             if (editInput.value === "1") {
@@ -380,6 +387,7 @@
                     btn.classList.add('btn-secondary');
                 }
                 if (btnText) btnText.textContent = "Edit";
+                if (loadingText) loadingText.textContent = "Exiting edit mode...";
             } else {
                 editInput.value = "1";
                 if (btn) {
@@ -387,13 +395,25 @@
                     btn.classList.add('btn-primary');
                 }
                 if (btnText) btnText.textContent = "Done Editing";
+                if (loadingText) loadingText.textContent = "Loading batch edit mode...";
             }
 
             const form = document.getElementById('sales-filter-form');
             if (form && typeof htmx !== 'undefined') {
-                htmx.ajax('GET', '/sales', { target: '#sales-results', values: htmx.values(form) });
+                htmx.ajax('GET', '/sales', { target: '#sales-results', values: htmx.values(form), source: form });
             }
         };
+
+        document.addEventListener('htmx:beforeRequest', function (evt) {
+            const form = document.getElementById('sales-filter-form');
+            if (form && form.contains(evt.detail.elt)) {
+                const loadingText = document.getElementById('sales-loading-text');
+                if (loadingText && evt.detail.elt.id !== 'edit-mode-btn') {
+                    const isEdit = document.getElementById('is_edit_input')?.value === "1";
+                    loadingText.textContent = isEdit ? "Updating batch edit view..." : "Searching & filtering sales logs...";
+                }
+            }
+        });
 
         window.toggleEncodeSalesForm = function () {
             const card = document.getElementById('encode-sales-card');

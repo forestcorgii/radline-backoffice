@@ -85,18 +85,19 @@
             </div>
         </div>
 
-        <form style="display: contents;" onsubmit="return false;">
+        <form style="display: contents;" onsubmit="return false;" hx-indicator="#settings-brands-loading-indicator">
             <div class="search-filter-bar" style="gap: 0.5rem; margin-bottom: 0.75rem;">
                 <div style="flex-grow: 1;">
                     <input type="text" name="search" placeholder="Search brands..." hx-get="/brands"
                         hx-trigger="keyup changed delay:300ms, search" hx-target="#brands-results"
-                        hx-include="closest form" class="form-input"
+                        hx-include="closest form" hx-indicator="#settings-brands-loading-indicator" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
                 </div>
                 <div>
                     <select name="filter" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/brands"
-                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-brands-loading-indicator">
                         <option value="all">All</option>
                         <option value="in_use">In Use</option>
                         <option value="unused">Unused</option>
@@ -105,7 +106,8 @@
                 <div>
                     <select name="sort" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/brands"
-                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-brands-loading-indicator">
                         <option value="code_asc">Code A-Z</option>
                         <option value="code_desc">Code Z-A</option>
                         <option value="name_asc">Name A-Z</option>
@@ -115,7 +117,8 @@
                 <div>
                     <select name="limit" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/brands"
-                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#brands-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-brands-loading-indicator">
                         <option value="25" selected>Top 25</option>
                         <option value="50">Top 50</option>
                         <option value="100">Top 100</option>
@@ -123,6 +126,11 @@
                         <option value="500">Top 500</option>
                     </select>
                 </div>
+            </div>
+
+            <div id="settings-brands-loading-indicator" class="htmx-indicator">
+                <div class="spinner-sm"></div>
+                <span>Searching & filtering brands...</span>
             </div>
 
             <div id="brands-results">
@@ -202,18 +210,19 @@
             </div>
         </div>
 
-        <form style="display: contents;" onsubmit="return false;">
+        <form style="display: contents;" onsubmit="return false;" hx-indicator="#settings-categories-loading-indicator">
             <div class="search-filter-bar" style="gap: 0.5rem; margin-bottom: 0.75rem;">
                 <div style="flex-grow: 1;">
                     <input type="text" name="search" placeholder="Search categories..." hx-get="/categories"
                         hx-trigger="keyup changed delay:300ms, search" hx-target="#categories-results"
-                        hx-include="closest form" class="form-input"
+                        hx-include="closest form" hx-indicator="#settings-categories-loading-indicator" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
                 </div>
                 <div>
                     <select name="filter" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/categories"
-                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-categories-loading-indicator">
                         <option value="all">All</option>
                         <option value="in_use">In Use</option>
                         <option value="unused">Unused</option>
@@ -222,7 +231,8 @@
                 <div>
                     <select name="sort" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/categories"
-                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-categories-loading-indicator">
                         <option value="code_asc">Code A-Z</option>
                         <option value="code_desc">Code Z-A</option>
                         <option value="name_asc">Name A-Z</option>
@@ -232,7 +242,8 @@
                 <div>
                     <select name="limit" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/categories"
-                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#categories-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-categories-loading-indicator">
                         <option value="25" selected>Top 25</option>
                         <option value="50">Top 50</option>
                         <option value="100">Top 100</option>
@@ -240,6 +251,11 @@
                         <option value="500">Top 500</option>
                     </select>
                 </div>
+            </div>
+
+            <div id="settings-categories-loading-indicator" class="htmx-indicator">
+                <div class="spinner-sm"></div>
+                <span>Searching & filtering categories...</span>
             </div>
 
             <div id="categories-results">
@@ -406,18 +422,19 @@
             </div>
         </div>
 
-        <form style="display: contents;" onsubmit="return false;">
+        <form style="display: contents;" onsubmit="return false;" hx-indicator="#settings-uoms-loading-indicator">
             <div class="search-filter-bar" style="gap: 0.5rem; margin-bottom: 0.75rem;">
                 <div style="flex-grow: 1;">
                     <input type="text" name="search" placeholder="Search UOMs..." hx-get="/uoms"
                         hx-trigger="keyup changed delay:300ms, search" hx-target="#uoms-results"
-                        hx-include="closest form" class="form-input"
+                        hx-include="closest form" hx-indicator="#settings-uoms-loading-indicator" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem;">
                 </div>
                 <div>
                     <select name="filter" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/uoms"
-                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-uoms-loading-indicator">
                         <option value="all">All</option>
                         <option value="in_use">In Use</option>
                         <option value="unused">Unused</option>
@@ -426,7 +443,8 @@
                 <div>
                     <select name="sort" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/uoms"
-                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-uoms-loading-indicator">
                         <option value="code_asc">Code A-Z</option>
                         <option value="code_desc">Code Z-A</option>
                     </select>
@@ -434,7 +452,8 @@
                 <div>
                     <select name="limit" class="form-input"
                         style="padding: 0.35rem 0.6rem; font-size: 0.8125rem; height: auto;" hx-get="/uoms"
-                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change">
+                        hx-target="#uoms-results" hx-include="closest form" hx-trigger="change"
+                        hx-indicator="#settings-uoms-loading-indicator">
                         <option value="25" selected>Top 25</option>
                         <option value="50">Top 50</option>
                         <option value="100">Top 100</option>
@@ -442,6 +461,11 @@
                         <option value="500">Top 500</option>
                     </select>
                 </div>
+            </div>
+
+            <div id="settings-uoms-loading-indicator" class="htmx-indicator">
+                <div class="spinner-sm"></div>
+                <span>Searching & filtering UOMs...</span>
             </div>
 
             <div id="uoms-results">

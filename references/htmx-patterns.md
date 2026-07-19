@@ -242,6 +242,13 @@ This triggers HTMX to navigate to the logs page, similar to `hx-push-url` but tr
   - Select filters (including the new limit dropdown): `hx-trigger="change"` (triggers immediately).
   - Ensure all inputs target the table results container and specify `hx-include="closest form"` to preserve the values of other filter elements.
 
+### Context: HTMX Search/Filter & Mode Toggle Loading Indicators
+**Problem**: When users search, filter, or toggle table display modes (e.g., Preview to Batch Edit mode in Sales), AJAX request latencies can cause the user to believe no action is occurring.
+**Enforced Solution**:
+- **Global Indicator Component & Styles**: Define `.htmx-indicator` in `index.css` with a smooth flex layout, `.spinner-sm` keyframe animation, background pill styling, and subtle `.htmx-request` opacity dimming for target tables.
+- **Form & Input Bindings**: Mark filter forms and input/select elements with `hx-indicator="#<page>-loading-indicator"` to automatically toggle visibility on HTMX requests.
+- **Dynamic Action Text**: On pages with mode toggling (such as Sales preview <-> batch edit mode), listen to `htmx:beforeRequest` or update text elements dynamically prior to triggering `htmx.ajax` to provide contextual feedback (e.g. "Loading batch edit mode...", "Searching & filtering sales logs...").
+
 ## Related
 - [[handlers-overview]] — `Render` and `RenderPage` methods
 - [[templates-overview]] — Template structure
