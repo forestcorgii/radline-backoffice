@@ -1,0 +1,83 @@
+{{ define "sale_edit_row.html" }}
+{{ $sale := .Sale }}
+<tr id="sale-row-{{ $sale.ID }}" class="edit-row">
+    <td data-col="doc_date">
+        <input type="date" name="doc_date" value="{{ $sale.DocDate.Format "2006-01-02" }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;" required>
+    </td>
+    <td data-col="doc_type_number">
+        <div style="display: flex; gap: 0.25rem;">
+            <select name="doc_type" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; width: 4.2rem; height: auto;" required>
+                <option value="SI" {{ if eq $sale.DocType "SI" }}selected{{ end }}>SI</option>
+                <option value="DR" {{ if eq $sale.DocType "DR" }}selected{{ end }}>DR</option>
+                <option value="SU" {{ if eq $sale.DocType "SU" }}selected{{ end }}>SU</option>
+                <option value="PU" {{ if eq $sale.DocType "PU" }}selected{{ end }}>PU</option>
+                <option value="RI" {{ if eq $sale.DocType "RI" }}selected{{ end }}>RI</option>
+            </select>
+            <input type="text" name="doc_number" value="{{ $sale.DocNumber }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 5.5rem;" required>
+        </div>
+    </td>
+    <td data-col="supplier">
+        <select name="supplier" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto;" required>
+            <option value="ASCD" {{ if eq $sale.Supplier "ASCD" }}selected{{ end }}>ASCD</option>
+            <option value="RENOWN" {{ if eq $sale.Supplier "RENOWN" }}selected{{ end }}>RENOWN</option>
+            <option value="OTHER" {{ if eq $sale.Supplier "OTHER" }}selected{{ end }}>OTHER</option>
+        </select>
+    </td>
+    <td data-col="item_description">
+        <select name="item_id" class="form-input" style="padding: 0.35rem 0.4rem; font-size: 0.8125rem; height: auto; min-width: 130px;" required>
+            {{ $currentItemID := $sale.ItemID }}
+            {{ range $.Items }}
+            <option value="{{ .ID }}" {{ if eq .ID $currentItemID }}selected{{ end }}>{{ .Description }}</option>
+            {{ end }}
+        </select>
+    </td>
+    <td data-col="qty">
+        <input type="number" step="any" name="qty" value="{{ $sale.Qty }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 4.5rem;" required>
+    </td>
+    <td data-col="uom">
+        <select name="uom" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto;" required>
+            {{ $currentUOM := $sale.UOM }}
+            {{ range $.Uoms }}
+            <option value="{{ .Code }}" {{ if eq .Code $currentUOM }}selected{{ end }}>{{ .Code }}</option>
+            {{ end }}
+        </select>
+    </td>
+    <td data-col="total_sales">
+        <input type="number" step="any" name="price" value="{{ printf "%.2f" $sale.Price }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 5.5rem;" title="Unit Selling Price" required>
+    </td>
+    <td data-col="total_cost">
+        <input type="number" step="any" name="cost" value="{{ printf "%.2f" $sale.Cost }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 5.5rem;" title="Unit Cost" required>
+    </td>
+    <td data-col="profit" class="text-primary" style="font-weight: 500; font-size: 0.8125rem;">
+        ₱{{ printf "%.2f" $sale.Profit }}
+    </td>
+    <td data-col="actions">
+        <input type="hidden" name="is_edit" value="1">
+        <div class="actions-cell">
+            <button type="button" class="btn btn-success btn-icon"
+                hx-post="/sales/edit/{{ $sale.ID }}"
+                hx-include="closest tr"
+                hx-target="#sale-row-{{ $sale.ID }}"
+                hx-swap="outerHTML"
+                title="Save">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </button>
+            <button type="button" class="btn btn-danger btn-icon"
+                hx-delete="/sales/delete/{{ $sale.ID }}"
+                hx-confirm="Are you sure you want to delete this sale log?"
+                hx-target="#sale-row-{{ $sale.ID }}"
+                hx-swap="outerHTML"
+                title="Delete">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+            </button>
+        </div>
+    </td>
+</tr>
+{{ end }}

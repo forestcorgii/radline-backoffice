@@ -5,20 +5,24 @@
 {{ define "content" }}
 <div class="header-bar">
     <h2 style="margin: 0;">Items</h2>
-    <button type="button" class="btn" onclick="toggleAddItemForm()" style="padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer;">
+    <button type="button" class="btn" onclick="toggleAddItemForm()"
+        style="padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer;">
         + Add Item
     </button>
 </div>
 
 <!-- Add Item Form Card (hidden by default, shown when + Add Item is clicked) -->
 <div class="card mb-4" id="add-item-card" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add New Item</h3>
-        <button type="button" class="btn btn-secondary" onclick="toggleAddItemForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+        <button type="button" class="btn btn-secondary" onclick="toggleAddItemForm()"
+            style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
             ✕ Close
         </button>
     </div>
-    <form hx-post="/items/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddItemForm(); }">
+    <form hx-post="/items/add" hx-swap="none"
+        hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddItemForm(); }">
         <div class="grid grid-cols-3">
             <div class="form-group">
                 <label for="item_code">Item Code</label>
@@ -45,7 +49,7 @@
             <div class="form-group">
                 <label for="default_uom">Default UOM</label>
                 <select id="default_uom" name="default_uom" class="form-input" required
-                        hx-get="/uoms/select?name=default_uom" hx-trigger="uom-added from:body" hx-swap="outerHTML">
+                    hx-get="/uoms/select?name=default_uom" hx-trigger="uom-added from:body" hx-swap="outerHTML">
                     <option value="">-- Select UOM --</option>
                     {{ range .Uoms }}
                     <option value="{{ .Code }}">{{ .Code }}</option>

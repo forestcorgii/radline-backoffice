@@ -493,14 +493,19 @@ func (app *App) ItemsHandler(w http.ResponseWriter, r *http.Request) {
 		var categories []models.Category
 		_ = db.DB.Select(&categories, "SELECT * FROM categories ORDER BY name ASC")
 
+		var uoms []models.Uom
+		_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
 		data := struct {
 			Items      []models.ItemWithRelations
 			Brands     []models.Brand
 			Categories []models.Category
+			Uoms       []models.Uom
 		}{
 			Items:      items,
 			Brands:     brands,
 			Categories: categories,
+			Uoms:       uoms,
 		}
 		app.RenderPage(w, r, "items.html", data)
 	}

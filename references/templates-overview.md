@@ -132,3 +132,10 @@ See [[sidebar-navigation]] and [[htmx-patterns]] for details.
 - **Strict Context Mapping**: Ensure all templates match the exact data structure returned by the Go HTTP handler.
 - **Select All Required Columns**: Keep SQL queries aligned with destination DTO/Model structs by selecting all fields explicitly (e.g., `i.description as item_description` to map to `db:"item_description"` tag).
 - **Correct Go Struct Field Reference**: Access fields in html templates using the exact case-sensitive Go struct field name (e.g., `.Description`), not the database tag name or a mismatched name.
+
+### Context: Missing Child Templates in Fragment Parsing Causing HTMX 500 Errors
+**Problem**: When fetching a sub-fragment or container result template via HTMX (e.g., `sales_results.html` or `sales_rows.html`), Go's `html/template` threw an execution error (`no such template "sale_edit_row.html"`) because child templates referenced inside `{{ template ... }}` calls were omitted from the `files` slice in `parseTemplates()`.
+**Enforced Solution**:
+- **Include All Transitive Dependencies**: When declaring fragment file lists in `main.go` `parseTemplates()`, always include all leaf row and edit templates (e.g., `sale_row.html`, `sale_edit_row.html`) that any parent container template calls via `{{ template }}`.
+- **Register All Standalone Fragments**: Ensure all individual editable or toggleable row templates are registered in the `fragments` slice so `app.Templates["<frag_name>.html"]` exists for standalone handler responses.
+
