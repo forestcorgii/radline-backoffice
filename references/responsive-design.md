@@ -105,9 +105,14 @@ At `≤ 480px`:
 **Enforced Solution**:
 - **Fixed Viewport Popover Positioning (`updateDropdownPosition`)**: Set `.dropdown-list` to `position: fixed` dynamically calculated via `input.getBoundingClientRect()`. This completely breaks out of table containers, scroll boxes, backdrop filters, forms, and cards, floating the dropdown popover on the top-most viewport layer (`z-index: 999999`) above all elements. Auto-flips above the input if space below is constrained.
 - **DOM Rendering Performance Cap**: Limited `filterDropdown()` to display at most 50 matching items at a time (`visibleCount < 50`) to eliminate DOM reflow lag when iterating thousands of items.
-- **Input Text Preservation**: Preserved typed and selected item text in `hideDropdown()` without wiping `input.value` to blank.
+### Context: Universal Flexbox Cross-Browser Form Layout (Edge & Chrome)
+**Problem**: Using CSS Grid `grid-template-columns` for editable item rows can fail in Edge or Chromium compatibility modes, causing items to stack vertically on top of each other.
+**Enforced Solution**:
+- **Flexbox Horizontal Rows**: Use `display: flex; flex-direction: row; flex-wrap: nowrap;` on header and row containers (`.item-grid-header`, `.item-grid-row`).
+- **Proportional flex nth-child Sizing**: Use `flex: ratio 1 0px` on `:nth-child(n)` cells with `min-width` limits on `.item-grid-table` (`min-width: 850px`) inside `.item-grid-container` (`overflow-x: auto`) for 100% cross-browser alignment.
 
 ## Related
 - [[ui-design-tokens]] — Full CSS reference
 - [[sidebar-navigation]] — Mobile sidebar behavior
 - [[templates-overview]] — Template structure for responsive layout
+
