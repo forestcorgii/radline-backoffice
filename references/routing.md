@@ -101,11 +101,11 @@
 | GET | `/import` | `ImportPageHandler` | Consolidated data import page |
 | POST | `/import/upload` | `ImportUploadHandler` | Excel spreadsheet upload and parse |
 
-### Tools / Receipt OCR
+### Tools / Receipt Vision
 | Method | Path | Handler | Notes |
 |---|---|---|---|
-| GET | `/tools/receipt-scanner` | `ReceiptScannerHandler` | Receipt OCR uploader page |
-| POST | `/tools/receipt-scanner/parse` | `ReceiptScannerParseHandler` | OCR parser and structured result renderer |
+| GET | `/tools/receipt-scanner` | `ReceiptScannerHandler` | Receipt vision scanner uploader page |
+| POST | `/tools/receipt-scanner/parse` | `ReceiptScannerParseHandler` | DeepSeek Vision parser and structured result renderer |
 
 ### Static Files
 | Path | Source |

@@ -208,6 +208,11 @@ func createSchema() {
 		FOREIGN KEY(item_id) REFERENCES items(id)
 	);
 
+	CREATE TABLE IF NOT EXISTS system_settings (
+		key TEXT PRIMARY KEY,
+		value TEXT NOT NULL
+	);
+
 	CREATE INDEX IF NOT EXISTS idx_items_code ON items(code);
 	CREATE INDEX IF NOT EXISTS idx_uom_settings_item_id ON uom_settings(item_id);
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_item_id ON receiving_logs(item_id);
@@ -236,3 +241,30 @@ func createSchema() {
 		}
 	}
 }
+
+// GetSystemSetting retrieves a configuration value by key from system_settings
+func GetSystemSetting(key string) string {
+	if DB == nil {
+		return ""
+	}
+	var val string
+	err := DB.Get(&val, "SELECT value FROM system_settings WHERE key = ? LIMIT 1", key)
+	if err != nil {
+		return ""
+	}
+	return val
+}
+
+// SetSystemSetting inserts or updates a configuration key-value pair in system_settings
+func SetSystemSetting(key, value string) error {
+	if DB == nil {
+		return nil
+	}
+	_, err := DB.Exec(`
+		INSERT INTO system_settings (key, value)
+		VALUES (?, ?)
+		ON CONFLICT(key) DO UPDATE SET value = excluded.value
+	`, key, value)
+	return err
+}
+

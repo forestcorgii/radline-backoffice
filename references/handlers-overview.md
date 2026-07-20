@@ -52,7 +52,7 @@ The dashboard aggregates financial data:
 | [import.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/import.go) | Excel Import | Import page and Excel file upload processing |
 | [settings.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/settings.go) | System Settings & UOM | Configuration views and UOM list handlers |
 | [uom_settings.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/uom_settings.go) | UOM Settings | UOM conversion multiplier settings CRUD |
-| [receipt_scanner.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/receipt_scanner.go) | OCR Tools | Receipt scanner upload and text parsing logic |
+| [receipt_scanner.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/receipt_scanner.go) | AI Vision Tools | Receipt scanner upload and DeepSeek Vision extraction logic |
 | [pagination.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/pagination.go) | Core Utilities | `GetLimitParam` request limit parser |
 
 ## Common Handler Patterns

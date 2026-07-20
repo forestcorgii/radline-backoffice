@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +10,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -29,12 +28,76 @@ type ExtractedItem struct {
 	RefPL           string
 }
 
-type ocrResponse struct {
-	ParsedResults []struct {
-		ParsedText string `json:"ParsedText"`
-	} `json:"ParsedResults"`
-	OCRExitCode           int  `json:"OCRExitCode"`
-	IsErroredOnProcessing bool `json:"IsErroredOnProcessing"`
+type deepSeekMessageContent struct {
+	Type     string                   `json:"type"`
+	Text     string                   `json:"text,omitempty"`
+	ImageURL *deepSeekImageURLContent `json:"image_url,omitempty"`
+}
+
+type deepSeekImageURLContent struct {
+	URL string `json:"url"`
+}
+
+type deepSeekMessage struct {
+	Role    string                  `json:"role"`
+	Content []deepSeekMessageContent `json:"content"`
+}
+
+type deepSeekResponseFormat struct {
+	Type string `json:"type"`
+}
+
+type deepSeekRequest struct {
+	Model          string                 `json:"model"`
+	Messages       []deepSeekMessage      `json:"messages"`
+	ResponseFormat *deepSeekResponseFormat `json:"response_format,omitempty"`
+	Temperature    float64                `json:"temperature,omitempty"`
+}
+
+type deepSeekTextMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type deepSeekTextRequest struct {
+	Model          string                 `json:"model"`
+	Messages       []deepSeekTextMessage  `json:"messages"`
+	ResponseFormat *deepSeekResponseFormat `json:"response_format,omitempty"`
+	Temperature    float64                `json:"temperature,omitempty"`
+}
+
+type deepSeekResponse struct {
+	Choices []struct {
+		Message struct {
+			Content string `json:"content"`
+		} `json:"message"`
+	} `json:"choices"`
+	Error *struct {
+		Message string `json:"message"`
+		Type    string `json:"type"`
+	} `json:"error,omitempty"`
+}
+
+type deepSeekReceiptJSON struct {
+	DocType   string `json:"doc_type"`
+	DocNumber string `json:"doc_number"`
+	DocDate   string `json:"doc_date"`
+	Supplier  string `json:"supplier"`
+	Customer  string `json:"customer"`
+	Items     []struct {
+		Description string  `json:"description"`
+		Qty         float64 `json:"qty"`
+		Uom         string  `json:"uom"`
+		Price       float64 `json:"price"`
+		Total       float64 `json:"total"`
+	} `json:"items"`
+}
+
+type DeepSeekConfig struct {
+	APIKey    string
+	APIBase   string
+	Model     string
+	HasAPIKey bool
 }
 
 // ReceiptScannerHandler renders the receipt scanner page
@@ -45,18 +108,22 @@ func (app *App) ReceiptScannerHandler(w http.ResponseWriter, r *http.Request) {
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
+	dsConfig := getDeepSeekConfig()
+
 	data := struct {
-		Items []models.Item
-		Uoms  []models.Uom
+		Items          []models.Item
+		Uoms           []models.Uom
+		DeepSeekConfig DeepSeekConfig
 	}{
-		Items: items,
-		Uoms:  uoms,
+		Items:          items,
+		Uoms:           uoms,
+		DeepSeekConfig: dsConfig,
 	}
 
 	app.RenderPage(w, r, "receipt_scanner.html", data)
 }
 
-// ReceiptScannerParseHandler handles image upload and returns extracted data
+// ReceiptScannerParseHandler handles image upload and extracts receipt data via DeepSeek (Vision or Text+OCR)
 func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse multipart form
 	err := r.ParseMultipartForm(10 << 20) // 10MB max
@@ -82,19 +149,52 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Call OCR API
-	ocrText, err := callOCRSpaceAPI(fileBytes, header.Filename)
+	cfg := getDeepSeekConfig()
+	var rawContent string
+
+	// Determine processing pipeline:
+	// If base URL is official api.deepseek.com (text-only V3/R1 models), use OCR + DeepSeek Text LLM parsing
+	isOfficialTextOnly := strings.Contains(cfg.APIBase, "api.deepseek.com")
+
+	if isOfficialTextOnly {
+		log.Printf("Using official DeepSeek text endpoint (%s). Executing OCR + DeepSeek V3 text extraction...", cfg.APIBase)
+		ocrText, ocrErr := callOCRSpaceAPI(fileBytes, header.Filename)
+		if ocrErr != nil {
+			err = fmt.Errorf("OCR preprocessing failed: %w", ocrErr)
+		} else {
+			rawContent, err = callDeepSeekTextAPI(ocrText, cfg)
+		}
+	} else {
+		// Call Direct DeepSeek Vision API
+		mimeType := header.Header.Get("Content-Type")
+		rawContent, err = callDeepSeekVisionAPI(fileBytes, mimeType)
+
+		// Fallback to OCR + DeepSeek Text if vision fails due to text-only endpoint rejection
+		if err != nil && (strings.Contains(err.Error(), "text-only") || strings.Contains(err.Error(), "unknown variant `image_url`")) {
+			log.Printf("Vision API rejected by endpoint. Falling back to OCR + DeepSeek Text API...")
+			ocrText, ocrErr := callOCRSpaceAPI(fileBytes, header.Filename)
+			if ocrErr == nil {
+				rawContent, err = callDeepSeekTextAPI(ocrText, cfg)
+			}
+		}
+	}
+
 	var docType, docNumber, docDate, supplier, customer string
 	var extractedItems []ExtractedItem
 
 	if err != nil {
-		log.Printf("OCR failed: %v", err)
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "warning", "message": "OCR service unavailable. Loaded standard empty form."}}`)
-		// Fallback to empty values
+		log.Printf("DeepSeek processing failed: %v", err)
+		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "warning", "message": "DeepSeek error: %s. Loaded empty form."}}`, strings.ReplaceAll(err.Error(), `"`, `'`)))
 		docType = "SALES"
 	} else {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "OCR successfully processed receipt!"}}`)
-		docType, docNumber, docDate, supplier, customer, extractedItems = parseOCRText(ocrText)
+		docType, docNumber, docDate, supplier, customer, extractedItems, err = parseDeepSeekJSON(rawContent)
+		if err != nil {
+			log.Printf("Failed to parse DeepSeek JSON response: %v", err)
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "warning", "message": "Failed to parse receipt JSON structure. Loaded empty form."}}`)
+			docType = "SALES"
+		} else {
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "DeepSeek successfully extracted sales receipt!"}}`)
+		}
 	}
 
 	// Resolve extracted items against database items
@@ -106,8 +206,8 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 				extractedItems[i].Uom = resolvedUOM
 			}
 			var item struct {
-				Code        string  `db:"code"`
-				Description string  `db:"description"`
+				Code        string `db:"code"`
+				Description string `db:"description"`
 			}
 			err := db.DB.Get(&item, "SELECT code, description FROM items WHERE id = ?", itemID)
 			if err == nil {
@@ -122,6 +222,8 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
+	dsConfig := getDeepSeekConfig()
+
 	// If HTMX request, render just the extracted data section
 	if r.Header.Get("HX-Request") == "true" {
 		data := struct {
@@ -134,6 +236,7 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 			Customer       string
 			ExtractedItems []ExtractedItem
 			HasResults     bool
+			DeepSeekConfig DeepSeekConfig
 		}{
 			Items:          items,
 			Uoms:           uoms,
@@ -144,6 +247,7 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 			Customer:       customer,
 			ExtractedItems: extractedItems,
 			HasResults:     true,
+			DeepSeekConfig: dsConfig,
 		}
 		app.Render(w, "receipt_scanner_results.html", data)
 		return
@@ -151,161 +255,196 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 
 	// Full page render fallback
 	app.RenderPage(w, r, "receipt_scanner.html", map[string]interface{}{
-		"Items": items,
-		"Uoms":  uoms,
+		"Items":          items,
+		"Uoms":           uoms,
+		"DeepSeekConfig": dsConfig,
 	})
 }
 
-// callOCRSpaceAPI calls the OCR.space Free API
-func callOCRSpaceAPI(imageBytes []byte, filename string) (string, error) {
-	apiKey := os.Getenv("OCR_SPACE_API_KEY")
+// getDeepSeekConfig returns configured API key, base URL, and model from DB system_settings or env vars
+func getDeepSeekConfig() DeepSeekConfig {
+	apiKey := strings.TrimSpace(db.GetSystemSetting("deepseek_api_key"))
 	if apiKey == "" {
-		apiKey = "helloworld"
+		apiKey = strings.TrimSpace(os.Getenv("DEEPSEEK_API_KEY"))
 	}
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
+	apiBase := strings.TrimSpace(db.GetSystemSetting("deepseek_api_base"))
+	if apiBase == "" {
+		apiBase = strings.TrimSpace(os.Getenv("DEEPSEEK_API_BASE"))
+	}
+	if apiBase == "" {
+		apiBase = "https://api.deepseek.com/v1"
+	}
 
-	part, err := writer.CreateFormFile("file", filename)
+	model := strings.TrimSpace(db.GetSystemSetting("deepseek_model"))
+	if model == "" {
+		model = strings.TrimSpace(os.Getenv("DEEPSEEK_MODEL"))
+	}
+	if model == "" {
+		model = "deepseek-chat"
+	}
+
+	return DeepSeekConfig{
+		APIKey:    apiKey,
+		APIBase:   apiBase,
+		Model:     model,
+		HasAPIKey: apiKey != "",
+	}
+}
+
+// callDeepSeekVisionAPI makes an HTTP request to DeepSeek's OpenAI-compatible Chat Completions API
+func callDeepSeekVisionAPI(imageBytes []byte, mimeType string) (string, error) {
+	cfg := getDeepSeekConfig()
+	if !cfg.HasAPIKey || strings.TrimSpace(cfg.APIKey) == "" {
+		return "", fmt.Errorf("API Key is missing. Please configure your API key in Settings or Receipt Scanner drawer.")
+	}
+
+	if mimeType == "" || mimeType == "application/octet-stream" {
+		mimeType = http.DetectContentType(imageBytes)
+	}
+
+	base64Img := base64.StdEncoding.EncodeToString(imageBytes)
+	dataURL := fmt.Sprintf("data:%s;base64,%s", mimeType, base64Img)
+
+	prompt := `You are an expert receipt reader. Analyze the attached sales receipt or invoice image and extract structured data into JSON with keys:
+- "doc_type": string ("SI", "DR", or "SALES")
+- "doc_number": string (invoice/receipt number)
+- "doc_date": string (YYYY-MM-DD)
+- "supplier": string (store or supplier name)
+- "customer": string (customer name)
+- "items": array of objects with keys: "description" (string), "qty" (number), "uom" (string), "price" (number), "total" (number)
+
+Return ONLY valid JSON matching this schema.`
+
+	reqBody := deepSeekRequest{
+		Model: cfg.Model,
+		Messages: []deepSeekMessage{
+			{
+				Role: "user",
+				Content: []deepSeekMessageContent{
+					{
+						Type: "text",
+						Text: prompt,
+					},
+					{
+						Type: "image_url",
+						ImageURL: &deepSeekImageURLContent{
+							URL: dataURL,
+						},
+					},
+				},
+			},
+		},
+		ResponseFormat: &deepSeekResponseFormat{
+			Type: "json_object",
+		},
+		Temperature: 0.1,
+	}
+
+	jsonBytes, err := json.Marshal(reqBody)
 	if err != nil {
-		return "", err
-	}
-	if _, err = io.Copy(part, bytes.NewReader(imageBytes)); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	_ = writer.WriteField("apikey", apiKey)
-	_ = writer.WriteField("language", "eng")
-	_ = writer.WriteField("isOverlayRequired", "false")
-	_ = writer.WriteField("ocrEngine", "2") // Engine 2 is much better for handwriting/receipts
-
-	if err = writer.Close(); err != nil {
-		return "", err
+	endpoint := strings.TrimSuffix(cfg.APIBase, "/")
+	if !strings.HasSuffix(endpoint, "/chat/completions") {
+		endpoint += "/chat/completions"
 	}
 
-	req, err := http.NewRequest("POST", "https://api.ocr.space/parse/image", body)
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonBytes))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	client := &http.Client{Timeout: 30 * time.Second}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(cfg.APIKey))
+	req.Header.Set("HTTP-Referer", "http://localhost:8080")
+	req.Header.Set("X-Title", "Radline BackOffice")
+
+	client := &http.Client{Timeout: 45 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to connect to DeepSeek API: %w", err)
 	}
 	defer resp.Body.Close()
 
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read API response: %w", err)
+	}
+
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("OCR API returned status: %s", resp.Status)
+		respStr := string(bodyBytes)
+		if resp.StatusCode == http.StatusUnauthorized || strings.Contains(respStr, "Missing Authentication") || strings.Contains(respStr, "401") || strings.Contains(respStr, "invalid_api_key") {
+			return "", fmt.Errorf("Authentication failed (401 Unauthorized). Please verify that your API Key for '%s' is correct in settings.", cfg.APIBase)
+		}
+		if strings.Contains(respStr, "unknown variant `image_url`") || strings.Contains(respStr, "expected `text`") {
+			return "", fmt.Errorf("endpoint '%s' is text-only and rejected image input. Please set Base URL & Model to a Vision-capable provider (e.g. OpenRouter https://openrouter.ai/api/v1 or SiliconFlow)", cfg.APIBase)
+		}
+		return "", fmt.Errorf("DeepSeek API returned status %d: %s", resp.StatusCode, respStr)
 	}
 
-	var ocrResult ocrResponse
-	if err := json.NewDecoder(resp.Body).Decode(&ocrResult); err != nil {
-		return "", err
+	var dsResp deepSeekResponse
+	if err := json.Unmarshal(bodyBytes, &dsResp); err != nil {
+		return "", fmt.Errorf("failed to decode API response: %w", err)
 	}
 
-	if ocrResult.IsErroredOnProcessing || len(ocrResult.ParsedResults) == 0 {
-		return "", fmt.Errorf("OCR processing error, exit code: %d", ocrResult.OCRExitCode)
+	if dsResp.Error != nil && dsResp.Error.Message != "" {
+		return "", fmt.Errorf("DeepSeek API error: %s", dsResp.Error.Message)
 	}
 
-	return ocrResult.ParsedResults[0].ParsedText, nil
+	if len(dsResp.Choices) == 0 {
+		return "", fmt.Errorf("DeepSeek API returned no choices")
+	}
+
+	return dsResp.Choices[0].Message.Content, nil
 }
 
-// parseOCRText applies parsing heuristics on raw OCR output
-func parseOCRText(text string) (docType, docNumber, docDate, supplier, customer string, items []ExtractedItem) {
-	docType = "SALES"
-
-	text = strings.ReplaceAll(text, "\r\n", "\n")
-	lines := strings.Split(text, "\n")
-	var trimmedLines []string
-	for _, l := range lines {
-		t := strings.TrimSpace(l)
-		if t != "" {
-			trimmedLines = append(trimmedLines, t)
-		}
-	}
-
-	// 1. Detect sample receipt
-	lowerText := strings.ToLower(text)
-	isSampleReceipt := strings.Contains(text, "3907") && (strings.Contains(lowerText, "wadeou") || strings.Contains(lowerText, "wadfow"))
-
-	if isSampleReceipt {
-		supplier = "RADLINE INDUSTRIAL TOOLS SUPPLIES"
-		docNumber = "3907"
-		docDate = "2026-07-14"
-		customer = "IVAN"
-		items = []ExtractedItem{
-			{
-				ItemID:          0,
-				ItemDescription: "WADFOW WPB2915 P. BRUSH",
-				Qty:             1.0,
-				Uom:             "PC",
-				Price:           30.00,
-				Total:           30.00,
-			},
-		}
-		return
-	}
-
-	// 2. Generic Parsing Heuristics
-	if len(trimmedLines) > 0 {
-		supplier = trimmedLines[0]
-	}
-
-	// Find doc number
-	for i, line := range trimmedLines {
-		lowerLine := strings.ToLower(line)
-		if strings.Contains(lowerLine, "no.") || strings.Contains(lowerLine, "no ") || lowerLine == "no" {
-			parts := strings.Fields(line)
-			if len(parts) > 1 {
-				docNumber = parts[len(parts)-1]
-			} else if i+1 < len(trimmedLines) {
-				docNumber = trimmedLines[i+1]
+// parseDeepSeekJSON parses raw JSON string returned by DeepSeek Vision API into receipt fields
+func parseDeepSeekJSON(rawJSON string) (docType, docNumber, docDate, supplier, customer string, items []ExtractedItem, err error) {
+	cleaned := strings.TrimSpace(rawJSON)
+	if strings.HasPrefix(cleaned, "```") {
+		lines := strings.Split(cleaned, "\n")
+		if len(lines) >= 2 {
+			if strings.HasPrefix(lines[0], "```") {
+				lines = lines[1:]
 			}
-			break
-		}
-	}
-
-	// Find date
-	dateRegex := regexp.MustCompile(`\b(\d{1,2})[/\-,](\d{1,2})[/\-,]?(\d{4})\b`)
-	for _, line := range trimmedLines {
-		if match := dateRegex.FindStringSubmatch(line); match != nil {
-			m, _ := strconv.Atoi(match[1])
-			d, _ := strconv.Atoi(match[2])
-			y, _ := strconv.Atoi(match[3])
-			docDate = fmt.Sprintf("%04d-%02d-%02d", y, m, d)
-			break
-		}
-	}
-
-	// Find customer
-	for i, line := range trimmedLines {
-		lowerLine := strings.ToLower(line)
-		if strings.Contains(lowerLine, "customer") {
-			if strings.Contains(line, ":") {
-				parts := strings.SplitN(line, ":", 2)
-				customer = strings.TrimSpace(parts[1])
-			} else if i > 0 {
-				customer = trimmedLines[i-1]
+			if len(lines) > 0 && strings.HasPrefix(lines[len(lines)-1], "```") {
+				lines = lines[:len(lines)-1]
 			}
-			break
+			cleaned = strings.Join(lines, "\n")
 		}
 	}
+	cleaned = strings.TrimSpace(cleaned)
 
-	// Find doc type
-	for _, line := range trimmedLines {
-		lowerLine := strings.ToLower(line)
-		if strings.Contains(lowerLine, "invoice") || strings.Contains(lowerLine, "si") {
-			docType = "SI"
-			break
-		} else if strings.Contains(lowerLine, "quotation") || strings.Contains(lowerLine, "slip") {
-			docType = "SALES"
-			break
-		}
+	var res deepSeekReceiptJSON
+	if err := json.Unmarshal([]byte(cleaned), &res); err != nil {
+		return "", "", "", "", "", nil, err
 	}
 
-	// Generic item extraction fallback
+	docType = res.DocType
+	if docType == "" {
+		docType = "SALES"
+	}
+	docNumber = res.DocNumber
+	docDate = res.DocDate
+	supplier = res.Supplier
+	customer = res.Customer
+
+	for _, item := range res.Items {
+		extracted := ExtractedItem{
+			ItemDescription: item.Description,
+			Qty:             item.Qty,
+			Uom:             item.Uom,
+			Price:           item.Price,
+			Total:           item.Total,
+		}
+		if extracted.Total == 0 && extracted.Qty > 0 && extracted.Price > 0 {
+			extracted.Total = extracted.Qty * extracted.Price
+		}
+		items = append(items, extracted)
+	}
+
 	if len(items) == 0 {
 		items = []ExtractedItem{
 			{
@@ -319,7 +458,7 @@ func parseOCRText(text string) (docType, docNumber, docDate, supplier, customer 
 		}
 	}
 
-	return
+	return docType, docNumber, docDate, supplier, customer, items, nil
 }
 
 // findMatchingItem queries the database to find a matching item ID and Default UOM
@@ -352,4 +491,155 @@ func findMatchingItem(description string) (int, string) {
 		return match.ID, match.DefaultUOM
 	}
 	return 0, ""
+}
+
+// callOCRSpaceAPI calls the OCR.space Free API to extract raw text from image
+func callOCRSpaceAPI(imageBytes []byte, filename string) (string, error) {
+	apiKey := os.Getenv("OCR_SPACE_API_KEY")
+	if apiKey == "" {
+		apiKey = "helloworld"
+	}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("file", filename)
+	if err != nil {
+		return "", err
+	}
+	if _, err = io.Copy(part, bytes.NewReader(imageBytes)); err != nil {
+		return "", err
+	}
+
+	_ = writer.WriteField("apikey", apiKey)
+	_ = writer.WriteField("language", "eng")
+	_ = writer.WriteField("isOverlayRequired", "false")
+	_ = writer.WriteField("ocrEngine", "2")
+
+	if err = writer.Close(); err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest("POST", "https://api.ocr.space/parse/image", body)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("OCR API returned status: %s", resp.Status)
+	}
+
+	var ocrResult struct {
+		ParsedResults []struct {
+			ParsedText string `json:"ParsedText"`
+		} `json:"ParsedResults"`
+		OCRExitCode           int  `json:"OCRExitCode"`
+		IsErroredOnProcessing bool `json:"IsErroredOnProcessing"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&ocrResult); err != nil {
+		return "", err
+	}
+
+	if ocrResult.IsErroredOnProcessing || len(ocrResult.ParsedResults) == 0 {
+		return "", fmt.Errorf("OCR processing error, exit code: %d", ocrResult.OCRExitCode)
+	}
+
+	return ocrResult.ParsedResults[0].ParsedText, nil
+}
+
+// callDeepSeekTextAPI sends raw OCR text to DeepSeek text LLM to parse into receipt JSON
+func callDeepSeekTextAPI(ocrText string, cfg DeepSeekConfig) (string, error) {
+	if !cfg.HasAPIKey || strings.TrimSpace(cfg.APIKey) == "" {
+		return "", fmt.Errorf("API Key is missing. Please configure your API key in Settings or Receipt Scanner drawer.")
+	}
+
+	prompt := fmt.Sprintf(`You are an expert receipt parser. Analyze the following raw text extracted from a sales receipt or invoice, and extract structured data into a JSON object with keys:
+- "doc_type": string ("SI", "DR", or "SALES")
+- "doc_number": string (invoice/receipt number)
+- "doc_date": string (YYYY-MM-DD)
+- "supplier": string (store or supplier name)
+- "customer": string (customer name)
+- "items": array of objects with keys: "description" (string), "qty" (number), "uom" (string), "price" (number), "total" (number)
+
+Return ONLY valid JSON matching this schema.
+
+RAW RECEIPT TEXT:
+---
+%s
+---`, ocrText)
+
+	reqBody := deepSeekTextRequest{
+		Model: cfg.Model,
+		Messages: []deepSeekTextMessage{
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
+		ResponseFormat: &deepSeekResponseFormat{
+			Type: "json_object",
+		},
+		Temperature: 0.1,
+	}
+
+	jsonBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	endpoint := strings.TrimSuffix(cfg.APIBase, "/")
+	if !strings.HasSuffix(endpoint, "/chat/completions") {
+		endpoint += "/chat/completions"
+	}
+
+	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(jsonBytes))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(cfg.APIKey))
+
+	client := &http.Client{Timeout: 45 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to connect to DeepSeek API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read API response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		respStr := string(bodyBytes)
+		if resp.StatusCode == http.StatusUnauthorized || strings.Contains(respStr, "401") {
+			return "", fmt.Errorf("Authentication failed (401 Unauthorized) for '%s'. Please verify your API Key.", cfg.APIBase)
+		}
+		return "", fmt.Errorf("DeepSeek API returned status %d: %s", resp.StatusCode, respStr)
+	}
+
+	var dsResp deepSeekResponse
+	if err := json.Unmarshal(bodyBytes, &dsResp); err != nil {
+		return "", fmt.Errorf("failed to decode API response: %w", err)
+	}
+
+	if dsResp.Error != nil && dsResp.Error.Message != "" {
+		return "", fmt.Errorf("DeepSeek API error: %s", dsResp.Error.Message)
+	}
+
+	if len(dsResp.Choices) == 0 {
+		return "", fmt.Errorf("DeepSeek API returned no choices")
+	}
+
+	return dsResp.Choices[0].Message.Content, nil
 }
