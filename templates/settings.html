@@ -725,11 +725,12 @@
 
         const rect = input.getBoundingClientRect();
         list.style.position = 'fixed';
-        list.style.top = (rect.bottom + 4) + 'px';
+        list.style.top = (rect.bottom + 2) + 'px';
         list.style.bottom = 'auto';
         list.style.left = rect.left + 'px';
-        list.style.width = Math.max(rect.width, 220) + 'px';
+        list.style.width = rect.width + 'px';
         list.style.zIndex = '999999';
+        list.style.marginTop = '0px';
     }
 
     function showDropdown(input) {
