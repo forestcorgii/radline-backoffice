@@ -222,3 +222,13 @@ See [[htmx-patterns]] for the toast protocol.
 - **Header Alignment**: Placed `+ Encode Sales` directly in the header bar (matching Brands/Categories pages) which toggles an inline, collapsible form card (`#encode-sales-card`) directly above the filters.
 - **Filter-Bar Icon Buttons**: Removed textual label from the "Customize View" button, converting it into a compact icon-only button (`<svg>` polygon filter icon) situated at the far right end of `.search-filter-bar`.
 
+### Context: Universal Flexbox Cross-Browser Form Layout Compatibility (Edge & Chrome)
+**Problem**: Microsoft Edge (or Edge in IE compatibility mode) can fail to resolve CSS Grid `grid-template-columns` inside dynamic HTMX swapped wrappers, causing form items and buttons to collapse or stack vertically.
+**Enforced Solution**:
+- **Universal Flexbox Horizontal Rows**: Use `display: flex; flex-direction: row; flex-wrap: nowrap;` on `.item-grid-header` and `.item-grid-row` instead of CSS Grid.
+- **nth-child Flex Ratios**: Apply explicit `flex: ratio 1 0px; min-width: ...` to header labels and `.item-grid-cell:nth-child(n)` cells to guarantee 100% pixel-perfect column alignment across Edge, Chrome, Safari, and Firefox.
+- **Cache Busting & Meta Compatibility**: Include `<meta http-equiv="X-UA-Compatible" content="IE=edge">` in [base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) and increment `index.css?v=2.0` query version to force Edge to reload fresh stylesheets.
+
+
+
+

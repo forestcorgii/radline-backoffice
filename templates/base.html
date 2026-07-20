@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BackOffice System</title>
     <!-- HTMX -->
@@ -10,7 +11,7 @@
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/index.css?v=1.4">
+    <link rel="stylesheet" href="/static/index.css?v=2.0">
 </head>
 
 <body>
@@ -313,16 +314,49 @@
         });
 
         // Searchable Dropdown functions
+        function updateDropdownPosition(input) {
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            const list = container.querySelector('.dropdown-list');
+            if (!list || list.style.display === 'none') return;
+
+            const rect = input.getBoundingClientRect();
+            list.style.position = 'fixed';
+            list.style.top = (rect.bottom + 4) + 'px';
+            list.style.bottom = 'auto';
+            list.style.left = rect.left + 'px';
+            list.style.width = Math.max(rect.width, 220) + 'px';
+            list.style.zIndex = '999999';
+        }
+
         function showDropdown(input) {
             const container = input.closest('.searchable-dropdown');
             if (!container) return;
+            container.classList.add('active');
+            const card = input.closest('.card');
+            if (card) card.classList.add('has-dropdown');
+            const form = input.closest('form');
+            if (form) form.classList.add('has-dropdown');
+            const tableContainer = input.closest('.table-container');
+            if (tableContainer) tableContainer.classList.add('has-dropdown');
+            const row = input.closest('tr');
+            if (row) {
+                document.querySelectorAll('tr.active-dropdown-row').forEach(r => r.classList.remove('active-dropdown-row'));
+                row.classList.add('active-dropdown-row');
+            }
+            const cell = input.closest('td');
+            if (cell) {
+                document.querySelectorAll('td.active-dropdown-cell').forEach(c => c.classList.remove('active-dropdown-cell'));
+                cell.classList.add('active-dropdown-cell');
+            }
             const list = container.querySelector('.dropdown-list');
             if (list) {
                 document.querySelectorAll('.dropdown-list').forEach(l => {
                     if (l !== list) l.style.display = 'none';
                 });
                 list.style.display = 'block';
-                container.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('active'));
+                updateDropdownPosition(input);
+                filterDropdown(input);
             }
         }
 
@@ -330,6 +364,17 @@
             setTimeout(() => {
                 const container = input.closest('.searchable-dropdown');
                 if (!container) return;
+                container.classList.remove('active');
+                const card = input.closest('.card');
+                if (card) card.classList.remove('has-dropdown');
+                const form = input.closest('form');
+                if (form) form.classList.remove('has-dropdown');
+                const tableContainer = input.closest('.table-container');
+                if (tableContainer) tableContainer.classList.remove('has-dropdown');
+                const row = input.closest('tr');
+                if (row) row.classList.remove('active-dropdown-row');
+                const cell = input.closest('td');
+                if (cell) cell.classList.remove('active-dropdown-cell');
                 const list = container.querySelector('.dropdown-list');
                 if (list) {
                     list.style.display = 'none';
@@ -340,68 +385,47 @@
                             hidden.dispatchEvent(new Event('change'));
                         }
                     } else {
-                        const currentText = input.value;
+                        const currentText = input.value.trim();
                         const items = container.querySelectorAll('.dropdown-item');
                         let match = null;
                         for (const item of items) {
-                            if (item.getAttribute('data-description') === currentText) {
+                            if ((item.getAttribute('data-description') || '').toLowerCase() === currentText.toLowerCase()) {
                                 match = item;
                                 break;
                             }
                         }
                         if (match) {
                             const selectedId = match.getAttribute('data-id');
+                            input.value = match.getAttribute('data-description');
                             if (hidden && hidden.value !== selectedId) {
                                 hidden.value = selectedId;
                                 hidden.dispatchEvent(new Event('change'));
                             }
-                        } else {
-                            let ciMatch = null;
+                        } else if (hidden && hidden.value) {
                             for (const item of items) {
-                                if (item.getAttribute('data-description').toLowerCase() === currentText.toLowerCase()) {
-                                    ciMatch = item;
+                                if (item.getAttribute('data-id') === hidden.value) {
+                                    input.value = item.getAttribute('data-description');
                                     break;
-                                }
-                            }
-                            if (ciMatch) {
-                                input.value = ciMatch.getAttribute('data-description');
-                                const selectedId = ciMatch.getAttribute('data-id');
-                                if (hidden && hidden.value !== selectedId) {
-                                    hidden.value = selectedId;
-                                    hidden.dispatchEvent(new Event('change'));
-                                }
-                            } else {
-                                const selectedId = hidden ? hidden.value : '';
-                                if (selectedId) {
-                                    let found = false;
-                                    for (const item of items) {
-                                        if (item.getAttribute('data-id') === selectedId) {
-                                            input.value = item.getAttribute('data-description');
-                                            found = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!found) input.value = '';
-                                } else {
-                                    input.value = '';
                                 }
                             }
                         }
                     }
                 }
-            }, 200);
+            }, 250);
         }
 
         function filterDropdown(input) {
-            const filter = input.value.toLowerCase();
+            const filter = input.value.trim().toLowerCase();
             const container = input.closest('.searchable-dropdown');
             if (!container) return;
             const items = container.querySelectorAll('.dropdown-item');
             let firstVisible = null;
+            let visibleCount = 0;
             items.forEach(item => {
-                const text = item.getAttribute('data-description').toLowerCase();
-                if (text.includes(filter)) {
+                const text = (item.getAttribute('data-description') || '').toLowerCase();
+                if (visibleCount < 50 && (filter === '' || text.includes(filter))) {
                     item.style.display = 'block';
+                    visibleCount++;
                     if (!firstVisible) firstVisible = item;
                 } else {
                     item.style.display = 'none';
@@ -411,6 +435,7 @@
             if (firstVisible) {
                 firstVisible.classList.add('active');
             }
+            updateDropdownPosition(input);
         }
 
         function selectDropdownItem(item) {
@@ -448,7 +473,7 @@
             if (!container) return;
             const list = container.querySelector('.dropdown-list');
             if (!list || list.style.display === 'none') {
-                if (event.key === 'ArrowDown' || event.key === 'Enter') {
+                if (event.key === 'ArrowDown') {
                     showDropdown(input);
                     event.preventDefault();
                 }
@@ -474,6 +499,7 @@
                 visibleItems[activeIndex].scrollIntoView({ block: 'nearest' });
             } else if (event.key === 'Enter') {
                 event.preventDefault();
+                event.stopPropagation();
                 if (activeIndex >= 0) {
                     selectDropdownItem(visibleItems[activeIndex]);
                 } else {
@@ -492,6 +518,86 @@
                 document.querySelectorAll('.dropdown-list').forEach(list => {
                     list.style.display = 'none';
                 });
+            }
+        });
+
+        window.addEventListener('scroll', function() {
+            const activeInput = document.activeElement;
+            if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
+                updateDropdownPosition(activeInput);
+            }
+        }, true);
+
+        window.addEventListener('resize', function() {
+            const activeInput = document.activeElement;
+            if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
+                updateDropdownPosition(activeInput);
+            }
+        });
+
+        // Global keydown handler for Enter key behavior:
+        // 1. On filter inputs/bars, pressing Enter applies the filter.
+        // 2. When adding items in receiving, adjustments, or sales, pressing Enter adds another item line.
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Enter') return;
+            const target = e.target;
+            if (!target || !['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) return;
+
+            // If a searchable dropdown list is currently open/visible, let handleDropdownKeydown handle Enter
+            const dropdown = target.closest('.searchable-dropdown');
+            if (dropdown) {
+                const list = dropdown.querySelector('.dropdown-list');
+                if (list && list.style.display !== 'none' && list.style.display !== '') {
+                    return;
+                }
+            }
+
+            // Check if we are inside an item addition form or item row
+            const itemForm = target.closest('form[hx-post*="/receiving/add"], form[hx-post*="/adjustments/add"], form[hx-post*="/sales/add"], #receipt-scan-form');
+            const isItemTable = target.closest('#receiving-items-tbody, #adjustment-items-tbody, #sales-items-tbody, #scan-items-body');
+
+            // 1. FILTER BAR / FILTER INPUTS -> Apply filter
+            const filterContainer = target.closest('.search-filter-bar, form[id*="filter"], form[onsubmit*="return false"]');
+            const isFilterInput = filterContainer || target.name === 'search' || (target.name && target.name.includes('filter')) || target.hasAttribute('data-filter');
+
+            if (isFilterInput && !itemForm && !isItemTable) {
+                e.preventDefault();
+                const container = filterContainer || target.closest('form, div') || target.parentElement;
+                if (container) {
+                    const hxTarget = target.hasAttribute('hx-get') ? target : (container.querySelector('[hx-get]') || target);
+                    if (window.htmx && hxTarget && hxTarget.hasAttribute('hx-get')) {
+                        htmx.trigger(hxTarget, 'search');
+                        htmx.trigger(hxTarget, 'change');
+                        htmx.trigger(hxTarget, 'keyup');
+                    } else if (target.form && target.form.onsubmit !== false) {
+                        target.form.submit();
+                    }
+                }
+                return;
+            }
+
+            // 2. ADDING ITEMS IN RECEIVING, ADJUSTMENTS, OR SALES -> Add another item line
+            if (itemForm || isItemTable) {
+                e.preventDefault();
+                const parent = itemForm || target.closest('.card, form, div');
+                if (parent) {
+                    const addRowBtn = parent.querySelector('button[hx-get*="new-row"], button[onclick*="addScanRow"], button[onclick*="addRow"]') ||
+                        Array.from(parent.querySelectorAll('button')).find(btn => btn.textContent.includes('Add Item Row') || btn.textContent.includes('Add Row'));
+                    if (addRowBtn) {
+                        addRowBtn.click();
+                        setTimeout(() => {
+                            const tbody = parent.querySelector('tbody');
+                            if (tbody && tbody.lastElementChild) {
+                                const newInput = tbody.lastElementChild.querySelector('.dropdown-search, input:not([type="hidden"]), select');
+                                if (newInput) {
+                                    newInput.focus();
+                                    if (newInput.select && newInput.type === 'text') newInput.select();
+                                }
+                            }
+                        }, 100);
+                    }
+                }
+                return;
             }
         });
     </script>
