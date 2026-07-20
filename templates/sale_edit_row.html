@@ -16,6 +16,9 @@
             <input type="text" name="doc_number" value="{{ $sale.DocNumber }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 5.5rem;" required>
         </div>
     </td>
+    <td data-col="customer_name">
+        <input type="text" name="customer_name" value="{{ $sale.CustomerName }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 7rem;" placeholder="Customer">
+    </td>
     <td data-col="supplier">
         <select name="supplier" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto;" required>
             <option value="ASCD" {{ if eq $sale.Supplier "ASCD" }}selected{{ end }}>ASCD</option>
@@ -32,7 +35,7 @@
         </select>
     </td>
     <td data-col="qty">
-        <input type="number" step="any" name="qty" value="{{ $sale.Qty }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 4.5rem;" required>
+        <input type="number" step="any" name="qty" value="{{ $sale.Qty }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 4.5rem;" required>
     </td>
     <td data-col="uom">
         <select name="uom" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto;" required>
@@ -42,14 +45,38 @@
             {{ end }}
         </select>
     </td>
-    <td data-col="total_sales">
-        <input type="number" step="any" name="price" value="{{ printf "%.2f" $sale.Price }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 5.5rem;" title="Unit Selling Price" required>
+    <td data-col="price">
+        <input type="number" step="any" name="price" value="{{ printf "%.2f" $sale.Price }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 5.5rem;" title="Unit Price" required>
     </td>
-    <td data-col="total_cost">
-        <input type="number" step="any" name="cost" value="{{ printf "%.2f" $sale.Cost }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 5.5rem;" title="Unit Cost" required>
+    <td data-col="total_sales" class="text-success" style="font-weight: 500; font-size: 0.8125rem;">
+        <span class="calc-total-sales">₱{{ printf "%.2f" $sale.TotalSales }}</span>
     </td>
-    <td data-col="profit" class="text-primary" style="font-weight: 500; font-size: 0.8125rem;">
-        ₱{{ printf "%.2f" $sale.Profit }}
+    <td data-col="cost">
+        <input type="number" step="any" name="cost" value="{{ printf "%.2f" $sale.Cost }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 5.5rem;" title="Unit Cost" required>
+    </td>
+    <td data-col="total_cost" class="text-danger" style="font-weight: 500; font-size: 0.8125rem;">
+        <span class="calc-total-cost">₱{{ printf "%.2f" $sale.TotalCost }}</span>
+    </td>
+    <td data-col="patong">
+        <input type="number" step="any" name="patong" value="{{ printf "%.2f" $sale.Patong }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 4.5rem;">
+    </td>
+    <td data-col="pos_charge">
+        <input type="number" step="any" name="pos_charge" value="{{ printf "%.2f" $sale.POSCharge }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 4.5rem;">
+    </td>
+    <td data-col="wt_2307">
+        <input type="number" step="any" name="wt_2307" value="{{ printf "%.2f" $sale.WT2307 }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 4.5rem;">
+    </td>
+    <td data-col="total_remit" class="text-primary" style="font-weight: 500; font-size: 0.8125rem;">
+        <span class="calc-total-remit">₱{{ printf "%.2f" $sale.TotalRemit }}</span>
+    </td>
+    <td data-col="profit" class="text-success" style="font-weight: 500; font-size: 0.8125rem;">
+        <span class="calc-profit">₱{{ printf "%.2f" $sale.Profit }}</span>
+    </td>
+    <td data-col="profit_margin" style="font-weight: 500; font-size: 0.8125rem;">
+        <span class="calc-profit-margin">{{ printf "%.2f" $sale.ProfitMargin }}%</span>
+    </td>
+    <td data-col="remarks">
+        <input type="text" name="remarks" value="{{ $sale.Remarks }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 7rem;" placeholder="Remarks">
     </td>
     <td data-col="actions">
         <input type="hidden" name="is_edit" value="1">

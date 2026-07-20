@@ -90,7 +90,13 @@ func InitDB(datasource string) error {
 | `total_sales` | REAL | NOT NULL |
 | `cost` | REAL | NOT NULL |
 | `total_cost` | REAL | NOT NULL |
+| `patong` | REAL | NOT NULL DEFAULT 0.0 |
+| `pos_charge` | REAL | NOT NULL DEFAULT 0.0 |
+| `wt_2307` | REAL | NOT NULL DEFAULT 0.0 |
+| `total_remit` | REAL | NOT NULL DEFAULT 0.0 |
 | `profit` | REAL | NOT NULL |
+| `profit_margin` | REAL | NOT NULL DEFAULT 0.0 |
+| `remarks` | TEXT | NOT NULL DEFAULT '' |
 | `ref_pl` | TEXT | — |
 
 ### `stock_adjustments` (Header)
@@ -147,7 +153,22 @@ SQLite does **not** enforce foreign keys by default. The `PRAGMA foreign_keys = 
 - **Batch Querying**: Implement batch loader functions (e.g. `FetchItemsStockBatch(db, itemIDs)`) that execute single SQL `IN (?)` queries across all needed tables rather than executing separate queries per row loop.
 - **Database Indexing**: Add standard indices on search text fields (e.g., `code`) and foreign key columns (`item_id`, `adjustment_id`) in SQLite schema definition to prevent full table scans on group by / filter queries.
 
+### Context: Sales Financial Field Calculations & Auto-Remittance Schema
+**Problem**: Managing comprehensive sales accounting requires tracking custom charges (`patong`, `pos_charge`, `wt_2307`), net remit, profit margin percentages, and remarks across encoding, batch edit, customize column views, and Excel import.
+**Enforced Solution**:
+- **Database Schema**: `sales_details` includes `patong`, `pos_charge`, `wt_2307`, `total_remit`, `profit_margin`, and `remarks` with default safe values.
+- **Invariants & Formulas**:
+  - `Total Sales (Total Price)` = `Qty * Price`
+  - `Total Cost` = `Qty * Cost`
+  - `Total Remit` = `Total Sales - (Patong + POS Charge + WT 2307)`
+  - `Profit` = `Total Sales - Total Cost`
+  - `Profit Margin (%)` = `(Profit / Total Sales) * 100` if `Total Sales > 0` else `0%`
+- **UI & Import Alignment**: All fields are supported across list view columns, customize view popovers, real-time JS client-side encoding, and Excel sheet import.
+
 ## Related
+- [[00-index]]
+- [[database-migrations]]
+- [[domain-sales]]
 - [[database-migrations]] — How schema evolves at startup
 - [[models-layer]] — DTO structs mapping these tables
 - [[domain-overview]] — Domain entities these tables represent

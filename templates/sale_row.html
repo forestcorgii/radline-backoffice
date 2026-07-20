@@ -5,13 +5,22 @@
         <span class="badge badge-secondary">{{ .DocType }}</span>
         {{ .DocNumber }}
     </td>
+    <td data-col="customer_name">{{ if .CustomerName }}{{ .CustomerName }}{{ else }}—{{ end }}</td>
     <td data-col="supplier"><span class="badge badge-primary">{{ .Supplier }}</span></td>
     <td data-col="item_description" style="font-weight: 500;">{{ .Description }}</td>
     <td data-col="qty" style="font-weight: 600;">{{ .Qty }}</td>
     <td data-col="uom">{{ .UOM }}</td>
+    <td data-col="price">₱{{ printf "%.2f" .Price }}</td>
     <td data-col="total_sales" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales }}</td>
+    <td data-col="cost">₱{{ printf "%.2f" .Cost }}</td>
     <td data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</td>
-    <td data-col="profit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }}</td>
+    <td data-col="patong">₱{{ printf "%.2f" .Patong }}</td>
+    <td data-col="pos_charge">₱{{ printf "%.2f" .POSCharge }}</td>
+    <td data-col="wt_2307">₱{{ printf "%.2f" .WT2307 }}</td>
+    <td data-col="total_remit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .TotalRemit }}</td>
+    <td data-col="profit" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }}</td>
+    <td data-col="profit_margin" style="font-weight: 500;">{{ printf "%.2f" .ProfitMargin }}%</td>
+    <td data-col="remarks">{{ if .Remarks }}{{ .Remarks }}{{ else }}—{{ end }}</td>
     <td data-col="actions">
         <div class="actions-cell">
             <button class="btn btn-danger btn-icon" hx-delete="/sales/delete/{{ .ID }}"

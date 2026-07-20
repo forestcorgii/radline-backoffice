@@ -21,7 +21,8 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	baseQuery := `
 		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
-		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost, s.profit,
+		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost,
+		       s.patong, s.pos_charge, s.wt_2307, s.total_remit, s.profit, s.profit_margin, s.remarks,
 		       i.code as item_code, i.description as item_description
 		FROM sales_details s
 		JOIN items i ON s.item_id = i.id
@@ -138,6 +139,10 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	uoms := r.Form["uom"]
 	prices := r.Form["price"]
 	costs := r.Form["cost"]
+	patongs := r.Form["patong"]
+	posCharges := r.Form["pos_charge"]
+	wt2307s := r.Form["wt_2307"]
+	remarkss := r.Form["remarks"]
 	refPLs := r.Form["ref_pl"]
 
 	if len(itemIDs) == 0 {
@@ -146,7 +151,7 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(prices) || len(itemIDs) != len(costs) || len(itemIDs) != len(refPLs) {
+	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(prices) || len(itemIDs) != len(costs) {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Mismatch in item fields lengths."}}`)
 		http.Error(w, "Mismatch in item fields lengths", http.StatusBadRequest)
 		return
@@ -159,7 +164,26 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		price, err3 := strconv.ParseFloat(prices[i], 64)
 		cost, err4 := strconv.ParseFloat(costs[i], 64)
 		uom := uoms[i]
-		refPL := refPLs[i]
+		
+		var refPL string
+		if i < len(refPLs) {
+			refPL = refPLs[i]
+		}
+
+		var patong, posCharge, wt2307 float64
+		var remarks string
+		if i < len(patongs) && patongs[i] != "" {
+			patong, _ = strconv.ParseFloat(patongs[i], 64)
+		}
+		if i < len(posCharges) && posCharges[i] != "" {
+			posCharge, _ = strconv.ParseFloat(posCharges[i], 64)
+		}
+		if i < len(wt2307s) && wt2307s[i] != "" {
+			wt2307, _ = strconv.ParseFloat(wt2307s[i], 64)
+		}
+		if i < len(remarkss) {
+			remarks = remarkss[i]
+		}
 
 		if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid numeric input in items."}}`)
@@ -168,12 +192,16 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		saleItems = append(saleItems, domain.SaleItem{
-			ItemID: itemID,
-			Qty:    qty,
-			UOM:    uom,
-			Price:  price,
-			Cost:   cost,
-			RefPL:  refPL,
+			ItemID:    itemID,
+			Qty:       qty,
+			UOM:       uom,
+			Price:     price,
+			Cost:      cost,
+			Patong:    patong,
+			POSCharge: posCharge,
+			WT2307:    wt2307,
+			Remarks:   remarks,
+			RefPL:     refPL,
 		})
 	}
 
@@ -195,9 +223,9 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	details := sale.ToSalesDetails()
 	for _, sd := range details {
 		_, err = tx.Exec(`
-			INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, profit, ref_pl)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, sd.DocType, sd.DocStatus, sd.DocDate, sd.DocNumber, sd.CustomerName, sd.Supplier, sd.ItemID, sd.Qty, sd.UOM, sd.Price, sd.TotalSales, sd.Cost, sd.TotalCost, sd.Profit, sd.RefPL)
+			INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, patong, pos_charge, wt_2307, total_remit, profit, profit_margin, remarks, ref_pl)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, sd.DocType, sd.DocStatus, sd.DocDate, sd.DocNumber, sd.CustomerName, sd.Supplier, sd.ItemID, sd.Qty, sd.UOM, sd.Price, sd.TotalSales, sd.Cost, sd.TotalCost, sd.Patong, sd.POSCharge, sd.WT2307, sd.TotalRemit, sd.Profit, sd.ProfitMargin, sd.Remarks, sd.RefPL)
 		if err != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save sale detail."}}`)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -278,8 +306,6 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 	if itemID > 0 {
 		_ = db.DB.Get(&defaultUOM, "SELECT default_uom FROM items WHERE id = ?", itemID)
 
-		// Get oldest PL with stock available using a single efficient SQL query
-		// This replaces the old approach of loading ALL transactions into memory via FetchItemStock
 		type CostPriceResult struct {
 			Cost         float64 `db:"cost"`
 			SellingPrice float64 `db:"selling_price"`
@@ -308,7 +334,6 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 			lastPrice = result.SellingPrice
 			lastPLNo = result.PLNo
 		} else {
-			// Fallback to last receiving log
 			var lastRec models.ReceivingLog
 			err := db.DB.Get(&lastRec, "SELECT cost, selling_price, pl_no FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
 			if err == nil {
@@ -360,11 +385,18 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 	uom := r.FormValue("uom")
 	priceStr := r.FormValue("price")
 	costStr := r.FormValue("cost")
+	patongStr := r.FormValue("patong")
+	posChargeStr := r.FormValue("pos_charge")
+	wt2307Str := r.FormValue("wt_2307")
+	remarks := r.FormValue("remarks")
 
 	itemID, errItem := strconv.Atoi(itemIDStr)
 	qty, errQty := strconv.ParseFloat(qtyStr, 64)
 	price, errPrice := strconv.ParseFloat(priceStr, 64)
 	cost, errCost := strconv.ParseFloat(costStr, 64)
+	patong, _ := strconv.ParseFloat(patongStr, 64)
+	posCharge, _ := strconv.ParseFloat(posChargeStr, 64)
+	wt2307, _ := strconv.ParseFloat(wt2307Str, 64)
 
 	parsedDate, dateErr := time.Parse("2006-01-02", docDateStr)
 	if dateErr != nil || errItem != nil || errQty != nil || errPrice != nil || errCost != nil {
@@ -373,7 +405,7 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	salesDetail, err := domain.NewSalesDetail(id, docType, "POSTED", parsedDate, docNumber, customerName, supplier, itemID, qty, uom, price, cost, "")
+	salesDetail, err := domain.NewSalesDetail(id, docType, "POSTED", parsedDate, docNumber, customerName, supplier, itemID, qty, uom, price, cost, patong, posCharge, wt2307, remarks, "")
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "` + err.Error() + `"}}`)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -382,9 +414,9 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.DB.Exec(`
 		UPDATE sales_details 
-		SET doc_type = ?, doc_date = ?, doc_number = ?, customer_name = ?, supplier = ?, item_id = ?, qty = ?, uom = ?, price = ?, total_sales = ?, cost = ?, total_cost = ?, profit = ?
+		SET doc_type = ?, doc_date = ?, doc_number = ?, customer_name = ?, supplier = ?, item_id = ?, qty = ?, uom = ?, price = ?, total_sales = ?, cost = ?, total_cost = ?, patong = ?, pos_charge = ?, wt_2307 = ?, total_remit = ?, profit = ?, profit_margin = ?, remarks = ?
 		WHERE id = ?
-	`, salesDetail.DocType, salesDetail.DocDate, salesDetail.DocNumber, salesDetail.CustomerName, salesDetail.Supplier, salesDetail.ItemID, salesDetail.Qty, salesDetail.UOM, salesDetail.Price, salesDetail.TotalSales, salesDetail.Cost, salesDetail.TotalCost, salesDetail.Profit, id)
+	`, salesDetail.DocType, salesDetail.DocDate, salesDetail.DocNumber, salesDetail.CustomerName, salesDetail.Supplier, salesDetail.ItemID, salesDetail.Qty, salesDetail.UOM, salesDetail.Price, salesDetail.TotalSales, salesDetail.Cost, salesDetail.TotalCost, salesDetail.Patong, salesDetail.POSCharge, salesDetail.WT2307, salesDetail.TotalRemit, salesDetail.Profit, salesDetail.ProfitMargin, salesDetail.Remarks, id)
 
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update sale log."}}`)
@@ -395,7 +427,8 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 	var updatedSale models.SalesDetailWithItem
 	err = db.DB.Get(&updatedSale, `
 		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
-		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost, s.profit,
+		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost,
+		       s.patong, s.pos_charge, s.wt_2307, s.total_remit, s.profit, s.profit_margin, s.remarks,
 		       i.code as item_code, i.description as item_description
 		FROM sales_details s
 		JOIN items i ON s.item_id = i.id

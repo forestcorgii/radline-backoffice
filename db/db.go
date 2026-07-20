@@ -95,13 +95,27 @@ func InitDB(datasource string) error {
 		}
 	}
 
-	// Safe migration: add ref_pl column to sales_details if it doesn't exist
+	// Safe migration: add ref_pl, patong, pos_charge, wt_2307, total_remit, profit_margin, remarks columns to sales_details if they don't exist
 	_, err = DB.Exec("SELECT ref_pl FROM sales_details LIMIT 0")
 	if err != nil {
 		var rowCount int
 		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM sales_details")
 		if errCount == nil {
 			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN ref_pl TEXT;")
+		}
+	}
+
+	_, err = DB.Exec("SELECT patong FROM sales_details LIMIT 0")
+	if err != nil {
+		var rowCount int
+		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM sales_details")
+		if errCount == nil {
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN patong REAL NOT NULL DEFAULT 0.0;")
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN pos_charge REAL NOT NULL DEFAULT 0.0;")
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN wt_2307 REAL NOT NULL DEFAULT 0.0;")
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN total_remit REAL NOT NULL DEFAULT 0.0;")
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN profit_margin REAL NOT NULL DEFAULT 0.0;")
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN remarks TEXT NOT NULL DEFAULT '';")
 		}
 	}
 
@@ -184,7 +198,13 @@ func createSchema() {
 		total_sales REAL NOT NULL,
 		cost REAL NOT NULL,
 		total_cost REAL NOT NULL,
+		patong REAL NOT NULL DEFAULT 0.0,
+		pos_charge REAL NOT NULL DEFAULT 0.0,
+		wt_2307 REAL NOT NULL DEFAULT 0.0,
+		total_remit REAL NOT NULL DEFAULT 0.0,
 		profit REAL NOT NULL,
+		profit_margin REAL NOT NULL DEFAULT 0.0,
+		remarks TEXT NOT NULL DEFAULT '',
 		ref_pl TEXT,
 		FOREIGN KEY(item_id) REFERENCES items(id)
 	);

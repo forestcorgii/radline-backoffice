@@ -1409,20 +1409,22 @@ td:focus-within {
 }
 
 /* Sales Column Proportions */
-.sales-grid-header > div:nth-child(1),
-.sales-grid-row > .item-grid-cell:nth-child(1) { flex: 2.5 1 0px; min-width: 180px; }
-.sales-grid-header > div:nth-child(2),
-.sales-grid-row > .item-grid-cell:nth-child(2) { flex: 1 1 0px; min-width: 80px; }
-.sales-grid-header > div:nth-child(3),
-.sales-grid-row > .item-grid-cell:nth-child(3) { flex: 1 1 0px; min-width: 90px; }
-.sales-grid-header > div:nth-child(4),
-.sales-grid-row > .item-grid-cell:nth-child(4) { flex: 0.8 1 0px; min-width: 70px; }
-.sales-grid-header > div:nth-child(5),
-.sales-grid-row > .item-grid-cell:nth-child(5) { flex: 1.2 1 0px; min-width: 100px; }
-.sales-grid-header > div:nth-child(6),
-.sales-grid-row > .item-grid-cell:nth-child(6) { flex: 1.2 1 0px; min-width: 100px; }
-.sales-grid-header > div:nth-child(7),
-.sales-grid-row > .item-grid-cell:nth-child(7) { flex: 0 0 45px; width: 45px; min-width: 45px; }
+.sales-grid-header > div:nth-child(1), .sales-grid-row > .item-grid-cell:nth-child(1) { flex: 2.5 1 0px; min-width: 170px; }
+.sales-grid-header > div:nth-child(2), .sales-grid-row > .item-grid-cell:nth-child(2) { flex: 1 1 0px; min-width: 80px; }
+.sales-grid-header > div:nth-child(3), .sales-grid-row > .item-grid-cell:nth-child(3) { flex: 0.9 1 0px; min-width: 80px; }
+.sales-grid-header > div:nth-child(4), .sales-grid-row > .item-grid-cell:nth-child(4) { flex: 0.8 1 0px; min-width: 65px; }
+.sales-grid-header > div:nth-child(5), .sales-grid-row > .item-grid-cell:nth-child(5) { flex: 1 1 0px; min-width: 85px; }
+.sales-grid-header > div:nth-child(6), .sales-grid-row > .item-grid-cell:nth-child(6) { flex: 1.1 1 0px; min-width: 90px; }
+.sales-grid-header > div:nth-child(7), .sales-grid-row > .item-grid-cell:nth-child(7) { flex: 1 1 0px; min-width: 85px; }
+.sales-grid-header > div:nth-child(8), .sales-grid-row > .item-grid-cell:nth-child(8) { flex: 1.1 1 0px; min-width: 90px; }
+.sales-grid-header > div:nth-child(9), .sales-grid-row > .item-grid-cell:nth-child(9) { flex: 0.9 1 0px; min-width: 75px; }
+.sales-grid-header > div:nth-child(10), .sales-grid-row > .item-grid-cell:nth-child(10) { flex: 0.9 1 0px; min-width: 80px; }
+.sales-grid-header > div:nth-child(11), .sales-grid-row > .item-grid-cell:nth-child(11) { flex: 0.9 1 0px; min-width: 80px; }
+.sales-grid-header > div:nth-child(12), .sales-grid-row > .item-grid-cell:nth-child(12) { flex: 1.1 1 0px; min-width: 90px; }
+.sales-grid-header > div:nth-child(13), .sales-grid-row > .item-grid-cell:nth-child(13) { flex: 1 1 0px; min-width: 85px; }
+.sales-grid-header > div:nth-child(14), .sales-grid-row > .item-grid-cell:nth-child(14) { flex: 1 1 0px; min-width: 80px; }
+.sales-grid-header > div:nth-child(15), .sales-grid-row > .item-grid-cell:nth-child(15) { flex: 1.5 1 0px; min-width: 110px; }
+.sales-grid-header > div:nth-child(16), .sales-grid-row > .item-grid-cell:nth-child(16) { flex: 0 0 45px; width: 45px; min-width: 45px; }
 
 /* Receiving Column Proportions */
 .receiving-grid-header > div:nth-child(1),
