@@ -70,7 +70,7 @@
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#items-loading-indicator">
         <div class="search-filter-bar">
-            <div class="flex-grow">
+            <div class="flex-grow" data-filter="search">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search item description, or model..." hx-get="/items"
@@ -78,7 +78,7 @@
                     hx-indicator="#items-loading-indicator"
                     class="form-input">
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="brand_id_filter">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Brand
                     Filter</label>
@@ -90,7 +90,7 @@
                     {{ end }}
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="category_id_filter">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Category
                     Filter</label>
@@ -102,7 +102,7 @@
                     {{ end }}
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="sort">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
@@ -114,7 +114,7 @@
                     <option value="description_desc">Description (Z-A)</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="limit">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
@@ -126,6 +126,75 @@
                     <option value="200">Top 200</option>
                     <option value="500">Top 500</option>
                 </select>
+            </div>
+            <!-- Customize View Button Popover -->
+            <div class="filter-item" style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
+                <div class="customize-view-container">
+                    <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
+                        style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; justify-content: center; height: 38px;"
+                        title="Customize Visible Columns and Filters">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                    </button>
+
+                    <div id="customize-items-view-popover" class="customize-view-popover">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                            <span style="font-weight: 600; font-size: 0.875rem;">Masterlist View</span>
+                            <button type="button" onclick="resetItemsViewSettings()"
+                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                        </div>
+
+                        <div class="customize-section-title">Table Columns</div>
+                        <div class="customize-checkbox-grid">
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="description" onchange="onItemsViewSettingChange()">
+                                <span>Description</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="model" onchange="onItemsViewSettingChange()">
+                                <span>Model</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="brand" onchange="onItemsViewSettingChange()">
+                                <span>Brand</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="category" onchange="onItemsViewSettingChange()">
+                                <span>Category</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="default_uom" onchange="onItemsViewSettingChange()">
+                                <span>Default UOM</span>
+                            </label>
+                        </div>
+
+                        <div class="customize-section-title">Visible Filters</div>
+                        <div class="customize-checkbox-grid">
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="search" onchange="onItemsViewSettingChange()">
+                                <span>Search Bar</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="brand_id_filter" onchange="onItemsViewSettingChange()">
+                                <span>Brand Filter</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="category_id_filter" onchange="onItemsViewSettingChange()">
+                                <span>Category Filter</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="sort" onchange="onItemsViewSettingChange()">
+                                <span>Sort By</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="limit" onchange="onItemsViewSettingChange()">
+                                <span>Show Rows (Limit)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -139,12 +208,12 @@
                 <table class="table-scroll-md">
                     <thead>
                         <tr>
-                            <th>Description</th>
-                            <th>Model</th>
-                            <th>Brand</th>
-                            <th>Category</th>
-                            <th>Default UOM</th>
-                            <th>Actions</th>
+                            <th data-col="description">Description</th>
+                            <th data-col="model">Model</th>
+                            <th data-col="brand">Brand</th>
+                            <th data-col="category">Category</th>
+                            <th data-col="default_uom">Default UOM</th>
+                            <th data-col="actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="items-tbody">
@@ -157,6 +226,115 @@
 </div>
 
 <script>
+    (function () {
+        const DEFAULT_ITEMS_VIEW_CONFIG = {
+            columns: {
+                description: true,
+                model: true,
+                brand: true,
+                category: true,
+                default_uom: true,
+                actions: true
+            },
+            filters: {
+                search: true,
+                brand_id_filter: true,
+                category_id_filter: true,
+                sort: true,
+                limit: true
+            }
+        };
+
+        function getItemsViewConfig() {
+            try {
+                const stored = localStorage.getItem('radline_items_view_config');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    return {
+                        columns: Object.assign({}, DEFAULT_ITEMS_VIEW_CONFIG.columns, parsed.columns || {}),
+                        filters: Object.assign({}, DEFAULT_ITEMS_VIEW_CONFIG.filters, parsed.filters || {})
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to parse items view config', e);
+            }
+            return DEFAULT_ITEMS_VIEW_CONFIG;
+        }
+
+        function saveItemsViewConfig(config) {
+            localStorage.setItem('radline_items_view_config', JSON.stringify(config));
+        }
+
+        window.applyItemsViewSettings = function () {
+            const config = getItemsViewConfig();
+
+            document.querySelectorAll('#customize-items-view-popover [data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                cb.checked = !!config.columns[colKey];
+            });
+            document.querySelectorAll('#customize-items-view-popover [data-target-filter]').forEach(cb => {
+                const filterKey = cb.getAttribute('data-target-filter');
+                cb.checked = !!config.filters[filterKey];
+            });
+
+            Object.keys(config.columns).forEach(colKey => {
+                const isVisible = config.columns[colKey];
+                const elements = document.querySelectorAll(`[data-col="${colKey}"]`);
+                elements.forEach(el => {
+                    el.style.display = isVisible ? '' : 'none';
+                });
+            });
+
+            Object.keys(config.filters).forEach(filterKey => {
+                const isVisible = config.filters[filterKey];
+                const elements = document.querySelectorAll(`[data-filter="${filterKey}"]`);
+                elements.forEach(el => {
+                    el.style.display = isVisible ? '' : 'none';
+                });
+            });
+        };
+
+        window.onItemsViewSettingChange = function () {
+            const config = { columns: {}, filters: {} };
+            document.querySelectorAll('#customize-items-view-popover [data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                config.columns[colKey] = cb.checked;
+            });
+            config.columns.actions = true;
+
+            document.querySelectorAll('#customize-items-view-popover [data-target-filter]').forEach(cb => {
+                const filterKey = cb.getAttribute('data-target-filter');
+                config.filters[filterKey] = cb.checked;
+            });
+
+            saveItemsViewConfig(config);
+            window.applyItemsViewSettings();
+        };
+
+        window.resetItemsViewSettings = function () {
+            saveItemsViewConfig(DEFAULT_ITEMS_VIEW_CONFIG);
+            window.applyItemsViewSettings();
+        };
+
+        window.toggleCustomizeItemsViewPopover = function (event) {
+            event.stopPropagation();
+            const popover = document.getElementById('customize-items-view-popover');
+            if (popover) {
+                popover.classList.toggle('show');
+            }
+        };
+
+        document.addEventListener('click', function (event) {
+            const container = document.querySelector('#items-card .customize-view-container');
+            const popover = document.getElementById('customize-items-view-popover');
+            if (container && popover && !container.contains(event.target)) {
+                popover.classList.remove('show');
+            }
+        });
+
+        window.applyItemsViewSettings();
+    })();
+
     function toggleAddItemForm() {
         const card = document.getElementById('add-item-card');
         if (!card) return;
@@ -167,6 +345,12 @@
             card.style.display = 'none';
         }
     }
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applyItemsViewSettings === 'function') {
+            window.applyItemsViewSettings();
+        }
+    });
 
     document.body.addEventListener('item-added', function () {
         const searchInput = document.querySelector('input[name="search"]');

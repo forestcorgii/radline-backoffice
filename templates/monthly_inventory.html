@@ -12,7 +12,7 @@
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#monthly-loading-indicator">
         <div class="search-filter-bar">
-            <div class="flex-grow">
+            <div class="flex-grow" data-filter="search">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search
                     Items</label>
@@ -20,7 +20,7 @@
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#monthly-inventory-results"
                     hx-include="closest form" hx-indicator="#monthly-loading-indicator" class="form-input">
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="month_filter">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Month
                     Filter</label>
@@ -33,7 +33,7 @@
                     {{ end }}
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="limit">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
@@ -47,6 +47,75 @@
                     <option value="500">Top 500</option>
                 </select>
             </div>
+            <!-- Customize View Button Popover -->
+            <div class="filter-item" style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
+                <div class="customize-view-container">
+                    <button type="button" class="btn btn-secondary" onclick="toggleCustomizeMonthlyViewPopover(event)"
+                        style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; justify-content: center; height: 38px;"
+                        title="Customize Visible Columns and Filters">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                    </button>
+
+                    <div id="customize-monthly-view-popover" class="customize-view-popover">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                            <span style="font-weight: 600; font-size: 0.875rem;">Monthly Inventory View</span>
+                            <button type="button" onclick="resetMonthlyViewSettings()"
+                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                        </div>
+
+                        <div class="customize-section-title">Table Columns</div>
+                        <div class="customize-checkbox-grid">
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="month" onchange="onMonthlyViewSettingChange()">
+                                <span>Month</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="description" onchange="onMonthlyViewSettingChange()">
+                                <span>Description</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="uom" onchange="onMonthlyViewSettingChange()">
+                                <span>UOM</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="received" onchange="onMonthlyViewSettingChange()">
+                                <span>Received</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="sold" onchange="onMonthlyViewSettingChange()">
+                                <span>Sold</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="adjusted" onchange="onMonthlyViewSettingChange()">
+                                <span>Adjusted</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="net_change" onchange="onMonthlyViewSettingChange()">
+                                <span>Net Change</span>
+                            </label>
+                        </div>
+
+                        <div class="customize-section-title">Visible Filters</div>
+                        <div class="customize-checkbox-grid">
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="search" onchange="onMonthlyViewSettingChange()">
+                                <span>Search Bar</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="month_filter" onchange="onMonthlyViewSettingChange()">
+                                <span>Month Filter</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="limit" onchange="onMonthlyViewSettingChange()">
+                                <span>Show Rows (Limit)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="monthly-loading-indicator" class="htmx-indicator">
@@ -59,13 +128,13 @@
                 <table class="table-scroll-md">
                     <thead>
                         <tr>
-                            <th style="width: 15%;">Month</th>
-                            <th style="width: 40%;">Description</th>
-                            <th style="width: 10%;">UOM</th>
-                            <th style="width: 11%;">Received</th>
-                            <th style="width: 11%;">Sold</th>
-                            <th style="width: 11%;">Adjusted</th>
-                            <th style="width: 12%;">Net Change</th>
+                            <th data-col="month" style="width: 15%;">Month</th>
+                            <th data-col="description" style="width: 40%;">Description</th>
+                            <th data-col="uom" style="width: 10%;">UOM</th>
+                            <th data-col="received" style="width: 11%;">Received</th>
+                            <th data-col="sold" style="width: 11%;">Sold</th>
+                            <th data-col="adjusted" style="width: 11%;">Adjusted</th>
+                            <th data-col="net_change" style="width: 12%;">Net Change</th>
                         </tr>
                     </thead>
                     <tbody id="monthly-inventory-tbody">
@@ -76,4 +145,119 @@
         </div>
     </form>
 </div>
+
+<script>
+    (function () {
+        const DEFAULT_MONTHLY_VIEW_CONFIG = {
+            columns: {
+                month: true,
+                description: true,
+                uom: true,
+                received: true,
+                sold: true,
+                adjusted: true,
+                net_change: true
+            },
+            filters: {
+                search: true,
+                month_filter: true,
+                limit: true
+            }
+        };
+
+        function getMonthlyViewConfig() {
+            try {
+                const stored = localStorage.getItem('radline_monthly_inventory_view_config');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    return {
+                        columns: Object.assign({}, DEFAULT_MONTHLY_VIEW_CONFIG.columns, parsed.columns || {}),
+                        filters: Object.assign({}, DEFAULT_MONTHLY_VIEW_CONFIG.filters, parsed.filters || {})
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to parse monthly inventory view config', e);
+            }
+            return DEFAULT_MONTHLY_VIEW_CONFIG;
+        }
+
+        function saveMonthlyViewConfig(config) {
+            localStorage.setItem('radline_monthly_inventory_view_config', JSON.stringify(config));
+        }
+
+        window.applyMonthlyViewSettings = function () {
+            const config = getMonthlyViewConfig();
+
+            document.querySelectorAll('#customize-monthly-view-popover [data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                cb.checked = !!config.columns[colKey];
+            });
+            document.querySelectorAll('#customize-monthly-view-popover [data-target-filter]').forEach(cb => {
+                const filterKey = cb.getAttribute('data-target-filter');
+                cb.checked = !!config.filters[filterKey];
+            });
+
+            Object.keys(config.columns).forEach(colKey => {
+                const isVisible = config.columns[colKey];
+                const elements = document.querySelectorAll(`[data-col="${colKey}"]`);
+                elements.forEach(el => {
+                    el.style.display = isVisible ? '' : 'none';
+                });
+            });
+
+            Object.keys(config.filters).forEach(filterKey => {
+                const isVisible = config.filters[filterKey];
+                const elements = document.querySelectorAll(`[data-filter="${filterKey}"]`);
+                elements.forEach(el => {
+                    el.style.display = isVisible ? '' : 'none';
+                });
+            });
+        };
+
+        window.onMonthlyViewSettingChange = function () {
+            const config = { columns: {}, filters: {} };
+            document.querySelectorAll('#customize-monthly-view-popover [data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                config.columns[colKey] = cb.checked;
+            });
+
+            document.querySelectorAll('#customize-monthly-view-popover [data-target-filter]').forEach(cb => {
+                const filterKey = cb.getAttribute('data-target-filter');
+                config.filters[filterKey] = cb.checked;
+            });
+
+            saveMonthlyViewConfig(config);
+            window.applyMonthlyViewSettings();
+        };
+
+        window.resetMonthlyViewSettings = function () {
+            saveMonthlyViewConfig(DEFAULT_MONTHLY_VIEW_CONFIG);
+            window.applyMonthlyViewSettings();
+        };
+
+        window.toggleCustomizeMonthlyViewPopover = function (event) {
+            event.stopPropagation();
+            const popover = document.getElementById('customize-monthly-view-popover');
+            if (popover) {
+                popover.classList.toggle('show');
+            }
+        };
+
+        document.addEventListener('click', function (event) {
+            const container = document.querySelector('#monthly-inventory-results')?.closest('.card')?.querySelector('.customize-view-container');
+            const popover = document.getElementById('customize-monthly-view-popover');
+            if (container && popover && !container.contains(event.target)) {
+                popover.classList.remove('show');
+            }
+        });
+
+        window.applyMonthlyViewSettings();
+    })();
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applyMonthlyViewSettings === 'function') {
+            window.applyMonthlyViewSettings();
+        }
+    });
+</script>
 {{ end }}
