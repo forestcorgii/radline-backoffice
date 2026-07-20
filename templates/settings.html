@@ -717,24 +717,81 @@
     }
 
     // --- Searchable Dropdown Functions (for inline UOM form) ---
+    function updateDropdownPosition(input) {
+        const container = input.closest('.searchable-dropdown');
+        if (!container) return;
+        const list = container.querySelector('.dropdown-list');
+        if (!list || list.style.display === 'none') return;
+
+        const rect = input.getBoundingClientRect();
+        list.style.position = 'fixed';
+        list.style.top = (rect.bottom + 4) + 'px';
+        list.style.bottom = 'auto';
+        list.style.left = rect.left + 'px';
+        list.style.width = Math.max(rect.width, 220) + 'px';
+        list.style.zIndex = '999999';
+    }
+
     function showDropdown(input) {
         const dd = input.closest('.searchable-dropdown');
-        if (dd) dd.querySelector('.dropdown-list').style.display = 'block';
+        if (dd) {
+            dd.classList.add('active');
+            const card = input.closest('.card');
+            if (card) card.classList.add('has-dropdown');
+            const form = input.closest('form');
+            if (form) form.classList.add('has-dropdown');
+            const tableContainer = input.closest('.table-container');
+            if (tableContainer) tableContainer.classList.add('has-dropdown');
+            const row = input.closest('tr');
+            if (row) {
+                document.querySelectorAll('tr.active-dropdown-row').forEach(r => r.classList.remove('active-dropdown-row'));
+                row.classList.add('active-dropdown-row');
+            }
+            const cell = input.closest('td');
+            if (cell) {
+                document.querySelectorAll('td.active-dropdown-cell').forEach(c => c.classList.remove('active-dropdown-cell'));
+                cell.classList.add('active-dropdown-cell');
+            }
+            const list = dd.querySelector('.dropdown-list');
+            if (list) {
+                list.style.display = 'block';
+                updateDropdownPosition(input);
+            }
+        }
     }
 
     function hideDropdown(input) {
         const dd = input.closest('.searchable-dropdown');
-        if (dd) setTimeout(() => { dd.querySelector('.dropdown-list').style.display = 'none'; }, 200);
+        if (dd) setTimeout(() => {
+            dd.classList.remove('active');
+            const card = input.closest('.card');
+            if (card) card.classList.remove('has-dropdown');
+            const form = input.closest('form');
+            if (form) form.classList.remove('has-dropdown');
+            const tableContainer = input.closest('.table-container');
+            if (tableContainer) tableContainer.classList.remove('has-dropdown');
+            const row = input.closest('tr');
+            if (row) row.classList.remove('active-dropdown-row');
+            const cell = input.closest('td');
+            if (cell) cell.classList.remove('active-dropdown-cell');
+            dd.querySelector('.dropdown-list').style.display = 'none';
+        }, 200);
     }
 
     function filterDropdown(input) {
         const dd = input.closest('.searchable-dropdown');
         if (!dd) return;
         const items = dd.querySelectorAll('.dropdown-item');
-        const val = input.value.toLowerCase();
+        const val = input.value.trim().toLowerCase();
+        let visibleCount = 0;
         items.forEach(item => {
             const desc = (item.getAttribute('data-description') || '').toLowerCase();
-            item.style.display = desc.includes(val) ? 'block' : 'none';
+            if (visibleCount < 50 && (val === '' || desc.includes(val))) {
+                item.style.display = 'block';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
         });
         dd.querySelector('.dropdown-list').style.display = 'block';
     }
@@ -743,8 +800,14 @@
         if (e.key === 'Enter') {
             const dd = input.closest('.searchable-dropdown');
             if (!dd) return;
+            const list = dd.querySelector('.dropdown-list');
+            if (!list || list.style.display === 'none') return;
             const visible = dd.querySelectorAll('.dropdown-item:not([style*="display: none"])');
-            if (visible.length > 0) selectDropdownItem(visible[0]);
+            if (visible.length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                selectDropdownItem(visible[0]);
+            }
         }
     }
 

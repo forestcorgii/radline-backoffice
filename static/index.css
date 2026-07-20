@@ -415,6 +415,16 @@ input:focus {
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
 	margin-top: 1rem;
+	position: relative;
+	z-index: 1;
+}
+
+.table-container:has(.searchable-dropdown),
+.table-container:has(.has-dropdown),
+.table-container.has-dropdown {
+	overflow: visible !important;
+	position: relative;
+	z-index: 9000 !important;
 }
 
 .table-container::-webkit-scrollbar {
@@ -1166,6 +1176,51 @@ tr:hover td {
 	width: 100%;
 }
 
+.card:has(.searchable-dropdown:focus-within),
+.card:has(.has-dropdown),
+.card.has-dropdown {
+	position: relative;
+	z-index: 9000 !important;
+}
+
+form:has(.searchable-dropdown:focus-within),
+form:has(.has-dropdown),
+form.has-dropdown {
+	position: relative;
+	z-index: 9000 !important;
+}
+
+.table-container:has(.searchable-dropdown),
+.table-container:has(.has-dropdown),
+.table-container.has-dropdown {
+	overflow: visible !important;
+	position: relative;
+	z-index: 9000 !important;
+}
+
+table:has(.searchable-dropdown:focus-within),
+table:has(.has-dropdown),
+table.has-dropdown {
+	position: relative;
+	z-index: 9000 !important;
+}
+
+tr.active-dropdown-row,
+td.active-dropdown-cell,
+tr:has(.searchable-dropdown:focus-within),
+td:has(.searchable-dropdown:focus-within),
+tr:focus-within,
+td:focus-within {
+	position: relative;
+	z-index: 9500 !important;
+}
+
+.searchable-dropdown:focus-within,
+.searchable-dropdown.active {
+	position: relative;
+	z-index: 9999 !important;
+}
+
 .dropdown-list {
 	display: none;
 	position: absolute;
@@ -1175,10 +1230,10 @@ tr:hover td {
 	background: var(--surface-color);
 	border: 1px solid var(--border-color);
 	border-radius: 6px;
-	max-height: 200px;
+	max-height: 220px;
 	overflow-y: auto;
-	z-index: 1000;
-	box-shadow: var(--shadow);
+	z-index: 999999 !important;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
 	margin-top: 4px;
 }
 
@@ -1268,4 +1323,158 @@ tr:hover td {
 	width: 15px;
 	height: 15px;
 	cursor: pointer;
+}
+
+/* CSS Item Entry Form Styles (Universal Flexbox Layout — Edge & Chrome 100% Compatible) */
+.item-grid-container {
+	width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.item-grid-table {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	min-width: 850px;
+	gap: 0.35rem;
+	box-sizing: border-box;
+}
+
+#sales-items-tbody,
+#receiving-items-tbody,
+#adjustment-items-tbody {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	gap: 0.35rem;
+	box-sizing: border-box;
+}
+
+.item-grid-header {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	gap: 0.75rem;
+	align-items: center;
+	padding: 0.6rem 0.75rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+	border-bottom: 1px solid var(--border-color);
+	background-color: rgba(0, 0, 0, 0.02);
+	border-radius: 6px 6px 0 0;
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.item-grid-header > div {
+	min-width: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.item-grid-row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	gap: 0.75rem;
+	align-items: center;
+	padding: 0.4rem 0.75rem;
+	background: var(--surface-color);
+	border-bottom: 1px dashed var(--border-color);
+	position: relative;
+	overflow: visible;
+	border-radius: 4px;
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.item-grid-row:focus-within {
+	z-index: 9999;
+}
+
+.item-grid-cell {
+	position: relative;
+	overflow: visible;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
+/* Sales Column Proportions */
+.sales-grid-header > div:nth-child(1),
+.sales-grid-row > .item-grid-cell:nth-child(1) { flex: 2.5 1 0px; min-width: 180px; }
+.sales-grid-header > div:nth-child(2),
+.sales-grid-row > .item-grid-cell:nth-child(2) { flex: 1 1 0px; min-width: 80px; }
+.sales-grid-header > div:nth-child(3),
+.sales-grid-row > .item-grid-cell:nth-child(3) { flex: 1 1 0px; min-width: 90px; }
+.sales-grid-header > div:nth-child(4),
+.sales-grid-row > .item-grid-cell:nth-child(4) { flex: 0.8 1 0px; min-width: 70px; }
+.sales-grid-header > div:nth-child(5),
+.sales-grid-row > .item-grid-cell:nth-child(5) { flex: 1.2 1 0px; min-width: 100px; }
+.sales-grid-header > div:nth-child(6),
+.sales-grid-row > .item-grid-cell:nth-child(6) { flex: 1.2 1 0px; min-width: 100px; }
+.sales-grid-header > div:nth-child(7),
+.sales-grid-row > .item-grid-cell:nth-child(7) { flex: 0 0 45px; width: 45px; min-width: 45px; }
+
+/* Receiving Column Proportions */
+.receiving-grid-header > div:nth-child(1),
+.receiving-grid-row > .item-grid-cell:nth-child(1) { flex: 2.5 1 0px; min-width: 180px; }
+.receiving-grid-header > div:nth-child(2),
+.receiving-grid-row > .item-grid-cell:nth-child(2) { flex: 1 1 0px; min-width: 80px; }
+.receiving-grid-header > div:nth-child(3),
+.receiving-grid-row > .item-grid-cell:nth-child(3) { flex: 0.8 1 0px; min-width: 70px; }
+.receiving-grid-header > div:nth-child(4),
+.receiving-grid-row > .item-grid-cell:nth-child(4) { flex: 1 1 0px; min-width: 90px; }
+.receiving-grid-header > div:nth-child(5),
+.receiving-grid-row > .item-grid-cell:nth-child(5) { flex: 0.8 1 0px; min-width: 65px; }
+.receiving-grid-header > div:nth-child(6),
+.receiving-grid-row > .item-grid-cell:nth-child(6) { flex: 0.8 1 0px; min-width: 65px; }
+.receiving-grid-header > div:nth-child(7),
+.receiving-grid-row > .item-grid-cell:nth-child(7) { flex: 0.8 1 0px; min-width: 65px; }
+.receiving-grid-header > div:nth-child(8),
+.receiving-grid-row > .item-grid-cell:nth-child(8) { flex: 1.5 1 0px; min-width: 110px; }
+.receiving-grid-header > div:nth-child(9),
+.receiving-grid-row > .item-grid-cell:nth-child(9) { flex: 0 0 45px; width: 45px; min-width: 45px; }
+
+/* Adjustment Column Proportions */
+.adjustment-grid-header > div:nth-child(1),
+.adjustment-grid-row > .item-grid-cell:nth-child(1) { flex: 3 1 0px; min-width: 200px; }
+.adjustment-grid-header > div:nth-child(2),
+.adjustment-grid-row > .item-grid-cell:nth-child(2) { flex: 1 1 0px; min-width: 90px; }
+.adjustment-grid-header > div:nth-child(3),
+.adjustment-grid-row > .item-grid-cell:nth-child(3) { flex: 1.2 1 0px; min-width: 100px; }
+.adjustment-grid-header > div:nth-child(4),
+.adjustment-grid-row > .item-grid-cell:nth-child(4) { flex: 1.2 1 0px; min-width: 100px; }
+.adjustment-grid-header > div:nth-child(5),
+.adjustment-grid-row > .item-grid-cell:nth-child(5) { flex: 0 0 45px; width: 45px; min-width: 45px; }
+
+.item-grid-cell .searchable-dropdown {
+	width: 100%;
+	position: relative;
+	box-sizing: border-box;
+}
+
+.item-grid-cell .form-input,
+.item-grid-cell select.form-input,
+.item-grid-cell input {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+.item-grid-cell .actions-cell {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
 }

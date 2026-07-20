@@ -35,25 +35,23 @@
             <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Items</h3>
         </div>
 
-        <div class="table-container">
-            <table class="table-scroll-md">
-                <thead>
-                    <tr>
-                        <th style="width: 25%;">Item</th>
-                        <th style="width: 10%;">UOM</th>
-                        <th style="width: 8%;">Qty</th>
-                        <th style="width: 12%;">Unit Price</th>
-                        <th style="width: 8%;">Less 1 (%)</th>
-                        <th style="width: 8%;">Less 2 (%)</th>
-                        <th style="width: 8%;">Markup (%)</th>
-                        <th style="width: 13%;">Remarks</th>
-                        <th style="width: 8%;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="receiving-items-tbody">
+        <div class="item-grid-container">
+            <div class="item-grid-table">
+                <div class="item-grid-header receiving-grid-header">
+                    <div>Item</div>
+                    <div>UOM</div>
+                    <div>Qty</div>
+                    <div>Unit Price</div>
+                    <div>Less 1 (%)</div>
+                    <div>Less 2 (%)</div>
+                    <div>Markup (%)</div>
+                    <div>Remarks</div>
+                    <div>Actions</div>
+                </div>
+                <div id="receiving-items-tbody">
                     {{ template "receiving_item_row.html" .ReceivingRowData }}
-                </tbody>
-            </table>
+                </div>
+            </div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;" class="mt-4">

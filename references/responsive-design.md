@@ -100,6 +100,13 @@ At `≤ 480px`:
 - **Table Container Overflow**: Set `.table-container` to `overflow-x: auto; -webkit-overflow-scrolling: touch;` to enable horizontal scrolling when tables exceed container width, matching mobile-responsive standards.
 - **Prevent Cell Wrap**: Add `white-space: nowrap;` to the global `th` and `td` stylesheet definitions. This forces columns to expand dynamically to fit their content perfectly without line breaks.
 
+### Context: Card, Form, and Table Stacking Context for Searchable Dropdowns
+**Problem**: Cards with `backdrop-filter: blur()` create root WebKit/Blink stacking contexts that clip child absolute elements. In forms across Sales, Receive Stock, and Stock Adjustments, form action buttons and card footers rendered after `.table-container` in DOM order were painted on top of `.dropdown-list`.
+**Enforced Solution**:
+- **Fixed Viewport Popover Positioning (`updateDropdownPosition`)**: Set `.dropdown-list` to `position: fixed` dynamically calculated via `input.getBoundingClientRect()`. This completely breaks out of table containers, scroll boxes, backdrop filters, forms, and cards, floating the dropdown popover on the top-most viewport layer (`z-index: 999999`) above all elements. Auto-flips above the input if space below is constrained.
+- **DOM Rendering Performance Cap**: Limited `filterDropdown()` to display at most 50 matching items at a time (`visibleCount < 50`) to eliminate DOM reflow lag when iterating thousands of items.
+- **Input Text Preservation**: Preserved typed and selected item text in `hideDropdown()` without wiping `input.value` to blank.
+
 ## Related
 - [[ui-design-tokens]] — Full CSS reference
 - [[sidebar-navigation]] — Mobile sidebar behavior

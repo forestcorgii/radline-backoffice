@@ -1,12 +1,13 @@
 {{ define "sale_item_row.html" }}
-<tr>
-    <td>
+<div class="item-grid-row sales-grid-row">
+    <div class="item-grid-cell">
         <div class="searchable-dropdown">
             <input type="text" 
                    class="form-input dropdown-search" 
                    placeholder="Search Item..." 
                    value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
-                   onfocus="showDropdown(this)"
+                   onfocus="showDropdown(this); this.select();"
+                   onclick="showDropdown(this); this.select();"
                    onblur="hideDropdown(this)"
                    oninput="filterDropdown(this)"
                    onkeydown="handleDropdownKeydown(event, this)"
@@ -17,7 +18,7 @@
                    value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
                    hx-get="/sales/item-row-details" 
                    hx-include="this"
-                   hx-target="closest tr" 
+                   hx-target="closest .item-grid-row" 
                    hx-swap="outerHTML" 
                    hx-trigger="change">
             <div class="dropdown-list">
@@ -31,11 +32,11 @@
                 {{ end }}
             </div>
         </div>
-    </td>
-    <td>
+    </div>
+    <div class="item-grid-cell">
         <input type="text" name="ref_pl" class="form-input" value="{{ .PLNo }}" readonly placeholder="N/A" style="background-color: rgba(0,0,0,0.03); color: var(--text-muted); cursor: not-allowed;">
-    </td>
-    <td>
+    </div>
+    <div class="item-grid-cell">
         <select name="uom" class="form-input" required style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;">
             <option value="">-- Select --</option>
             {{ $selectedUOM := .DefaultUOM }}
@@ -43,19 +44,19 @@
             <option value="{{ .Code }}" {{ if eq .Code $selectedUOM }}selected{{ end }}>{{ .Code }}</option>
             {{ end }}
         </select>
-    </td>
-    <td>
+    </div>
+    <div class="item-grid-cell">
         <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required>
-    </td>
-    <td>
+    </div>
+    <div class="item-grid-cell">
         <input type="number" step="any" name="price" class="form-input" value="{{ if .Price }}{{ printf "%.2f" .Price }}{{ end }}" required>
-    </td>
-    <td>
+    </div>
+    <div class="item-grid-cell">
         <input type="number" step="any" name="cost" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" required>
-    </td>
-    <td>
+    </div>
+    <div class="item-grid-cell">
         <div class="actions-cell">
-            <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('tr').remove()" title="Remove">
+            <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.item-grid-row').remove()" title="Remove">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -64,6 +65,7 @@
                 </svg>
             </button>
         </div>
-    </td>
-</tr>
+    </div>
+</div>
 {{ end }}
+
