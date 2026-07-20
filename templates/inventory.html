@@ -131,14 +131,14 @@
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#inventory-loading-indicator">
         <div class="search-filter-bar">
-            <div class="flex-grow">
+            <div class="flex-grow" data-filter="search">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/stock"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#inventory-stock-results"
                     hx-include="closest form" hx-indicator="#inventory-loading-indicator" class="form-input">
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="stock_filter">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Stock
                     Filter</label>
@@ -151,7 +151,7 @@
                     <option value="low_stock">Low Stock (≤ 10)</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item" data-filter="limit">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
@@ -163,6 +163,79 @@
                     <option value="200">Top 200</option>
                     <option value="500">Top 500</option>
                 </select>
+            </div>
+            <!-- Customize View Button Popover -->
+            <div class="filter-item" style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
+                <div class="customize-view-container">
+                    <button type="button" class="btn btn-secondary" onclick="toggleCustomizeInventoryViewPopover(event)"
+                        style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; justify-content: center; height: 38px;"
+                        title="Customize Visible Columns and Filters">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                    </button>
+
+                    <div id="customize-inventory-view-popover" class="customize-view-popover">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                            <span style="font-weight: 600; font-size: 0.875rem;">Inventory View</span>
+                            <button type="button" onclick="resetInventoryViewSettings()"
+                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                        </div>
+
+                        <div class="customize-section-title">Table Columns</div>
+                        <div class="customize-checkbox-grid">
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="description" onchange="onInventoryViewSettingChange()">
+                                <span>Description</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="uom" onchange="onInventoryViewSettingChange()">
+                                <span>UOM</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="received" onchange="onInventoryViewSettingChange()">
+                                <span>Received</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="sold" onchange="onInventoryViewSettingChange()">
+                                <span>Sold</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="adjusted" onchange="onInventoryViewSettingChange()">
+                                <span>Adjusted</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="on_hand" onchange="onInventoryViewSettingChange()">
+                                <span>On Hand</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="current_cost" onchange="onInventoryViewSettingChange()">
+                                <span>Current Cost</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="current_price" onchange="onInventoryViewSettingChange()">
+                                <span>Current Price</span>
+                            </label>
+                        </div>
+
+                        <div class="customize-section-title">Visible Filters</div>
+                        <div class="customize-checkbox-grid">
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="search" onchange="onInventoryViewSettingChange()">
+                                <span>Search Bar</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="stock_filter" onchange="onInventoryViewSettingChange()">
+                                <span>Stock Filter</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="limit" onchange="onInventoryViewSettingChange()">
+                                <span>Show Rows (Limit)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -176,14 +249,14 @@
                 <table class="table-scroll-md">
                     <thead>
                         <tr>
-                            <th style="width: 36%;">Description</th>
-                            <th style="width: 8%;">UOM</th>
-                            <th style="width: 10%;">Received</th>
-                            <th style="width: 8%;">Sold</th>
-                            <th style="width: 10%;">Adjusted</th>
-                            <th style="width: 10%;">On Hand</th>
-                            <th style="width: 9%;">Current Cost</th>
-                            <th style="width: 9%;">Current Price</th>
+                            <th data-col="description" style="width: 36%;">Description</th>
+                            <th data-col="uom" style="width: 8%;">UOM</th>
+                            <th data-col="received" style="width: 10%;">Received</th>
+                            <th data-col="sold" style="width: 8%;">Sold</th>
+                            <th data-col="adjusted" style="width: 10%;">Adjusted</th>
+                            <th data-col="on_hand" style="width: 10%;">On Hand</th>
+                            <th data-col="current_cost" style="width: 9%;">Current Cost</th>
+                            <th data-col="current_price" style="width: 9%;">Current Price</th>
                         </tr>
                     </thead>
                     <tbody id="inventory-stock-tbody">
@@ -196,6 +269,114 @@
 </div>
 
 <script>
+    (function () {
+        const DEFAULT_INVENTORY_VIEW_CONFIG = {
+            columns: {
+                description: true,
+                uom: true,
+                received: true,
+                sold: true,
+                adjusted: true,
+                on_hand: true,
+                current_cost: true,
+                current_price: true
+            },
+            filters: {
+                search: true,
+                stock_filter: true,
+                limit: true
+            }
+        };
+
+        function getInventoryViewConfig() {
+            try {
+                const stored = localStorage.getItem('radline_inventory_view_config');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    return {
+                        columns: Object.assign({}, DEFAULT_INVENTORY_VIEW_CONFIG.columns, parsed.columns || {}),
+                        filters: Object.assign({}, DEFAULT_INVENTORY_VIEW_CONFIG.filters, parsed.filters || {})
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to parse inventory view config', e);
+            }
+            return DEFAULT_INVENTORY_VIEW_CONFIG;
+        }
+
+        function saveInventoryViewConfig(config) {
+            localStorage.setItem('radline_inventory_view_config', JSON.stringify(config));
+        }
+
+        window.applyInventoryViewSettings = function () {
+            const config = getInventoryViewConfig();
+
+            document.querySelectorAll('#customize-inventory-view-popover [data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                cb.checked = !!config.columns[colKey];
+            });
+            document.querySelectorAll('#customize-inventory-view-popover [data-target-filter]').forEach(cb => {
+                const filterKey = cb.getAttribute('data-target-filter');
+                cb.checked = !!config.filters[filterKey];
+            });
+
+            Object.keys(config.columns).forEach(colKey => {
+                const isVisible = config.columns[colKey];
+                const elements = document.querySelectorAll(`[data-col="${colKey}"]`);
+                elements.forEach(el => {
+                    el.style.display = isVisible ? '' : 'none';
+                });
+            });
+
+            Object.keys(config.filters).forEach(filterKey => {
+                const isVisible = config.filters[filterKey];
+                const elements = document.querySelectorAll(`[data-filter="${filterKey}"]`);
+                elements.forEach(el => {
+                    el.style.display = isVisible ? '' : 'none';
+                });
+            });
+        };
+
+        window.onInventoryViewSettingChange = function () {
+            const config = { columns: {}, filters: {} };
+            document.querySelectorAll('#customize-inventory-view-popover [data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                config.columns[colKey] = cb.checked;
+            });
+
+            document.querySelectorAll('#customize-inventory-view-popover [data-target-filter]').forEach(cb => {
+                const filterKey = cb.getAttribute('data-target-filter');
+                config.filters[filterKey] = cb.checked;
+            });
+
+            saveInventoryViewConfig(config);
+            window.applyInventoryViewSettings();
+        };
+
+        window.resetInventoryViewSettings = function () {
+            saveInventoryViewConfig(DEFAULT_INVENTORY_VIEW_CONFIG);
+            window.applyInventoryViewSettings();
+        };
+
+        window.toggleCustomizeInventoryViewPopover = function (event) {
+            event.stopPropagation();
+            const popover = document.getElementById('customize-inventory-view-popover');
+            if (popover) {
+                popover.classList.toggle('show');
+            }
+        };
+
+        document.addEventListener('click', function (event) {
+            const container = document.querySelector('#inventory-stock-results')?.closest('.card')?.querySelector('.customize-view-container');
+            const popover = document.getElementById('customize-inventory-view-popover');
+            if (container && popover && !container.contains(event.target)) {
+                popover.classList.remove('show');
+            }
+        });
+
+        window.applyInventoryViewSettings();
+    })();
+
     function toggleReceiveStockForm() {
         const receiveCard = document.getElementById('receive-stock-card');
         const adjustCard = document.getElementById('adjust-stock-card');
@@ -221,6 +402,12 @@
             adjustCard.style.display = 'none';
         }
     }
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applyInventoryViewSettings === 'function') {
+            window.applyInventoryViewSettings();
+        }
+    });
 
     document.body.addEventListener('stock-received', function () {
         const searchInput = document.querySelector('input[name="search"]');

@@ -1,17 +1,17 @@
 {{ define "inventory_stock_rows.html" }}
 {{ range . }}
 <tr>
-    <td style="font-weight: 600;">{{ .Description }}</td>
-    <td><span class="badge badge-primary">{{ .DefaultUOM }}</span></td>
-    <td class="text-success" style="font-weight: 500;">{{ if gt .TotalReceived 0.0 }}+{{ printf "%.2f" .TotalReceived
+    <td data-col="description" style="font-weight: 600;">{{ .Description }}</td>
+    <td data-col="uom"><span class="badge badge-primary">{{ .DefaultUOM }}</span></td>
+    <td data-col="received" class="text-success" style="font-weight: 500;">{{ if gt .TotalReceived 0.0 }}+{{ printf "%.2f" .TotalReceived
         }}{{ else }}0.00{{ end }}</td>
-    <td class="text-danger" style="font-weight: 500;">{{ if gt .TotalSold 0.0 }}-{{ printf "%.2f" .TotalSold }}{{ else
+    <td data-col="sold" class="text-danger" style="font-weight: 500;">{{ if gt .TotalSold 0.0 }}-{{ printf "%.2f" .TotalSold }}{{ else
         }}0.00{{ end }}</td>
-    <td style="font-weight: 500;"
+    <td data-col="adjusted" style="font-weight: 500;"
         class="{{ if gt .TotalAdjusted 0.0 }}text-success{{ else if lt .TotalAdjusted 0.0 }}text-danger{{ else }}text-muted{{ end }}">
         {{ if gt .TotalAdjusted 0.0 }}+{{ end }}{{ printf "%.2f" .TotalAdjusted }}
     </td>
-    <td>
+    <td data-col="on_hand">
         {{ if gt .OnHand 0.0 }}
         <span class="badge badge-success">{{ printf "%.2f" .OnHand }}</span>
         {{ else if eq .OnHand 0.0 }}
@@ -20,8 +20,8 @@
         <span class="badge badge-danger">{{ printf "%.2f" .OnHand }}</span>
         {{ end }}
     </td>
-    <td style="font-weight: 500;">₱{{ printf "%.2f" .CurrentCost }}</td>
-    <td class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .CurrentPrice }}</td>
+    <td data-col="current_cost" style="font-weight: 500;">₱{{ printf "%.2f" .CurrentCost }}</td>
+    <td data-col="current_price" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .CurrentPrice }}</td>
 </tr>
 {{ else }}
 <tr>

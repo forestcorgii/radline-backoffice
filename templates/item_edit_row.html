@@ -1,15 +1,13 @@
 {{ define "item_edit_row.html" }}
 <tr id="item-row-{{ .Item.ID }}" class="edit-row">
-    <td>
-        <input type="text" name="code" value="{{ .Item.Code }}" required class="form-input" style="font-weight: 500;">
+    <td data-col="description">
+        <input type="hidden" name="code" value="{{ .Item.Code }}">
+        <input type="text" name="description" value="{{ .Item.Description }}" required class="form-input" style="font-weight: 500;">
     </td>
-    <td>
-        <input type="text" name="description" value="{{ .Item.Description }}" required class="form-input">
-    </td>
-    <td>
+    <td data-col="model">
         <input type="text" name="model" value="{{ .Item.Model }}" class="form-input">
     </td>
-    <td>
+    <td data-col="brand">
         <select name="brand_id" class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
             <option value="0">-- No Brand --</option>
             {{ $selectedBrand := derefInt .Item.BrandID }}
@@ -18,7 +16,7 @@
             {{ end }}
         </select>
     </td>
-    <td>
+    <td data-col="category">
         <select name="category_id" class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
             <option value="0">-- No Category --</option>
             {{ $selectedCategory := derefInt .Item.CategoryID }}
@@ -27,7 +25,7 @@
             {{ end }}
         </select>
     </td>
-    <td>
+    <td data-col="default_uom">
         <select name="default_uom" required class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
             {{ $selectedUOM := .Item.DefaultUOM }}
             {{ range .Uoms }}
@@ -35,7 +33,7 @@
             {{ end }}
         </select>
     </td>
-    <td>
+    <td data-col="actions">
         <div class="actions-cell">
             <button class="btn btn-success btn-icon" 
                     hx-post="/items/edit/{{ .Item.ID }}" 
