@@ -114,6 +114,10 @@ func CalculateStockOnHand(db *sqlx.DB, itemID int, supplierName string) (float64
 			s.UOM,
 			s.Price,
 			s.Cost,
+			s.Patong,
+			s.POSCharge,
+			s.WT2307,
+			s.Remarks,
 			refPL,
 		)
 		if errS == nil {
@@ -261,6 +265,10 @@ func FetchItemStock(db *sqlx.DB, itemID int) (domain.ItemStock, error) {
 			s.UOM,
 			s.Price,
 			s.Cost,
+			s.Patong,
+			s.POSCharge,
+			s.WT2307,
+			s.Remarks,
 			refPL,
 		)
 		if errS == nil {
@@ -461,6 +469,10 @@ func FetchItemsStockBatch(db *sqlx.DB, itemIDs []int) (map[int]domain.ItemStock,
 				s.UOM,
 				s.Price,
 				s.Cost,
+				s.Patong,
+				s.POSCharge,
+				s.WT2307,
+				s.Remarks,
 				refPL,
 			)
 			if errS == nil {

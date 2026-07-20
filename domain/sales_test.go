@@ -1,6 +1,7 @@
 package domain_test
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -174,8 +175,8 @@ func TestNewSale_Validation(t *testing.T) {
 
 func TestSale_ToSalesDetails(t *testing.T) {
 	items := []domain.SaleItem{
-		{ItemID: 1, Qty: 2.0, UOM: "PCS", Price: 150.0, Cost: 100.0},
-		{ItemID: 2, Qty: 3.0, UOM: "BOX", Price: 50.0, Cost: 30.0},
+		{ItemID: 1, Qty: 2.0, UOM: "PCS", Price: 150.0, Cost: 100.0, Patong: 10.0, POSCharge: 5.0, WT2307: 2.0, Remarks: "Test item 1"},
+		{ItemID: 2, Qty: 3.0, UOM: "BOX", Price: 50.0, Cost: 30.0, Patong: 0.0, POSCharge: 0.0, WT2307: 0.0},
 	}
 	docDate := time.Date(2026, 7, 11, 0, 0, 0, 0, time.UTC)
 
@@ -200,6 +201,14 @@ func TestSale_ToSalesDetails(t *testing.T) {
 	if d1.TotalSales != 300.0 || d1.TotalCost != 200.0 || d1.Profit != 100.0 {
 		t.Errorf("incorrect calculated values on first detail: %+v", d1)
 	}
+	expectedRemit1 := 300.0 - (10.0 + 5.0 + 2.0) // 283.0
+	if d1.TotalRemit != expectedRemit1 {
+		t.Errorf("expected TotalRemit %f, got %f", expectedRemit1, d1.TotalRemit)
+	}
+	expectedMargin1 := (100.0 / 300.0) * 100.0 // 33.333333333333336
+	if math.Abs(d1.ProfitMargin-expectedMargin1) > 0.0001 {
+		t.Errorf("expected ProfitMargin %f, got %f", expectedMargin1, d1.ProfitMargin)
+	}
 
 	// Verify calculations and mappings for second item
 	d2 := details[1]
@@ -211,5 +220,12 @@ func TestSale_ToSalesDetails(t *testing.T) {
 	}
 	if d2.TotalSales != 150.0 || d2.TotalCost != 90.0 || d2.Profit != 60.0 {
 		t.Errorf("incorrect calculated values on second detail: %+v", d2)
+	}
+	if d2.TotalRemit != 150.0 {
+		t.Errorf("expected TotalRemit 150.0, got %f", d2.TotalRemit)
+	}
+	expectedMargin2 := (60.0 / 150.0) * 100.0 // 40%
+	if d2.ProfitMargin != expectedMargin2 {
+		t.Errorf("expected ProfitMargin %f, got %f", expectedMargin2, d2.ProfitMargin)
 	}
 }

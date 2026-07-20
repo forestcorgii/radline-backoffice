@@ -61,8 +61,17 @@
                     <div>PL No</div>
                     <div>UOM</div>
                     <div>Qty</div>
-                    <div>Unit Selling Price</div>
-                    <div>Unit Cost</div>
+                    <div>Price</div>
+                    <div>Total Price</div>
+                    <div>Cost</div>
+                    <div>Total Cost</div>
+                    <div>Patong</div>
+                    <div>POS Charge</div>
+                    <div>WT 2307</div>
+                    <div>Total Remit</div>
+                    <div>Profit</div>
+                    <div>Profit Margin</div>
+                    <div>Remarks</div>
                     <div>Actions</div>
                 </div>
                 <div id="sales-items-tbody">
@@ -185,12 +194,16 @@
                                 <span>Doc Type / Number</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="item_description" onchange="onSalesViewSettingChange()">
-                                <span>Item Description</span>
+                                <input type="checkbox" data-target-col="customer_name" onchange="onSalesViewSettingChange()">
+                                <span>Customer Name</span>
                             </label>
                             <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-col="supplier" onchange="onSalesViewSettingChange()">
                                 <span>Supplier</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="item_description" onchange="onSalesViewSettingChange()">
+                                <span>Item Description</span>
                             </label>
                             <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-col="qty" onchange="onSalesViewSettingChange()">
@@ -201,16 +214,48 @@
                                 <span>UOM</span>
                             </label>
                             <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="price" onchange="onSalesViewSettingChange()">
+                                <span>Price</span>
+                            </label>
+                            <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-col="total_sales" onchange="onSalesViewSettingChange()">
-                                <span>Total Sales</span>
+                                <span>Total Price</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="cost" onchange="onSalesViewSettingChange()">
+                                <span>Cost</span>
                             </label>
                             <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-col="total_cost" onchange="onSalesViewSettingChange()">
                                 <span>Total Cost</span>
                             </label>
                             <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="patong" onchange="onSalesViewSettingChange()">
+                                <span>Patong</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="pos_charge" onchange="onSalesViewSettingChange()">
+                                <span>POS Charge</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="wt_2307" onchange="onSalesViewSettingChange()">
+                                <span>WT 2307</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="total_remit" onchange="onSalesViewSettingChange()">
+                                <span>Total Remit</span>
+                            </label>
+                            <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-col="profit" onchange="onSalesViewSettingChange()">
                                 <span>Profit</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="profit_margin" onchange="onSalesViewSettingChange()">
+                                <span>Profit Margin</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="remarks" onchange="onSalesViewSettingChange()">
+                                <span>Remarks</span>
                             </label>
                         </div>
 
@@ -255,13 +300,22 @@
                     <tr>
                         <th data-col="doc_date">Date</th>
                         <th data-col="doc_type_number">Doc Type / Number</th>
+                        <th data-col="customer_name">Customer Name</th>
                         <th data-col="supplier">Supplier</th>
                         <th data-col="item_description">Item Description</th>
                         <th data-col="qty">Qty</th>
                         <th data-col="uom">UOM</th>
-                        <th data-col="total_sales">Total Sales</th>
+                        <th data-col="price">Price</th>
+                        <th data-col="total_sales">Total Price</th>
+                        <th data-col="cost">Cost</th>
                         <th data-col="total_cost">Total Cost</th>
+                        <th data-col="patong">Patong</th>
+                        <th data-col="pos_charge">POS Charge</th>
+                        <th data-col="wt_2307">WT 2307</th>
+                        <th data-col="total_remit">Total Remit</th>
                         <th data-col="profit">Profit</th>
+                        <th data-col="profit_margin">Profit Margin</th>
+                        <th data-col="remarks">Remarks</th>
                         <th data-col="actions">Actions</th>
                     </tr>
                 </thead>
@@ -274,18 +328,77 @@
 </div>
 
 <script>
+    window.calcSaleRow = function(inputEl) {
+        const row = inputEl.closest('.sales-grid-row') || inputEl.closest('tr');
+        if (!row) return;
+
+        const qty = parseFloat(row.querySelector('[name="qty"]')?.value) || 0;
+        const price = parseFloat(row.querySelector('[name="price"]')?.value) || 0;
+        const cost = parseFloat(row.querySelector('[name="cost"]')?.value) || 0;
+        const patong = parseFloat(row.querySelector('[name="patong"]')?.value) || 0;
+        const posCharge = parseFloat(row.querySelector('[name="pos_charge"]')?.value) || 0;
+        const wt2307 = parseFloat(row.querySelector('[name="wt_2307"]')?.value) || 0;
+
+        const totalPrice = qty * price;
+        const totalCost = qty * cost;
+        const totalRemit = totalPrice - (patong + posCharge + wt2307);
+        const profit = totalPrice - totalCost;
+        const profitMargin = totalPrice > 0 ? (profit / totalPrice) * 100 : 0;
+
+        // For encoding card inputs:
+        const totalPriceCalc = row.querySelector('[name="total_price_calc"]');
+        if (totalPriceCalc) totalPriceCalc.value = totalPrice.toFixed(2);
+
+        const totalCostCalc = row.querySelector('[name="total_cost_calc"]');
+        if (totalCostCalc) totalCostCalc.value = totalCost.toFixed(2);
+
+        const totalRemitCalc = row.querySelector('[name="total_remit_calc"]');
+        if (totalRemitCalc) totalRemitCalc.value = totalRemit.toFixed(2);
+
+        const profitCalc = row.querySelector('[name="profit_calc"]');
+        if (profitCalc) profitCalc.value = profit.toFixed(2);
+
+        const profitMarginCalc = row.querySelector('[name="profit_margin_calc"]');
+        if (profitMarginCalc) profitMarginCalc.value = profitMargin.toFixed(2) + '%';
+
+        // For batch edit table row spans:
+        const spanTotalSales = row.querySelector('.calc-total-sales');
+        if (spanTotalSales) spanTotalSales.textContent = '₱' + totalPrice.toFixed(2);
+
+        const spanTotalCost = row.querySelector('.calc-total-cost');
+        if (spanTotalCost) spanTotalCost.textContent = '₱' + totalCost.toFixed(2);
+
+        const spanTotalRemit = row.querySelector('.calc-total-remit');
+        if (spanTotalRemit) spanTotalRemit.textContent = '₱' + totalRemit.toFixed(2);
+
+        const spanProfit = row.querySelector('.calc-profit');
+        if (spanProfit) spanProfit.textContent = '₱' + profit.toFixed(2);
+
+        const spanProfitMargin = row.querySelector('.calc-profit-margin');
+        if (spanProfitMargin) spanProfitMargin.textContent = profitMargin.toFixed(2) + '%';
+    };
+
     (function () {
         const DEFAULT_SALES_VIEW_CONFIG = {
             columns: {
                 doc_date: true,
                 doc_type_number: true,
+                customer_name: true,
+                supplier: true,
                 item_description: true,
-                supplier: false,
-                qty: false,
-                uom: false,
-                total_sales: false,
-                total_cost: false,
-                profit: false,
+                qty: true,
+                uom: true,
+                price: true,
+                total_sales: true,
+                cost: true,
+                total_cost: true,
+                patong: true,
+                pos_charge: true,
+                wt_2307: true,
+                total_remit: true,
+                profit: true,
+                profit_margin: true,
+                remarks: true,
                 actions: true
             },
             filters: {

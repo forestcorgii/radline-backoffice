@@ -19,11 +19,17 @@ type SalesDetail struct {
     ItemID       int
     Qty          float64
     UOM          string
-    Price        float64       // Selling price per unit
+    Price        float64       // Unit selling price
     TotalSales   float64       // Auto: Qty * Price
-    Cost         float64       // Cost per unit
+    Cost         float64       // Unit cost
     TotalCost    float64       // Auto: Qty * Cost
+    Patong       float64       // Additional markup/fee
+    POSCharge    float64       // POS charge deduction
+    WT2307       float64       // Withholding tax 2307 deduction
+    TotalRemit   float64       // Auto: TotalSales - (Patong + POSCharge + WT2307)
     Profit       float64       // Auto: TotalSales - TotalCost
+    ProfitMargin float64       // Auto: (Profit / TotalSales) * 100
+    Remarks      string
     RefPL        string        // Reference Packing List
 }
 ```
@@ -33,7 +39,12 @@ type SalesDetail struct {
 - `ItemID > 0`, `Qty > 0`
 - `Price >= 0`, `Cost >= 0`
 
-**Auto-computed:** `TotalSales = Qty * Price`, `TotalCost = Qty * Cost`, `Profit = TotalSales - TotalCost`
+**Auto-computed:**
+- `TotalSales = Qty * Price`
+- `TotalCost = Qty * Cost`
+- `TotalRemit = TotalSales - (Patong + POSCharge + WT2307)`
+- `Profit = TotalSales - TotalCost`
+- `ProfitMargin = (Profit / TotalSales) * 100` if `TotalSales > 0` else `0`
 
 ---
 
@@ -57,15 +68,21 @@ type Sale struct {
 ### Line Item
 ```go
 type SaleItem struct {
-    ItemID     int
-    Qty        float64
-    UOM        string
-    Price      float64
-    Cost       float64
-    TotalSales float64    // Auto: Qty * Price
-    TotalCost  float64    // Auto: Qty * Cost
-    Profit     float64    // Auto: TotalSales - TotalCost
-    RefPL      string     // Reference Packing List
+    ItemID       int
+    Qty          float64
+    UOM          string
+    Price        float64
+    Cost         float64
+    TotalSales   float64
+    TotalCost    float64
+    Patong       float64
+    POSCharge    float64
+    WT2307       float64
+    TotalRemit   float64
+    Profit       float64
+    ProfitMargin float64
+    Remarks      string
+    RefPL        string
 }
 ```
 
@@ -82,7 +99,8 @@ Flattens the aggregate into individual `SalesDetail` records ready for DB insert
 - **DocType**: Distinguishes document type (e.g., `SI` = Sales Invoice, `DR` = Delivery Receipt)
 - **DocStatus**: Currently always `"POSTED"` — set in the handler, not via form
 - **Supplier**: Ties the sale to a specific supplier for stock tracking in [[domain-stock]]
-- **Profit**: Always auto-calculated as `(Price - Cost) * Qty`
+- **Total Remit**: Net remittance after deducting patong, POS charge, and WT 2307
+- **Profit & Margin**: Auto-calculated profitability metrics
 
 ## Related
 - [[domain-stock]] — Sales reduce stock on hand

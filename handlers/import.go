@@ -422,9 +422,40 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 					qty := parseExcelFloat(qtyStr)
 					price := parseExcelFloat(getValByHeader(row, colMap, "PRICE"))
 					totalSales := parseExcelFloat(getValByHeader(row, colMap, "TOTAL SALES"))
+					if totalSales <= 0 {
+						totalSales = parseExcelFloat(getValByHeader(row, colMap, "TOTAL PRICE"))
+					}
 					cost := parseExcelFloat(getValByHeader(row, colMap, "COST"))
 					totalCost := parseExcelFloat(getValByHeader(row, colMap, "TOTAL COST"))
 					profit := parseExcelFloat(getValByHeader(row, colMap, "PROFIT"))
+
+					patong := parseExcelFloat(getValByHeader(row, colMap, "PATONG"))
+					posCharge := parseExcelFloat(getValByHeader(row, colMap, "POS CHARGE"))
+					if posCharge == 0 {
+						posCharge = parseExcelFloat(getValByHeader(row, colMap, "POS_CHARGE"))
+					}
+					wt2307 := parseExcelFloat(getValByHeader(row, colMap, "WT 2307"))
+					if wt2307 == 0 {
+						wt2307 = parseExcelFloat(getValByHeader(row, colMap, "WT_2307"))
+					}
+					totalRemit := parseExcelFloat(getValByHeader(row, colMap, "TOTAL REMIT"))
+					if totalRemit == 0 {
+						totalRemit = parseExcelFloat(getValByHeader(row, colMap, "TOTAL_REMIT"))
+					}
+					profitMargin := parseExcelFloat(getValByHeader(row, colMap, "PROFIT MARGIN"))
+					if profitMargin == 0 {
+						profitMargin = parseExcelFloat(getValByHeader(row, colMap, "PROFIT_MARGIN"))
+					}
+					remarks := getValByHeader(row, colMap, "REMARKS")
+					refPL := getValByHeader(row, colMap, "REF PL")
+					if refPL == "" {
+						refPL = getValByHeader(row, colMap, "PL NO.")
+					}
+
+					var refPLVal *string
+					if refPL != "" {
+						refPLVal = &refPL
+					}
 
 					// Calculate defaults if missing
 					if totalSales <= 0 {
@@ -436,11 +467,17 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 					if profit == 0 && totalSales > 0 {
 						profit = totalSales - totalCost
 					}
+					if totalRemit == 0 && totalSales > 0 {
+						totalRemit = totalSales - (patong + posCharge + wt2307)
+					}
+					if profitMargin == 0 && totalSales > 0 {
+						profitMargin = (profit / totalSales) * 100
+					}
 
 					_, err = tx.Exec(`
-						INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, profit)
-						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-					`, docType, docStatus, date, docNumber, customerName, supplier, itemID, qty, uom, price, totalSales, cost, totalCost, profit)
+						INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, patong, pos_charge, wt_2307, total_remit, profit, profit_margin, remarks, ref_pl)
+						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+					`, docType, docStatus, date, docNumber, customerName, supplier, itemID, qty, uom, price, totalSales, cost, totalCost, patong, posCharge, wt2307, totalRemit, profit, profitMargin, remarks, refPLVal)
 					if err == nil {
 						summary.Sales++
 					}

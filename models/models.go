@@ -102,7 +102,13 @@ type SalesDetail struct {
 	TotalSales   float64   `db:"total_sales"`
 	Cost         float64   `db:"cost"`
 	TotalCost    float64   `db:"total_cost"`
+	Patong       float64   `db:"patong"`
+	POSCharge    float64   `db:"pos_charge"`
+	WT2307       float64   `db:"wt_2307"`
+	TotalRemit   float64   `db:"total_remit"`
 	Profit       float64   `db:"profit"`
+	ProfitMargin float64   `db:"profit_margin"`
+	Remarks      string    `db:"remarks"`
 	RefPL        *string   `db:"ref_pl"`
 }
 
@@ -121,7 +127,13 @@ type SalesDetailWithItem struct {
 	TotalSales   float64   `db:"total_sales"`
 	Cost         float64   `db:"cost"`
 	TotalCost    float64   `db:"total_cost"`
+	Patong       float64   `db:"patong"`
+	POSCharge    float64   `db:"pos_charge"`
+	WT2307       float64   `db:"wt_2307"`
+	TotalRemit   float64   `db:"total_remit"`
 	Profit       float64   `db:"profit"`
+	ProfitMargin float64   `db:"profit_margin"`
+	Remarks      string    `db:"remarks"`
 	ItemCode     string    `db:"item_code"`
 	Description  string    `db:"item_description"`
 	RefPL        *string   `db:"ref_pl"`

@@ -21,21 +21,33 @@ type SalesDetail struct {
 	TotalSales   float64
 	Cost         float64
 	TotalCost    float64
+	Patong       float64
+	POSCharge    float64
+	WT2307       float64
+	TotalRemit   float64
 	Profit       float64
+	ProfitMargin float64
+	Remarks      string
 	RefPL        string
 }
 
 // SaleItem represents an item line in a sale.
 type SaleItem struct {
-	ItemID     int
-	Qty        float64
-	UOM        string
-	Price      float64
-	Cost       float64
-	TotalSales float64
-	TotalCost  float64
-	Profit     float64
-	RefPL      string
+	ItemID       int
+	Qty          float64
+	UOM          string
+	Price        float64
+	Cost         float64
+	TotalSales   float64
+	TotalCost    float64
+	Patong       float64
+	POSCharge    float64
+	WT2307       float64
+	TotalRemit   float64
+	Profit       float64
+	ProfitMargin float64
+	Remarks      string
+	RefPL        string
 }
 
 // Sale represents a sale transaction aggregate.
@@ -87,18 +99,29 @@ func NewSale(docType, docStatus string, docDate time.Time, docNumber, customerNa
 
 		totalSales := item.Qty * item.Price
 		totalCost := item.Qty * item.Cost
+		totalRemit := totalSales - (item.Patong + item.POSCharge + item.WT2307)
 		profit := totalSales - totalCost
+		profitMargin := 0.0
+		if totalSales > 0 {
+			profitMargin = (profit / totalSales) * 100
+		}
 
 		validatedItems[i] = SaleItem{
-			ItemID:     item.ItemID,
-			Qty:        item.Qty,
-			UOM:        item.UOM,
-			Price:      item.Price,
-			Cost:       item.Cost,
-			TotalSales: totalSales,
-			TotalCost:  totalCost,
-			Profit:     profit,
-			RefPL:      item.RefPL,
+			ItemID:       item.ItemID,
+			Qty:          item.Qty,
+			UOM:          item.UOM,
+			Price:        item.Price,
+			Cost:         item.Cost,
+			TotalSales:   totalSales,
+			TotalCost:    totalCost,
+			Patong:       item.Patong,
+			POSCharge:    item.POSCharge,
+			WT2307:       item.WT2307,
+			TotalRemit:   totalRemit,
+			Profit:       profit,
+			ProfitMargin: profitMargin,
+			Remarks:      item.Remarks,
+			RefPL:        item.RefPL,
 		}
 	}
 
@@ -131,15 +154,21 @@ func (s Sale) ToSalesDetails() []SalesDetail {
 			TotalSales:   item.TotalSales,
 			Cost:         item.Cost,
 			TotalCost:    item.TotalCost,
+			Patong:       item.Patong,
+			POSCharge:    item.POSCharge,
+			WT2307:       item.WT2307,
+			TotalRemit:   item.TotalRemit,
 			Profit:       item.Profit,
+			ProfitMargin: item.ProfitMargin,
+			Remarks:      item.Remarks,
 			RefPL:        item.RefPL,
 		}
 	}
 	return details
 }
 
-// NewSalesDetail creates a sales transaction, validating constraints and calculating total sales, cost, and profit.
-func NewSalesDetail(id int, docType, docStatus string, docDate time.Time, docNumber, customerName, supplier string, itemID int, qty float64, uom string, price, cost float64, refPL string) (SalesDetail, error) {
+// NewSalesDetail creates a sales transaction, validating constraints and calculating total sales, cost, total remit, profit, and profit margin.
+func NewSalesDetail(id int, docType, docStatus string, docDate time.Time, docNumber, customerName, supplier string, itemID int, qty float64, uom string, price, cost, patong, posCharge, wt2307 float64, remarks, refPL string) (SalesDetail, error) {
 	if docType == "" {
 		return SalesDetail{}, errors.New("doc type cannot be empty")
 	}
@@ -167,7 +196,12 @@ func NewSalesDetail(id int, docType, docStatus string, docDate time.Time, docNum
 
 	totalSales := qty * price
 	totalCost := qty * cost
+	totalRemit := totalSales - (patong + posCharge + wt2307)
 	profit := totalSales - totalCost
+	profitMargin := 0.0
+	if totalSales > 0 {
+		profitMargin = (profit / totalSales) * 100
+	}
 
 	return SalesDetail{
 		ID:           id,
@@ -184,7 +218,13 @@ func NewSalesDetail(id int, docType, docStatus string, docDate time.Time, docNum
 		TotalSales:   totalSales,
 		Cost:         cost,
 		TotalCost:    totalCost,
+		Patong:       patong,
+		POSCharge:    posCharge,
+		WT2307:       wt2307,
+		TotalRemit:   totalRemit,
 		Profit:       profit,
+		ProfitMargin: profitMargin,
+		Remarks:      remarks,
 		RefPL:        refPL,
 	}, nil
 }
