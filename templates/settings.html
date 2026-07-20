@@ -29,6 +29,84 @@
     <h2 style="margin: 0;">Settings</h2>
 </div>
 
+<!-- 0. DeepSeek AI Vision Configuration Card -->
+<div class="card mb-4" id="deepseek-card">
+    <div class="card-header"
+        style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;"
+        onclick="toggleCardCollapse('deepseek-card')">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="chevron-icon" id="deepseek-card-chevron"
+                style="width: 18px; height: 18px; transition: transform 0.2s; {{ if .DeepSeekConfig.HasAPIKey }}transform: rotate(-90deg);{{ end }}"
+                viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd" />
+            </svg>
+            DeepSeek Vision AI Settings
+        </h3>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            {{ if .DeepSeekConfig.HasAPIKey }}
+            <span class="badge badge-success" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; background-color: var(--accent-green, #10b981); color: #fff; border-radius: 4px;">API Key Configured</span>
+            {{ else }}
+            <span class="badge badge-warning" style="font-size: 0.75rem; padding: 0.2rem 0.5rem; background-color: var(--accent-orange, #f59e0b); color: #fff; border-radius: 4px;">API Key Required</span>
+            {{ end }}
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Click to toggle</span>
+        </div>
+    </div>
+    <div class="card-body" id="deepseek-card-body" style="{{ if .DeepSeekConfig.HasAPIKey }}display: none;{{ end }}">
+        <form hx-post="/settings/deepseek" hx-swap="none">
+            <div style="margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(0,0,0,0.02); border-radius: 4px;">
+                <label style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                    Quick Provider Preset
+                </label>
+                <select class="form-input" style="width: 100%; font-size: 0.8125rem;" onchange="applyProviderPreset(this, 'ds-api-base', 'ds-model')">
+                    <option value="">-- Select Provider Preset --</option>
+                    <option value="deepseek_official" data-base="https://api.deepseek.com/v1" data-model="deepseek-chat">Official DeepSeek API (sk-...) — OCR + DeepSeek V3 AI</option>
+                    <option value="openrouter" data-base="https://openrouter.ai/api/v1" data-model="deepseek/deepseek-chat">OpenRouter (sk-or-v1-...) — Direct Vision API</option>
+                    <option value="siliconflow" data-base="https://api.siliconflow.cn/v1" data-model="deepseek-ai/deepseek-vl-7b-chat">SiliconFlow — Direct Vision API</option>
+                    <option value="ollama" data-base="http://localhost:11434/v1" data-model="deepseek-vl">Ollama / Local — Direct Vision API</option>
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label for="ds-api-key" style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                        DeepSeek API Key
+                    </label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="password" id="ds-api-key" name="api_key" value="{{ .DeepSeekConfig.APIKey }}" placeholder="sk-..." required class="form-input" style="width: 100%; padding-right: 2.5rem;">
+                        <button type="button" onclick="togglePasswordVisibility('ds-api-key')" style="position: absolute; right: 0.5rem; background: none; border: none; cursor: pointer; color: var(--text-muted);">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                    <small style="font-size: 0.7rem; color: var(--text-muted);">Required for receipt vision parsing.</small>
+                </div>
+                <div>
+                    <label for="ds-api-base" style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                        API Base URL
+                    </label>
+                    <input type="text" id="ds-api-base" name="api_base" value="{{ .DeepSeekConfig.APIBase }}" placeholder="https://api.deepseek.com/v1" class="form-input" style="width: 100%;">
+                    <small style="font-size: 0.7rem; color: var(--text-muted);">Default: https://api.deepseek.com/v1</small>
+                </div>
+                <div>
+                    <label for="ds-model" style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                        Model Name
+                    </label>
+                    <input type="text" id="ds-model" name="model" value="{{ .DeepSeekConfig.Model }}" placeholder="deepseek-chat" class="form-input" style="width: 100%;">
+                    <small style="font-size: 0.7rem; color: var(--text-muted);">Default: deepseek-chat</small>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn" style="padding: 0.4rem 1rem; font-size: 0.8125rem;">
+                    Save DeepSeek Configuration
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- 1. Brands Card (Collapsible, Collapsed by Default) -->
 <div class="card mb-4" id="brands-card">
     <div class="card-header"
@@ -682,6 +760,21 @@
         // Set UOM readonly field
         const uomInput = document.getElementById('uom-inline-uom');
         if (uomInput) uomInput.value = uom || '';
+    }
+
+    function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function applyProviderPreset(select, baseInputId, modelInputId) {
+        const option = select.options[select.selectedIndex];
+        if (!option || !option.value) return;
+        const base = option.getAttribute('data-base');
+        const model = option.getAttribute('data-model');
+        if (base && document.getElementById(baseInputId)) document.getElementById(baseInputId).value = base;
+        if (model && document.getElementById(modelInputId)) document.getElementById(modelInputId).value = model;
     }
 </script>
 {{ end }}

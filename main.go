@@ -91,6 +91,7 @@ func main() {
 
 	// Settings CRUD
 	http.HandleFunc("GET /settings", app.SettingsHandler)
+	http.HandleFunc("POST /settings/deepseek", app.SaveDeepSeekConfigHandler)
 	http.HandleFunc("GET /uom-settings/new", app.NewUomSettingPageHandler)
 	http.HandleFunc("POST /uom-settings/add", app.AddUomSettingHandler)
 	http.HandleFunc("GET /uom-settings/edit/{id}", app.EditUomSettingFormHandler)

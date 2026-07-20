@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"radline/db"
 	"radline/models"
@@ -57,18 +58,23 @@ func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC LIMIT ?", DefaultPageSize)
 
+	// 6. Fetch DeepSeek Vision Configuration
+	dsConfig := getDeepSeekConfig()
+
 	data := struct {
-		UomSettings []models.UomSettingWithItem
-		Brands      []models.Brand
-		Categories  []models.Category
-		Items       []models.Item
-		Uoms        []models.Uom
+		UomSettings    []models.UomSettingWithItem
+		Brands         []models.Brand
+		Categories     []models.Category
+		Items          []models.Item
+		Uoms           []models.Uom
+		DeepSeekConfig DeepSeekConfig
 	}{
-		UomSettings: uomSettings,
-		Brands:      brands,
-		Categories:  categories,
-		Items:       items,
-		Uoms:        uoms,
+		UomSettings:    uomSettings,
+		Brands:         brands,
+		Categories:     categories,
+		Items:          items,
+		Uoms:           uoms,
+		DeepSeekConfig: dsConfig,
 	}
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
@@ -76,6 +82,25 @@ func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		app.RenderPage(w, r, "settings.html", data)
 	}
+}
+
+// SaveDeepSeekConfigHandler updates DeepSeek Vision API configuration in system_settings
+func (app *App) SaveDeepSeekConfigHandler(w http.ResponseWriter, r *http.Request) {
+	apiKey := strings.TrimSpace(r.FormValue("api_key"))
+	apiBase := strings.TrimSpace(r.FormValue("api_base"))
+	model := strings.TrimSpace(r.FormValue("model"))
+
+	if err := db.SetSystemSetting("deepseek_api_key", apiKey); err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save API key."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_ = db.SetSystemSetting("deepseek_api_base", apiBase)
+	_ = db.SetSystemSetting("deepseek_model", model)
+
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "DeepSeek Vision configuration saved successfully!"}}`)
+	w.WriteHeader(http.StatusOK)
 }
 
 // NewUomSettingPageHandler redirects to uom-settings list page

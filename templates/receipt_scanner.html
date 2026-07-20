@@ -12,12 +12,54 @@
             </svg>
             Receipt Scanner
         </h2>
-        <span class="badge badge-info">Scan & Encode</span>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            {{ if .DeepSeekConfig.HasAPIKey }}
+            <span class="badge badge-success" style="cursor: pointer; background-color: var(--accent-green, #10b981); color: #fff; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 4px;" onclick="toggleDeepSeekScannerConfig()">DeepSeek API Configured ⚙️</span>
+            {{ else }}
+            <span class="badge badge-warning" style="cursor: pointer; background-color: var(--accent-orange, #f59e0b); color: #fff; padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 4px;" onclick="toggleDeepSeekScannerConfig()">⚠️ API Key Missing — Configure</span>
+            {{ end }}
+            <span class="badge badge-info">Scan & Encode</span>
+        </div>
     </div>
 
     <p style="color: var(--text-muted); margin-bottom: 1.25rem; font-size: 0.875rem;">
         Upload or capture a photo of a receipt or sales invoice to extract data for encoding.
     </p>
+
+    <!-- Quick DeepSeek Vision API Config Drawer -->
+    <div id="scanner-api-config-drawer" class="card mb-4" style="display: none; background: rgba(37, 99, 235, 0.03); border: 1px dashed var(--primary-color); padding: 1rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="font-size: 0.875rem; font-weight: 600; margin: 0; color: var(--primary-color);">DeepSeek Vision API Settings</h4>
+            <button type="button" onclick="toggleDeepSeekScannerConfig()" class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Close</button>
+        </div>
+        <form hx-post="/settings/deepseek" hx-swap="none">
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Quick Provider Preset</label>
+                <select class="form-input" style="width: 100%; font-size: 0.8125rem; padding: 0.35rem 0.5rem;" onchange="applyProviderPreset(this, 'scanner-ds-base', 'scanner-ds-model')">
+                    <option value="">-- Select Provider Preset --</option>
+                    <option value="deepseek_official" data-base="https://api.deepseek.com/v1" data-model="deepseek-chat">Official DeepSeek API (sk-...) — OCR + DeepSeek V3 AI</option>
+                    <option value="openrouter" data-base="https://openrouter.ai/api/v1" data-model="deepseek/deepseek-chat">OpenRouter (sk-or-v1-...) — Direct Vision API</option>
+                    <option value="siliconflow" data-base="https://api.siliconflow.cn/v1" data-model="deepseek-ai/deepseek-vl-7b-chat">SiliconFlow — Direct Vision API</option>
+                    <option value="ollama" data-base="http://localhost:11434/v1" data-model="deepseek-vl">Ollama / Local — Direct Vision API</option>
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">DeepSeek API Key</label>
+                    <input type="password" name="api_key" value="{{ .DeepSeekConfig.APIKey }}" placeholder="sk-..." required class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">API Base URL</label>
+                    <input type="text" id="scanner-ds-base" name="api_base" value="{{ .DeepSeekConfig.APIBase }}" placeholder="https://api.deepseek.com/v1" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Model</label>
+                    <input type="text" id="scanner-ds-model" name="model" value="{{ .DeepSeekConfig.Model }}" placeholder="deepseek-chat" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%;">
+                </div>
+            </div>
+            <button type="submit" class="btn" style="padding: 0.3rem 0.75rem; font-size: 0.75rem;">Save API Config</button>
+        </form>
+    </div>
 
     <!-- Upload Area -->
     <div id="scanner-upload-area" class="scanner-upload-area"
@@ -161,6 +203,22 @@
             }
         });
     });
+
+    function toggleDeepSeekScannerConfig() {
+        const drawer = document.getElementById('scanner-api-config-drawer');
+        if (drawer) {
+            drawer.style.display = drawer.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    function applyProviderPreset(select, baseInputId, modelInputId) {
+        const option = select.options[select.selectedIndex];
+        if (!option || !option.value) return;
+        const base = option.getAttribute('data-base');
+        const model = option.getAttribute('data-model');
+        if (base && document.getElementById(baseInputId)) document.getElementById(baseInputId).value = base;
+        if (model && document.getElementById(modelInputId)) document.getElementById(modelInputId).value = model;
+    }
 </script>
 
 <style>
