@@ -1,56 +1,43 @@
 {{ define "adjustment_item_row.html" }}
-<div class="item-grid-row adjustment-grid-row">
-    <div class="item-grid-cell">
-        <div class="searchable-dropdown">
-            <input type="text" 
-                   class="form-input dropdown-search" 
-                   placeholder="Search Item..." 
-                   value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
-                   onfocus="showDropdown(this); this.select();"
-                   onclick="showDropdown(this); this.select();"
-                   onblur="hideDropdown(this)"
-                   oninput="filterDropdown(this)"
-                   onkeydown="handleDropdownKeydown(event, this)"
-                   style="width: 100%; padding: 0.75rem 1rem; height: auto;" 
-                   required>
-            <input type="hidden" 
-                   name="item_id" 
-                   value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
-                   hx-get="/inventory/adjustments/item-row-details" 
-                   hx-include="this"
-                   hx-target="closest .item-grid-row" 
-                   hx-swap="outerHTML" 
-                   hx-trigger="change">
-            <div class="dropdown-list">
-                {{ range .Items }}
-                <div class="dropdown-item" 
-                     data-id="{{ .ID }}" 
-                     data-description="{{ .Description }}"
-                     onmousedown="selectDropdownItem(this)">
-                    {{ .Description }}
+<div class="item-card-row adjustment-grid-row item-grid-row">
+    <!-- Top Row: Item Search & Actions -->
+    <div class="item-card-header">
+        <div class="item-card-search">
+            <label class="item-field-label">Item Description</label>
+            <div class="searchable-dropdown">
+                <input type="text" 
+                       class="form-input dropdown-search" 
+                       placeholder="Search Item..." 
+                       value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
+                       onfocus="showDropdown(this); this.select();"
+                       onclick="showDropdown(this); this.select();"
+                       onblur="hideDropdown(this)"
+                       oninput="filterDropdown(this)"
+                       onkeydown="handleDropdownKeydown(event, this)"
+                       style="width: 100%; font-weight: 500;" 
+                       required>
+                <input type="hidden" 
+                       name="item_id" 
+                       value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
+                       hx-get="/inventory/adjustments/item-row-details" 
+                       hx-include="this"
+                       hx-target="closest .item-grid-row" 
+                       hx-swap="outerHTML" 
+                       hx-trigger="change">
+                <div class="dropdown-list">
+                    {{ range .Items }}
+                    <div class="dropdown-item" 
+                         data-id="{{ .ID }}" 
+                         data-description="{{ .Description }}"
+                         onmousedown="selectDropdownItem(this)">
+                        {{ .Description }}
+                    </div>
+                    {{ end }}
                 </div>
-                {{ end }}
             </div>
         </div>
-    </div>
-    <div class="item-grid-cell">
-        <select name="uom" class="form-input" required style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;">
-            <option value="">-- Select --</option>
-            {{ $selectedUOM := .DefaultUOM }}
-            {{ range .Uoms }}
-            <option value="{{ .Code }}" {{ if eq .Code $selectedUOM }}selected{{ end }}>{{ .Code }}</option>
-            {{ end }}
-        </select>
-    </div>
-    <div class="item-grid-cell">
-        <input type="number" step="any" name="adjustment_qty" placeholder="e.g. -5 or 10" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required>
-    </div>
-    <div class="item-grid-cell">
-        <input type="number" step="any" name="cost" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" required>
-    </div>
-    <div class="item-grid-cell">
-        <div class="actions-cell">
-            <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.item-grid-row').remove()" title="Remove">
+        <div class="item-card-actions">
+            <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.item-grid-row').remove()" title="Remove Item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -58,6 +45,28 @@
                     <line x1="14" y1="11" x2="14" y2="17"></line>
                 </svg>
             </button>
+        </div>
+    </div>
+
+    <!-- Inputs Grid: Adjustment Details -->
+    <div class="item-card-fields-grid item-grid-adjustment">
+        <div class="item-field-group">
+            <label class="item-field-label">UOM</label>
+            <select name="uom" class="form-input" required style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;">
+                <option value="">-- Select --</option>
+                {{ $selectedUOM := .DefaultUOM }}
+                {{ range .Uoms }}
+                <option value="{{ .Code }}" {{ if eq .Code $selectedUOM }}selected{{ end }}>{{ .Code }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Adj Qty (Negative to subtract)</label>
+            <input type="number" step="any" name="adjustment_qty" placeholder="e.g. -5 or 10" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required>
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Unit Cost</label>
+            <input type="number" step="any" name="cost" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" placeholder="0.00" required>
         </div>
     </div>
 </div>

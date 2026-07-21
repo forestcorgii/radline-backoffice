@@ -1,105 +1,43 @@
 {{ define "sale_item_row.html" }}
-<div class="item-grid-row sales-grid-row">
-    <!-- 1. Item -->
-    <div class="item-grid-cell">
-        <div class="searchable-dropdown">
-            <input type="text" 
-                   class="form-input dropdown-search" 
-                   placeholder="Search Item..." 
-                   value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
-                   onfocus="showDropdown(this); this.select();"
-                   onclick="showDropdown(this); this.select();"
-                   onblur="hideDropdown(this)"
-                   oninput="filterDropdown(this)"
-                   onkeydown="handleDropdownKeydown(event, this)"
-                   style="width: 100%; padding: 0.75rem 1rem; height: auto;" 
-                   required>
-            <input type="hidden" 
-                   name="item_id" 
-                   value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
-                   hx-get="/sales/item-row-details" 
-                   hx-include="this"
-                   hx-target="closest .item-grid-row" 
-                   hx-swap="outerHTML" 
-                   hx-trigger="change">
-            <div class="dropdown-list">
-                {{ range .Items }}
-                <div class="dropdown-item" 
-                     data-id="{{ .ID }}" 
-                     data-description="{{ .Description }}"
-                     onmousedown="selectDropdownItem(this)">
-                    {{ .Description }}
+<div class="item-card-row sales-grid-row item-grid-row">
+    <!-- Top Row: Item Search & Actions -->
+    <div class="item-card-header">
+        <div class="item-card-search">
+            <label class="item-field-label">Item Description</label>
+            <div class="searchable-dropdown">
+                <input type="text" 
+                       class="form-input dropdown-search" 
+                       placeholder="Search Item..." 
+                       value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
+                       onfocus="showDropdown(this); this.select();"
+                       onclick="showDropdown(this); this.select();"
+                       onblur="hideDropdown(this)"
+                       oninput="filterDropdown(this)"
+                       onkeydown="handleDropdownKeydown(event, this)"
+                       style="width: 100%; font-weight: 500;" 
+                       required>
+                <input type="hidden" 
+                       name="item_id" 
+                       value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
+                       hx-get="/sales/item-row-details" 
+                       hx-include="this"
+                       hx-target="closest .item-grid-row" 
+                       hx-swap="outerHTML" 
+                       hx-trigger="change">
+                <div class="dropdown-list">
+                    {{ range .Items }}
+                    <div class="dropdown-item" 
+                         data-id="{{ .ID }}" 
+                         data-description="{{ .Description }}"
+                         onmousedown="selectDropdownItem(this)">
+                        {{ .Description }}
+                    </div>
+                    {{ end }}
                 </div>
-                {{ end }}
             </div>
         </div>
-    </div>
-    <!-- 2. PL No -->
-    <div class="item-grid-cell">
-        <input type="text" name="ref_pl" class="form-input" value="{{ .PLNo }}" readonly placeholder="N/A" style="background-color: rgba(0,0,0,0.03); color: var(--text-muted); cursor: not-allowed;">
-    </div>
-    <!-- 3. UOM -->
-    <div class="item-grid-cell">
-        <select name="uom" class="form-input" required style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;">
-            <option value="">-- Select --</option>
-            {{ $selectedUOM := .DefaultUOM }}
-            {{ range .Uoms }}
-            <option value="{{ .Code }}" {{ if eq .Code $selectedUOM }}selected{{ end }}>{{ .Code }}</option>
-            {{ end }}
-        </select>
-    </div>
-    <!-- 4. Qty -->
-    <div class="item-grid-cell">
-        <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" oninput="calcSaleRow(this)" required placeholder="0">
-    </div>
-    <!-- 5. Price -->
-    <div class="item-grid-cell">
-        <input type="number" step="any" name="price" class="form-input" value="{{ if .Price }}{{ printf "%.2f" .Price }}{{ end }}" oninput="calcSaleRow(this)" required placeholder="0.00">
-    </div>
-    <!-- 6. Total Price (auto-computed: Qty * Price) -->
-    <div class="item-grid-cell">
-        <input type="text" name="total_price_calc" class="form-input" readonly placeholder="0.00" style="background-color: rgba(0,0,0,0.03); font-weight: 600; color: var(--text-color); cursor: not-allowed;">
-    </div>
-    <!-- 7. Cost -->
-    <div class="item-grid-cell">
-        <input type="number" step="any" name="cost" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" oninput="calcSaleRow(this)" required placeholder="0.00">
-    </div>
-    <!-- 8. Total Cost (auto-computed: Qty * Cost) -->
-    <div class="item-grid-cell">
-        <input type="text" name="total_cost_calc" class="form-input" readonly placeholder="0.00" style="background-color: rgba(0,0,0,0.03); font-weight: 600; color: var(--text-color); cursor: not-allowed;">
-    </div>
-    <!-- 9. Patong -->
-    <div class="item-grid-cell">
-        <input type="number" step="any" name="patong" class="form-input" value="0.00" oninput="calcSaleRow(this)" placeholder="0.00">
-    </div>
-    <!-- 10. POS Charge -->
-    <div class="item-grid-cell">
-        <input type="number" step="any" name="pos_charge" class="form-input" value="0.00" oninput="calcSaleRow(this)" placeholder="0.00">
-    </div>
-    <!-- 11. WT 2307 -->
-    <div class="item-grid-cell">
-        <input type="number" step="any" name="wt_2307" class="form-input" value="0.00" oninput="calcSaleRow(this)" placeholder="0.00">
-    </div>
-    <!-- 12. Total Remit (auto-computed: Total Price - (Patong + POS Charge + WT 2307)) -->
-    <div class="item-grid-cell">
-        <input type="text" name="total_remit_calc" class="form-input" readonly placeholder="0.00" style="background-color: rgba(0,0,0,0.03); font-weight: 600; color: var(--primary-color); cursor: not-allowed;">
-    </div>
-    <!-- 13. Profit (auto-computed: Total Price - Total Cost) -->
-    <div class="item-grid-cell">
-        <input type="text" name="profit_calc" class="form-input" readonly placeholder="0.00" style="background-color: rgba(0,0,0,0.03); font-weight: 600; color: var(--success-color, #10b981); cursor: not-allowed;">
-    </div>
-    <!-- 14. Profit Margin (auto-computed: (Profit / Total Price) * 100) -->
-    <div class="item-grid-cell">
-        <input type="text" name="profit_margin_calc" class="form-input" readonly placeholder="0.00%" style="background-color: rgba(0,0,0,0.03); font-weight: 600; color: var(--text-color); cursor: not-allowed;">
-    </div>
-    <!-- 15. Remarks -->
-    <div class="item-grid-cell">
-        <input type="text" name="remarks" class="form-input" placeholder="Remarks...">
-    </div>
-    <!-- 16. Actions -->
-    <div class="item-grid-cell">
-        <div class="actions-cell">
-            <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.item-grid-row').remove()" title="Remove">
+        <div class="item-card-actions">
+            <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.item-grid-row').remove()" title="Remove Item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -109,6 +47,75 @@
             </button>
         </div>
     </div>
+
+    <!-- Inputs Grid 1: Specs & Pricing -->
+    <div class="item-card-fields-grid item-grid-sales-1">
+        <div class="item-field-group">
+            <label class="item-field-label">PL No</label>
+            <input type="text" name="ref_pl" class="form-input readonly-input" value="{{ .PLNo }}" readonly placeholder="N/A">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">UOM</label>
+            <select name="uom" class="form-input" required style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;">
+                <option value="">-- Select --</option>
+                {{ $selectedUOM := .DefaultUOM }}
+                {{ range .Uoms }}
+                <option value="{{ .Code }}" {{ if eq .Code $selectedUOM }}selected{{ end }}>{{ .Code }}</option>
+                {{ end }}
+            </select>
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Qty</label>
+            <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" oninput="calcSaleRow(this)" required placeholder="0">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Unit Selling Price</label>
+            <input type="number" step="any" name="price" class="form-input" value="{{ if .Price }}{{ printf "%.2f" .Price }}{{ end }}" oninput="calcSaleRow(this)" required placeholder="0.00">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Total Price</label>
+            <input type="text" name="total_price_calc" class="form-input readonly-input font-semibold" readonly placeholder="0.00">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Unit Cost</label>
+            <input type="number" step="any" name="cost" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" oninput="calcSaleRow(this)" required placeholder="0.00">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Total Cost</label>
+            <input type="text" name="total_cost_calc" class="form-input readonly-input font-semibold" readonly placeholder="0.00">
+        </div>
+    </div>
+
+    <!-- Inputs Grid 2: Deductions, Remit, Profit & Remarks -->
+    <div class="item-card-fields-grid item-grid-sales-2">
+        <div class="item-field-group">
+            <label class="item-field-label">Patong</label>
+            <input type="number" step="any" name="patong" class="form-input" value="0.00" oninput="calcSaleRow(this)" placeholder="0.00">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">POS Charge</label>
+            <input type="number" step="any" name="pos_charge" class="form-input" value="0.00" oninput="calcSaleRow(this)" placeholder="0.00">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">WT 2307</label>
+            <input type="number" step="any" name="wt_2307" class="form-input" value="0.00" oninput="calcSaleRow(this)" placeholder="0.00">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label text-primary">Total Remit</label>
+            <input type="text" name="total_remit_calc" class="form-input readonly-input font-semibold text-primary" readonly placeholder="0.00">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label text-success">Profit</label>
+            <input type="text" name="profit_calc" class="form-input readonly-input font-semibold text-success" readonly placeholder="0.00">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Profit %</label>
+            <input type="text" name="profit_margin_calc" class="form-input readonly-input font-semibold" readonly placeholder="0.00%">
+        </div>
+        <div class="item-field-group">
+            <label class="item-field-label">Remarks</label>
+            <input type="text" name="remarks" class="form-input" placeholder="Remarks...">
+        </div>
+    </div>
 </div>
 {{ end }}
-

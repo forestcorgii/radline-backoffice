@@ -28,17 +28,8 @@
         </div>
 
         <div class="item-grid-container">
-            <div class="item-grid-table">
-                <div class="item-grid-header adjustment-grid-header">
-                    <div>Item</div>
-                    <div>UOM</div>
-                    <div>Adj Qty (Negative to subtract)</div>
-                    <div>Unit Cost</div>
-                    <div>Actions</div>
-                </div>
-                <div id="adjustment-items-tbody">
-                    {{ template "adjustment_item_row.html" .AdjustmentRowData }}
-                </div>
+            <div id="adjustment-items-tbody">
+                {{ template "adjustment_item_row.html" .AdjustmentRowData }}
             </div>
         </div>
 
