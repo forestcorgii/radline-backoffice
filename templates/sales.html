@@ -55,28 +55,8 @@
         </div>
 
         <div class="item-grid-container">
-            <div class="item-grid-table">
-                <div class="item-grid-header sales-grid-header">
-                    <div>Item</div>
-                    <div>PL No</div>
-                    <div>UOM</div>
-                    <div>Qty</div>
-                    <div>Price</div>
-                    <div>Total Price</div>
-                    <div>Cost</div>
-                    <div>Total Cost</div>
-                    <div>Patong</div>
-                    <div>POS Charge</div>
-                    <div>WT 2307</div>
-                    <div>Total Remit</div>
-                    <div>Profit</div>
-                    <div>Profit Margin</div>
-                    <div>Remarks</div>
-                    <div>Actions</div>
-                </div>
-                <div id="sales-items-tbody">
-                    {{ template "sale_item_row.html" .SalesRowData }}
-                </div>
+            <div id="sales-items-tbody">
+                {{ template "sale_item_row.html" .SalesRowData }}
             </div>
         </div>
 

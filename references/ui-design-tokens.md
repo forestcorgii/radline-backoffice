@@ -229,6 +229,24 @@ See [[htmx-patterns]] for the toast protocol.
 - **nth-child Flex Ratios**: Apply explicit `flex: ratio 1 0px; min-width: ...` to header labels and `.item-grid-cell:nth-child(n)` cells to guarantee 100% pixel-perfect column alignment across Edge, Chrome, Safari, and Firefox.
 - **Cache Busting & Meta Compatibility**: Include `<meta http-equiv="X-UA-Compatible" content="IE=edge">` in [base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) and increment `index.css?v=2.0` query version to force Edge to reload fresh stylesheets.
 
+### Context: Standardizing Radline BackOffice to shadcn/ui Design Tokens & Components
+**Problem**: Transforming existing custom styles in `static/index.css` to match the official **shadcn/ui** design language while preserving HTMX and Go HTML template compatibility.
+**Enforced Solution**:
+- **shadcn HSL Design System Tokens**: Configured standard HSL CSS variables (`--background`, `--foreground`, `--card`, `--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`) in `:root` and mapped legacy application CSS variables to them.
+- **shadcn Primitive Component Specifications**:
+  - **Cards (`.card`)**: High-contrast white/slate card with subtle border `1px solid hsl(var(--border))` and `shadow-sm`.
+  - **Inputs & Selects (`input`, `select`, `.form-input`)**: Height `2.25rem`, radius `0.5rem`, focus ring `ring-2 ring-ring`.
+  - **Buttons (`.btn`, `.btn-secondary`, `.btn-outline`, `.btn-ghost`, `.btn-danger`, `.btn-success`)**: Standard `2.25rem` height, rounded-md corners, high contrast slate dark primary button fill and clear focus rings.
+  - **Badges (`.badge`, `.badge-secondary`, `.badge-success`, `.badge-danger`, `.badge-warning`)**: Rounded pill style badges with soft tint background fills and crisp text contrast.
+  - **Tables**: Muted uppercase headers, subtle borders, row hover highlights.
+
+### Context: Universal shadcn/ui Alert Dialog for HTMX Confirmations and JS Alerts
+**Problem**: Native browser `window.confirm()` popups and `window.alert()` dialogs broke the visual aesthetics of the application and provided inconsistent user experience across different browsers.
+**Enforced Solution**:
+- **shadcn Alert Dialog Markup & Styling**: Created `.alert-dialog-overlay`, `.alert-dialog-content`, `.alert-dialog-header`, `.alert-dialog-title`, `.alert-dialog-description`, `.alert-dialog-footer` in [static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css) and added `#shadcn-alert-dialog` modal markup to [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html).
+- **HTMX Event Interception (`htmx:confirm`)**: Attached a global listener for `htmx:confirm` that prevents the default browser popup and presents the shadcn Alert Dialog with smooth backdrop blur and scale-in animation. Clicking "Continue" calls `evt.detail.issueRequest(true)` to proceed.
+- **Window Alert & Confirm Override**: Overrode `window.alert` and `window.confirm` to route through `window.showShadcnAlertDialog()` for consistent UI across the entire application.
+
 
 
 

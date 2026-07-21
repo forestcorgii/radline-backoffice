@@ -165,8 +165,37 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
   2. **Second pass**: If multiple links in the same dropdown are active, keep only the one with the **longest href** (most specific match) and deactivate the rest.
 - This ensures only one sub-link is active at a time while still supporting parent-link highlighting for sub-pages (e.g., `/items/new` highlights `/items`).
 
+### Context: Displaying All Menu and Sub-menu Logo Icons Altogether when Sidebar is Minimized
+**Problem**: Previously, when the sidebar was collapsed (`.sidebar.collapsed`), sub-menu links were hidden inside popovers that relied on CSS hover, causing sub-menu icons to be hidden or hard to access when minimized.
+**Enforced Solution**:
+- **SVG Logos for Sub-menu Items**: Wrap all sub-menu links in `<span class="nav-icon-text">` containing distinct 18x18 SVG icons (`.nav-icon`) matching top-level menu icon style (2px stroke width, `currentColor`).
+- **Inline Collapsed Navigation**: When `.sidebar.collapsed`, hide non-link category headers (`.sidebar-dropdown-trigger`) and display all `.sidebar-dropdown-menu` containers inline as a continuous vertical column:
+  ```css
+  .sidebar.collapsed .sidebar-dropdown-trigger {
+      display: none !important;
+  }
+  .sidebar.collapsed .sidebar-dropdown-menu {
+      display: flex !important;
+      flex-direction: column;
+      gap: 0.125rem;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+  }
+  .sidebar.collapsed .sidebar-nav a,
+  .sidebar.collapsed .sidebar-dropdown-menu a {
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center;
+      padding: 0.5rem !important;
+  }
+  ```
+- All menu and sub-menu item icons (Dashboard, Sales, Overview, Monthly Inventory, Receiving Logs, Adjustment Logs, Items, Settings, Import, Receipt Scanner) now display centered altogether in the 64px minimized sidebar column with native tooltips (`title="..."`) on hover.
+
+
 ## Related
 - [[ui-design-tokens]] — CSS classes and variables
 - [[responsive-design]] — Mobile breakpoints
 - [[htmx-patterns]] — SPA navigation via HTMX
 - [[templates-overview]] — Base template structure
+
