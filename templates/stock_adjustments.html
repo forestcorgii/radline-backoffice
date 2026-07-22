@@ -3,15 +3,16 @@
 {{ end }}
 
 {{ define "content" }}
-<div style="margin-bottom: 1.5rem;">
+<!-- <div style="margin-bottom: 1.5rem;">
     <a href="/inventory" hx-get="/inventory" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
         ← Back to Inventory
     </a>
-</div>
+</div> -->
 
 <div class="card mb-4">
     <h2 class="mb-4">New Stock Adjustment</h2>
-    <form hx-post="/inventory/adjustments/add" hx-target="#adjustment-tbody" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('adj_date').valueAsDate = new Date(); const tbody = document.getElementById('adjustment-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
+    <form hx-post="/inventory/adjustments/add" hx-target="#adjustment-tbody" hx-swap="innerHTML"
+        hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('adj_date').valueAsDate = new Date(); const tbody = document.getElementById('adjustment-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
         <div class="grid grid-adj-header">
             <div class="form-group">
                 <label for="adj_date">Adjustment Date</label>
@@ -20,7 +21,8 @@
             </div>
             <div class="form-group">
                 <label for="adj_remarks">Remarks / Reason</label>
-                <input type="text" id="adj_remarks" name="remarks" placeholder="e.g. Damaged inventory, annual count adjustment" class="form-input" required>
+                <input type="text" id="adj_remarks" name="remarks"
+                    placeholder="e.g. Damaged inventory, annual count adjustment" class="form-input" required>
             </div>
         </div>
 
@@ -34,8 +36,10 @@
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;" class="mt-4">
-            <button type="button" class="btn btn-secondary" hx-get="/inventory/adjustments/new-row" hx-target="#adjustment-items-tbody" hx-swap="beforeend">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;"
+            class="mt-4">
+            <button type="button" class="btn btn-secondary" hx-get="/inventory/adjustments/new-row"
+                hx-target="#adjustment-items-tbody" hx-swap="beforeend">
                 + Add Item Row
             </button>
             <button type="submit" class="btn">Commit Adjustment</button>

@@ -696,14 +696,26 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var items []models.Item
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	var uoms []models.Uom
+	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
+	receivingRowData := map[string]interface{}{
+		"Items": items,
+		"Uoms":  uoms,
+	}
+
 	data := struct {
-		ReceivingLogs  []models.ReceivingLogWithItem
-		Suppliers      []string
-		SupplierFilter string
+		ReceivingLogs    []models.ReceivingLogWithItem
+		Suppliers        []string
+		SupplierFilter   string
+		ReceivingRowData interface{}
 	}{
-		ReceivingLogs:  receivingLogs,
-		Suppliers:      suppliers,
-		SupplierFilter: supplierFilter,
+		ReceivingLogs:    receivingLogs,
+		Suppliers:        suppliers,
+		SupplierFilter:   supplierFilter,
+		ReceivingRowData: receivingRowData,
 	}
 
 	app.RenderPage(w, r, "receiving_logs.html", data)
@@ -763,10 +775,22 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var adjItems []models.Item
+	_ = db.DB.Select(&adjItems, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	var adjUoms []models.Uom
+	_ = db.DB.Select(&adjUoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
+	adjustmentRowData := map[string]interface{}{
+		"Items": adjItems,
+		"Uoms":  adjUoms,
+	}
+
 	data := struct {
-		AdjustmentLogs []models.InventoryAdjustmentWithItem
+		AdjustmentLogs    []models.InventoryAdjustmentWithItem
+		AdjustmentRowData interface{}
 	}{
-		AdjustmentLogs: adjustmentLogs,
+		AdjustmentLogs:    adjustmentLogs,
+		AdjustmentRowData: adjustmentRowData,
 	}
 
 	app.RenderPage(w, r, "adjustment_logs.html", data)
