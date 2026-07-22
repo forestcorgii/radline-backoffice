@@ -59,16 +59,16 @@
 
         <div id="adjustment-logs-results">
             <div class="table-container">
-                <table class="table-scroll-md">
+                <table class="table-scroll-md resizable-table adjustment-logs-table">
                     <thead>
                         <tr>
-                            <th>Adj#</th>
-                            <th>Date</th>
-                            <th>Item Description</th>
-                            <th>Adj Qty</th>
-                            <th>UOM</th>
-                            <th>Cost Impact</th>
-                            <th>Remarks</th>
+                            <th data-col="adj_id">Adj#</th>
+                            <th data-col="date">Date</th>
+                            <th data-col="item_description">Item Description</th>
+                            <th data-col="adj_qty">Adj Qty</th>
+                            <th data-col="uom">UOM</th>
+                            <th data-col="cost_impact">Cost Impact</th>
+                            <th data-col="remarks">Remarks</th>
                         </tr>
                     </thead>
                     <tbody id="adjustment-logs-tbody">
@@ -81,6 +81,150 @@
 </div>
 
 <script>
+    (function () {
+        const DEFAULT_ADJUSTMENT_COL_WIDTHS = {
+            adj_id: 100,
+            date: 110,
+            item_description: 250,
+            adj_qty: 100,
+            uom: 80,
+            cost_impact: 120,
+            remarks: 200
+        };
+
+        function getAdjustmentColumnWidths() {
+            try {
+                const stored = localStorage.getItem('radline_adjustment_column_widths');
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to parse adjustment column widths', e);
+            }
+            return Object.assign({}, DEFAULT_ADJUSTMENT_COL_WIDTHS);
+        }
+
+        let currentAdjustmentColumnWidths = getAdjustmentColumnWidths();
+
+        function saveAdjustmentColumnWidths() {
+            try {
+                localStorage.setItem('radline_adjustment_column_widths', JSON.stringify(currentAdjustmentColumnWidths));
+            } catch (e) {
+                console.error('Failed to save adjustment column widths', e);
+            }
+        }
+
+        window.applyAdjustmentColumnWidths = function () {
+            let styleEl = document.getElementById('adjustment-column-widths-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'adjustment-column-widths-style';
+                document.head.appendChild(styleEl);
+            }
+
+            const cssRules = [];
+            Object.keys(currentAdjustmentColumnWidths).forEach(colKey => {
+                const w = currentAdjustmentColumnWidths[colKey];
+                if (w) {
+                    cssRules.push(`
+                        .adjustment-logs-table th[data-col="${colKey}"],
+                        .adjustment-logs-table td[data-col="${colKey}"] {
+                            width: ${w}px !important;
+                            min-width: ${w}px !important;
+                            max-width: ${w}px !important;
+                            box-sizing: border-box;
+                        }
+                    `);
+                }
+            });
+
+            styleEl.textContent = cssRules.join('\n');
+        };
+
+        window.initAdjustmentColumnResizing = function () {
+            const headers = document.querySelectorAll('.adjustment-logs-table th[data-col]');
+            headers.forEach(th => {
+                if (th.querySelector('.table-col-resizer')) return;
+
+                const resizer = document.createElement('div');
+                resizer.className = 'table-col-resizer';
+                th.appendChild(resizer);
+
+                const colKey = th.getAttribute('data-col');
+
+                let startX = 0;
+                let startWidth = 0;
+
+                const onPointerDown = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    startX = clientX;
+                    startWidth = th.offsetWidth;
+
+                    resizer.classList.add('resizing');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+
+                    const onPointerMove = function (moveEvent) {
+                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                        const deltaX = currentX - startX;
+                        const newWidth = Math.max(40, startWidth + deltaX);
+
+                        currentAdjustmentColumnWidths[colKey] = newWidth;
+                        window.applyAdjustmentColumnWidths();
+                    };
+
+                    const onPointerUp = function () {
+                        resizer.classList.remove('resizing');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+
+                        document.removeEventListener('mousemove', onPointerMove);
+                        document.removeEventListener('mouseup', onPointerUp);
+                        document.removeEventListener('touchmove', onPointerMove);
+                        document.removeEventListener('touchend', onPointerUp);
+
+                        saveAdjustmentColumnWidths();
+                    };
+
+                    document.addEventListener('mousemove', onPointerMove);
+                    document.addEventListener('mouseup', onPointerUp);
+                    document.addEventListener('touchmove', onPointerMove, { passive: false });
+                    document.addEventListener('touchend', onPointerUp);
+                };
+
+                resizer.addEventListener('mousedown', onPointerDown);
+                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
+
+                resizer.addEventListener('dblclick', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (DEFAULT_ADJUSTMENT_COL_WIDTHS[colKey]) {
+                        currentAdjustmentColumnWidths[colKey] = DEFAULT_ADJUSTMENT_COL_WIDTHS[colKey];
+                    } else {
+                        delete currentAdjustmentColumnWidths[colKey];
+                    }
+                    saveAdjustmentColumnWidths();
+                    window.applyAdjustmentColumnWidths();
+                });
+            });
+        };
+
+        window.applyAdjustmentColumnWidths();
+        window.initAdjustmentColumnResizing();
+    })();
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applyAdjustmentColumnWidths === 'function') {
+            window.applyAdjustmentColumnWidths();
+        }
+        if (typeof window.initAdjustmentColumnResizing === 'function') {
+            window.initAdjustmentColumnResizing();
+        }
+    });
+
     document.body.addEventListener('stock-adjusted', function () {
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {

@@ -502,6 +502,54 @@ table {
 	border-collapse: collapse;
 }
 
+.resizable-table,
+.sales-log-table {
+	table-layout: fixed;
+	width: 100%;
+}
+
+.resizable-table th[data-col],
+.sales-log-table th[data-col] {
+	position: relative;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.resizable-table td[data-col],
+.sales-log-table td[data-col] {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.resizable-table td[data-col] .form-input,
+.sales-log-table td[data-col] .form-input {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.table-col-resizer,
+.sales-log-col-resizer {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 7px;
+	height: 100%;
+	cursor: col-resize;
+	user-select: none;
+	z-index: 10;
+	transition: background-color 0.15s ease;
+}
+
+.table-col-resizer:hover,
+.table-col-resizer.resizing,
+.sales-log-col-resizer:hover,
+.sales-log-col-resizer.resizing {
+	background-color: var(--primary-color);
+	opacity: 0.8;
+}
+
 th,
 td {
 	padding: 0.5rem 0.75rem;

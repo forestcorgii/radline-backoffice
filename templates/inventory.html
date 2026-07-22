@@ -140,17 +140,17 @@
 
         <div id="inventory-stock-results">
             <div class="table-container">
-                <table class="table-scroll-md">
+                <table class="table-scroll-md resizable-table inventory-stock-table">
                     <thead>
                         <tr>
-                            <th data-col="description" style="width: 36%;">Description</th>
-                            <th data-col="uom" style="width: 8%;">UOM</th>
-                            <th data-col="received" style="width: 10%;">Received</th>
-                            <th data-col="sold" style="width: 8%;">Sold</th>
-                            <th data-col="adjusted" style="width: 10%;">Adjusted</th>
-                            <th data-col="on_hand" style="width: 10%;">On Hand</th>
-                            <th data-col="current_cost" style="width: 9%;">Current Cost</th>
-                            <th data-col="current_price" style="width: 9%;">Current Price</th>
+                            <th data-col="description">Description</th>
+                            <th data-col="uom">UOM</th>
+                            <th data-col="received">Received</th>
+                            <th data-col="sold">Sold</th>
+                            <th data-col="adjusted">Adjusted</th>
+                            <th data-col="on_hand">On Hand</th>
+                            <th data-col="current_cost">Current Cost</th>
+                            <th data-col="current_price">Current Price</th>
                         </tr>
                     </thead>
                     <tbody id="inventory-stock-tbody">
@@ -180,6 +180,137 @@
                 stock_filter: true,
                 limit: true
             }
+        };
+
+        const DEFAULT_INVENTORY_COL_WIDTHS = {
+            description: 250,
+            uom: 80,
+            received: 100,
+            sold: 80,
+            adjusted: 100,
+            on_hand: 100,
+            current_cost: 110,
+            current_price: 110
+        };
+
+        function getInventoryColumnWidths() {
+            try {
+                const stored = localStorage.getItem('radline_inventory_column_widths');
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to parse inventory column widths', e);
+            }
+            return Object.assign({}, DEFAULT_INVENTORY_COL_WIDTHS);
+        }
+
+        let currentInventoryColumnWidths = getInventoryColumnWidths();
+
+        function saveInventoryColumnWidths() {
+            try {
+                localStorage.setItem('radline_inventory_column_widths', JSON.stringify(currentInventoryColumnWidths));
+            } catch (e) {
+                console.error('Failed to save inventory column widths', e);
+            }
+        }
+
+        window.applyInventoryColumnWidths = function () {
+            let styleEl = document.getElementById('inventory-column-widths-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'inventory-column-widths-style';
+                document.head.appendChild(styleEl);
+            }
+
+            const cssRules = [];
+            Object.keys(currentInventoryColumnWidths).forEach(colKey => {
+                const w = currentInventoryColumnWidths[colKey];
+                if (w) {
+                    cssRules.push(`
+                        .inventory-stock-table th[data-col="${colKey}"],
+                        .inventory-stock-table td[data-col="${colKey}"] {
+                            width: ${w}px !important;
+                            min-width: ${w}px !important;
+                            max-width: ${w}px !important;
+                            box-sizing: border-box;
+                        }
+                    `);
+                }
+            });
+
+            styleEl.textContent = cssRules.join('\n');
+        };
+
+        window.initInventoryColumnResizing = function () {
+            const headers = document.querySelectorAll('.inventory-stock-table th[data-col]');
+            headers.forEach(th => {
+                if (th.querySelector('.table-col-resizer')) return;
+
+                const resizer = document.createElement('div');
+                resizer.className = 'table-col-resizer';
+                th.appendChild(resizer);
+
+                const colKey = th.getAttribute('data-col');
+
+                let startX = 0;
+                let startWidth = 0;
+
+                const onPointerDown = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    startX = clientX;
+                    startWidth = th.offsetWidth;
+
+                    resizer.classList.add('resizing');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+
+                    const onPointerMove = function (moveEvent) {
+                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                        const deltaX = currentX - startX;
+                        const newWidth = Math.max(40, startWidth + deltaX);
+
+                        currentInventoryColumnWidths[colKey] = newWidth;
+                        window.applyInventoryColumnWidths();
+                    };
+
+                    const onPointerUp = function () {
+                        resizer.classList.remove('resizing');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+
+                        document.removeEventListener('mousemove', onPointerMove);
+                        document.removeEventListener('mouseup', onPointerUp);
+                        document.removeEventListener('touchmove', onPointerMove);
+                        document.removeEventListener('touchend', onPointerUp);
+
+                        saveInventoryColumnWidths();
+                    };
+
+                    document.addEventListener('mousemove', onPointerMove);
+                    document.addEventListener('mouseup', onPointerUp);
+                    document.addEventListener('touchmove', onPointerMove, { passive: false });
+                    document.addEventListener('touchend', onPointerUp);
+                };
+
+                resizer.addEventListener('mousedown', onPointerDown);
+                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
+
+                resizer.addEventListener('dblclick', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (DEFAULT_INVENTORY_COL_WIDTHS[colKey]) {
+                        currentInventoryColumnWidths[colKey] = DEFAULT_INVENTORY_COL_WIDTHS[colKey];
+                    } else {
+                        delete currentInventoryColumnWidths[colKey];
+                    }
+                    saveInventoryColumnWidths();
+                    window.applyInventoryColumnWidths();
+                });
+            });
         };
 
         function getInventoryViewConfig() {
@@ -249,6 +380,9 @@
 
         window.resetInventoryViewSettings = function () {
             saveInventoryViewConfig(DEFAULT_INVENTORY_VIEW_CONFIG);
+            localStorage.removeItem('radline_inventory_column_widths');
+            currentInventoryColumnWidths = Object.assign({}, DEFAULT_INVENTORY_COL_WIDTHS);
+            window.applyInventoryColumnWidths();
             window.applyInventoryViewSettings();
         };
 
@@ -268,7 +402,9 @@
             }
         });
 
+        window.applyInventoryColumnWidths();
         window.applyInventoryViewSettings();
+        window.initInventoryColumnResizing();
     })();
 
     function toggleReceiveStockForm() {
@@ -298,8 +434,14 @@
     }
 
     document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applyInventoryColumnWidths === 'function') {
+            window.applyInventoryColumnWidths();
+        }
         if (typeof window.applyInventoryViewSettings === 'function') {
             window.applyInventoryViewSettings();
+        }
+        if (typeof window.initInventoryColumnResizing === 'function') {
+            window.initInventoryColumnResizing();
         }
     });
 

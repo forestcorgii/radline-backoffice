@@ -76,6 +76,158 @@
 </div>
 
 <script>
+    (function () {
+        const DEFAULT_RECEIVING_COL_WIDTHS = {
+            date: 100,
+            pl_no: 100,
+            supplier: 90,
+            qty: 70,
+            description: 200,
+            uom: 70,
+            unit_price: 90,
+            less1: 75,
+            less2: 75,
+            unit_cost: 90,
+            total_cost: 95,
+            markup: 75,
+            selling_price: 100,
+            remarks: 130,
+            actions: 90
+        };
+
+        function getReceivingColumnWidths() {
+            try {
+                const stored = localStorage.getItem('radline_receiving_column_widths');
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to parse receiving column widths', e);
+            }
+            return Object.assign({}, DEFAULT_RECEIVING_COL_WIDTHS);
+        }
+
+        let currentReceivingColumnWidths = getReceivingColumnWidths();
+
+        function saveReceivingColumnWidths() {
+            try {
+                localStorage.setItem('radline_receiving_column_widths', JSON.stringify(currentReceivingColumnWidths));
+            } catch (e) {
+                console.error('Failed to save receiving column widths', e);
+            }
+        }
+
+        window.applyReceivingColumnWidths = function () {
+            let styleEl = document.getElementById('receiving-column-widths-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'receiving-column-widths-style';
+                document.head.appendChild(styleEl);
+            }
+
+            const cssRules = [];
+            Object.keys(currentReceivingColumnWidths).forEach(colKey => {
+                const w = currentReceivingColumnWidths[colKey];
+                if (w) {
+                    cssRules.push(`
+                        .receiving-logs-table th[data-col="${colKey}"],
+                        .receiving-logs-table td[data-col="${colKey}"] {
+                            width: ${w}px !important;
+                            min-width: ${w}px !important;
+                            max-width: ${w}px !important;
+                            box-sizing: border-box;
+                        }
+                    `);
+                }
+            });
+
+            styleEl.textContent = cssRules.join('\n');
+        };
+
+        window.initReceivingColumnResizing = function () {
+            const headers = document.querySelectorAll('.receiving-logs-table th[data-col]');
+            headers.forEach(th => {
+                if (th.querySelector('.table-col-resizer')) return;
+
+                const resizer = document.createElement('div');
+                resizer.className = 'table-col-resizer';
+                th.appendChild(resizer);
+
+                const colKey = th.getAttribute('data-col');
+
+                let startX = 0;
+                let startWidth = 0;
+
+                const onPointerDown = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    startX = clientX;
+                    startWidth = th.offsetWidth;
+
+                    resizer.classList.add('resizing');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+
+                    const onPointerMove = function (moveEvent) {
+                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                        const deltaX = currentX - startX;
+                        const newWidth = Math.max(40, startWidth + deltaX);
+
+                        currentReceivingColumnWidths[colKey] = newWidth;
+                        window.applyReceivingColumnWidths();
+                    };
+
+                    const onPointerUp = function () {
+                        resizer.classList.remove('resizing');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+
+                        document.removeEventListener('mousemove', onPointerMove);
+                        document.removeEventListener('mouseup', onPointerUp);
+                        document.removeEventListener('touchmove', onPointerMove);
+                        document.removeEventListener('touchend', onPointerUp);
+
+                        saveReceivingColumnWidths();
+                    };
+
+                    document.addEventListener('mousemove', onPointerMove);
+                    document.addEventListener('mouseup', onPointerUp);
+                    document.addEventListener('touchmove', onPointerMove, { passive: false });
+                    document.addEventListener('touchend', onPointerUp);
+                };
+
+                resizer.addEventListener('mousedown', onPointerDown);
+                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
+
+                resizer.addEventListener('dblclick', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (DEFAULT_RECEIVING_COL_WIDTHS[colKey]) {
+                        currentReceivingColumnWidths[colKey] = DEFAULT_RECEIVING_COL_WIDTHS[colKey];
+                    } else {
+                        delete currentReceivingColumnWidths[colKey];
+                    }
+                    saveReceivingColumnWidths();
+                    window.applyReceivingColumnWidths();
+                });
+            });
+        };
+
+        window.applyReceivingColumnWidths();
+        window.initReceivingColumnResizing();
+    })();
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applyReceivingColumnWidths === 'function') {
+            window.applyReceivingColumnWidths();
+        }
+        if (typeof window.initReceivingColumnResizing === 'function') {
+            window.initReceivingColumnResizing();
+        }
+    });
+
     document.body.addEventListener('stock-received', function () {
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {

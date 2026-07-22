@@ -1,15 +1,15 @@
 {{ define "adjustment_logs_results.html" }}
 <div class="table-container">
-    <table class="table-scroll-md">
+    <table class="table-scroll-md resizable-table adjustment-logs-table">
         <thead>
             <tr>
-                <th style="width: 10%;">Adj#</th>
-                <th style="width: 14%;">Date</th>
-                <th style="width: 16%;">Item Description</th>
-                <th style="width: 10%;">Adj Qty</th>
-                <th style="width: 8%;">UOM</th>
-                <th style="width: 12%;">Cost Impact</th>
-                <th style="width: 30%;">Remarks</th>
+                <th data-col="adj_id">Adj#</th>
+                <th data-col="date">Date</th>
+                <th data-col="item_description">Item Description</th>
+                <th data-col="adj_qty">Adj Qty</th>
+                <th data-col="uom">UOM</th>
+                <th data-col="cost_impact">Cost Impact</th>
+                <th data-col="remarks">Remarks</th>
             </tr>
         </thead>
         <tbody id="adjustment-logs-tbody">
