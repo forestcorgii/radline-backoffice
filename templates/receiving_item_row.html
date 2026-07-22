@@ -85,8 +85,8 @@
             <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required placeholder="0">
         </div>
         <div class="item-field-group">
-            <label class="item-field-label">Unit Price</label>
-            <input type="number" step="any" name="unit_price" class="form-input" value="{{ if .Price }}{{ printf "%.2f" .Price }}{{ end }}" required placeholder="0.00">
+            <label class="item-field-label">Unit Cost</label>
+            <input type="number" step="any" name="unit_price" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" required placeholder="0.00">
         </div>
         <div class="item-field-group">
             <label class="item-field-label">Less 1 (%)</label>

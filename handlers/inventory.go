@@ -358,7 +358,7 @@ func (app *App) ReceivingItemRowDetailsHandler(w http.ResponseWriter, r *http.Re
 		"Items":          items,
 		"SelectedItemID": itemID,
 		"DefaultUOM":     defaultUOM,
-		"Price":          lastPrice,
+		"Cost":           lastPrice,
 		"Less1":          lastLess1,
 		"Less2":          lastLess2,
 		"Markup":         lastMarkup,

@@ -82,5 +82,41 @@
             htmx.trigger(searchInput, 'search');
         }
     });
+
+    // Autocompute selling price from Unit Cost, Less 1, Less 2, and Markup
+    document.addEventListener('input', function (e) {
+        const target = e.target;
+        if (!target.matches('input[name="unit_price"], input[name="less1"], input[name="less2"], input[name="markup"]')) {
+            return;
+        }
+
+        const row = target.closest('.item-grid-row, tr.editing-row');
+        if (!row) return;
+
+        const unitPriceInput = row.querySelector('input[name="unit_price"]');
+        const less1Input = row.querySelector('input[name="less1"]');
+        const less2Input = row.querySelector('input[name="less2"]');
+        const markupInput = row.querySelector('input[name="markup"]');
+
+        if (!unitPriceInput || !markupInput) return;
+
+        const unitPrice = parseFloat(unitPriceInput.value) || 0;
+        const less1 = less1Input ? (parseFloat(less1Input.value) || 0) : 0;
+        const less2 = less2Input ? (parseFloat(less2Input.value) || 0) : 0;
+        const markup = parseFloat(markupInput.value) || 130;
+
+        const cost = unitPrice * (1 - less1 / 100) * (1 - less2 / 100);
+        const sellingPrice = cost * markup / 100;
+
+        // Display updated calculated values if matching display containers exist in edit/view rows
+        const sellingPriceCell = row.querySelector('.calc-selling-price');
+        if (sellingPriceCell) {
+            sellingPriceCell.textContent = '₱' + sellingPrice.toFixed(2);
+        }
+        const costCell = row.querySelector('.calc-cost');
+        if (costCell) {
+            costCell.textContent = '₱' + cost.toFixed(2);
+        }
+    });
 </script>
 {{ end }}
