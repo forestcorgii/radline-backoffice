@@ -193,9 +193,18 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
 - All menu and sub-menu item icons (Dashboard, Sales, Overview, Monthly Inventory, Receiving Logs, Adjustment Logs, Items, Settings, Import, Receipt Scanner) now display centered altogether in the 64px minimized sidebar column with native tooltips (`title="..."`) on hover.
 
 
+### Context: Sidebar Navigation Z-Index and Dropdown Cleanup Fix
+**Problem**: Users could not click sidebar navigation links or the "+ Add Item Row" button. Page cards/forms containing `.searchable-dropdown` elements were applying `z-index: 9000 !important` and `z-index: 9500 !important` to parent `.card`, `form`, `.table-container`, and `tr` elements. This stacked page content 9x higher than `.sidebar` (`z-index: 1000`), causing content cards to intercept clicks intended for the sidebar. Additionally, selecting item dropdown options failed to clean up container `has-dropdown` states, leaving cards permanently elevated.
+**Enforced Solution**:
+- **Elevated Sidebar Z-Index**: Increased `.sidebar` `z-index` to `10000` on desktop and `100000` on mobile (and mobile backdrop to `99999`).
+- **Purged Card/Form Z-Index Overrides**: Removed destructive `z-index: 9000 !important` and `z-index: 9500 !important` rules from `.card`, `form`, `.table-container`, and `tr` rules. Since `.dropdown-list` is `position: fixed; z-index: 999999 !important;`, parent cards and forms do not require high z-indexes.
+- **Immediate Dropdown State Cleanup**: Added `cleanupDropdownState(container)` in `base.html` to instantly strip `active`, `has-dropdown`, `active-dropdown-row`, and `active-dropdown-cell` classes on item selection, blur, escape, or outside clicks.
+- **Grid Row Container Focus**: Updated Enter keydown listener to target `#sales-items-tbody`, `#receiving-items-tbody`, `#adjustment-items-tbody` grid containers when auto-focusing newly added item rows.
+
 ## Related
 - [[ui-design-tokens]] — CSS classes and variables
 - [[responsive-design]] — Mobile breakpoints
 - [[htmx-patterns]] — SPA navigation via HTMX
 - [[templates-overview]] — Base template structure
+
 
