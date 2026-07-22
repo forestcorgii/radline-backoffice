@@ -1,16 +1,16 @@
 {{ define "adjustment_rows.html" }}
 {{ range . }}
 <tr>
-    <td><span class="badge badge-secondary">{{ if .AdjustmentID }}ADJ-{{ .AdjustmentID }}{{ else }}-{{ end }}</span>
+    <td data-col="adj_id"><span class="badge badge-secondary">{{ if .AdjustmentID }}ADJ-{{ .AdjustmentID }}{{ else }}-{{ end }}</span>
     </td>
-    <td>{{ .Date.Format "2006-01-02" }}</td>
-    <td style="font-weight: 500;">{{ .Description }}</td>
-    <td style="font-weight: 600;" class="{{ if gt .AdjustmentQty 0.0 }}text-success{{ else }}text-danger{{ end }}">
+    <td data-col="date">{{ .Date.Format "2006-01-02" }}</td>
+    <td data-col="item_description" style="font-weight: 500;">{{ .Description }}</td>
+    <td data-col="adj_qty" style="font-weight: 600;" class="{{ if gt .AdjustmentQty 0.0 }}text-success{{ else }}text-danger{{ end }}">
         {{ if gt .AdjustmentQty 0.0 }}+{{ end }}{{ .AdjustmentQty }}
     </td>
-    <td>{{ .UOM }}</td>
-    <td>₱{{ printf "%.2f" .Cost }}</td>
-    <td style="color: var(--text-muted);">{{ if .Remarks }}{{ .Remarks }}{{ else }}-{{ end }}</td>
+    <td data-col="uom">{{ .UOM }}</td>
+    <td data-col="cost_impact">₱{{ printf "%.2f" .Cost }}</td>
+    <td data-col="remarks" style="color: var(--text-muted);">{{ if .Remarks }}{{ .Remarks }}{{ else }}-{{ end }}</td>
 </tr>
 {{ else }}
 <tr>

@@ -116,3 +116,11 @@ At `≤ 480px`:
 - [[sidebar-navigation]] — Mobile sidebar behavior
 - [[templates-overview]] — Template structure for responsive layout
 
+### Context: Dynamic Column Resizing & LocalStorage Persistence for Tabular Logs
+**Problem**: Users need the ability to adjust table column widths manually to view long strings (e.g. descriptions, remarks) or tighten narrow numeric columns, with column widths persisting across sessions and HTMX view updates.
+**Enforced Solution**:
+- **Fixed Table Layout & Handle Overlay**: Set `table-layout: fixed; width: 100%;` on `.resizable-table` / `.sales-log-table` and append a right-aligned `.table-col-resizer` (width: 7px, cursor: `col-resize`) inside each `th[data-col]`.
+- **Dynamic `<style>` Tag Injection**: Generate/update rules in a single `<style id="<table-name>-column-widths-style">` element in `<head>`. Using CSS rule injection (`.table-class th[data-col="x"], .table-class td[data-col="x"] { width: Wpx !important; min-width: Wpx !important; max-width: Wpx !important; }`) ensures 60 FPS smooth dragging and instant automatic application to newly swapped HTMX rows (`htmx:afterSwap`) without iterating individual DOM cells.
+- **LocalStorage Storage & Double-Click Reset**: Save width maps into `localStorage` (`radline_<table_name>_column_widths`). Double-clicking a resizer handle or clicking "Reset Default" restores default column widths. Implemented across Sales, Adjustment Logs, Receiving Logs, Current Inventory, Monthly Inventory, and Items Masterlist tables.
+
+

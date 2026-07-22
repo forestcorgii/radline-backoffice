@@ -336,7 +336,7 @@
 
         <div id="items-results">
             <div class="table-container">
-                <table class="table-scroll-md">
+                <table class="table-scroll-md resizable-table items-table">
                     <thead>
                         <tr>
                             <th data-col="description">Description</th>
@@ -374,6 +374,135 @@
                 sort: true,
                 limit: true
             }
+        };
+
+        const DEFAULT_ITEMS_COL_WIDTHS = {
+            description: 250,
+            model: 120,
+            brand: 120,
+            category: 120,
+            default_uom: 100,
+            actions: 90
+        };
+
+        function getItemsColumnWidths() {
+            try {
+                const stored = localStorage.getItem('radline_items_column_widths');
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to parse items column widths', e);
+            }
+            return Object.assign({}, DEFAULT_ITEMS_COL_WIDTHS);
+        }
+
+        let currentItemsColumnWidths = getItemsColumnWidths();
+
+        function saveItemsColumnWidths() {
+            try {
+                localStorage.setItem('radline_items_column_widths', JSON.stringify(currentItemsColumnWidths));
+            } catch (e) {
+                console.error('Failed to save items column widths', e);
+            }
+        }
+
+        window.applyItemsColumnWidths = function () {
+            let styleEl = document.getElementById('items-column-widths-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'items-column-widths-style';
+                document.head.appendChild(styleEl);
+            }
+
+            const cssRules = [];
+            Object.keys(currentItemsColumnWidths).forEach(colKey => {
+                const w = currentItemsColumnWidths[colKey];
+                if (w) {
+                    cssRules.push(`
+                        .items-table th[data-col="${colKey}"],
+                        .items-table td[data-col="${colKey}"] {
+                            width: ${w}px !important;
+                            min-width: ${w}px !important;
+                            max-width: ${w}px !important;
+                            box-sizing: border-box;
+                        }
+                    `);
+                }
+            });
+
+            styleEl.textContent = cssRules.join('\n');
+        };
+
+        window.initItemsColumnResizing = function () {
+            const headers = document.querySelectorAll('.items-table th[data-col]');
+            headers.forEach(th => {
+                if (th.querySelector('.table-col-resizer')) return;
+
+                const resizer = document.createElement('div');
+                resizer.className = 'table-col-resizer';
+                th.appendChild(resizer);
+
+                const colKey = th.getAttribute('data-col');
+
+                let startX = 0;
+                let startWidth = 0;
+
+                const onPointerDown = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    startX = clientX;
+                    startWidth = th.offsetWidth;
+
+                    resizer.classList.add('resizing');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+
+                    const onPointerMove = function (moveEvent) {
+                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                        const deltaX = currentX - startX;
+                        const newWidth = Math.max(40, startWidth + deltaX);
+
+                        currentItemsColumnWidths[colKey] = newWidth;
+                        window.applyItemsColumnWidths();
+                    };
+
+                    const onPointerUp = function () {
+                        resizer.classList.remove('resizing');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+
+                        document.removeEventListener('mousemove', onPointerMove);
+                        document.removeEventListener('mouseup', onPointerUp);
+                        document.removeEventListener('touchmove', onPointerMove);
+                        document.removeEventListener('touchend', onPointerUp);
+
+                        saveItemsColumnWidths();
+                    };
+
+                    document.addEventListener('mousemove', onPointerMove);
+                    document.addEventListener('mouseup', onPointerUp);
+                    document.addEventListener('touchmove', onPointerMove, { passive: false });
+                    document.addEventListener('touchend', onPointerUp);
+                };
+
+                resizer.addEventListener('mousedown', onPointerDown);
+                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
+
+                resizer.addEventListener('dblclick', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (DEFAULT_ITEMS_COL_WIDTHS[colKey]) {
+                        currentItemsColumnWidths[colKey] = DEFAULT_ITEMS_COL_WIDTHS[colKey];
+                    } else {
+                        delete currentItemsColumnWidths[colKey];
+                    }
+                    saveItemsColumnWidths();
+                    window.applyItemsColumnWidths();
+                });
+            });
         };
 
         function getItemsViewConfig() {
@@ -444,6 +573,9 @@
 
         window.resetItemsViewSettings = function () {
             saveItemsViewConfig(DEFAULT_ITEMS_VIEW_CONFIG);
+            localStorage.removeItem('radline_items_column_widths');
+            currentItemsColumnWidths = Object.assign({}, DEFAULT_ITEMS_COL_WIDTHS);
+            window.applyItemsColumnWidths();
             window.applyItemsViewSettings();
         };
 
@@ -463,8 +595,22 @@
             }
         });
 
+        window.applyItemsColumnWidths();
         window.applyItemsViewSettings();
+        window.initItemsColumnResizing();
     })();
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applyItemsColumnWidths === 'function') {
+            window.applyItemsColumnWidths();
+        }
+        if (typeof window.applyItemsViewSettings === 'function') {
+            window.applyItemsViewSettings();
+        }
+        if (typeof window.initItemsColumnResizing === 'function') {
+            window.initItemsColumnResizing();
+        }
+    });
 
     // --- Generic Brand/Category Searchable Dropdown Helpers ---
 

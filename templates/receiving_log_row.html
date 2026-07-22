@@ -1,20 +1,20 @@
 {{ define "receiving_log_row.html" }}
 <tr id="receiving-log-row-{{ .ID }}">
-    <td>{{ .Date.Format "2006-01-02" }}</td>
-    <td>{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</td>
-    <td><span class="badge badge-primary">{{ .Supplier }}</span></td>
-    <td class="text-success" style="font-weight: 600;">+{{ .Qty }}</td>
-    <td style="font-weight: 500;">{{ .Description }}</td>
-    <td>{{ .UOM }}</td>
-    <td>₱{{ printf "%.2f" .UnitPrice }}</td>
-    <td>{{ if gt .Less1 0.0 }}{{ printf "%.1f" .Less1 }}%{{ else }}-{{ end }}</td>
-    <td>{{ if gt .Less2 0.0 }}{{ printf "%.1f" .Less2 }}%{{ else }}-{{ end }}</td>
-    <td>₱{{ printf "%.2f" .Cost }}</td>
-    <td class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</td>
-    <td>{{ printf "%.0f" .Markup }}%</td>
-    <td style="font-weight: 500;">₱{{ printf "%.2f" .SellingPrice }}</td>
-    <td>{{ if .Remarks }}{{ .Remarks }}{{ else }}-{{ end }}</td>
-    <td>
+    <td data-col="date">{{ .Date.Format "2006-01-02" }}</td>
+    <td data-col="pl_no">{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</td>
+    <td data-col="supplier"><span class="badge badge-primary">{{ .Supplier }}</span></td>
+    <td data-col="qty" class="text-success" style="font-weight: 600;">+{{ .Qty }}</td>
+    <td data-col="description" style="font-weight: 500;">{{ .Description }}</td>
+    <td data-col="uom">{{ .UOM }}</td>
+    <td data-col="unit_price">₱{{ printf "%.2f" .UnitPrice }}</td>
+    <td data-col="less1">{{ if gt .Less1 0.0 }}{{ printf "%.1f" .Less1 }}%{{ else }}-{{ end }}</td>
+    <td data-col="less2">{{ if gt .Less2 0.0 }}{{ printf "%.1f" .Less2 }}%{{ else }}-{{ end }}</td>
+    <td data-col="unit_cost">₱{{ printf "%.2f" .Cost }}</td>
+    <td data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</td>
+    <td data-col="markup">{{ printf "%.0f" .Markup }}%</td>
+    <td data-col="selling_price" style="font-weight: 500;">₱{{ printf "%.2f" .SellingPrice }}</td>
+    <td data-col="remarks">{{ if .Remarks }}{{ .Remarks }}{{ else }}-{{ end }}</td>
+    <td data-col="actions">
         <div class="actions-cell">
             <button type="button" class="btn btn-secondary btn-icon"
                 hx-get="/inventory/receiving/logs/edit/{{ .ID }}"

@@ -1,32 +1,32 @@
 {{ define "receiving_log_edit_row.html" }}
 <tr id="receiving-log-row-{{ .ID }}" class="editing-row" style="background: var(--bg-secondary);">
-    <td>{{ .Date.Format "2006-01-02" }}</td>
-    <td>{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</td>
-    <td><span class="badge badge-primary">{{ .Supplier }}</span></td>
-    <td>
-        <input type="number" step="any" name="qty" form="edit-form-{{ .ID }}" class="form-input" value="{{ .Qty }}" style="width: 5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    <td data-col="date">{{ .Date.Format "2006-01-02" }}</td>
+    <td data-col="pl_no">{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</td>
+    <td data-col="supplier"><span class="badge badge-primary">{{ .Supplier }}</span></td>
+    <td data-col="qty">
+        <input type="number" step="any" name="qty" form="edit-form-{{ .ID }}" class="form-input" value="{{ .Qty }}" style="width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
-    <td style="font-weight: 500;">{{ .Description }}</td>
-    <td>{{ .UOM }}</td>
-    <td>
-        <input type="number" step="any" name="unit_price" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.2f" .UnitPrice }}" style="width: 6rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    <td data-col="description" style="font-weight: 500;">{{ .Description }}</td>
+    <td data-col="uom">{{ .UOM }}</td>
+    <td data-col="unit_price">
+        <input type="number" step="any" name="unit_price" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.2f" .UnitPrice }}" style="width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
-    <td>
-        <input type="number" step="any" name="less1" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.1f" .Less1 }}" style="width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    <td data-col="less1">
+        <input type="number" step="any" name="less1" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.1f" .Less1 }}" style="width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
-    <td>
-        <input type="number" step="any" name="less2" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.1f" .Less2 }}" style="width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    <td data-col="less2">
+        <input type="number" step="any" name="less2" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.1f" .Less2 }}" style="width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
-    <td class="calc-cost">₱{{ printf "%.2f" .Cost }}</td>
-    <td>₱{{ printf "%.2f" .TotalCost }}</td>
-    <td>
-        <input type="number" step="any" name="markup" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.0f" .Markup }}" style="width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    <td data-col="unit_cost" class="calc-cost">₱{{ printf "%.2f" .Cost }}</td>
+    <td data-col="total_cost">₱{{ printf "%.2f" .TotalCost }}</td>
+    <td data-col="markup">
+        <input type="number" step="any" name="markup" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.0f" .Markup }}" style="width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
-    <td class="calc-selling-price">₱{{ printf "%.2f" .SellingPrice }}</td>
-    <td>
-        <input type="text" name="remarks" form="edit-form-{{ .ID }}" class="form-input" value="{{ .Remarks }}" style="width: 7rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
+    <td data-col="selling_price" class="calc-selling-price">₱{{ printf "%.2f" .SellingPrice }}</td>
+    <td data-col="remarks">
+        <input type="text" name="remarks" form="edit-form-{{ .ID }}" class="form-input" value="{{ .Remarks }}" style="width: 100%; box-sizing: border-box; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
-    <td>
+    <td data-col="actions">
         <form id="edit-form-{{ .ID }}"
             hx-post="/inventory/receiving/logs/edit/{{ .ID }}"
             hx-target="#receiving-log-row-{{ .ID }}"

@@ -125,16 +125,16 @@
 
         <div id="monthly-inventory-results">
             <div class="table-container">
-                <table class="table-scroll-md">
+                <table class="table-scroll-md resizable-table monthly-inventory-table">
                     <thead>
                         <tr>
-                            <th data-col="month" style="width: 15%;">Month</th>
-                            <th data-col="description" style="width: 40%;">Description</th>
-                            <th data-col="uom" style="width: 10%;">UOM</th>
-                            <th data-col="received" style="width: 11%;">Received</th>
-                            <th data-col="sold" style="width: 11%;">Sold</th>
-                            <th data-col="adjusted" style="width: 11%;">Adjusted</th>
-                            <th data-col="net_change" style="width: 12%;">Net Change</th>
+                            <th data-col="month">Month</th>
+                            <th data-col="description">Description</th>
+                            <th data-col="uom">UOM</th>
+                            <th data-col="received">Received</th>
+                            <th data-col="sold">Sold</th>
+                            <th data-col="adjusted">Adjusted</th>
+                            <th data-col="net_change">Net Change</th>
                         </tr>
                     </thead>
                     <tbody id="monthly-inventory-tbody">
@@ -163,6 +163,136 @@
                 month_filter: true,
                 limit: true
             }
+        };
+
+        const DEFAULT_MONTHLY_COL_WIDTHS = {
+            month: 120,
+            description: 250,
+            uom: 80,
+            received: 100,
+            sold: 80,
+            adjusted: 100,
+            net_change: 110
+        };
+
+        function getMonthlyColumnWidths() {
+            try {
+                const stored = localStorage.getItem('radline_monthly_inventory_column_widths');
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to parse monthly inventory column widths', e);
+            }
+            return Object.assign({}, DEFAULT_MONTHLY_COL_WIDTHS);
+        }
+
+        let currentMonthlyColumnWidths = getMonthlyColumnWidths();
+
+        function saveMonthlyColumnWidths() {
+            try {
+                localStorage.setItem('radline_monthly_inventory_column_widths', JSON.stringify(currentMonthlyColumnWidths));
+            } catch (e) {
+                console.error('Failed to save monthly inventory column widths', e);
+            }
+        }
+
+        window.applyMonthlyColumnWidths = function () {
+            let styleEl = document.getElementById('monthly-column-widths-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'monthly-column-widths-style';
+                document.head.appendChild(styleEl);
+            }
+
+            const cssRules = [];
+            Object.keys(currentMonthlyColumnWidths).forEach(colKey => {
+                const w = currentMonthlyColumnWidths[colKey];
+                if (w) {
+                    cssRules.push(`
+                        .monthly-inventory-table th[data-col="${colKey}"],
+                        .monthly-inventory-table td[data-col="${colKey}"] {
+                            width: ${w}px !important;
+                            min-width: ${w}px !important;
+                            max-width: ${w}px !important;
+                            box-sizing: border-box;
+                        }
+                    `);
+                }
+            });
+
+            styleEl.textContent = cssRules.join('\n');
+        };
+
+        window.initMonthlyColumnResizing = function () {
+            const headers = document.querySelectorAll('.monthly-inventory-table th[data-col]');
+            headers.forEach(th => {
+                if (th.querySelector('.table-col-resizer')) return;
+
+                const resizer = document.createElement('div');
+                resizer.className = 'table-col-resizer';
+                th.appendChild(resizer);
+
+                const colKey = th.getAttribute('data-col');
+
+                let startX = 0;
+                let startWidth = 0;
+
+                const onPointerDown = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    startX = clientX;
+                    startWidth = th.offsetWidth;
+
+                    resizer.classList.add('resizing');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+
+                    const onPointerMove = function (moveEvent) {
+                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                        const deltaX = currentX - startX;
+                        const newWidth = Math.max(40, startWidth + deltaX);
+
+                        currentMonthlyColumnWidths[colKey] = newWidth;
+                        window.applyMonthlyColumnWidths();
+                    };
+
+                    const onPointerUp = function () {
+                        resizer.classList.remove('resizing');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+
+                        document.removeEventListener('mousemove', onPointerMove);
+                        document.removeEventListener('mouseup', onPointerUp);
+                        document.removeEventListener('touchmove', onPointerMove);
+                        document.removeEventListener('touchend', onPointerUp);
+
+                        saveMonthlyColumnWidths();
+                    };
+
+                    document.addEventListener('mousemove', onPointerMove);
+                    document.addEventListener('mouseup', onPointerUp);
+                    document.addEventListener('touchmove', onPointerMove, { passive: false });
+                    document.addEventListener('touchend', onPointerUp);
+                };
+
+                resizer.addEventListener('mousedown', onPointerDown);
+                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
+
+                resizer.addEventListener('dblclick', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (DEFAULT_MONTHLY_COL_WIDTHS[colKey]) {
+                        currentMonthlyColumnWidths[colKey] = DEFAULT_MONTHLY_COL_WIDTHS[colKey];
+                    } else {
+                        delete currentMonthlyColumnWidths[colKey];
+                    }
+                    saveMonthlyColumnWidths();
+                    window.applyMonthlyColumnWidths();
+                });
+            });
         };
 
         function getMonthlyViewConfig() {
@@ -232,6 +362,9 @@
 
         window.resetMonthlyViewSettings = function () {
             saveMonthlyViewConfig(DEFAULT_MONTHLY_VIEW_CONFIG);
+            localStorage.removeItem('radline_monthly_inventory_column_widths');
+            currentMonthlyColumnWidths = Object.assign({}, DEFAULT_MONTHLY_COL_WIDTHS);
+            window.applyMonthlyColumnWidths();
             window.applyMonthlyViewSettings();
         };
 
@@ -251,12 +384,20 @@
             }
         });
 
+        window.applyMonthlyColumnWidths();
         window.applyMonthlyViewSettings();
+        window.initMonthlyColumnResizing();
     })();
 
     document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applyMonthlyColumnWidths === 'function') {
+            window.applyMonthlyColumnWidths();
+        }
         if (typeof window.applyMonthlyViewSettings === 'function') {
             window.applyMonthlyViewSettings();
+        }
+        if (typeof window.initMonthlyColumnResizing === 'function') {
+            window.initMonthlyColumnResizing();
         }
     });
 </script>

@@ -288,7 +288,7 @@
 
     <div id="sales-results">
         <div class="table-container">
-            <table class="table-scroll-lg">
+            <table class="table-scroll-lg sales-log-table">
                 <thead>
                     <tr>
                         <th data-col="doc_status">Status</th>
@@ -405,6 +405,150 @@
             }
         };
 
+        const DEFAULT_SALES_COL_WIDTHS = {
+            doc_status: 110,
+            doc_date: 100,
+            doc_type_number: 140,
+            customer_name: 140,
+            supplier: 90,
+            item_description: 200,
+            qty: 75,
+            uom: 75,
+            price: 90,
+            total_sales: 100,
+            cost: 90,
+            total_cost: 100,
+            patong: 80,
+            pos_charge: 90,
+            wt_2307: 80,
+            total_remit: 100,
+            profit: 90,
+            profit_margin: 100,
+            remarks: 120,
+            actions: 90
+        };
+
+        function getSalesColumnWidths() {
+            try {
+                const stored = localStorage.getItem('radline_sales_column_widths');
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+            } catch (e) {
+                console.error('Failed to parse sales column widths', e);
+            }
+            return Object.assign({}, DEFAULT_SALES_COL_WIDTHS);
+        }
+
+        let currentSalesColumnWidths = getSalesColumnWidths();
+
+        function saveSalesColumnWidths() {
+            try {
+                localStorage.setItem('radline_sales_column_widths', JSON.stringify(currentSalesColumnWidths));
+            } catch (e) {
+                console.error('Failed to save sales column widths', e);
+            }
+        }
+
+        window.applySalesColumnWidths = function () {
+            let styleEl = document.getElementById('sales-column-widths-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'sales-column-widths-style';
+                document.head.appendChild(styleEl);
+            }
+
+            const cssRules = [];
+            Object.keys(currentSalesColumnWidths).forEach(colKey => {
+                const w = currentSalesColumnWidths[colKey];
+                if (w) {
+                    cssRules.push(`
+                        .sales-log-table th[data-col="${colKey}"],
+                        .sales-log-table td[data-col="${colKey}"] {
+                            width: ${w}px !important;
+                            min-width: ${w}px !important;
+                            max-width: ${w}px !important;
+                            box-sizing: border-box;
+                        }
+                    `);
+                }
+            });
+
+            styleEl.textContent = cssRules.join('\n');
+        };
+
+        window.initSalesColumnResizing = function () {
+            const headers = document.querySelectorAll('.sales-log-table th[data-col]');
+            headers.forEach(th => {
+                if (th.querySelector('.sales-log-col-resizer')) return;
+
+                const resizer = document.createElement('div');
+                resizer.className = 'sales-log-col-resizer';
+                th.appendChild(resizer);
+
+                const colKey = th.getAttribute('data-col');
+
+                let startX = 0;
+                let startWidth = 0;
+
+                const onPointerDown = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    startX = clientX;
+                    startWidth = th.offsetWidth;
+
+                    resizer.classList.add('resizing');
+                    document.body.style.cursor = 'col-resize';
+                    document.body.style.userSelect = 'none';
+
+                    const onPointerMove = function (moveEvent) {
+                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                        const deltaX = currentX - startX;
+                        const newWidth = Math.max(40, startWidth + deltaX);
+
+                        currentSalesColumnWidths[colKey] = newWidth;
+                        window.applySalesColumnWidths();
+                    };
+
+                    const onPointerUp = function () {
+                        resizer.classList.remove('resizing');
+                        document.body.style.cursor = '';
+                        document.body.style.userSelect = '';
+
+                        document.removeEventListener('mousemove', onPointerMove);
+                        document.removeEventListener('mouseup', onPointerUp);
+                        document.removeEventListener('touchmove', onPointerMove);
+                        document.removeEventListener('touchend', onPointerUp);
+
+                        saveSalesColumnWidths();
+                    };
+
+                    document.addEventListener('mousemove', onPointerMove);
+                    document.addEventListener('mouseup', onPointerUp);
+                    document.addEventListener('touchmove', onPointerMove, { passive: false });
+                    document.addEventListener('touchend', onPointerUp);
+                };
+
+                resizer.addEventListener('mousedown', onPointerDown);
+                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
+
+                // Double-click to reset column width back to default
+                resizer.addEventListener('dblclick', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (DEFAULT_SALES_COL_WIDTHS[colKey]) {
+                        currentSalesColumnWidths[colKey] = DEFAULT_SALES_COL_WIDTHS[colKey];
+                    } else {
+                        delete currentSalesColumnWidths[colKey];
+                    }
+                    saveSalesColumnWidths();
+                    window.applySalesColumnWidths();
+                });
+            });
+        };
+
         function getSalesViewConfig() {
             try {
                 const stored = localStorage.getItem('radline_sales_view_config');
@@ -479,6 +623,9 @@
 
         window.resetSalesViewSettings = function () {
             saveSalesViewConfig(DEFAULT_SALES_VIEW_CONFIG);
+            localStorage.removeItem('radline_sales_column_widths');
+            currentSalesColumnWidths = Object.assign({}, DEFAULT_SALES_COL_WIDTHS);
+            window.applySalesColumnWidths();
             window.applySalesViewSettings();
         };
 
@@ -553,13 +700,21 @@
         });
 
         // Apply immediately
+        window.applySalesColumnWidths();
         window.applySalesViewSettings();
+        window.initSalesColumnResizing();
     })();
 
     // Re-apply settings on HTMX swaps
     document.body.addEventListener('htmx:afterSwap', function (evt) {
+        if (typeof window.applySalesColumnWidths === 'function') {
+            window.applySalesColumnWidths();
+        }
         if (typeof window.applySalesViewSettings === 'function') {
             window.applySalesViewSettings();
+        }
+        if (typeof window.initSalesColumnResizing === 'function') {
+            window.initSalesColumnResizing();
         }
     });
 
