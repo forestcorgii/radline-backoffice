@@ -3,8 +3,16 @@
 {{ end }}
 
 {{ define "content" }}
+{{ template "receive_stock_form.html" . }}
+
 <div class="card">
-    <h2>Receiving Logs</h2>
+    <div class="header-bar">
+        <h2>Receiving Logs</h2>
+        <button type="button" onclick="toggleReceiveStockForm()" class="btn"
+            style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem; cursor: pointer;">
+            📦 Receive Stock
+        </button>
+    </div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#receiving-loading-indicator">
         <div class="search-filter-bar">
@@ -13,13 +21,15 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search by PL No. or Item Code..."
                     hx-get="/inventory/receiving/logs" hx-trigger="keyup changed delay:300ms, search"
-                    hx-target="#receiving-logs-results" hx-include="closest form" hx-indicator="#receiving-loading-indicator" class="form-input">
+                    hx-target="#receiving-logs-results" hx-include="closest form"
+                    hx-indicator="#receiving-loading-indicator" class="form-input">
             </div>
             <div class="filter-item">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier</label>
                 <select name="supplier_filter" class="form-input" hx-get="/inventory/receiving/logs"
-                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change" hx-indicator="#receiving-loading-indicator">
+                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#receiving-loading-indicator">
                     <option value="all">All Suppliers</option>
                     {{ range .Suppliers }}
                     <option value="{{ . }}" {{ if eq . $.SupplierFilter }}selected{{ end }}>{{ . }}</option>
@@ -31,7 +41,8 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
                 <select name="sort" class="form-input" hx-get="/inventory/receiving/logs"
-                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change" hx-indicator="#receiving-loading-indicator">
+                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#receiving-loading-indicator">
                     <option value="date_desc">Newest First</option>
                     <option value="date_asc">Oldest First</option>
                     <option value="qty_desc">Highest Quantity First</option>
@@ -42,7 +53,8 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
                 <select name="limit" class="form-input" hx-get="/inventory/receiving/logs"
-                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change" hx-indicator="#receiving-loading-indicator">
+                    hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#receiving-loading-indicator">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -62,4 +74,13 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.body.addEventListener('stock-received', function () {
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            htmx.trigger(searchInput, 'search');
+        }
+    });
+</script>
 {{ end }}

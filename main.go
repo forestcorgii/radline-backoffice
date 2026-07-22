@@ -166,11 +166,11 @@ func parseTemplates() map[string]*template.Template {
 		} else if page == "uom_settings.html" {
 			files = append(files, "templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html")
 		} else if page == "inventory.html" {
-			files = append(files, "templates/inventory_stock_rows.html", "templates/receiving_item_row.html", "templates/adjustment_item_row.html")
+			files = append(files, "templates/inventory_stock_rows.html", "templates/receiving_item_row.html", "templates/adjustment_item_row.html", "templates/receive_stock_form.html", "templates/adjust_stock_form.html")
 		} else if page == "stock_receiving.html" {
-			files = append(files, "templates/receiving_rows.html", "templates/item_select.html", "templates/receiving_item_row.html")
+			files = append(files, "templates/receiving_rows.html", "templates/item_select.html", "templates/receiving_item_row.html", "templates/receive_stock_form.html")
 		} else if page == "stock_adjustments.html" {
-			files = append(files, "templates/adjustment_rows.html", "templates/item_select.html", "templates/adjustment_item_row.html")
+			files = append(files, "templates/adjustment_rows.html", "templates/item_select.html", "templates/adjustment_item_row.html", "templates/adjust_stock_form.html")
 		} else if page == "sales.html" {
 			files = append(files, "templates/sales_rows.html", "templates/sale_item_row.html", "templates/sales_results.html", "templates/item_select.html", "templates/uom_select.html", "templates/sale_row.html", "templates/sale_edit_row.html")
 		} else if page == "item_new.html" {
@@ -180,9 +180,9 @@ func parseTemplates() map[string]*template.Template {
 		} else if page == "monthly_inventory.html" {
 			files = append(files, "templates/monthly_inventory_rows.html")
 		} else if page == "receiving_logs.html" {
-			files = append(files, "templates/receiving_rows.html", "templates/receiving_logs_results.html", "templates/receiving_log_row.html")
+			files = append(files, "templates/receiving_rows.html", "templates/receiving_logs_results.html", "templates/receiving_log_row.html", "templates/receiving_item_row.html", "templates/receive_stock_form.html")
 		} else if page == "adjustment_logs.html" {
-			files = append(files, "templates/adjustment_rows.html")
+			files = append(files, "templates/adjustment_rows.html", "templates/adjustment_item_row.html", "templates/adjust_stock_form.html")
 		} else if page == "settings.html" {
 			files = append(files,
 				"templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html",
@@ -205,6 +205,7 @@ func parseTemplates() map[string]*template.Template {
 		"receiving_rows.html", "adjustment_rows.html", "sales_rows.html", "inventory_stock_rows.html",
 		"brand_select.html", "category_select.html", "item_select.html",
 		"sale_item_row.html", "receiving_item_row.html", "adjustment_item_row.html",
+		"receive_stock_form.html", "adjust_stock_form.html",
 		"monthly_inventory_rows.html",
 		"brands_results.html", "categories_results.html", "items_results.html",
 		"inventory_stock_results.html", "sales_results.html", "monthly_inventory_results.html",

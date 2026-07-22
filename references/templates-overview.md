@@ -139,3 +139,12 @@ See [[sidebar-navigation]] and [[htmx-patterns]] for details.
 - **Include All Transitive Dependencies**: When declaring fragment file lists in `main.go` `parseTemplates()`, always include all leaf row and edit templates (e.g., `sale_row.html`, `sale_edit_row.html`) that any parent container template calls via `{{ template }}`.
 - **Register All Standalone Fragments**: Ensure all individual editable or toggleable row templates are registered in the `fragments` slice so `app.Templates["<frag_name>.html"]` exists for standalone handler responses.
 
+### Context: Reusable Action Form Templates Across Pages
+**Problem**: Action forms like Receive Stock and Adjust Stock were embedded inline inside `inventory.html`, making them unavailable when navigating to dedicated log pages (`receiving_logs.html` and `adjustment_logs.html`).
+**Enforced Solution**:
+- **Extract Reusable Partial Templates**: Move multi-page action forms into dedicated template files (`receive_stock_form.html`, `adjust_stock_form.html`) with self-contained JS toggle helpers (`toggleReceiveStockForm()`, `toggleAdjustStockForm()`).
+- **Register Form Partial Dependencies**: Register the reusable form templates and their nested row dependencies (`receiving_item_row.html`, `item_select.html`) in `main.go` `parseTemplates()` for every page and test harness where the form is included (`inventory.html`, `receiving_logs.html`, `adjustment_logs.html`).
+- **Provide Context Data in Log Handlers**: Ensure handlers for log pages (`ReceivingLogsHandler`, `AdjustmentLogsHandler`) fetch and pass `ReceivingRowData` / `AdjustmentRowData` (items and UOMs) so form dropdowns render correctly.
+- **Listen for HTMX Triggers**: Add event listeners (e.g. `stock-received`, `stock-adjusted`) on log pages to trigger dynamic search/filter refreshes upon form submission.
+
+

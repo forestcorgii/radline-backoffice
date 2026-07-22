@@ -3,8 +3,16 @@
 {{ end }}
 
 {{ define "content" }}
+{{ template "adjust_stock_form.html" . }}
+
 <div class="card">
-    <h2>Adjustment Logs</h2>
+    <div class="header-bar">
+        <h2>Adjustment Logs</h2>
+        <button type="button" onclick="toggleAdjustStockForm()" class="btn btn-primary"
+            style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem; cursor: pointer;">
+            📋 Adjust Stock
+        </button>
+    </div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#adjustment-loading-indicator">
         <div class="search-filter-bar">
@@ -13,14 +21,16 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search by Remarks, Item Description, or Adjustment ID..."
                     hx-get="/inventory/adjustments/logs" hx-trigger="keyup changed delay:300ms, search"
-                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-indicator="#adjustment-loading-indicator" class="form-input">
+                    hx-target="#adjustment-logs-results" hx-include="closest form"
+                    hx-indicator="#adjustment-loading-indicator" class="form-input">
             </div>
             <div class="filter-item">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
                 <select name="sort" class="form-input" hx-get="/inventory/adjustments/logs"
-                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change" hx-indicator="#adjustment-loading-indicator">
+                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#adjustment-loading-indicator">
                     <option value="date_desc">Newest First</option>
                     <option value="date_asc">Oldest First</option>
                     <option value="qty_desc">Highest Abs(Quantity) First</option>
@@ -31,7 +41,8 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
                 <select name="limit" class="form-input" hx-get="/inventory/adjustments/logs"
-                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change" hx-indicator="#adjustment-loading-indicator">
+                    hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#adjustment-loading-indicator">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -68,4 +79,13 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.body.addEventListener('stock-adjusted', function () {
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            htmx.trigger(searchInput, 'search');
+        }
+    });
+</script>
 {{ end }}

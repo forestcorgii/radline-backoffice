@@ -3,15 +3,16 @@
 {{ end }}
 
 {{ define "content" }}
-<div style="margin-bottom: 1.5rem;">
+<!-- <div style="margin-bottom: 1.5rem;">
     <a href="/inventory" hx-get="/inventory" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
         ← Back to Inventory
     </a>
-</div>
+</div> -->
 
 <div class="card mb-4">
     <h2 class="mb-4">Receive Stock</h2>
-    <form hx-post="/inventory/receiving/add" hx-target="#receiving-tbody" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('date').valueAsDate = new Date(); const tbody = document.getElementById('receiving-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
+    <form hx-post="/inventory/receiving/add" hx-target="#receiving-tbody" hx-swap="innerHTML"
+        hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('date').valueAsDate = new Date(); const tbody = document.getElementById('receiving-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
         <div class="grid grid-cols-3">
             <div class="form-group">
                 <label for="pl_no">Packing List (PL) No.</label>
@@ -19,7 +20,8 @@
             </div>
             <div class="form-group">
                 <label for="supplier">Supplier</label>
-                <select id="supplier" name="supplier" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                <select id="supplier" name="supplier" class="form-input" style="padding: 0.75rem 1rem; height: auto;"
+                    required>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
                     <option value="OTHER">OTHER</option>
@@ -42,8 +44,10 @@
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;" class="mt-4">
-            <button type="button" class="btn btn-secondary" hx-get="/inventory/receiving/new-row" hx-target="#receiving-items-tbody" hx-swap="beforeend">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;"
+            class="mt-4">
+            <button type="button" class="btn btn-secondary" hx-get="/inventory/receiving/new-row"
+                hx-target="#receiving-items-tbody" hx-swap="beforeend">
                 + Add Item Row
             </button>
             <button type="submit" class="btn">Receive Stock</button>

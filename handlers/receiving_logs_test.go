@@ -23,7 +23,7 @@ func parseTemplatesForTest() map[string]*template.Template {
 	pages := []string{"receiving_logs.html"}
 	for _, page := range pages {
 		t := template.New(page).Funcs(funcMap)
-		files := []string{"../templates/base.html", "../templates/" + page, "../templates/receiving_rows.html", "../templates/receiving_logs_results.html", "../templates/receiving_log_row.html"}
+		files := []string{"../templates/base.html", "../templates/" + page, "../templates/receiving_rows.html", "../templates/receiving_logs_results.html", "../templates/receiving_log_row.html", "../templates/receiving_item_row.html", "../templates/receive_stock_form.html", "../templates/item_select.html"}
 		t = template.Must(t.ParseFiles(files...))
 		templates[page] = t
 	}
