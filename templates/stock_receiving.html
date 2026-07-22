@@ -11,7 +11,7 @@
 
 <div class="card mb-4">
     <h2 class="mb-4">Receive Stock</h2>
-    <form hx-post="/inventory/receiving/add" hx-target="#receiving-tbody" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('receiving-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
+    <form hx-post="/inventory/receiving/add" hx-target="#receiving-tbody" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('date').valueAsDate = new Date(); const tbody = document.getElementById('receiving-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
         <div class="grid grid-cols-3">
             <div class="form-group">
                 <label for="pl_no">Packing List (PL) No.</label>
@@ -28,6 +28,7 @@
             <div class="form-group">
                 <label for="date">Delivery Date</label>
                 <input type="date" id="date" name="date" class="form-input" required>
+                <script>document.currentScript.previousElementSibling.valueAsDate = new Date();</script>
             </div>
         </div>
 

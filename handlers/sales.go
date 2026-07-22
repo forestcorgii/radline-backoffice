@@ -258,12 +258,10 @@ func (app *App) NewSaleRowHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
-
+	// No item selected yet — pass empty Uoms so template shows placeholder
 	app.Render(w, "sale_item_row.html", map[string]interface{}{
 		"Items": items,
-		"Uoms":  uoms,
+		"Uoms":  []models.Uom{},
 	})
 }
 
@@ -344,8 +342,17 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 		}
 	}
 
+	// Load only UOMs valid for this item: default_uom + any muom from uom_settings
 	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+	if itemID > 0 {
+		_ = db.DB.Select(&uoms, `
+			SELECT code FROM (
+				SELECT default_uom AS code FROM items WHERE id = ?
+				UNION
+				SELECT muom AS code FROM uom_settings WHERE item_id = ?
+			) ORDER BY code ASC
+		`, itemID, itemID)
+	}
 
 	app.Render(w, "sale_item_row.html", map[string]interface{}{
 		"Items":          items,

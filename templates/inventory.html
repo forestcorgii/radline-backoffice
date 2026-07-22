@@ -25,7 +25,7 @@
             ✕ Close
         </button>
     </div>
-    <form hx-post="/inventory/receiving/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('receiving-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleReceiveStockForm(); }">
+    <form hx-post="/inventory/receiving/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('date').valueAsDate = new Date(); const tbody = document.getElementById('receiving-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleReceiveStockForm(); }">
         <div class="grid grid-cols-3">
             <div class="form-group">
                 <label for="pl_no">Packing List (PL) No.</label>
@@ -42,6 +42,7 @@
             <div class="form-group">
                 <label for="date">Delivery Date</label>
                 <input type="date" id="date" name="date" class="form-input" required>
+                <script>document.currentScript.previousElementSibling.valueAsDate = new Date();</script>
             </div>
         </div>
 
@@ -72,11 +73,12 @@
             ✕ Close
         </button>
     </div>
-    <form hx-post="/inventory/adjustments/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('adjustment-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleAdjustStockForm(); }">
+    <form hx-post="/inventory/adjustments/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('adj_date').valueAsDate = new Date(); const tbody = document.getElementById('adjustment-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleAdjustStockForm(); }">
         <div class="grid grid-adj-header">
             <div class="form-group">
                 <label for="adj_date">Adjustment Date</label>
                 <input type="date" id="adj_date" name="date" class="form-input" required>
+                <script>document.currentScript.previousElementSibling.valueAsDate = new Date();</script>
             </div>
             <div class="form-group">
                 <label for="adj_remarks">Remarks / Reason</label>

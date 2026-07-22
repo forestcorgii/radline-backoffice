@@ -11,11 +11,12 @@
 
 <div class="card mb-4">
     <h2 class="mb-4">New Stock Adjustment</h2>
-    <form hx-post="/inventory/adjustments/add" hx-target="#adjustment-tbody" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('adjustment-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
+    <form hx-post="/inventory/adjustments/add" hx-target="#adjustment-tbody" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('adj_date').valueAsDate = new Date(); const tbody = document.getElementById('adjustment-items-tbody'); while(tbody.rows.length > 1) { tbody.deleteRow(1); } }">
         <div class="grid grid-adj-header">
             <div class="form-group">
                 <label for="adj_date">Adjustment Date</label>
                 <input type="date" id="adj_date" name="date" class="form-input" required>
+                <script>document.currentScript.previousElementSibling.valueAsDate = new Date();</script>
             </div>
             <div class="form-group">
                 <label for="adj_remarks">Remarks / Reason</label>
