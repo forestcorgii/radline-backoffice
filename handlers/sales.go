@@ -126,6 +126,10 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	docNumber := r.FormValue("doc_number")
 	customerName := r.FormValue("customer_name")
 	supplier := r.FormValue("supplier")
+	docStatus := r.FormValue("doc_status")
+	if docStatus == "" {
+		docStatus = "Active"
+	}
 
 	parsedDate, dateErr := time.Parse("2006-01-02", docDateStr)
 	if dateErr != nil {
@@ -205,7 +209,7 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	sale, err := domain.NewSale(docType, "POSTED", parsedDate, docNumber, customerName, supplier, saleItems)
+	sale, err := domain.NewSale(docType, docStatus, parsedDate, docNumber, customerName, supplier, saleItems)
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "`+err.Error()+`"}}`)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -314,7 +318,7 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 			WITH item_stats AS (
 				SELECT
 					COALESCE((SELECT SUM(r.qty) FROM receiving_logs r WHERE r.item_id = ?), 0) AS total_received,
-					COALESCE((SELECT SUM(s.qty) FROM sales_details s WHERE s.item_id = ?), 0) AS total_sold,
+					COALESCE((SELECT SUM(s.qty) FROM sales_details s WHERE s.item_id = ? AND s.doc_status IN ('Posted', 'POSTED')), 0) AS total_sold,
 					COALESCE((SELECT SUM(a.adjustment_qty) FROM inventory_adjustments a WHERE a.item_id = ?), 0) AS total_adjusted
 			),
 			oh AS (SELECT (total_received - total_sold + total_adjusted) AS on_hand FROM item_stats)
@@ -323,7 +327,7 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 			WHERE r.item_id = ? AND oh.on_hand > 0
 			  AND (SELECT COALESCE(SUM(r2.qty), 0) FROM receiving_logs r2
 			       WHERE r2.item_id = ? AND (r2.date < r.date OR (r2.date = r.date AND r2.id < r.id)))
-			      < (SELECT COALESCE(SUM(s.qty), 0) FROM sales_details s WHERE s.item_id = ?)
+			      < (SELECT COALESCE(SUM(s.qty), 0) FROM sales_details s WHERE s.item_id = ? AND s.doc_status IN ('Posted', 'POSTED'))
 			ORDER BY r.date ASC, r.id ASC
 			LIMIT 1
 		`, itemID, itemID, itemID, itemID, itemID, itemID)
@@ -384,6 +388,10 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	docDateStr := r.FormValue("doc_date")
 	docType := r.FormValue("doc_type")
+	docStatus := r.FormValue("doc_status")
+	if docStatus == "" {
+		docStatus = "Active"
+	}
 	docNumber := r.FormValue("doc_number")
 	customerName := r.FormValue("customer_name")
 	supplier := r.FormValue("supplier")
@@ -412,7 +420,7 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	salesDetail, err := domain.NewSalesDetail(id, docType, "POSTED", parsedDate, docNumber, customerName, supplier, itemID, qty, uom, price, cost, patong, posCharge, wt2307, remarks, "")
+	salesDetail, err := domain.NewSalesDetail(id, docType, docStatus, parsedDate, docNumber, customerName, supplier, itemID, qty, uom, price, cost, patong, posCharge, wt2307, remarks, "")
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "` + err.Error() + `"}}`)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -421,9 +429,9 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.DB.Exec(`
 		UPDATE sales_details 
-		SET doc_type = ?, doc_date = ?, doc_number = ?, customer_name = ?, supplier = ?, item_id = ?, qty = ?, uom = ?, price = ?, total_sales = ?, cost = ?, total_cost = ?, patong = ?, pos_charge = ?, wt_2307 = ?, total_remit = ?, profit = ?, profit_margin = ?, remarks = ?
+		SET doc_type = ?, doc_status = ?, doc_date = ?, doc_number = ?, customer_name = ?, supplier = ?, item_id = ?, qty = ?, uom = ?, price = ?, total_sales = ?, cost = ?, total_cost = ?, patong = ?, pos_charge = ?, wt_2307 = ?, total_remit = ?, profit = ?, profit_margin = ?, remarks = ?
 		WHERE id = ?
-	`, salesDetail.DocType, salesDetail.DocDate, salesDetail.DocNumber, salesDetail.CustomerName, salesDetail.Supplier, salesDetail.ItemID, salesDetail.Qty, salesDetail.UOM, salesDetail.Price, salesDetail.TotalSales, salesDetail.Cost, salesDetail.TotalCost, salesDetail.Patong, salesDetail.POSCharge, salesDetail.WT2307, salesDetail.TotalRemit, salesDetail.Profit, salesDetail.ProfitMargin, salesDetail.Remarks, id)
+	`, salesDetail.DocType, salesDetail.DocStatus, salesDetail.DocDate, salesDetail.DocNumber, salesDetail.CustomerName, salesDetail.Supplier, salesDetail.ItemID, salesDetail.Qty, salesDetail.UOM, salesDetail.Price, salesDetail.TotalSales, salesDetail.Cost, salesDetail.TotalCost, salesDetail.Patong, salesDetail.POSCharge, salesDetail.WT2307, salesDetail.TotalRemit, salesDetail.Profit, salesDetail.ProfitMargin, salesDetail.Remarks, id)
 
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update sale log."}}`)
@@ -466,3 +474,90 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 		app.Render(w, "sale_row.html", updatedSale)
 	}
 }
+
+// UpdateSalesStatusHandler updates only the doc_status of an existing sales detail record
+func (app *App) UpdateSalesStatusHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid sale log ID."}}`)
+		http.Error(w, "Invalid sale log ID", http.StatusBadRequest)
+		return
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to parse form."}}`)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	docStatus := r.FormValue("doc_status")
+	if docStatus == "" {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Status cannot be empty."}}`)
+		http.Error(w, "Status cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	// Validate status is one of the allowed values
+	allowed := false
+	for _, s := range []string{"Active", "Posted", "Cancelled/Return"} {
+		if docStatus == s {
+			allowed = true
+			break
+		}
+	}
+	if !allowed {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid status value."}}`)
+		http.Error(w, "Invalid status value", http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.DB.Exec(`
+		UPDATE sales_details 
+		SET doc_status = ?
+		WHERE id = ?
+	`, docStatus, id)
+
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update sale status."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var updatedSale models.SalesDetailWithItem
+	err = db.DB.Get(&updatedSale, `
+		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
+		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost,
+		       s.patong, s.pos_charge, s.wt_2307, s.total_remit, s.profit, s.profit_margin, s.remarks,
+		       i.code as item_code, i.description as item_description
+		FROM sales_details s
+		JOIN items i ON s.item_id = i.id
+		WHERE s.id = ?
+	`, id)
+
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to retrieve updated sale record."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Status updated to `+docStatus+`!"}}`)
+
+	isEdit := r.FormValue("is_edit") == "1"
+	if isEdit {
+		var items []models.Item
+		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+		var uoms []models.Uom
+		_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+
+		app.Render(w, "sale_edit_row.html", map[string]interface{}{
+			"Sale":  updatedSale,
+			"Items": items,
+			"Uoms":  uoms,
+		})
+	} else {
+		app.Render(w, "sale_row.html", updatedSale)
+	}
+}
+

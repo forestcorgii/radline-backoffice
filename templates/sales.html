@@ -20,7 +20,7 @@
         </button>
     </div>
     <form hx-post="/sales/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); const tbody = document.getElementById('sales-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleEncodeSalesForm(); }">
-        <div class="grid grid-cols-5">
+        <div class="grid grid-cols-6">
             <div class="form-group">
                 <label for="doc_date">Document Date</label>
                 <input type="date" id="doc_date" name="doc_date" required class="form-input">
@@ -47,6 +47,14 @@
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
                     <option value="OTHER">OTHER</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="doc_status_encode">Status</label>
+                <select id="doc_status_encode" name="doc_status" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                    <option value="Active" selected>Active</option>
+                    <option value="Posted">Posted</option>
+                    <option value="Cancelled/Return">Cancelled/Return</option>
                 </select>
             </div>
         </div>
@@ -167,6 +175,10 @@
                         <div class="customize-section-title">Table Columns</div>
                         <div class="customize-checkbox-grid">
                             <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-col="doc_status" onchange="onSalesViewSettingChange()">
+                                <span>Status</span>
+                            </label>
+                            <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-col="doc_date" onchange="onSalesViewSettingChange()">
                                 <span>Doc Date</span>
                             </label>
@@ -279,6 +291,7 @@
             <table class="table-scroll-lg">
                 <thead>
                     <tr>
+                        <th data-col="doc_status">Status</th>
                         <th data-col="doc_date">Date</th>
                         <th data-col="doc_type_number">Doc Type / Number</th>
                         <th data-col="customer_name">Customer Name</th>
@@ -362,6 +375,7 @@
     (function () {
         const DEFAULT_SALES_VIEW_CONFIG = {
             columns: {
+                doc_status: true,
                 doc_date: true,
                 doc_type_number: true,
                 customer_name: true,
@@ -396,6 +410,9 @@
                 const stored = localStorage.getItem('radline_sales_view_config');
                 if (stored) {
                     const parsed = JSON.parse(stored);
+                    if (parsed.columns && parsed.columns.doc_status === undefined) {
+                        parsed.columns.doc_status = true;
+                    }
                     return {
                         columns: Object.assign({}, DEFAULT_SALES_VIEW_CONFIG.columns, parsed.columns || {}),
                         filters: Object.assign({}, DEFAULT_SALES_VIEW_CONFIG.filters, parsed.filters || {})

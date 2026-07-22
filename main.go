@@ -85,6 +85,7 @@ func main() {
 	http.HandleFunc("GET /sales/new", app.NewSalesPageHandler)
 	http.HandleFunc("POST /sales/add", app.AddSalesHandler)
 	http.HandleFunc("POST /sales/edit/{id}", app.UpdateSalesHandler)
+	http.HandleFunc("POST /sales/update-status/{id}", app.UpdateSalesStatusHandler)
 	http.HandleFunc("GET /sales/new-row", app.NewSaleRowHandler)
 	http.HandleFunc("DELETE /sales/delete/{id}", app.DeleteSalesHandler)
 	http.HandleFunc("GET /sales/item-row-details", app.SaleItemRowDetailsHandler)

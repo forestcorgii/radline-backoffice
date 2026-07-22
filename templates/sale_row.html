@@ -1,5 +1,16 @@
 {{ define "sale_row.html" }}
 <tr id="sale-row-{{ .ID }}">
+    <td data-col="doc_status">
+        <select class="form-input" style="padding: 0.25rem 0.5rem; font-size: 0.8125rem; height: auto; width: auto; border: 1px solid var(--border-color); border-radius: var(--radius); background-color: var(--surface-color); color: var(--text-main);"
+                name="doc_status"
+                hx-post="/sales/update-status/{{ .ID }}"
+                hx-target="#sale-row-{{ .ID }}"
+                hx-swap="outerHTML">
+            <option value="Active" {{ if or (eq .DocStatus "Active") (eq .DocStatus "ACTIVE") }}selected{{ end }}>Active</option>
+            <option value="Posted" {{ if or (eq .DocStatus "Posted") (eq .DocStatus "POSTED") }}selected{{ end }}>Posted</option>
+            <option value="Cancelled/Return" {{ if or (eq .DocStatus "Cancelled/Return") (eq .DocStatus "CANCELLED/RETURN") }}selected{{ end }}>Cancelled/Return</option>
+        </select>
+    </td>
     <td data-col="doc_date">{{ .DocDate.Format "2006-01-02" }}</td>
     <td data-col="doc_type_number">
         <span class="badge badge-secondary">{{ .DocType }}</span>
