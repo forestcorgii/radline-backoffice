@@ -22,22 +22,13 @@
         </button>
     </div>
     <form hx-post="/items/add" hx-swap="none"
-        hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddItemForm(); }">
-        <div class="grid grid-cols-3">
-            <div class="form-group">
-                <label for="item_code">Item Code</label>
-                <input type="text" id="item_code" name="code" required class="form-input">
-            </div>
-            <div class="form-group">
-                <label for="item_description">Description</label>
-                <input type="text" id="item_description" name="description" required class="form-input">
-            </div>
+        hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); updateAddItemSuggestions(); toggleAddItemForm(); }">
+
+        <div class="grid grid-cols-3 mt-4">
             <div class="form-group">
                 <label for="item_model">Model</label>
-                <input type="text" id="item_model" name="model" class="form-input">
+                <input type="text" id="item_model" name="model" class="form-input" oninput="updateAddItemSuggestions()">
             </div>
-        </div>
-        <div class="grid grid-cols-3 mt-4">
             <div class="form-group">
                 <label for="brand_id">Brand</label>
                 {{ template "brand_select.html" .Brands }}
@@ -55,6 +46,25 @@
                     <option value="{{ .Code }}">{{ .Code }}</option>
                     {{ end }}
                 </select>
+            </div>
+        </div>
+        <div class="grid grid-cols-3 mt-4">
+            <div class="form-group">
+                <label for="item_variation">Variation</label>
+                <input type="text" id="item_variation" name="variation" class="form-input"
+                    placeholder="e.g. Red, 220V, Large" oninput="updateAddItemSuggestions()">
+            </div>
+        </div>
+        <div class="grid grid-cols-3">
+            <div class="form-group">
+                <label for="item_code">Item Code</label>
+                <input type="text" id="item_code" name="code" required class="form-input"
+                    placeholder="Auto-suggested or enter manually">
+            </div>
+            <div class="form-group">
+                <label for="item_description">Description</label>
+                <input type="text" id="item_description" name="description" required class="form-input"
+                    placeholder="Auto-suggested or enter manually">
             </div>
         </div>
         <div style="display: flex; gap: 0.5rem;" class="mt-4">
@@ -75,8 +85,7 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search item description, or model..." hx-get="/items"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#items-results" hx-include="closest form"
-                    hx-indicator="#items-loading-indicator"
-                    class="form-input">
+                    hx-indicator="#items-loading-indicator" class="form-input">
             </div>
             <div class="filter-item" data-filter="brand_id_filter">
                 <label
@@ -128,28 +137,32 @@
                 </select>
             </div>
             <!-- Customize View Button Popover -->
-            <div class="filter-item" style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
+            <div class="filter-item"
+                style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
                 <div class="customize-view-container">
                     <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
                         style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; justify-content: center; height: 38px;"
                         title="Customize Visible Columns and Filters">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                         </svg>
                     </button>
 
                     <div id="customize-items-view-popover" class="customize-view-popover">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
                             <span style="font-weight: 600; font-size: 0.875rem;">Masterlist View</span>
                             <button type="button" onclick="resetItemsViewSettings()"
-                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset
+                                Default</button>
                         </div>
 
                         <div class="customize-section-title">Table Columns</div>
                         <div class="customize-checkbox-grid">
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="description" onchange="onItemsViewSettingChange()">
+                                <input type="checkbox" data-target-col="description"
+                                    onchange="onItemsViewSettingChange()">
                                 <span>Description</span>
                             </label>
                             <label class="customize-checkbox-item">
@@ -165,7 +178,8 @@
                                 <span>Category</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="default_uom" onchange="onItemsViewSettingChange()">
+                                <input type="checkbox" data-target-col="default_uom"
+                                    onchange="onItemsViewSettingChange()">
                                 <span>Default UOM</span>
                             </label>
                         </div>
@@ -173,15 +187,18 @@
                         <div class="customize-section-title">Visible Filters</div>
                         <div class="customize-checkbox-grid">
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="search" onchange="onItemsViewSettingChange()">
+                                <input type="checkbox" data-target-filter="search"
+                                    onchange="onItemsViewSettingChange()">
                                 <span>Search Bar</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="brand_id_filter" onchange="onItemsViewSettingChange()">
+                                <input type="checkbox" data-target-filter="brand_id_filter"
+                                    onchange="onItemsViewSettingChange()">
                                 <span>Brand Filter</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="category_id_filter" onchange="onItemsViewSettingChange()">
+                                <input type="checkbox" data-target-filter="category_id_filter"
+                                    onchange="onItemsViewSettingChange()">
                                 <span>Category Filter</span>
                             </label>
                             <label class="customize-checkbox-item">
@@ -335,16 +352,88 @@
         window.applyItemsViewSettings();
     })();
 
+    // --- Add Item Auto-Suggest Logic ---
+    // Track whether the user has manually edited code/description
+    let addItemCodeManual = false;
+    let addItemDescManual = false;
+
+    window.updateAddItemSuggestions = function () {
+        const brandSel = document.getElementById('brand_id');
+        const catSel = document.getElementById('category_id');
+        const modelInput = document.getElementById('item_model');
+        const variationInput = document.getElementById('item_variation');
+        const codeInput = document.getElementById('item_code');
+        const descInput = document.getElementById('item_description');
+
+        if (!brandSel || !codeInput || !descInput) return;
+
+        const brandOpt = brandSel.options[brandSel.selectedIndex];
+        const brandCode = (brandOpt && brandOpt.value !== '0') ? (brandOpt.getAttribute('data-code') || '') : '';
+        const brandName = (brandOpt && brandOpt.value !== '0') ? (brandOpt.getAttribute('data-name') || '') : '';
+
+        const catOpt = catSel ? catSel.options[catSel.selectedIndex] : null;
+        const catCode = (catOpt && catOpt.value !== '0') ? (catOpt.getAttribute('data-code') || '') : '';
+        const catName = (catOpt && catOpt.value !== '0') ? (catOpt.getAttribute('data-name') || '') : '';
+
+        const model = modelInput ? modelInput.value.trim() : '';
+        const variation = variationInput ? variationInput.value.trim() : '';
+
+        // Build suggested code
+        let suggestedCode = '';
+        if (brandCode) {
+            if (model) {
+                suggestedCode = brandCode + '-' + model;
+            } else {
+                const parts = [brandCode];
+                if (catCode) parts.push(catCode);
+                if (variation) parts.push(variation);
+                suggestedCode = parts.join('-');
+            }
+        }
+
+        // Build suggested description
+        const descParts = [brandName, model, catName, variation].filter(s => s.length > 0);
+        const suggestedDesc = descParts.join(' ');
+
+        if (!addItemCodeManual) codeInput.value = suggestedCode;
+        if (!addItemDescManual) descInput.value = suggestedDesc;
+    };
+
+    function initAddItemAutoSuggest() {
+        const brandSel = document.getElementById('brand_id');
+        const catSel = document.getElementById('category_id');
+        const codeInput = document.getElementById('item_code');
+        const descInput = document.getElementById('item_description');
+
+        if (brandSel) brandSel.addEventListener('change', window.updateAddItemSuggestions);
+        if (catSel) catSel.addEventListener('change', window.updateAddItemSuggestions);
+
+        // Detect manual edits
+        if (codeInput) {
+            codeInput.addEventListener('input', function () { addItemCodeManual = this.value !== ''; });
+            codeInput.addEventListener('focus', function () { addItemCodeManual = this.value !== ''; });
+        }
+        if (descInput) {
+            descInput.addEventListener('input', function () { addItemDescManual = this.value !== ''; });
+            descInput.addEventListener('focus', function () { addItemDescManual = this.value !== ''; });
+        }
+    }
+
     function toggleAddItemForm() {
         const card = document.getElementById('add-item-card');
         if (!card) return;
         if (card.style.display === 'none' || card.style.display === '') {
             card.style.display = 'block';
+            addItemCodeManual = false;
+            addItemDescManual = false;
+            window.updateAddItemSuggestions();
             card.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
             card.style.display = 'none';
         }
     }
+
+    initAddItemAutoSuggest();
 
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         if (typeof window.applyItemsViewSettings === 'function') {
