@@ -2,6 +2,6 @@
         hx-get="/categories/select" hx-trigger="category-added from:body" hx-swap="outerHTML">
     <option value="0">-- Select Category --</option>
     {{ range . }}
-    <option value="{{ .ID }}">{{ .Name }}</option>
+    <option value="{{ .ID }}" data-code="{{ .Code }}" data-name="{{ .Name }}">{{ .Name }}</option>
     {{ end }}
 </select>

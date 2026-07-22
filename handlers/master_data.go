@@ -519,6 +519,7 @@ func (app *App) AddItemHandler(w http.ResponseWriter, r *http.Request) {
 	defaultUom := r.FormValue("default_uom")
 	brandIDStr := r.FormValue("brand_id")
 	categoryIDStr := r.FormValue("category_id")
+	variation := r.FormValue("variation")
 
 	if code == "" || description == "" || defaultUom == "" {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Code, Description and Default UOM are required."}}`)
@@ -544,8 +545,8 @@ func (app *App) AddItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.DB.Exec(`
 		INSERT INTO items (code, description, model, brand_id, category_id, default_uom, variation, remarks)
-		VALUES (?, ?, ?, ?, ?, ?, '', '')
-	`, code, description, model, brandID, categoryID, defaultUom)
+		VALUES (?, ?, ?, ?, ?, ?, ?, '')
+	`, code, description, model, brandID, categoryID, defaultUom, variation)
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to add item. Code might already be in use."}}`)
 		http.Error(w, "Failed to insert item", http.StatusInternalServerError)

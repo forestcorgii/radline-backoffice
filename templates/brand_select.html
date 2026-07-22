@@ -2,6 +2,6 @@
         hx-get="/brands/select" hx-trigger="brand-added from:body" hx-swap="outerHTML">
     <option value="0">-- Select Brand --</option>
     {{ range . }}
-    <option value="{{ .ID }}">{{ .Name }}</option>
+    <option value="{{ .ID }}" data-code="{{ .Code }}" data-name="{{ .Name }}">{{ .Name }}</option>
     {{ end }}
 </select>
