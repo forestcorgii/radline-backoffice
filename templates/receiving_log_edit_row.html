@@ -17,12 +17,12 @@
     <td>
         <input type="number" step="any" name="less2" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.1f" .Less2 }}" style="width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
-    <td>₱{{ printf "%.2f" .Cost }}</td>
+    <td class="calc-cost">₱{{ printf "%.2f" .Cost }}</td>
     <td>₱{{ printf "%.2f" .TotalCost }}</td>
     <td>
         <input type="number" step="any" name="markup" form="edit-form-{{ .ID }}" class="form-input" value="{{ printf "%.0f" .Markup }}" style="width: 4.5rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
-    <td>₱{{ printf "%.2f" .SellingPrice }}</td>
+    <td class="calc-selling-price">₱{{ printf "%.2f" .SellingPrice }}</td>
     <td>
         <input type="text" name="remarks" form="edit-form-{{ .ID }}" class="form-input" value="{{ .Remarks }}" style="width: 7rem; padding: 0.35rem 0.5rem; font-size: 0.8125rem;">
     </td>
