@@ -836,6 +836,99 @@
             </div>
         </div>
     </div>
+
+    <!-- UOM Setting Modal -->
+    <div id="uom-setting-modal"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;"
+         role="dialog" aria-modal="true" aria-labelledby="uom-modal-title">
+        <div style="background:var(--bg-card, #fff); border-radius:0.5rem; box-shadow:0 20px 60px rgba(0,0,0,0.3); width:100%; max-width:400px; padding:1.5rem; margin:1rem;">
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <div>
+                    <h2 id="uom-modal-title" style="font-size:1rem; font-weight:700; margin:0; color:var(--text-primary);">Add UOM Setting</h2>
+                    <p id="uom-modal-subtitle" style="font-size:0.78rem; color:var(--text-muted); margin:0.2rem 0 0;"></p>
+                </div>
+                <button type="button" onclick="closeUomSettingModal()"
+                        style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:0.25rem; border-radius:0.25rem; line-height:1;"
+                        aria-label="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <!-- Form -->
+            <form id="uom-setting-modal-form"
+                  hx-post="/uom-settings/add"
+                  hx-swap="none"
+                  hx-on::after-request="handleUomModalAfterRequest(event)">
+                <input type="hidden" id="uom-modal-item-id" name="item_id" value="">
+                <div style="display:flex; flex-direction:column; gap:1rem;">
+                    <div>
+                        <label for="uom-modal-muom" style="font-size:0.8rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:0.35rem;">MUOM Code <span style="color:var(--color-danger,#ef4444);">*</span></label>
+                        <input type="text" id="uom-modal-muom" name="muom" class="form-input" placeholder="e.g. BOX, CASE, DOZ"
+                               required style="width:100%; text-transform:uppercase;"
+                               oninput="this.value = this.value.toUpperCase()">
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0 0;">The multiple unit of measure code to add for this item.</p>
+                    </div>
+                    <div>
+                        <label for="uom-modal-factor" style="font-size:0.8rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:0.35rem;">Conversion Rate <span style="color:var(--color-danger,#ef4444);">*</span></label>
+                        <input type="number" id="uom-modal-factor" name="conversion_factor" class="form-input" placeholder="e.g. 12 (1 BOX = 12 base units)"
+                               step="any" min="0.0001" required style="width:100%;">
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0 0;">How many base units are in 1 MUOM unit.</p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeUomSettingModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save UOM Setting</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // UOM Setting Modal helpers
+        window._uomModalSourceRow = null;
+
+        window.openUomSettingModal = function(itemId, itemDesc) {
+            document.getElementById('uom-modal-item-id').value = itemId;
+            document.getElementById('uom-modal-subtitle').textContent = itemDesc ? 'Item: ' + itemDesc : '';
+            document.getElementById('uom-modal-muom').value = '';
+            document.getElementById('uom-modal-factor').value = '';
+            // Remember which item row triggered this (for refresh after save)
+            window._uomModalSourceRow = document.querySelector('.item-grid-row input[name="item_id"][value="' + itemId + '"]');
+            const modal = document.getElementById('uom-setting-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => document.getElementById('uom-modal-muom').focus(), 50);
+        };
+
+        window.closeUomSettingModal = function() {
+            document.getElementById('uom-setting-modal').style.display = 'none';
+            window._uomModalSourceRow = null;
+        };
+
+        window.handleUomModalAfterRequest = function(event) {
+            if (event.detail.successful) {
+                closeUomSettingModal();
+                // Re-trigger the item row's hidden input to reload the UOM dropdown
+                if (window._uomModalSourceRow) {
+                    htmx.trigger(window._uomModalSourceRow, 'change');
+                }
+            }
+        };
+
+        // Close modal when clicking the backdrop
+        document.getElementById('uom-setting-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeUomSettingModal();
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('uom-setting-modal').style.display === 'flex') {
+                closeUomSettingModal();
+            }
+        });
+    </script>
 </body>
 
 </html>

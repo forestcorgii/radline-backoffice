@@ -19,11 +19,12 @@
             ✕ Close
         </button>
     </div>
-    <form hx-post="/sales/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); const tbody = document.getElementById('sales-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleEncodeSalesForm(); }">
+    <form hx-post="/sales/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); const tbody = document.getElementById('sales-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleEncodeSalesForm(); }">
         <div class="grid grid-cols-5">
             <div class="form-group">
                 <label for="doc_date">Document Date</label>
                 <input type="date" id="doc_date" name="doc_date" required class="form-input">
+                <script>document.currentScript.previousElementSibling.valueAsDate = new Date();</script>
             </div>
             <div class="form-group">
                 <label for="doc_type">Doc Type</label>

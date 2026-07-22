@@ -11,11 +11,12 @@
 
 <div class="card">
     <h2 class="mb-4">Encode Sales</h2>
-    <form hx-post="/sales/add" hx-swap="none">
+    <form hx-post="/sales/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); }">
         <div class="grid grid-cols-5">
             <div class="form-group">
                 <label for="doc_date">Document Date</label>
                 <input type="date" id="doc_date" name="doc_date" required>
+                <script>document.currentScript.previousElementSibling.valueAsDate = new Date();</script>
             </div>
             <div class="form-group">
                 <label for="doc_type">Doc Type</label>
