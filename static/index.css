@@ -69,7 +69,7 @@ body {
 	border-right: 1px solid var(--border-color);
 	display: flex;
 	flex-direction: column;
-	z-index: 1000;
+	z-index: 10000;
 	transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -355,7 +355,7 @@ main#main-content {
 	background: rgba(0, 0, 0, 0.4);
 	backdrop-filter: blur(4px);
 	-webkit-backdrop-filter: blur(4px);
-	z-index: 950;
+	z-index: 99999;
 	opacity: 0;
 	transition: opacity 0.3s ease;
 }
@@ -470,8 +470,6 @@ select:focus,
 .table-container:has(.has-dropdown),
 .table-container.has-dropdown {
 	overflow: visible !important;
-	position: relative;
-	z-index: 9000 !important;
 }
 
 .table-container::-webkit-scrollbar {
@@ -1035,6 +1033,7 @@ tr:hover td {
 		bottom: 0;
 		transform: translateX(-100%);
 		box-shadow: var(--shadow);
+		z-index: 100000;
 	}
 	
 	.sidebar.open {
@@ -1286,49 +1285,15 @@ tr:hover td {
 	width: 100%;
 }
 
-.card:has(.searchable-dropdown:focus-within),
-.card:has(.has-dropdown),
-.card.has-dropdown {
-	position: relative;
-	z-index: 9000 !important;
-}
-
-form:has(.searchable-dropdown:focus-within),
-form:has(.has-dropdown),
-form.has-dropdown {
-	position: relative;
-	z-index: 9000 !important;
-}
-
 .table-container:has(.searchable-dropdown),
 .table-container:has(.has-dropdown),
 .table-container.has-dropdown {
 	overflow: visible !important;
-	position: relative;
-	z-index: 9000 !important;
-}
-
-table:has(.searchable-dropdown:focus-within),
-table:has(.has-dropdown),
-table.has-dropdown {
-	position: relative;
-	z-index: 9000 !important;
-}
-
-tr.active-dropdown-row,
-td.active-dropdown-cell,
-tr:has(.searchable-dropdown:focus-within),
-td:has(.searchable-dropdown:focus-within),
-tr:focus-within,
-td:focus-within {
-	position: relative;
-	z-index: 9500 !important;
 }
 
 .searchable-dropdown:focus-within,
 .searchable-dropdown.active {
 	position: relative;
-	z-index: 9999 !important;
 }
 
 .dropdown-list {

@@ -284,7 +284,7 @@
                 if (activeLinks.length > 1) {
                     let longest = activeLinks[0];
                     activeLinks.forEach(link => {
-                        if (link.getAttribute("href").length > longest.getAttribute("href").length) {
+                        if ((link.getAttribute("href") || "").length > (longest.getAttribute("href") || "").length) {
                             longest = link;
                         }
                     });
@@ -306,7 +306,7 @@
             event.preventDefault();
             // In collapsed sidebar state on desktop, dropdown menus should only be hovered, not clicked
             const sidebar = document.getElementById("sidebar");
-            if (sidebar && sidebar.classList.contains("collapsed")) {
+            if (sidebar && sidebar.classList.contains("collapsed") && window.innerWidth > 768) {
                 return;
             }
             const dropdown = event.currentTarget.closest(".sidebar-dropdown");
@@ -407,6 +407,21 @@
             list.style.marginTop = '0px';
         }
 
+        function cleanupDropdownState(container) {
+            if (!container) return;
+            container.classList.remove('active');
+            const card = container.closest('.card');
+            if (card) card.classList.remove('has-dropdown');
+            const form = container.closest('form');
+            if (form) form.classList.remove('has-dropdown');
+            const tableContainer = container.closest('.table-container');
+            if (tableContainer) tableContainer.classList.remove('has-dropdown');
+            const row = container.closest('tr, .item-grid-row');
+            if (row) row.classList.remove('active-dropdown-row');
+            const cell = container.closest('td');
+            if (cell) cell.classList.remove('active-dropdown-cell');
+        }
+
         function showDropdown(input) {
             const container = input.closest('.searchable-dropdown');
             if (!container) return;
@@ -417,9 +432,9 @@
             if (form) form.classList.add('has-dropdown');
             const tableContainer = input.closest('.table-container');
             if (tableContainer) tableContainer.classList.add('has-dropdown');
-            const row = input.closest('tr');
+            const row = input.closest('tr, .item-grid-row');
             if (row) {
-                document.querySelectorAll('tr.active-dropdown-row').forEach(r => r.classList.remove('active-dropdown-row'));
+                document.querySelectorAll('tr.active-dropdown-row, .item-grid-row.active-dropdown-row').forEach(r => r.classList.remove('active-dropdown-row'));
                 row.classList.add('active-dropdown-row');
             }
             const cell = input.closest('td');
@@ -442,17 +457,7 @@
             setTimeout(() => {
                 const container = input.closest('.searchable-dropdown');
                 if (!container) return;
-                container.classList.remove('active');
-                const card = input.closest('.card');
-                if (card) card.classList.remove('has-dropdown');
-                const form = input.closest('form');
-                if (form) form.classList.remove('has-dropdown');
-                const tableContainer = input.closest('.table-container');
-                if (tableContainer) tableContainer.classList.remove('has-dropdown');
-                const row = input.closest('tr');
-                if (row) row.classList.remove('active-dropdown-row');
-                const cell = input.closest('td');
-                if (cell) cell.classList.remove('active-dropdown-cell');
+                cleanupDropdownState(container);
                 const list = container.querySelector('.dropdown-list');
                 if (list) {
                     list.style.display = 'none';
@@ -489,7 +494,7 @@
                         }
                     }
                 }
-            }, 250);
+            }, 200);
         }
 
         function filterDropdown(input) {
@@ -544,6 +549,7 @@
             
             const list = container.querySelector('.dropdown-list');
             if (list) list.style.display = 'none';
+            cleanupDropdownState(container);
         }
 
         function handleDropdownKeydown(event, input) {
@@ -586,6 +592,7 @@
             } else if (event.key === 'Escape') {
                 event.preventDefault();
                 list.style.display = 'none';
+                cleanupDropdownState(container);
                 input.blur();
             }
         }
@@ -595,6 +602,9 @@
             if (!event.target.closest('.searchable-dropdown')) {
                 document.querySelectorAll('.dropdown-list').forEach(list => {
                     list.style.display = 'none';
+                });
+                document.querySelectorAll('.searchable-dropdown.active').forEach(c => {
+                    cleanupDropdownState(c);
                 });
             }
         });
@@ -664,7 +674,7 @@
                     if (addRowBtn) {
                         addRowBtn.click();
                         setTimeout(() => {
-                            const tbody = parent.querySelector('tbody');
+                            const tbody = parent.querySelector('tbody, #sales-items-tbody, #receiving-items-tbody, #adjustment-items-tbody, .item-grid-container > div');
                             if (tbody && tbody.lastElementChild) {
                                 const newInput = tbody.lastElementChild.querySelector('.dropdown-search, input:not([type="hidden"]), select');
                                 if (newInput) {
@@ -768,8 +778,10 @@
 
         // Intercept HTMX hx-confirm event
         document.addEventListener('htmx:confirm', function(evt) {
-            evt.preventDefault();
             const question = evt.detail.question;
+            // Only intercept when there's an actual hx-confirm question; otherwise let HTMX proceed normally
+            if (!question) return;
+            evt.preventDefault();
             showShadcnAlertDialog({
                 title: 'Are you sure?',
                 description: question,
