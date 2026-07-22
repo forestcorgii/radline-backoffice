@@ -1331,6 +1331,26 @@ tr:hover td {
 	color: #ffffff;
 }
 
+.dropdown-add-new {
+	padding: 0.5rem 0.75rem;
+	cursor: pointer;
+	border-top: 1px solid var(--border-color);
+	color: var(--primary-color);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	transition: background-color 0.15s ease;
+	position: sticky;
+	bottom: 0;
+	background: var(--surface-color);
+}
+
+.dropdown-add-new:hover {
+	background-color: rgba(37, 99, 235, 0.08);
+}
+
 /* Customize View Popover Styling */
 .customize-view-container {
 	position: relative;

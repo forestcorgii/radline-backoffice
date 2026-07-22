@@ -30,12 +30,68 @@
                 <input type="text" id="item_model" name="model" class="form-input" oninput="updateAddItemSuggestions()">
             </div>
             <div class="form-group">
-                <label for="brand_id">Brand</label>
-                {{ template "brand_select.html" .Brands }}
+                <label>Brand</label>
+                <div class="searchable-dropdown" id="brand-searchable-dd" style="position: relative; width: 100%;">
+                    <input type="text"
+                           class="form-input dropdown-search"
+                           id="brand_search_input"
+                           placeholder="Search Brand..."
+                           onfocus="showDropdown(this); this.select();"
+                           onclick="showDropdown(this); this.select();"
+                           onblur="hideGenericDropdown(this)"
+                           oninput="filterGenericDropdown(this)"
+                           onkeydown="handleGenericDropdownKeydown(event, this)"
+                           style="width: 100%; padding: 0.75rem 1rem; height: auto;">
+                    <input type="hidden" id="brand_id" name="brand_id" value="0"
+                           onchange="updateAddItemSuggestions()">
+                    <div class="dropdown-list" id="brand-dropdown-list">
+                        {{ range .Brands }}
+                        <div class="dropdown-item generic-dd-item"
+                             data-id="{{ .ID }}"
+                             data-display="{{ .Name }}"
+                             data-code="{{ .Code }}"
+                             data-name="{{ .Name }}"
+                             onmousedown="selectGenericDropdownItem(this)">
+                            {{ .Name }}
+                        </div>
+                        {{ end }}
+                        <div class="dropdown-add-new" onmousedown="openAddBrandModal()">
+                            <span style="font-size: 1rem; font-weight: 600;">+</span> Add New Brand
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
-                <label for="category_id">Category</label>
-                {{ template "category_select.html" .Categories }}
+                <label>Category</label>
+                <div class="searchable-dropdown" id="category-searchable-dd" style="position: relative; width: 100%;">
+                    <input type="text"
+                           class="form-input dropdown-search"
+                           id="category_search_input"
+                           placeholder="Search Category..."
+                           onfocus="showDropdown(this); this.select();"
+                           onclick="showDropdown(this); this.select();"
+                           onblur="hideGenericDropdown(this)"
+                           oninput="filterGenericDropdown(this)"
+                           onkeydown="handleGenericDropdownKeydown(event, this)"
+                           style="width: 100%; padding: 0.75rem 1rem; height: auto;">
+                    <input type="hidden" id="category_id" name="category_id" value="0"
+                           onchange="updateAddItemSuggestions()">
+                    <div class="dropdown-list" id="category-dropdown-list">
+                        {{ range .Categories }}
+                        <div class="dropdown-item generic-dd-item"
+                             data-id="{{ .ID }}"
+                             data-display="{{ .Name }}"
+                             data-code="{{ .Code }}"
+                             data-name="{{ .Name }}"
+                             onmousedown="selectGenericDropdownItem(this)">
+                            {{ .Name }}
+                        </div>
+                        {{ end }}
+                        <div class="dropdown-add-new" onmousedown="openAddCategoryModal()">
+                            <span style="font-size: 1rem; font-weight: 600;">+</span> Add New Category
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label for="default_uom">Default UOM</label>
@@ -72,6 +128,64 @@
             <button type="button" onclick="toggleAddItemForm()" class="btn btn-secondary">Cancel</button>
         </div>
     </form>
+</div>
+
+<!-- ===== Add Brand Modal ===== -->
+<div id="add-brand-modal" style="display:none; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);" onclick="closeAddBrandModal()"></div>
+    <div class="card" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem; padding:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+            <h3 style="margin:0; font-size:1.125rem; font-weight:600;">Add New Brand</h3>
+            <button type="button" class="btn btn-secondary" onclick="closeAddBrandModal()" style="padding:0.35rem 0.75rem; font-size:0.8125rem;">✕ Close</button>
+        </div>
+        <form id="add-brand-modal-form" hx-post="/brands/add" hx-swap="none"
+              hx-on::after-request="onAddBrandModalSubmit(event)">
+            <div class="grid grid-cols-2">
+                <div class="form-group">
+                    <label for="modal-brand-name">Brand Name</label>
+                    <input type="text" id="modal-brand-name" name="name" required class="form-input"
+                           oninput="autoGenerateBrandCodeModal()">
+                </div>
+                <div class="form-group">
+                    <label for="modal-brand-code">Brand Code</label>
+                    <input type="text" id="modal-brand-code" name="code" required class="form-input">
+                </div>
+            </div>
+            <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                <button type="submit" class="btn">Save Brand</button>
+                <button type="button" class="btn btn-secondary" onclick="closeAddBrandModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== Add Category Modal ===== -->
+<div id="add-category-modal" style="display:none; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);" onclick="closeAddCategoryModal()"></div>
+    <div class="card" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem; padding:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+            <h3 style="margin:0; font-size:1.125rem; font-weight:600;">Add New Category</h3>
+            <button type="button" class="btn btn-secondary" onclick="closeAddCategoryModal()" style="padding:0.35rem 0.75rem; font-size:0.8125rem;">✕ Close</button>
+        </div>
+        <form id="add-category-modal-form" hx-post="/categories/add" hx-swap="none"
+              hx-on::after-request="onAddCategoryModalSubmit(event)">
+            <div class="grid grid-cols-2">
+                <div class="form-group">
+                    <label for="modal-cat-name">Category Name</label>
+                    <input type="text" id="modal-cat-name" name="name" required class="form-input"
+                           oninput="autoGenerateCategoryCodeModal()">
+                </div>
+                <div class="form-group">
+                    <label for="modal-cat-code">Category Code</label>
+                    <input type="text" id="modal-cat-code" name="code" required class="form-input">
+                </div>
+            </div>
+            <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                <button type="submit" class="btn">Save Category</button>
+                <button type="button" class="btn btn-secondary" onclick="closeAddCategoryModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Non-collapsible Items List Card occupying the full width -->
@@ -352,28 +466,284 @@
         window.applyItemsViewSettings();
     })();
 
+    // --- Generic Brand/Category Searchable Dropdown Helpers ---
+
+    function filterGenericDropdown(input) {
+        const filter = input.value.trim().toLowerCase();
+        const container = input.closest('.searchable-dropdown');
+        if (!container) return;
+        const items = container.querySelectorAll('.generic-dd-item');
+        items.forEach(item => {
+            const text = (item.getAttribute('data-display') || '').toLowerCase();
+            item.style.display = (filter === '' || text.includes(filter)) ? 'block' : 'none';
+        });
+        updateDropdownPosition(input);
+    }
+
+    function hideGenericDropdown(input) {
+        setTimeout(() => {
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            cleanupDropdownState(container);
+            const list = container.querySelector('.dropdown-list');
+            if (list) list.style.display = 'none';
+            // Restore display text from current hidden value
+            const hidden = container.querySelector('input[type="hidden"]');
+            if (hidden && hidden.value && hidden.value !== '0') {
+                const match = container.querySelector(`.generic-dd-item[data-id="${hidden.value}"]`);
+                if (match) input.value = match.getAttribute('data-display') || '';
+            } else if (!hidden || hidden.value === '0' || hidden.value === '') {
+                // If nothing selected and user clears input, that's fine
+                if (input.value.trim() === '') {
+                    if (hidden) hidden.value = '0';
+                }
+            }
+        }, 200);
+    }
+
+    function selectGenericDropdownItem(item) {
+        const container = item.closest('.searchable-dropdown');
+        if (!container) return;
+        const input = container.querySelector('.dropdown-search');
+        const hidden = container.querySelector('input[type="hidden"]');
+        const id = item.getAttribute('data-id');
+        const display = item.getAttribute('data-display');
+        if (input) input.value = display;
+        if (hidden && hidden.value !== id) {
+            hidden.value = id;
+            hidden.dispatchEvent(new Event('change'));
+        }
+        const list = container.querySelector('.dropdown-list');
+        if (list) list.style.display = 'none';
+        cleanupDropdownState(container);
+    }
+
+    function handleGenericDropdownKeydown(event, input) {
+        const container = input.closest('.searchable-dropdown');
+        if (!container) return;
+        const list = container.querySelector('.dropdown-list');
+        if (!list || list.style.display === 'none') {
+            if (event.key === 'ArrowDown') { showDropdown(input); event.preventDefault(); }
+            return;
+        }
+        const visibleItems = Array.from(container.querySelectorAll('.generic-dd-item')).filter(i => i.style.display !== 'none');
+        if (visibleItems.length === 0) return;
+        let activeIndex = visibleItems.findIndex(i => i.classList.contains('active'));
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            if (activeIndex >= 0) visibleItems[activeIndex].classList.remove('active');
+            activeIndex = (activeIndex + 1) % visibleItems.length;
+            visibleItems[activeIndex].classList.add('active');
+            visibleItems[activeIndex].scrollIntoView({ block: 'nearest' });
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (activeIndex >= 0) visibleItems[activeIndex].classList.remove('active');
+            activeIndex = (activeIndex - 1 + visibleItems.length) % visibleItems.length;
+            visibleItems[activeIndex].classList.add('active');
+            visibleItems[activeIndex].scrollIntoView({ block: 'nearest' });
+        } else if (event.key === 'Enter') {
+            event.preventDefault(); event.stopPropagation();
+            const target = activeIndex >= 0 ? visibleItems[activeIndex] : visibleItems[0];
+            if (target) selectGenericDropdownItem(target);
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            list.style.display = 'none';
+            cleanupDropdownState(container);
+            input.blur();
+        }
+    }
+
+    // --- Add Brand Modal ---
+    window.openAddBrandModal = function () {
+        const modal = document.getElementById('add-brand-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            const form = document.getElementById('add-brand-modal-form');
+            if (form) { form.reset(); }
+            const nameInput = document.getElementById('modal-brand-name');
+            if (nameInput) setTimeout(() => nameInput.focus(), 50);
+        }
+        // Close brand dropdown if open
+        const dd = document.getElementById('brand-dropdown-list');
+        if (dd) dd.style.display = 'none';
+        const ddContainer = document.getElementById('brand-searchable-dd');
+        if (ddContainer) cleanupDropdownState(ddContainer);
+    };
+
+    window.closeAddBrandModal = function () {
+        const modal = document.getElementById('add-brand-modal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.onAddBrandModalSubmit = function (event) {
+        if (!event.detail.successful) return;
+        closeAddBrandModal();
+        // Fetch updated brand list and refresh the dropdown
+        fetch('/brands/select')
+            .then(r => r.text())
+            .then(html => {
+                // Parse out options from the returned <select>
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const options = doc.querySelectorAll('option');
+                const list = document.getElementById('brand-dropdown-list');
+                if (!list) return;
+                // Remove all existing brand items (keep the add-new footer)
+                list.querySelectorAll('.generic-dd-item').forEach(el => el.remove());
+                const footer = list.querySelector('.dropdown-add-new');
+                let lastId = null, lastName = null, lastCode = null;
+                options.forEach(opt => {
+                    if (!opt.value || opt.value === '0') return;
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item generic-dd-item';
+                    item.setAttribute('data-id', opt.value);
+                    item.setAttribute('data-display', opt.text);
+                    item.setAttribute('data-code', opt.getAttribute('data-code') || '');
+                    item.setAttribute('data-name', opt.text);
+                    item.setAttribute('onmousedown', 'selectGenericDropdownItem(this)');
+                    item.textContent = opt.text;
+                    list.insertBefore(item, footer);
+                    lastId = opt.value; lastName = opt.text; lastCode = opt.getAttribute('data-code') || '';
+                });
+                // Re-bind mousedown (textContent doesn't add listeners, use event delegation via onmousedown attr)
+                list.querySelectorAll('.generic-dd-item').forEach(el => {
+                    el.onmousedown = function() { selectGenericDropdownItem(this); };
+                });
+                // Auto-select the newly added brand (the last one)
+                if (lastId) {
+                    document.getElementById('brand_id').value = lastId;
+                    document.getElementById('brand_id').dispatchEvent(new Event('change'));
+                    document.getElementById('brand_search_input').value = lastName;
+                }
+            })
+            .catch(() => {});
+    };
+
+    window.autoGenerateBrandCodeModal = function () {
+        const nameInput = document.getElementById('modal-brand-name');
+        const codeInput = document.getElementById('modal-brand-code');
+        if (!nameInput || !codeInput) return;
+        const name = nameInput.value.trim();
+        if (!name) return;
+        const isAutoGen = codeInput.dataset.autogenerated === 'true';
+        if (codeInput.value && !isAutoGen) return;
+        const firstChar = name[0];
+        const rest = name.slice(1).replace(/[aeiouAEIOU]/g, '');
+        codeInput.value = (firstChar + rest).toUpperCase();
+        codeInput.dataset.autogenerated = 'true';
+    };
+
+    (function () {
+        const codeInput = document.getElementById('modal-brand-code');
+        if (codeInput) codeInput.addEventListener('input', function () { this.dataset.autogenerated = ''; });
+    })();
+
+    // --- Add Category Modal ---
+    window.openAddCategoryModal = function () {
+        const modal = document.getElementById('add-category-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            const form = document.getElementById('add-category-modal-form');
+            if (form) { form.reset(); }
+            const nameInput = document.getElementById('modal-cat-name');
+            if (nameInput) setTimeout(() => nameInput.focus(), 50);
+        }
+        const dd = document.getElementById('category-dropdown-list');
+        if (dd) dd.style.display = 'none';
+        const ddContainer = document.getElementById('category-searchable-dd');
+        if (ddContainer) cleanupDropdownState(ddContainer);
+    };
+
+    window.closeAddCategoryModal = function () {
+        const modal = document.getElementById('add-category-modal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.onAddCategoryModalSubmit = function (event) {
+        if (!event.detail.successful) return;
+        closeAddCategoryModal();
+        fetch('/categories/select')
+            .then(r => r.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const options = doc.querySelectorAll('option');
+                const list = document.getElementById('category-dropdown-list');
+                if (!list) return;
+                list.querySelectorAll('.generic-dd-item').forEach(el => el.remove());
+                const footer = list.querySelector('.dropdown-add-new');
+                let lastId = null, lastName = null;
+                options.forEach(opt => {
+                    if (!opt.value || opt.value === '0') return;
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item generic-dd-item';
+                    item.setAttribute('data-id', opt.value);
+                    item.setAttribute('data-display', opt.text);
+                    item.setAttribute('data-code', opt.getAttribute('data-code') || '');
+                    item.setAttribute('data-name', opt.text);
+                    item.textContent = opt.text;
+                    list.insertBefore(item, footer);
+                    lastId = opt.value; lastName = opt.text;
+                });
+                list.querySelectorAll('.generic-dd-item').forEach(el => {
+                    el.onmousedown = function() { selectGenericDropdownItem(this); };
+                });
+                if (lastId) {
+                    document.getElementById('category_id').value = lastId;
+                    document.getElementById('category_id').dispatchEvent(new Event('change'));
+                    document.getElementById('category_search_input').value = lastName;
+                }
+            })
+            .catch(() => {});
+    };
+
+    window.autoGenerateCategoryCodeModal = function () {
+        const nameInput = document.getElementById('modal-cat-name');
+        const codeInput = document.getElementById('modal-cat-code');
+        if (!nameInput || !codeInput) return;
+        const name = nameInput.value.trim();
+        if (!name) return;
+        const isAutoGen = codeInput.dataset.autogenerated === 'true';
+        if (codeInput.value && !isAutoGen) return;
+        const firstChar = name[0];
+        const rest = name.slice(1).replace(/[aeiouAEIOU]/g, '');
+        codeInput.value = (firstChar + rest).toUpperCase();
+        codeInput.dataset.autogenerated = 'true';
+    };
+
+    (function () {
+        const codeInput = document.getElementById('modal-cat-code');
+        if (codeInput) codeInput.addEventListener('input', function () { this.dataset.autogenerated = ''; });
+    })();
+
     // --- Add Item Auto-Suggest Logic ---
     // Track whether the user has manually edited code/description
     let addItemCodeManual = false;
     let addItemDescManual = false;
 
     window.updateAddItemSuggestions = function () {
-        const brandSel = document.getElementById('brand_id');
-        const catSel = document.getElementById('category_id');
+        const brandHidden = document.getElementById('brand_id');
+        const catHidden = document.getElementById('category_id');
         const modelInput = document.getElementById('item_model');
         const variationInput = document.getElementById('item_variation');
         const codeInput = document.getElementById('item_code');
         const descInput = document.getElementById('item_description');
 
-        if (!brandSel || !codeInput || !descInput) return;
+        if (!brandHidden || !codeInput || !descInput) return;
 
-        const brandOpt = brandSel.options[brandSel.selectedIndex];
-        const brandCode = (brandOpt && brandOpt.value !== '0') ? (brandOpt.getAttribute('data-code') || '') : '';
-        const brandName = (brandOpt && brandOpt.value !== '0') ? (brandOpt.getAttribute('data-name') || '') : '';
+        // Read from the selected dropdown item's data attributes
+        const brandContainer = document.getElementById('brand-searchable-dd');
+        const catContainer = document.getElementById('category-searchable-dd');
 
-        const catOpt = catSel ? catSel.options[catSel.selectedIndex] : null;
-        const catCode = (catOpt && catOpt.value !== '0') ? (catOpt.getAttribute('data-code') || '') : '';
-        const catName = (catOpt && catOpt.value !== '0') ? (catOpt.getAttribute('data-name') || '') : '';
+        const brandId = brandHidden.value;
+        const brandItem = brandContainer ? brandContainer.querySelector(`.generic-dd-item[data-id="${brandId}"]`) : null;
+        const brandCode = brandItem ? (brandItem.getAttribute('data-code') || '') : '';
+        const brandName = brandItem ? (brandItem.getAttribute('data-name') || '') : '';
+
+        const catId = catHidden ? catHidden.value : '';
+        const catItem = catContainer ? catContainer.querySelector(`.generic-dd-item[data-id="${catId}"]`) : null;
+        const catCode = catItem ? (catItem.getAttribute('data-code') || '') : '';
+        const catName = catItem ? (catItem.getAttribute('data-name') || '') : '';
 
         const model = modelInput ? modelInput.value.trim() : '';
         const variation = variationInput ? variationInput.value.trim() : '';
@@ -400,13 +770,10 @@
     };
 
     function initAddItemAutoSuggest() {
-        const brandSel = document.getElementById('brand_id');
-        const catSel = document.getElementById('category_id');
         const codeInput = document.getElementById('item_code');
         const descInput = document.getElementById('item_description');
 
-        if (brandSel) brandSel.addEventListener('change', window.updateAddItemSuggestions);
-        if (catSel) catSel.addEventListener('change', window.updateAddItemSuggestions);
+        // brand_id and category_id hidden inputs dispatch 'change' and call updateAddItemSuggestions via onchange attr
 
         // Detect manual edits
         if (codeInput) {
@@ -434,6 +801,20 @@
     }
 
     initAddItemAutoSuggest();
+
+    // Reset brand/category searchable dropdowns when item form is reset
+    document.querySelector('#add-item-card form')?.addEventListener('reset', function () {
+        const brandInput = document.getElementById('brand_search_input');
+        const brandHidden = document.getElementById('brand_id');
+        const catInput = document.getElementById('category_search_input');
+        const catHidden = document.getElementById('category_id');
+        if (brandInput) brandInput.value = '';
+        if (brandHidden) brandHidden.value = '0';
+        if (catInput) catInput.value = '';
+        if (catHidden) catHidden.value = '0';
+        addItemCodeManual = false;
+        addItemDescManual = false;
+    });
 
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         if (typeof window.applyItemsViewSettings === 'function') {
