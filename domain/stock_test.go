@@ -343,3 +343,32 @@ func TestItemStock_GetOldestPLWithStock(t *testing.T) {
 		t.Errorf("expected false when onHand is 0")
 	}
 }
+
+func TestItemStock_CalculateOnHand_Status(t *testing.T) {
+	item := domain.Item{ID: 1, Code: "ITEM001", DefaultUOM: "PCS"}
+	rl, _ := domain.NewReceivingLog(1, "SupplierA", time.Now(), "PL1", 1, 10.0, "PCS", 100.0, 0, 0, 80.0, 130, "")
+
+	// 1. Posted sale: should deduct stock
+	s1, _ := domain.NewSalesDetail(1, "SI", "Posted", time.Now(), "INV1", "Cust", "SupplierA", 1, 3.0, "PCS", 150.0, 80.0, 0, 0, 0, "", "")
+	// 2. Active sale: should NOT deduct stock
+	s2, _ := domain.NewSalesDetail(2, "SI", "Active", time.Now(), "INV2", "Cust", "SupplierA", 1, 2.0, "PCS", 150.0, 80.0, 0, 0, 0, "", "")
+	// 3. Cancelled/Return sale: should NOT deduct stock
+	s3, _ := domain.NewSalesDetail(3, "SI", "Cancelled/Return", time.Now(), "INV3", "Cust", "SupplierA", 1, 4.0, "PCS", 150.0, 80.0, 0, 0, 0, "", "")
+
+	sales := []domain.SalesDetail{s1, s2, s3}
+	stock := domain.NewItemStock(item, nil, []domain.ReceivingLog{rl}, sales, nil)
+
+	// Supplier-specific on-hand stock:
+	// Received = 10. Deduct only s1 (3) -> OnHand = 7.
+	onHandSupplier := stock.CalculateOnHand("SupplierA")
+	if onHandSupplier != 7.0 {
+		t.Errorf("expected CalculateOnHand to be 7.0, got %f", onHandSupplier)
+	}
+
+	// Global on-hand stock:
+	// Received = 10. Deduct only s1 (3) -> OnHand = 7.
+	onHandGlobal := stock.CalculateGlobalOnHand()
+	if onHandGlobal != 7.0 {
+		t.Errorf("expected CalculateGlobalOnHand to be 7.0, got %f", onHandGlobal)
+	}
+}

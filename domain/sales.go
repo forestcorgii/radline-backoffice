@@ -61,6 +61,14 @@ type Sale struct {
 	Items        []SaleItem
 }
 
+func isValidStatus(status string) bool {
+	switch status {
+	case "Active", "ACTIVE", "Posted", "POSTED", "Cancelled/Return", "CANCELLED/RETURN":
+		return true
+	}
+	return false
+}
+
 // NewSale constructs and validates a Sale aggregate.
 func NewSale(docType, docStatus string, docDate time.Time, docNumber, customerName, supplier string, items []SaleItem) (Sale, error) {
 	if docType == "" {
@@ -74,6 +82,12 @@ func NewSale(docType, docStatus string, docDate time.Time, docNumber, customerNa
 	}
 	if docDate.IsZero() {
 		return Sale{}, errors.New("doc date must be valid")
+	}
+	if docStatus == "" {
+		return Sale{}, errors.New("doc status cannot be empty")
+	}
+	if !isValidStatus(docStatus) {
+		return Sale{}, errors.New("invalid doc status: " + docStatus)
 	}
 	if len(items) == 0 {
 		return Sale{}, errors.New("sale must have at least one item")
@@ -177,6 +191,12 @@ func NewSalesDetail(id int, docType, docStatus string, docDate time.Time, docNum
 	}
 	if supplier == "" {
 		return SalesDetail{}, errors.New("supplier cannot be empty")
+	}
+	if docStatus == "" {
+		return SalesDetail{}, errors.New("doc status cannot be empty")
+	}
+	if !isValidStatus(docStatus) {
+		return SalesDetail{}, errors.New("invalid doc status: " + docStatus)
 	}
 	if itemID <= 0 {
 		return SalesDetail{}, errors.New("item ID must be valid")

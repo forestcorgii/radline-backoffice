@@ -38,6 +38,9 @@ func (s ItemStock) CalculateOnHand(supplier string) float64 {
 		if sd.Supplier != supplier {
 			continue
 		}
+		if sd.DocStatus != "Posted" && sd.DocStatus != "POSTED" {
+			continue
+		}
 		factor := s.getConversionFactor(sd.UOM)
 		totalSold += sd.Qty * factor
 	}
@@ -55,6 +58,9 @@ func (s ItemStock) CalculateGlobalOnHand() float64 {
 
 	totalSold := 0.0
 	for _, sd := range s.SalesDetails {
+		if sd.DocStatus != "Posted" && sd.DocStatus != "POSTED" {
+			continue
+		}
 		factor := s.getConversionFactor(sd.UOM)
 		totalSold += sd.Qty * factor
 	}

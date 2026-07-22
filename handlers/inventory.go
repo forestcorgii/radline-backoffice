@@ -32,7 +32,7 @@ func stockListQuery(search, stockFilter string) (string, []interface{}) {
 			SELECT item_id, SUM(qty) AS total_received FROM receiving_logs GROUP BY item_id
 		) r ON r.item_id = i.id
 		LEFT JOIN (
-			SELECT item_id, SUM(qty) AS total_sold FROM sales_details GROUP BY item_id
+			SELECT item_id, SUM(qty) AS total_sold FROM sales_details WHERE doc_status IN ('Posted', 'POSTED') GROUP BY item_id
 		) s ON s.item_id = i.id
 		LEFT JOIN (
 			SELECT item_id, SUM(adjustment_qty) AS total_adjusted FROM inventory_adjustments GROUP BY item_id
@@ -93,7 +93,7 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 				WITH item_stats AS (
 					SELECT
 						COALESCE((SELECT SUM(r.qty) FROM receiving_logs r WHERE r.item_id = ?), 0) AS total_received,
-						COALESCE((SELECT SUM(s.qty) FROM sales_details s WHERE s.item_id = ?), 0) AS total_sold,
+						COALESCE((SELECT SUM(s.qty) FROM sales_details s WHERE s.item_id = ? AND s.doc_status IN ('Posted', 'POSTED')), 0) AS total_sold,
 						COALESCE((SELECT SUM(a.adjustment_qty) FROM inventory_adjustments a WHERE a.item_id = ?), 0) AS total_adjusted
 				),
 				oh AS (SELECT (total_received - total_sold + total_adjusted) AS on_hand FROM item_stats)
@@ -102,7 +102,7 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 				WHERE r.item_id = ? AND oh.on_hand > 0
 				  AND (SELECT COALESCE(SUM(r2.qty), 0) FROM receiving_logs r2
 				       WHERE r2.item_id = ? AND (r2.date < r.date OR (r2.date = r.date AND r2.id < r.id)))
-				      < (SELECT COALESCE(SUM(s.qty), 0) FROM sales_details s WHERE s.item_id = ?)
+				      < (SELECT COALESCE(SUM(s.qty), 0) FROM sales_details s WHERE s.item_id = ? AND s.doc_status IN ('Posted', 'POSTED'))
 				ORDER BY r.date ASC, r.id ASC
 				LIMIT 1
 			`, itemID, itemID, itemID, itemID, itemID, itemID)

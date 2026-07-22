@@ -1,6 +1,13 @@
 {{ define "sale_edit_row.html" }}
 {{ $sale := .Sale }}
 <tr id="sale-row-{{ $sale.ID }}" class="edit-row">
+    <td data-col="doc_status">
+        <select name="doc_status" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto;" required>
+            <option value="Active" {{ if or (eq $sale.DocStatus "Active") (eq $sale.DocStatus "ACTIVE") }}selected{{ end }}>Active</option>
+            <option value="Posted" {{ if or (eq $sale.DocStatus "Posted") (eq $sale.DocStatus "POSTED") }}selected{{ end }}>Posted</option>
+            <option value="Cancelled/Return" {{ if or (eq $sale.DocStatus "Cancelled/Return") (eq $sale.DocStatus "CANCELLED/RETURN") }}selected{{ end }}>Cancelled/Return</option>
+        </select>
+    </td>
     <td data-col="doc_date">
         <input type="date" name="doc_date" value="{{ $sale.DocDate.Format "2006-01-02" }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem;" required>
     </td>

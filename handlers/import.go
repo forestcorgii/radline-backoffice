@@ -412,9 +412,25 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 						continue
 					}
 
-					docStatus := getValByHeader(row, colMap, "DOC STATUS")
-					if docStatus == "" {
-						docStatus = "POSTED"
+					docStatusRaw := getValByHeader(row, colMap, "DOC STATUS")
+					docStatus := "Posted"
+					if docStatusRaw != "" {
+						switch strings.ToUpper(docStatusRaw) {
+						case "POSTED":
+							docStatus = "Posted"
+						case "ACTIVE":
+							docStatus = "Active"
+						case "CANCELLED", "RETURN", "CANCELLED/RETURN":
+							docStatus = "Cancelled/Return"
+						default:
+							if strings.EqualFold(docStatusRaw, "Active") {
+								docStatus = "Active"
+							} else if strings.EqualFold(docStatusRaw, "Posted") {
+								docStatus = "Posted"
+							} else if strings.EqualFold(docStatusRaw, "Cancelled/Return") {
+								docStatus = "Cancelled/Return"
+							}
+						}
 					}
 					docNumber := getValByHeader(row, colMap, "DOC NUMBER")
 					customerName := getValByHeader(row, colMap, "CUSTOMER NAME")

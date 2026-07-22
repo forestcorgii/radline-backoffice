@@ -545,6 +545,10 @@ tr:hover td {
 	grid-template-columns: 1fr;
 }
 
+.grid-cols-6 {
+	grid-template-columns: 1fr;
+}
+
 .grid-adj-header {
 	grid-template-columns: 1fr;
 }
@@ -562,6 +566,9 @@ tr:hover td {
 	.grid-cols-5 {
 		grid-template-columns: repeat(2, 1fr);
 	}
+	.grid-cols-6 {
+		grid-template-columns: repeat(2, 1fr);
+	}
 	.grid-adj-header {
 		grid-template-columns: 1fr 2fr;
 	}
@@ -569,6 +576,9 @@ tr:hover td {
 
 @media (min-width: 768px) {
 	.grid-cols-5 {
+		grid-template-columns: repeat(3, 1fr);
+	}
+	.grid-cols-6 {
 		grid-template-columns: repeat(3, 1fr);
 	}
 }
@@ -582,6 +592,9 @@ tr:hover td {
 	}
 	.grid-cols-5 {
 		grid-template-columns: repeat(5, 1fr);
+	}
+	.grid-cols-6 {
+		grid-template-columns: repeat(6, 1fr);
 	}
 }
 

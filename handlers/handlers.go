@@ -88,6 +88,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			COALESCE(SUM(total_cost), 0.0) as total_costs,
 			COALESCE(SUM(profit), 0.0) as gross_profit
 		FROM sales_details
+		WHERE doc_status IN ('Posted', 'POSTED')
 	`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -111,6 +112,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(SUM(total_sales), 0.0) as sales, 
 		       COALESCE(SUM(profit), 0.0) as profit
 		FROM sales_details
+		WHERE doc_status IN ('Posted', 'POSTED')
 		GROUP BY month
 		ORDER BY month ASC
 		LIMIT 6

@@ -229,3 +229,37 @@ func TestSale_ToSalesDetails(t *testing.T) {
 		t.Errorf("expected ProfitMargin %f, got %f", expectedMargin2, d2.ProfitMargin)
 	}
 }
+
+func TestNewSale_StatusValidation(t *testing.T) {
+	validItem := domain.SaleItem{
+		ItemID: 1,
+		Qty:    5.0,
+		UOM:    "PCS",
+		Price:  100.0,
+		Cost:   80.0,
+	}
+
+	tests := []struct {
+		name      string
+		docStatus string
+		wantErr   bool
+	}{
+		{"valid active", "Active", false},
+		{"valid posted", "Posted", false},
+		{"valid cancelled/return", "Cancelled/Return", false},
+		{"valid uppercase active", "ACTIVE", false},
+		{"valid uppercase posted", "POSTED", false},
+		{"valid uppercase cancelled/return", "CANCELLED/RETURN", false},
+		{"invalid status value", "InvalidStatus", true},
+		{"empty status", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := domain.NewSale("SI", tt.docStatus, time.Now(), "INV100", "Customer", "ASCD", []domain.SaleItem{validItem})
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("NewSale() with status %q: error = %v, wantErr %v", tt.docStatus, err, tt.wantErr)
+			}
+		})
+	}
+}
