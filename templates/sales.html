@@ -63,10 +63,32 @@
             <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Items</h3>
         </div>
 
-        <div class="item-grid-container">
-            <div id="sales-items-tbody">
-                {{ template "sale_item_row.html" .SalesRowData }}
-            </div>
+        <div class="excel-table-container">
+            <table class="excel-table" style="min-width: 1840px;">
+                <thead>
+                    <tr>
+                        <th style="width: 320px;">Item Description</th>
+                        <th style="width: 90px;">PL No</th>
+                        <th style="width: 110px;">UOM</th>
+                        <th style="width: 80px;">Qty</th>
+                        <th style="width: 120px;">Unit Price</th>
+                        <th style="width: 120px;">Total Price</th>
+                        <th style="width: 120px;">Unit Cost</th>
+                        <th style="width: 120px;">Total Cost</th>
+                        <th style="width: 100px;">Patong</th>
+                        <th style="width: 100px;">POS Charge</th>
+                        <th style="width: 100px;">WT 2307</th>
+                        <th style="width: 120px;">Total Remit</th>
+                        <th style="width: 120px;">Profit</th>
+                        <th style="width: 90px;">Profit %</th>
+                        <th style="width: 180px;">Remarks</th>
+                        <th style="width: 50px; text-align: center;"></th>
+                    </tr>
+                </thead>
+                <tbody id="sales-items-tbody">
+                    {{ template "sale_item_row.html" .SalesRowData }}
+                </tbody>
+            </table>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;" class="mt-4">

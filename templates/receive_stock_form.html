@@ -32,10 +32,25 @@
             <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Items</h3>
         </div>
 
-        <div class="item-grid-container">
-            <div id="receiving-items-tbody">
-                {{ template "receiving_item_row.html" .ReceivingRowData }}
-            </div>
+        <div class="excel-table-container">
+            <table class="excel-table" style="min-width: 1100px;">
+                <thead>
+                    <tr>
+                        <th style="width: 320px;">Item Description</th>
+                        <th style="width: 110px;">UOM</th>
+                        <th style="width: 80px;">Qty</th>
+                        <th style="width: 110px;">Unit Cost</th>
+                        <th style="width: 80px;">Less 1 (%)</th>
+                        <th style="width: 80px;">Less 2 (%)</th>
+                        <th style="width: 90px;">Markup (%)</th>
+                        <th style="width: 180px;">Remarks</th>
+                        <th style="width: 50px; text-align: center;"></th>
+                    </tr>
+                </thead>
+                <tbody id="receiving-items-tbody">
+                    {{ template "receiving_item_row.html" .ReceivingRowData }}
+                </tbody>
+            </table>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;" class="mt-4">
