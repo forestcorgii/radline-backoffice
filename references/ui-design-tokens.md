@@ -247,6 +247,16 @@ See [[htmx-patterns]] for the toast protocol.
 - **HTMX Event Interception (`htmx:confirm`)**: Attached a global listener for `htmx:confirm` that prevents the default browser popup and presents the shadcn Alert Dialog with smooth backdrop blur and scale-in animation. Clicking "Continue" calls `evt.detail.issueRequest(true)` to proceed.
 - **Window Alert & Confirm Override**: Overrode `window.alert` and `window.confirm` to route through `window.showShadcnAlertDialog()` for consistent UI across the entire application.
 
+### Context: Compact UI Spacing and High Information Density Optimization
+**Problem**: UI spacing across form inputs, tables, cards, sidebar, buttons, and section wrappers was excessively tall and sparse, resulting in low information density and unnecessary vertical scrolling.
+**Enforced Solution**:
+- **Typography & Base Sizing**: Scaled body text to `0.8125rem` (13px) and `line-height: 1.4` for optimal text density.
+- **Card & Layout Padding**: Reduced `.card` and `main#main-content` padding to `0.75rem 1rem` (mobile `.card` `0.5rem 0.75rem`).
+- **Form Controls & Inputs**: Compacted `.form-group` vertical margin to `0.5rem`, `label` font-size to `0.75rem` with `0.2rem` margin-bottom, and input/select height to `1.875rem` (30px) with `0.25rem 0.5rem` padding.
+- **Buttons & Icons**: Reduced primary `.btn` height to `1.875rem` (30px) with `0 0.65rem` padding and `.btn-icon` dimensions to `1.75rem x 1.75rem`.
+- **Tables & Rows**: Reduced `th, td` cell padding to `0.3rem 0.5rem` with `font-size: 0.8125rem` (`0.75rem` uppercase headers) and table container top margin to `0.5rem`.
+- **Item Entry Grid Cards**: Compacted `.item-card-row` / `.item-grid-row` padding to `0.4rem 0.65rem` with `0.35rem` grid gaps and `0.6875rem` uppercase field labels.
+
 
 
 
