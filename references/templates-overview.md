@@ -147,4 +147,13 @@ See [[sidebar-navigation]] and [[htmx-patterns]] for details.
 - **Provide Context Data in Log Handlers**: Ensure handlers for log pages (`ReceivingLogsHandler`, `AdjustmentLogsHandler`) fetch and pass `ReceivingRowData` / `AdjustmentRowData` (items and UOMs) so form dropdowns render correctly.
 - **Listen for HTMX Triggers**: Add event listeners (e.g. `stock-received`, `stock-adjusted`) on log pages to trigger dynamic search/filter refreshes upon form submission.
 
-
+### Context: Terminology Mapping for "List Views"
+**Problem**: The user frequently uses the term "list views" to refer to various log views, tabular pages, or list layouts in the application.
+**Enforced Solution**:
+- When the user mentions "list views", understand and map them to the corresponding log or table pages and templates in the application:
+  - **Sales Logs**: [sales.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/sales.html)
+  - **Current Stock Levels**: [inventory.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/inventory.html)
+  - **Inventory Movements by Month**: [monthly_inventory.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/monthly_inventory.html)
+  - **Receiving Logs**: [receiving_logs.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/receiving_logs.html)
+  - **Adjustment Logs**: [adjustment_logs.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/adjustment_logs.html)
+  - **Item List**: [items.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/items.html)
