@@ -1,21 +1,21 @@
 {{ define "inventory_stock_results.html" }}
 <div class="table-container">
-    <table class="table-scroll-md resizable-table inventory-stock-table">
-        <thead>
-            <tr>
-                <th data-col="description" style="width: 36%;">Description</th>
-                <th data-col="uom" style="width: 8%;">UOM</th>
-                <th data-col="received" style="width: 10%;">Received</th>
-                <th data-col="sold" style="width: 8%;">Sold</th>
-                <th data-col="adjusted" style="width: 10%;">Adjusted</th>
-                <th data-col="on_hand" style="width: 10%;">On Hand</th>
-                <th data-col="current_cost" style="width: 9%;">Current Cost</th>
-                <th data-col="current_price" style="width: 9%;">Current Price</th>
-            </tr>
-        </thead>
-        <tbody id="inventory-stock-tbody">
+    <div class="table table-scroll-md resizable-table inventory-stock-table">
+        <div class="thead">
+            <div class="tr">
+                <div class="th" data-col="description" style="width: 36%;">Description</div>
+                <div class="th" data-col="uom" style="width: 8%;">UOM</div>
+                <div class="th" data-col="received" style="width: 10%;">Received</div>
+                <div class="th" data-col="sold" style="width: 8%;">Sold</div>
+                <div class="th" data-col="adjusted" style="width: 10%;">Adjusted</div>
+                <div class="th" data-col="on_hand" style="width: 10%;">On Hand</div>
+                <div class="th" data-col="current_cost" style="width: 9%;">Current Cost</div>
+                <div class="th" data-col="current_price" style="width: 9%;">Current Price</div>
+            </div>
+        </div>
+        <div class="tbody" id="inventory-stock-tbody">
             {{ template "inventory_stock_rows.html" .StockItems }}
-        </tbody>
-    </table>
+        </div>
+    </div>
 </div>
 {{ end }}

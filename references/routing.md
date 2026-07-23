@@ -122,3 +122,16 @@
 - [[handlers-overview]] — Handler architecture
 - [[htmx-patterns]] — How HTMX interacts with these routes
 - [[templates-overview]] — What templates each route renders
+
+---
+
+### Context: Server Port Configuration Invariance
+
+**Problem:**
+Starting the Go local development server occasionally fails due to the default port `8080` being bound by another process. Changing the hardcoded listener port in `main.go` violates configuration invariants and can cause configuration drift or deployment failures.
+
+**Enforced Solution:**
+Never change the configured listener port in `main.go` (keep it as `:8080`). If port `8080` is in use:
+- Check for existing processes running on port `8080` (e.g. using `netstat -ano | findstr :8080`).
+- If you need to stop the old process, prompt/explain to the user why it needs to be stopped, and ask for permission before running process termination commands like `taskkill` or `kill`.
+- Never commit port number modifications to `main.go` under any circumstances.

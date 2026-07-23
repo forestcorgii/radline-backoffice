@@ -1,19 +1,19 @@
 {{ define "items_results.html" }}
 <div class="table-container">
-    <table class="table-scroll-md resizable-table items-table">
-        <thead>
-            <tr>
-                <th data-col="description">Description</th>
-                <th data-col="model">Model</th>
-                <th data-col="brand">Brand</th>
-                <th data-col="category">Category</th>
-                <th data-col="default_uom">Default UOM</th>
-                <th data-col="actions">Actions</th>
-            </tr>
-        </thead>
-        <tbody id="items-tbody">
+    <div class="table table-scroll-md resizable-table items-table">
+        <div class="thead">
+            <div class="tr">
+                <div class="th" data-col="description">Description</div>
+                <div class="th" data-col="model">Model</div>
+                <div class="th" data-col="brand">Brand</div>
+                <div class="th" data-col="category">Category</div>
+                <div class="th" data-col="default_uom">Default UOM</div>
+                <div class="th" data-col="actions">Actions</div>
+            </div>
+        </div>
+        <div class="tbody" id="items-tbody">
             {{ template "item_rows.html" .Items }}
-        </tbody>
-    </table>
+        </div>
+    </div>
 </div>
 {{ end }}

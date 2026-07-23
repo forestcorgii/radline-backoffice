@@ -1,6 +1,6 @@
 {{ define "sale_row.html" }}
-<tr id="sale-row-{{ .ID }}">
-    <td data-col="doc_status">
+<div id="sale-row-{{ .ID }}" class="tr">
+    <div class="td" data-col="doc_status">
         <select class="form-input" style="padding: 0.25rem 0.5rem; font-size: 0.8125rem; height: auto; width: auto; border: 1px solid var(--border-color); border-radius: var(--radius); background-color: var(--surface-color); color: var(--text-main);"
                 name="doc_status"
                 hx-post="/sales/update-status/{{ .ID }}"
@@ -10,29 +10,29 @@
             <option value="Posted" {{ if or (eq .DocStatus "Posted") (eq .DocStatus "POSTED") }}selected{{ end }}>Posted</option>
             <option value="Cancelled/Return" {{ if or (eq .DocStatus "Cancelled/Return") (eq .DocStatus "CANCELLED/RETURN") }}selected{{ end }}>Cancelled/Return</option>
         </select>
-    </td>
-    <td data-col="doc_date">{{ .DocDate.Format "2006-01-02" }}</td>
-    <td data-col="doc_type_number">
+    </div>
+    <div class="td" data-col="doc_date">{{ .DocDate.Format "2006-01-02" }}</div>
+    <div class="td" data-col="doc_type_number">
         <span class="badge badge-secondary">{{ .DocType }}</span>
         {{ .DocNumber }}
-    </td>
-    <td data-col="customer_name">{{ if .CustomerName }}{{ .CustomerName }}{{ else }}—{{ end }}</td>
-    <td data-col="supplier"><span class="badge badge-primary">{{ .Supplier }}</span></td>
-    <td data-col="item_description" style="font-weight: 500;">{{ .Description }}</td>
-    <td data-col="qty" style="font-weight: 600;">{{ .Qty }}</td>
-    <td data-col="uom">{{ .UOM }}</td>
-    <td data-col="price">₱{{ printf "%.2f" .Price }}</td>
-    <td data-col="total_sales" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales }}</td>
-    <td data-col="cost">₱{{ printf "%.2f" .Cost }}</td>
-    <td data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</td>
-    <td data-col="patong">₱{{ printf "%.2f" .Patong }}</td>
-    <td data-col="pos_charge">₱{{ printf "%.2f" .POSCharge }}</td>
-    <td data-col="wt_2307">₱{{ printf "%.2f" .WT2307 }}</td>
-    <td data-col="total_remit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .TotalRemit }}</td>
-    <td data-col="profit" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }}</td>
-    <td data-col="profit_margin" style="font-weight: 500;">{{ printf "%.2f" .ProfitMargin }}%</td>
-    <td data-col="remarks">{{ if .Remarks }}{{ .Remarks }}{{ else }}—{{ end }}</td>
-    <td data-col="actions">
+    </div>
+    <div class="td" data-col="customer_name">{{ if .CustomerName }}{{ .CustomerName }}{{ else }}—{{ end }}</div>
+    <div class="td" data-col="supplier"><span class="badge badge-primary">{{ .Supplier }}</span></div>
+    <div class="td" data-col="item_description" style="font-weight: 500;">{{ .Description }}</div>
+    <div class="td" data-col="qty" style="font-weight: 600;">{{ .Qty }}</div>
+    <div class="td" data-col="uom">{{ .UOM }}</div>
+    <div class="td" data-col="price">₱{{ printf "%.2f" .Price }}</div>
+    <div class="td" data-col="total_sales" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales }}</div>
+    <div class="td" data-col="cost">₱{{ printf "%.2f" .Cost }}</div>
+    <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</div>
+    <div class="td" data-col="patong">₱{{ printf "%.2f" .Patong }}</div>
+    <div class="td" data-col="pos_charge">₱{{ printf "%.2f" .POSCharge }}</div>
+    <div class="td" data-col="wt_2307">₱{{ printf "%.2f" .WT2307 }}</div>
+    <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .TotalRemit }}</div>
+    <div class="td" data-col="profit" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }}</div>
+    <div class="td" data-col="profit_margin" style="font-weight: 500;">{{ printf "%.2f" .ProfitMargin }}%</div>
+    <div class="td" data-col="remarks">{{ if .Remarks }}{{ .Remarks }}{{ else }}—{{ end }}</div>
+    <div class="td" data-col="actions">
         <div class="actions-cell">
             <button class="btn btn-danger btn-icon" hx-delete="/sales/delete/{{ .ID }}"
                 hx-confirm="Are you sure you want to delete this sale log?" hx-target="#sale-row-{{ .ID }}"
@@ -46,6 +46,6 @@
                 </svg>
             </button>
         </div>
-    </td>
-</tr>
+    </div>
+</div>
 {{ end }}

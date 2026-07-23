@@ -1,17 +1,17 @@
 {{ define "sale_edit_row.html" }}
 {{ $sale := .Sale }}
-<tr id="sale-row-{{ $sale.ID }}" class="edit-row">
-    <td data-col="doc_status">
+<div id="sale-row-{{ $sale.ID }}" class="tr edit-row">
+    <div class="td" data-col="doc_status">
         <select name="doc_status" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" required>
             <option value="Active" {{ if or (eq $sale.DocStatus "Active") (eq $sale.DocStatus "ACTIVE") }}selected{{ end }}>Active</option>
             <option value="Posted" {{ if or (eq $sale.DocStatus "Posted") (eq $sale.DocStatus "POSTED") }}selected{{ end }}>Posted</option>
             <option value="Cancelled/Return" {{ if or (eq $sale.DocStatus "Cancelled/Return") (eq $sale.DocStatus "CANCELLED/RETURN") }}selected{{ end }}>Cancelled/Return</option>
         </select>
-    </td>
-    <td data-col="doc_date">
+    </div>
+    <div class="td" data-col="doc_date">
         <input type="date" name="doc_date" value="{{ $sale.DocDate.Format "2006-01-02" }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" required>
-    </td>
-    <td data-col="doc_type_number">
+    </div>
+    <div class="td" data-col="doc_type_number">
         <div style="display: flex; gap: 0.25rem;">
             <select name="doc_type" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; width: 3.2rem; flex-shrink: 0; height: auto;" required>
                 <option value="SI" {{ if eq $sale.DocType "SI" }}selected{{ end }}>SI</option>
@@ -22,75 +22,75 @@
             </select>
             <input type="text" name="doc_number" value="{{ $sale.DocNumber }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; min-width: 0;" required>
         </div>
-    </td>
-    <td data-col="customer_name">
+    </div>
+    <div class="td" data-col="customer_name">
         <input type="text" name="customer_name" value="{{ $sale.CustomerName }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" placeholder="Customer">
-    </td>
-    <td data-col="supplier">
+    </div>
+    <div class="td" data-col="supplier">
         <select name="supplier" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" required>
             <option value="ASCD" {{ if eq $sale.Supplier "ASCD" }}selected{{ end }}>ASCD</option>
             <option value="RENOWN" {{ if eq $sale.Supplier "RENOWN" }}selected{{ end }}>RENOWN</option>
             <option value="OTHER" {{ if eq $sale.Supplier "OTHER" }}selected{{ end }}>OTHER</option>
         </select>
-    </td>
-    <td data-col="item_description">
+    </div>
+    <div class="td" data-col="item_description">
         <select name="item_id" class="form-input" style="padding: 0.35rem 0.4rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" required>
             {{ $currentItemID := $sale.ItemID }}
             {{ range $.Items }}
             <option value="{{ .ID }}" {{ if eq .ID $currentItemID }}selected{{ end }}>{{ .Description }}</option>
             {{ end }}
         </select>
-    </td>
-    <td data-col="qty">
+    </div>
+    <div class="td" data-col="qty">
         <input type="number" step="any" name="qty" value="{{ $sale.Qty }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" required>
-    </td>
-    <td data-col="uom">
+    </div>
+    <div class="td" data-col="uom">
         <select name="uom" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" required>
             {{ $currentUOM := $sale.UOM }}
             {{ range $.Uoms }}
             <option value="{{ .Code }}" {{ if eq .Code $currentUOM }}selected{{ end }}>{{ .Code }}</option>
             {{ end }}
         </select>
-    </td>
-    <td data-col="price">
+    </div>
+    <div class="td" data-col="price">
         <input type="number" step="any" name="price" value="{{ printf "%.2f" $sale.Price }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" title="Unit Price" required>
-    </td>
-    <td data-col="total_sales" class="text-success" style="font-weight: 500; font-size: 0.8125rem;">
+    </div>
+    <div class="td" data-col="total_sales" class="text-success" style="font-weight: 500; font-size: 0.8125rem;">
         <span class="calc-total-sales">₱{{ printf "%.2f" $sale.TotalSales }}</span>
-    </td>
-    <td data-col="cost">
+    </div>
+    <div class="td" data-col="cost">
         <input type="number" step="any" name="cost" value="{{ printf "%.2f" $sale.Cost }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" title="Unit Cost" required>
-    </td>
-    <td data-col="total_cost" class="text-danger" style="font-weight: 500; font-size: 0.8125rem;">
+    </div>
+    <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500; font-size: 0.8125rem;">
         <span class="calc-total-cost">₱{{ printf "%.2f" $sale.TotalCost }}</span>
-    </td>
-    <td data-col="patong">
+    </div>
+    <div class="td" data-col="patong">
         <input type="number" step="any" name="patong" value="{{ printf "%.2f" $sale.Patong }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;">
-    </td>
-    <td data-col="pos_charge">
+    </div>
+    <div class="td" data-col="pos_charge">
         <input type="number" step="any" name="pos_charge" value="{{ printf "%.2f" $sale.POSCharge }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;">
-    </td>
-    <td data-col="wt_2307">
+    </div>
+    <div class="td" data-col="wt_2307">
         <input type="number" step="any" name="wt_2307" value="{{ printf "%.2f" $sale.WT2307 }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;">
-    </td>
-    <td data-col="total_remit" class="text-primary" style="font-weight: 500; font-size: 0.8125rem;">
+    </div>
+    <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500; font-size: 0.8125rem;">
         <span class="calc-total-remit">₱{{ printf "%.2f" $sale.TotalRemit }}</span>
-    </td>
-    <td data-col="profit" class="text-success" style="font-weight: 500; font-size: 0.8125rem;">
+    </div>
+    <div class="td" data-col="profit" class="text-success" style="font-weight: 500; font-size: 0.8125rem;">
         <span class="calc-profit">₱{{ printf "%.2f" $sale.Profit }}</span>
-    </td>
-    <td data-col="profit_margin" style="font-weight: 500; font-size: 0.8125rem;">
+    </div>
+    <div class="td" data-col="profit_margin" style="font-weight: 500; font-size: 0.8125rem;">
         <span class="calc-profit-margin">{{ printf "%.2f" $sale.ProfitMargin }}%</span>
-    </td>
-    <td data-col="remarks">
+    </div>
+    <div class="td" data-col="remarks">
         <input type="text" name="remarks" value="{{ $sale.Remarks }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" placeholder="Remarks">
-    </td>
-    <td data-col="actions">
+    </div>
+    <div class="td" data-col="actions">
         <input type="hidden" name="is_edit" value="1">
         <div class="actions-cell">
             <button type="button" class="btn btn-success btn-icon"
                 hx-post="/sales/edit/{{ $sale.ID }}"
-                hx-include="closest tr"
+                hx-include="closest .tr"
                 hx-target="#sale-row-{{ $sale.ID }}"
                 hx-swap="outerHTML"
                 title="Save">
@@ -122,6 +122,6 @@
                 </svg>
             </button>
         </div>
-    </td>
-</tr>
+    </div>
+</div>
 {{ end }}

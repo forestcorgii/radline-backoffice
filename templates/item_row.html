@@ -1,11 +1,11 @@
 {{ define "item_row.html" }}
-<tr id="item-row-{{ .ID }}">
-    <td data-col="description" style="font-weight: 500;">{{ .Description }}</td>
-    <td data-col="model">{{ if .Model }}{{ .Model }}{{ else }}-{{ end }}</td>
-    <td data-col="brand">{{ if .BrandName }}{{ .BrandName }}{{ else }}-{{ end }}</td>
-    <td data-col="category">{{ if .CategoryName }}{{ .CategoryName }}{{ else }}-{{ end }}</td>
-    <td data-col="default_uom"><span class="badge badge-active">{{ .DefaultUOM }}</span></td>
-    <td data-col="actions">
+<div id="item-row-{{ .ID }}" class="tr">
+    <div class="td" data-col="description" style="font-weight: 500;">{{ .Description }}</div>
+    <div class="td" data-col="model">{{ if .Model }}{{ .Model }}{{ else }}-{{ end }}</div>
+    <div class="td" data-col="brand">{{ if .BrandName }}{{ .BrandName }}{{ else }}-{{ end }}</div>
+    <div class="td" data-col="category">{{ if .CategoryName }}{{ .CategoryName }}{{ else }}-{{ end }}</div>
+    <div class="td" data-col="default_uom"><span class="badge badge-active">{{ .DefaultUOM }}</span></div>
+    <div class="td" data-col="actions">
         <div class="actions-cell">
             <button class="btn btn-secondary btn-icon" hx-get="/items/edit/{{ .ID }}" hx-target="#item-row-{{ .ID }}"
                 hx-swap="outerHTML" title="Edit">
@@ -27,6 +27,6 @@
                 </svg>
             </button>
         </div>
-    </td>
-</tr>
+    </div>
+</div>
 {{ end }}

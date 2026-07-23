@@ -1,13 +1,13 @@
 {{ define "item_edit_row.html" }}
-<tr id="item-row-{{ .Item.ID }}" class="edit-row">
-    <td data-col="description">
+<div id="item-row-{{ .Item.ID }}" class="tr edit-row">
+    <div class="td" data-col="description">
         <input type="hidden" name="code" value="{{ .Item.Code }}">
         <input type="text" name="description" value="{{ .Item.Description }}" required class="form-input" style="font-weight: 500;">
-    </td>
-    <td data-col="model">
+    </div>
+    <div class="td" data-col="model">
         <input type="text" name="model" value="{{ .Item.Model }}" class="form-input">
-    </td>
-    <td data-col="brand">
+    </div>
+    <div class="td" data-col="brand">
         <select name="brand_id" class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
             <option value="0">-- No Brand --</option>
             {{ $selectedBrand := derefInt .Item.BrandID }}
@@ -15,8 +15,8 @@
             <option value="{{ .ID }}" {{ if eq .ID $selectedBrand }}selected{{ end }}>{{ .Name }}</option>
             {{ end }}
         </select>
-    </td>
-    <td data-col="category">
+    </div>
+    <div class="td" data-col="category">
         <select name="category_id" class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
             <option value="0">-- No Category --</option>
             {{ $selectedCategory := derefInt .Item.CategoryID }}
@@ -24,20 +24,20 @@
             <option value="{{ .ID }}" {{ if eq .ID $selectedCategory }}selected{{ end }}>{{ .Name }}</option>
             {{ end }}
         </select>
-    </td>
-    <td data-col="default_uom">
+    </div>
+    <div class="td" data-col="default_uom">
         <select name="default_uom" required class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">
             {{ $selectedUOM := .Item.DefaultUOM }}
             {{ range .Uoms }}
             <option value="{{ .Code }}" {{ if eq .Code $selectedUOM }}selected{{ end }}>{{ .Code }}</option>
             {{ end }}
         </select>
-    </td>
-    <td data-col="actions">
+    </div>
+    <div class="td" data-col="actions">
         <div class="actions-cell">
             <button class="btn btn-success btn-icon" 
                     hx-post="/items/edit/{{ .Item.ID }}" 
-                    hx-include="closest tr" 
+                    hx-include="closest .tr" 
                     hx-target="#item-row-{{ .Item.ID }}" 
                     hx-swap="outerHTML"
                     title="Save">
@@ -56,6 +56,6 @@
                 </svg>
             </button>
         </div>
-    </td>
-</tr>
+    </div>
+</div>
 {{ end }}

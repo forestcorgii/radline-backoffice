@@ -140,23 +140,23 @@
 
         <div id="inventory-stock-results">
             <div class="table-container">
-                <table class="table-scroll-md resizable-table inventory-stock-table">
-                    <thead>
-                        <tr>
-                            <th data-col="description">Description</th>
-                            <th data-col="uom">UOM</th>
-                            <th data-col="received">Received</th>
-                            <th data-col="sold">Sold</th>
-                            <th data-col="adjusted">Adjusted</th>
-                            <th data-col="on_hand">On Hand</th>
-                            <th data-col="current_cost">Current Cost</th>
-                            <th data-col="current_price">Current Price</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventory-stock-tbody">
+                <div class="table table-scroll-md resizable-table inventory-stock-table">
+                    <div class="thead">
+                        <div class="tr">
+                            <div class="th" data-col="description">Description</div>
+                            <div class="th" data-col="uom">UOM</div>
+                            <div class="th" data-col="received">Received</div>
+                            <div class="th" data-col="sold">Sold</div>
+                            <div class="th" data-col="adjusted">Adjusted</div>
+                            <div class="th" data-col="on_hand">On Hand</div>
+                            <div class="th" data-col="current_cost">Current Cost</div>
+                            <div class="th" data-col="current_price">Current Price</div>
+                        </div>
+                    </div>
+                    <div class="tbody" id="inventory-stock-tbody">
                         {{ template "inventory_stock_rows.html" .StockItems }}
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
@@ -228,8 +228,8 @@
                 const w = currentInventoryColumnWidths[colKey];
                 if (w) {
                     cssRules.push(`
-                        .inventory-stock-table th[data-col="${colKey}"],
-                        .inventory-stock-table td[data-col="${colKey}"] {
+                        .inventory-stock-table .th[data-col="${colKey}"],
+                        .inventory-stock-table .td[data-col="${colKey}"] {
                             width: ${w}px !important;
                             min-width: ${w}px !important;
                             max-width: ${w}px !important;
@@ -243,7 +243,7 @@
         };
 
         window.initInventoryColumnResizing = function () {
-            const headers = document.querySelectorAll('.inventory-stock-table th[data-col]');
+            const headers = document.querySelectorAll('.inventory-stock-table .th[data-col]');
             headers.forEach(th => {
                 if (th.querySelector('.table-col-resizer')) return;
 
