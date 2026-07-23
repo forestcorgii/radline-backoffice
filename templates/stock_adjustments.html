@@ -30,10 +30,21 @@
             <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Items</h3>
         </div>
 
-        <div class="item-grid-container">
-            <div id="adjustment-items-tbody">
-                {{ template "adjustment_item_row.html" .AdjustmentRowData }}
-            </div>
+        <div class="excel-table-container">
+            <table class="excel-table" style="min-width: 800px;">
+                <thead>
+                    <tr>
+                        <th style="width: 350px;">Item Description</th>
+                        <th style="width: 120px;">UOM</th>
+                        <th style="width: 150px;">Adj Qty (Negative to subtract)</th>
+                        <th style="width: 130px;">Unit Cost</th>
+                        <th style="width: 50px; text-align: center;"></th>
+                    </tr>
+                </thead>
+                <tbody id="adjustment-items-tbody">
+                    {{ template "adjustment_item_row.html" .AdjustmentRowData }}
+                </tbody>
+            </table>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;"

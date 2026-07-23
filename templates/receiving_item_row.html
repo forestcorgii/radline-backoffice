@@ -1,42 +1,102 @@
 {{ define "receiving_item_row.html" }}
-<div class="item-card-row receiving-grid-row item-grid-row">
-    <!-- Top Row: Item Search & Actions -->
-    <div class="item-card-header">
-        <div class="item-card-search">
-            <label class="item-field-label">Item Description</label>
-            <div class="searchable-dropdown">
-                <input type="text" 
-                       class="form-input dropdown-search" 
-                       placeholder="Search Item..." 
-                       value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
-                       onfocus="showDropdown(this); this.select();"
-                       onclick="showDropdown(this); this.select();"
-                       onblur="hideDropdown(this)"
-                       oninput="filterDropdown(this)"
-                       onkeydown="handleDropdownKeydown(event, this)"
-                       style="width: 100%; font-weight: 500;" 
-                       required>
-                <input type="hidden" 
-                       name="item_id" 
-                       value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
-                       hx-get="/inventory/receiving/item-row-details" 
-                       hx-include="this"
-                       hx-target="closest .item-grid-row" 
-                       hx-swap="outerHTML" 
-                       hx-trigger="change">
-                <div class="dropdown-list">
-                    {{ range .Items }}
-                    <div class="dropdown-item" 
-                         data-id="{{ .ID }}" 
-                         data-description="{{ .Description }}"
-                         onmousedown="selectDropdownItem(this)">
-                        {{ .Description }}
-                    </div>
-                    {{ end }}
+<tr class="item-grid-row receiving-grid-row">
+    <!-- Item Description -->
+    <td>
+        <div class="searchable-dropdown">
+            <input type="text" 
+                   class="form-input dropdown-search" 
+                   placeholder="Search Item..." 
+                   value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
+                   onfocus="showDropdown(this); this.select();"
+                   onclick="showDropdown(this); this.select();"
+                   onblur="hideDropdown(this)"
+                   oninput="filterDropdown(this)"
+                   onkeydown="handleDropdownKeydown(event, this)"
+                   required>
+            <input type="hidden" 
+                   name="item_id" 
+                   value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
+                   hx-get="/inventory/receiving/item-row-details" 
+                   hx-include="this"
+                   hx-target="closest .item-grid-row" 
+                   hx-swap="outerHTML" 
+                   hx-trigger="change">
+            <div class="dropdown-list">
+                {{ range .Items }}
+                <div class="dropdown-item" 
+                     data-id="{{ .ID }}" 
+                     data-description="{{ .Description }}"
+                     onmousedown="selectDropdownItem(this)">
+                    {{ .Description }}
+                </div>
+                {{ end }}
+            </div>
+        </div>
+    </td>
+
+    <!-- UOM -->
+    <td>
+        {{ if .Uoms }}
+        {{ $selectedUOM := .DefaultUOM }}
+        <div class="searchable-dropdown">
+            <input type="text" class="form-input dropdown-search" placeholder="Select UOM..."
+                value="{{ $selectedUOM }}"
+                onfocus="showDropdown(this); this.select();" onclick="showDropdown(this); this.select();"
+                onblur="hideDropdown(this)" oninput="filterDropdown(this)"
+                onkeydown="handleDropdownKeydown(event, this)" required>
+            <input type="hidden" name="uom" value="{{ $selectedUOM }}">
+            <div class="dropdown-list">
+                {{ range .Uoms }}
+                <div class="dropdown-item" data-id="{{ .Code }}" data-description="{{ .Code }}"
+                    onmousedown="selectDropdownItem(this)">
+                    {{ .Code }}
+                </div>
+                {{ end }}
+                <div class="dropdown-add-new" onmousedown="openUomSettingModal({{ .SelectedItemID }}, '{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}')">
+                    <span style="font-size: 1rem; font-weight: 600;">+</span> Add UOM Setting
                 </div>
             </div>
         </div>
-        <div class="item-card-actions">
+        {{ else }}
+        <input type="text" class="form-input" disabled placeholder="-- Select item first --"
+            style="opacity: 0.5; cursor: not-allowed;">
+        <input type="hidden" name="uom" value="">
+        {{ end }}
+    </td>
+
+    <!-- Qty -->
+    <td>
+        <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required placeholder="0">
+    </td>
+
+    <!-- Unit Cost -->
+    <td>
+        <input type="number" step="any" name="unit_price" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" required placeholder="0.00">
+    </td>
+
+    <!-- Less 1 (%) -->
+    <td>
+        <input type="number" step="any" name="less1" class="form-input" value="{{ if .Less1 }}{{ printf "%.1f" .Less1 }}{{ else }}0{{ end }}" placeholder="0">
+    </td>
+
+    <!-- Less 2 (%) -->
+    <td>
+        <input type="number" step="any" name="less2" class="form-input" value="{{ if .Less2 }}{{ printf "%.1f" .Less2 }}{{ else }}0{{ end }}" placeholder="0">
+    </td>
+
+    <!-- Markup (%) -->
+    <td>
+        <input type="number" step="any" name="markup" class="form-input" value="{{ if .Markup }}{{ printf "%.0f" .Markup }}{{ else }}130{{ end }}" placeholder="130">
+    </td>
+
+    <!-- Remarks -->
+    <td>
+        <input type="text" name="remarks" class="form-input" value="" placeholder="Remarks...">
+    </td>
+
+    <!-- Actions -->
+    <td>
+        <div class="actions-cell">
             <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.item-grid-row').remove()" title="Remove Item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -46,64 +106,6 @@
                 </svg>
             </button>
         </div>
-    </div>
-
-    <!-- Inputs Grid: Receiving Details -->
-    <div class="item-card-fields-grid item-grid-receiving">
-        <div class="item-field-group">
-            <label class="item-field-label">UOM</label>
-            {{ if .Uoms }}
-            {{ $selectedUOM := .DefaultUOM }}
-            <div class="searchable-dropdown" style="position: relative; width: 100%;">
-                <input type="text" class="form-input dropdown-search" placeholder="Select UOM..."
-                    value="{{ $selectedUOM }}"
-                    onfocus="showDropdown(this); this.select();" onclick="showDropdown(this); this.select();"
-                    onblur="hideDropdown(this)" oninput="filterDropdown(this)"
-                    onkeydown="handleDropdownKeydown(event, this)"
-                    style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto;" required>
-                <input type="hidden" name="uom" value="{{ $selectedUOM }}">
-                <div class="dropdown-list">
-                    {{ range .Uoms }}
-                    <div class="dropdown-item" data-id="{{ .Code }}" data-description="{{ .Code }}"
-                        onmousedown="selectDropdownItem(this)">
-                        {{ .Code }}
-                    </div>
-                    {{ end }}
-                    <div class="dropdown-add-new" onmousedown="openUomSettingModal({{ .SelectedItemID }}, '{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}')">
-                        <span style="font-size: 1rem; font-weight: 600;">+</span> Add UOM Setting
-                    </div>
-                </div>
-            </div>
-            {{ else }}
-            <input type="text" class="form-input" disabled placeholder="-- Select item first --"
-                style="width: 100%; padding: 0.35rem 0.5rem; font-size: 0.8125rem; height: auto; opacity: 0.5; cursor: not-allowed;">
-            <input type="hidden" name="uom" value="">
-            {{ end }}
-        </div>
-        <div class="item-field-group">
-            <label class="item-field-label">Qty</label>
-            <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required placeholder="0">
-        </div>
-        <div class="item-field-group">
-            <label class="item-field-label">Unit Cost</label>
-            <input type="number" step="any" name="unit_price" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" required placeholder="0.00">
-        </div>
-        <div class="item-field-group">
-            <label class="item-field-label">Less 1 (%)</label>
-            <input type="number" step="any" name="less1" class="form-input" value="{{ if .Less1 }}{{ printf "%.1f" .Less1 }}{{ else }}0{{ end }}" placeholder="0">
-        </div>
-        <div class="item-field-group">
-            <label class="item-field-label">Less 2 (%)</label>
-            <input type="number" step="any" name="less2" class="form-input" value="{{ if .Less2 }}{{ printf "%.1f" .Less2 }}{{ else }}0{{ end }}" placeholder="0">
-        </div>
-        <div class="item-field-group">
-            <label class="item-field-label">Markup (%)</label>
-            <input type="number" step="any" name="markup" class="form-input" value="{{ if .Markup }}{{ printf "%.0f" .Markup }}{{ else }}130{{ end }}" placeholder="130">
-        </div>
-        <div class="item-field-group">
-            <label class="item-field-label">Remarks</label>
-            <input type="text" name="remarks" class="form-input" value="" placeholder="Remarks...">
-        </div>
-    </div>
-</div>
+    </td>
+</tr>
 {{ end }}
