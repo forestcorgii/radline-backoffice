@@ -195,7 +195,7 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 	unitPrices := r.Form["unit_price"]
 	less1s := r.Form["less1"]
 	less2s := r.Form["less2"]
-	markups := r.Form["markup"]
+	unitCosts := r.Form["unit_cost"]
 	remarksList := r.Form["remarks"]
 
 	if len(itemIDs) == 0 {
@@ -215,27 +215,23 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 		itemID, err1 := strconv.Atoi(itemIDs[i])
 		qty, err2 := strconv.ParseFloat(qtys[i], 64)
 		unitPrice, err3 := strconv.ParseFloat(unitPrices[i], 64)
+		unitCost, err4 := strconv.ParseFloat(unitCosts[i], 64)
 		uom := uoms[i]
 
-		if err1 != nil || err2 != nil || err3 != nil {
+		if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid numeric input in items."}}`)
 			http.Error(w, "Invalid numeric input in items", http.StatusBadRequest)
 			return
 		}
 
-		var less1, less2, markup float64
+		var less1, less2 float64
 		if i < len(less1s) && less1s[i] != "" {
 			less1, _ = strconv.ParseFloat(less1s[i], 64)
 		}
 		if i < len(less2s) && less2s[i] != "" {
 			less2, _ = strconv.ParseFloat(less2s[i], 64)
 		}
-		if i < len(markups) && markups[i] != "" {
-			markup, _ = strconv.ParseFloat(markups[i], 64)
-		}
-		if markup <= 0 {
-			markup = 130
-		}
+		markup := 130.0
 
 		var remarksVal string
 		if i < len(remarksList) {
@@ -249,6 +245,7 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 			UnitPrice: unitPrice,
 			Less1:     less1,
 			Less2:     less2,
+			UnitCost:  unitCost,
 			Markup:    markup,
 			Remarks:   remarksVal,
 		})

@@ -3,30 +3,18 @@
     <!-- Item Description -->
     <td>
         <div class="searchable-dropdown">
-            <input type="text" 
-                   class="form-input dropdown-search" 
-                   placeholder="Search Item..." 
-                   value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
-                   onfocus="showDropdown(this); this.select();"
-                   onclick="showDropdown(this); this.select();"
-                   onblur="hideDropdown(this)"
-                   oninput="filterDropdown(this)"
-                   onkeydown="handleDropdownKeydown(event, this)"
-                   required>
-            <input type="hidden" 
-                   name="item_id" 
-                   value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
-                   hx-get="/inventory/receiving/item-row-details" 
-                   hx-include="this"
-                   hx-target="closest .item-grid-row" 
-                   hx-swap="outerHTML" 
-                   hx-trigger="change">
+            <input type="text" class="form-input dropdown-search" placeholder="Search Item..."
+                value="{{ if .SelectedItemID }}{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}{{ end }}"
+                onfocus="showDropdown(this); this.select();" onclick="showDropdown(this); this.select();"
+                onblur="hideDropdown(this)" oninput="filterDropdown(this)"
+                onkeydown="handleDropdownKeydown(event, this)" required>
+            <input type="hidden" name="item_id" value="{{ if .SelectedItemID }}{{ .SelectedItemID }}{{ end }}"
+                hx-get="/inventory/receiving/item-row-details" hx-include="this" hx-target="closest .item-grid-row"
+                hx-swap="outerHTML" hx-trigger="change">
             <div class="dropdown-list">
                 {{ range .Items }}
-                <div class="dropdown-item" 
-                     data-id="{{ .ID }}" 
-                     data-description="{{ .Description }}"
-                     onmousedown="selectDropdownItem(this)">
+                <div class="dropdown-item" data-id="{{ .ID }}" data-description="{{ .Description }}"
+                    onmousedown="selectDropdownItem(this)">
                     {{ .Description }}
                 </div>
                 {{ end }}
@@ -39,8 +27,7 @@
         {{ if .Uoms }}
         {{ $selectedUOM := .DefaultUOM }}
         <div class="searchable-dropdown">
-            <input type="text" class="form-input dropdown-search" placeholder="Select UOM..."
-                value="{{ $selectedUOM }}"
+            <input type="text" class="form-input dropdown-search" placeholder="Select UOM..." value="{{ $selectedUOM }}"
                 onfocus="showDropdown(this); this.select();" onclick="showDropdown(this); this.select();"
                 onblur="hideDropdown(this)" oninput="filterDropdown(this)"
                 onkeydown="handleDropdownKeydown(event, this)" required>
@@ -52,7 +39,8 @@
                     {{ .Code }}
                 </div>
                 {{ end }}
-                <div class="dropdown-add-new" onmousedown="openUomSettingModal({{ .SelectedItemID }}, '{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}')">
+                <div class="dropdown-add-new"
+                    onmousedown="openUomSettingModal({{ .SelectedItemID }}, '{{ range .Items }}{{ if eq .ID $.SelectedItemID }}{{ .Description }}{{ end }}{{ end }}')">
                     <span style="font-size: 1rem; font-weight: 600;">+</span> Add UOM Setting
                 </div>
             </div>
@@ -66,29 +54,32 @@
 
     <!-- Qty -->
     <td>
-        <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required placeholder="0">
+        <input type="number" step="any" name="qty" class="form-input" value="{{ if .Qty }}{{ .Qty }}{{ end }}" required
+            placeholder="0">
     </td>
 
-    <!-- Unit Cost -->
+    <!-- Unit Price -->
     <td>
-        <input type="number" step="any" name="unit_price" class="form-input" value="{{ if .Cost }}{{ printf "%.2f" .Cost }}{{ end }}" required placeholder="0.00">
+        <input type="number" step="any" name="unit_price" class="form-input" value="{{ if .Price }}{{ printf " %.2f"
+            .Price }}{{ end }}" required placeholder="0.00">
     </td>
 
     <!-- Less 1 (%) -->
     <td>
-        <input type="number" step="any" name="less1" class="form-input" value="{{ if .Less1 }}{{ printf "%.1f" .Less1 }}{{ else }}0{{ end }}" placeholder="0">
+        <input type="number" step="any" name="less1" class="form-input" value="{{ if .Less1 }}{{ printf " %.1f" .Less1
+            }}{{ else }}0{{ end }}" placeholder="0">
     </td>
 
     <!-- Less 2 (%) -->
     <td>
-        <input type="number" step="any" name="less2" class="form-input" value="{{ if .Less2 }}{{ printf "%.1f" .Less2 }}{{ else }}0{{ end }}" placeholder="0">
+        <input type="number" step="any" name="less2" class="form-input" value="{{ if .Less2 }}{{ printf " %.1f" .Less2
+            }}{{ else }}0{{ end }}" placeholder="0">
     </td>
-
-    <!-- Markup (%) -->
+    <!-- Unit Cost -->
     <td>
-        <input type="number" step="any" name="markup" class="form-input" value="{{ if .Markup }}{{ printf "%.0f" .Markup }}{{ else }}130{{ end }}" placeholder="130">
+        <input type="number" step="any" name="unit_cost" class="form-input" value="{{ if .Cost }}{{ printf " %.2f" .Cost
+            }}{{ end }}" required placeholder="0.00">
     </td>
-
     <!-- Remarks -->
     <td>
         <input type="text" name="remarks" class="form-input" value="" placeholder="Remarks...">
@@ -97,8 +88,10 @@
     <!-- Actions -->
     <td>
         <div class="actions-cell">
-            <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.item-grid-row').remove()" title="Remove Item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" class="btn btn-danger btn-icon" onclick="this.closest('.item-grid-row').remove()"
+                title="Remove Item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     <line x1="10" y1="11" x2="10" y2="17"></line>

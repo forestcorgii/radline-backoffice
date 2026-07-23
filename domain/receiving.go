@@ -72,6 +72,7 @@ type StockReceiveItem struct {
 	Qty          float64
 	UOM          string
 	UnitPrice    float64 // supplier list price before discounts
+	UnitCost     float64 // supplier list price before discounts
 	Less1        float64 // first discount percentage
 	Less2        float64 // second discount percentage
 	Cost         float64 // unit cost after discounts
@@ -169,4 +170,3 @@ func (s StockReceive) ToReceivingLogs() []ReceivingLog {
 	}
 	return logs
 }
-
