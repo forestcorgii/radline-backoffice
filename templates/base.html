@@ -416,9 +416,9 @@
             if (form) form.classList.remove('has-dropdown');
             const tableContainer = container.closest('.table-container');
             if (tableContainer) tableContainer.classList.remove('has-dropdown');
-            const row = container.closest('tr, .item-grid-row');
+            const row = container.closest('tr, .tr, .item-grid-row');
             if (row) row.classList.remove('active-dropdown-row');
-            const cell = container.closest('td');
+            const cell = container.closest('td, .td');
             if (cell) cell.classList.remove('active-dropdown-cell');
         }
 
@@ -432,14 +432,14 @@
             if (form) form.classList.add('has-dropdown');
             const tableContainer = input.closest('.table-container');
             if (tableContainer) tableContainer.classList.add('has-dropdown');
-            const row = input.closest('tr, .item-grid-row');
+            const row = input.closest('tr, .tr, .item-grid-row');
             if (row) {
-                document.querySelectorAll('tr.active-dropdown-row, .item-grid-row.active-dropdown-row').forEach(r => r.classList.remove('active-dropdown-row'));
+                document.querySelectorAll('tr.active-dropdown-row, .tr.active-dropdown-row, .item-grid-row.active-dropdown-row').forEach(r => r.classList.remove('active-dropdown-row'));
                 row.classList.add('active-dropdown-row');
             }
-            const cell = input.closest('td');
+            const cell = input.closest('td, .td');
             if (cell) {
-                document.querySelectorAll('td.active-dropdown-cell').forEach(c => c.classList.remove('active-dropdown-cell'));
+                document.querySelectorAll('td.active-dropdown-cell, .td.active-dropdown-cell').forEach(c => c.classList.remove('active-dropdown-cell'));
                 cell.classList.add('active-dropdown-cell');
             }
             const list = container.querySelector('.dropdown-list');

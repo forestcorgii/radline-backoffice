@@ -130,8 +130,8 @@
                 const w = currentReceivingColumnWidths[colKey];
                 if (w) {
                     cssRules.push(`
-                        .receiving-logs-table th[data-col="${colKey}"],
-                        .receiving-logs-table td[data-col="${colKey}"] {
+                        .receiving-logs-table .th[data-col="${colKey}"],
+                        .receiving-logs-table .td[data-col="${colKey}"] {
                             width: ${w}px !important;
                             min-width: ${w}px !important;
                             max-width: ${w}px !important;
@@ -145,7 +145,7 @@
         };
 
         window.initReceivingColumnResizing = function () {
-            const headers = document.querySelectorAll('.receiving-logs-table th[data-col]');
+            const headers = document.querySelectorAll('.receiving-logs-table .th[data-col]');
             headers.forEach(th => {
                 if (th.querySelector('.table-col-resizer')) return;
 
@@ -242,7 +242,7 @@
             return;
         }
 
-        const row = target.closest('.item-grid-row, tr.editing-row');
+        const row = target.closest('.item-grid-row, tr.editing-row, .tr.editing-row');
         if (!row) return;
 
         const unitPriceInput = row.querySelector('input[name="unit_price"]');

@@ -2,10 +2,10 @@
 {{ range . }}
 {{ template "receiving_log_row.html" . }}
 {{ else }}
-<tr>
-    <td colspan="15" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+<div class="tr" style="display: block;">
+    <div class="td" style="display: block; text-align: center; color: var(--text-muted); padding: 3rem; width: 100%;">
         No receiving logs found.
-    </td>
-</tr>
+    </div>
+</div>
 {{ end }}
 {{ end }}

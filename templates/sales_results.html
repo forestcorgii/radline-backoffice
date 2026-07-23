@@ -1,33 +1,33 @@
 {{ define "sales_results.html" }}
 <div class="table-container">
-    <table class="table-scroll-lg sales-log-table">
-        <thead>
-            <tr>
-                <th data-col="doc_status">Status</th>
-                <th data-col="doc_date">Date</th>
-                <th data-col="doc_type_number">Doc Type / Number</th>
-                <th data-col="customer_name">Customer Name</th>
-                <th data-col="supplier">Supplier</th>
-                <th data-col="item_description">Item Description</th>
-                <th data-col="qty">Qty</th>
-                <th data-col="uom">UOM</th>
-                <th data-col="price">Price</th>
-                <th data-col="total_sales">Total Price</th>
-                <th data-col="cost">Cost</th>
-                <th data-col="total_cost">Total Cost</th>
-                <th data-col="patong">Patong</th>
-                <th data-col="pos_charge">POS Charge</th>
-                <th data-col="wt_2307">WT 2307</th>
-                <th data-col="total_remit">Total Remit</th>
-                <th data-col="profit">Profit</th>
-                <th data-col="profit_margin">Profit Margin</th>
-                <th data-col="remarks">Remarks</th>
-                <th data-col="actions">Actions</th>
-            </tr>
-        </thead>
-        <tbody id="sales-tbody">
+    <div class="table table-scroll-lg sales-log-table">
+        <div class="thead">
+            <div class="tr">
+                <div class="th" data-col="doc_status">Status</div>
+                <div class="th" data-col="doc_date">Date</div>
+                <div class="th" data-col="doc_type_number">Doc Type / Number</div>
+                <div class="th" data-col="customer_name">Customer Name</div>
+                <div class="th" data-col="supplier">Supplier</div>
+                <div class="th" data-col="item_description">Item Description</div>
+                <div class="th" data-col="qty">Qty</div>
+                <div class="th" data-col="uom">UOM</div>
+                <div class="th" data-col="price">Price</div>
+                <div class="th" data-col="total_sales">Total Price</div>
+                <div class="th" data-col="cost">Cost</div>
+                <div class="th" data-col="total_cost">Total Cost</div>
+                <div class="th" data-col="patong">Patong</div>
+                <div class="th" data-col="pos_charge">POS Charge</div>
+                <div class="th" data-col="wt_2307">WT 2307</div>
+                <div class="th" data-col="total_remit">Total Remit</div>
+                <div class="th" data-col="profit">Profit</div>
+                <div class="th" data-col="profit_margin">Profit Margin</div>
+                <div class="th" data-col="remarks">Remarks</div>
+                <div class="th" data-col="actions">Actions</div>
+            </div>
+        </div>
+        <div class="tbody" id="sales-tbody">
             {{ template "sales_rows.html" . }}
-        </tbody>
-    </table>
+        </div>
+    </div>
 </div>
 {{ end }}

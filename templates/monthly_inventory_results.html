@@ -1,20 +1,20 @@
 {{ define "monthly_inventory_results.html" }}
 <div class="table-container">
-    <table class="table-scroll-md resizable-table monthly-inventory-table">
-        <thead>
-            <tr>
-                <th data-col="month" style="width: 15%;">Month</th>
-                <th data-col="description" style="width: 25%;">Description</th>
-                <th data-col="uom" style="width: 10%;">UOM</th>
-                <th data-col="received" style="width: 11%;">Received</th>
-                <th data-col="sold" style="width: 11%;">Sold</th>
-                <th data-col="adjusted" style="width: 11%;">Adjusted</th>
-                <th data-col="net_change" style="width: 12%;">Net Change</th>
-            </tr>
-        </thead>
-        <tbody id="monthly-inventory-tbody">
+    <div class="table table-scroll-md resizable-table monthly-inventory-table">
+        <div class="thead">
+            <div class="tr">
+                <div class="th" data-col="month" style="width: 15%;">Month</div>
+                <div class="th" data-col="description" style="width: 25%;">Description</div>
+                <div class="th" data-col="uom" style="width: 10%;">UOM</div>
+                <div class="th" data-col="received" style="width: 11%;">Received</div>
+                <div class="th" data-col="sold" style="width: 11%;">Sold</div>
+                <div class="th" data-col="adjusted" style="width: 11%;">Adjusted</div>
+                <div class="th" data-col="net_change" style="width: 12%;">Net Change</div>
+            </div>
+        </div>
+        <div class="tbody" id="monthly-inventory-tbody">
             {{ template "monthly_inventory_rows.html" .Rows }}
-        </tbody>
-    </table>
+        </div>
+    </div>
 </div>
 {{ end }}

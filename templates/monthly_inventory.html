@@ -125,22 +125,22 @@
 
         <div id="monthly-inventory-results">
             <div class="table-container">
-                <table class="table-scroll-md resizable-table monthly-inventory-table">
-                    <thead>
-                        <tr>
-                            <th data-col="month">Month</th>
-                            <th data-col="description">Description</th>
-                            <th data-col="uom">UOM</th>
-                            <th data-col="received">Received</th>
-                            <th data-col="sold">Sold</th>
-                            <th data-col="adjusted">Adjusted</th>
-                            <th data-col="net_change">Net Change</th>
-                        </tr>
-                    </thead>
-                    <tbody id="monthly-inventory-tbody">
+                <div class="table table-scroll-md resizable-table monthly-inventory-table">
+                    <div class="thead">
+                        <div class="tr">
+                            <div class="th" data-col="month">Month</div>
+                            <div class="th" data-col="description">Description</div>
+                            <div class="th" data-col="uom">UOM</div>
+                            <div class="th" data-col="received">Received</div>
+                            <div class="th" data-col="sold">Sold</div>
+                            <div class="th" data-col="adjusted">Adjusted</div>
+                            <div class="th" data-col="net_change">Net Change</div>
+                        </div>
+                    </div>
+                    <div class="tbody" id="monthly-inventory-tbody">
                         {{ template "monthly_inventory_rows.html" .Rows }}
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
@@ -210,8 +210,8 @@
                 const w = currentMonthlyColumnWidths[colKey];
                 if (w) {
                     cssRules.push(`
-                        .monthly-inventory-table th[data-col="${colKey}"],
-                        .monthly-inventory-table td[data-col="${colKey}"] {
+                        .monthly-inventory-table .th[data-col="${colKey}"],
+                        .monthly-inventory-table .td[data-col="${colKey}"] {
                             width: ${w}px !important;
                             min-width: ${w}px !important;
                             max-width: ${w}px !important;
@@ -225,7 +225,7 @@
         };
 
         window.initMonthlyColumnResizing = function () {
-            const headers = document.querySelectorAll('.monthly-inventory-table th[data-col]');
+            const headers = document.querySelectorAll('.monthly-inventory-table .th[data-col]');
             headers.forEach(th => {
                 if (th.querySelector('.table-col-resizer')) return;
 

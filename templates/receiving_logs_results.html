@@ -1,28 +1,28 @@
 {{ define "receiving_logs_results.html" }}
 <div class="table-container">
-    <table class="table-scroll-md resizable-table receiving-logs-table">
-        <thead>
-            <tr>
-                <th data-col="date">Date</th>
-                <th data-col="pl_no">PL No.</th>
-                <th data-col="supplier">Supplier</th>
-                <th data-col="qty">Qty</th>
-                <th data-col="description">Description</th>
-                <th data-col="uom">UOM</th>
-                <th data-col="unit_price">Unit Price</th>
-                <th data-col="less1">Less 1</th>
-                <th data-col="less2">Less 2</th>
-                <th data-col="unit_cost">Unit Cost</th>
-                <th data-col="total_cost">Total Cost</th>
-                <th data-col="markup">Markup</th>
-                <th data-col="selling_price">Selling Price</th>
-                <th data-col="remarks">Remarks</th>
-                <th data-col="actions">Action</th>
-            </tr>
-        </thead>
-        <tbody id="receiving-logs-tbody">
+    <div class="table table-scroll-md resizable-table receiving-logs-table">
+        <div class="thead">
+            <div class="tr">
+                <div class="th" data-col="date">Date</div>
+                <div class="th" data-col="pl_no">PL No.</div>
+                <div class="th" data-col="supplier">Supplier</div>
+                <div class="th" data-col="qty">Qty</div>
+                <div class="th" data-col="description">Description</div>
+                <div class="th" data-col="uom">UOM</div>
+                <div class="th" data-col="unit_price">Unit Price</div>
+                <div class="th" data-col="less1">Less 1</div>
+                <div class="th" data-col="less2">Less 2</div>
+                <div class="th" data-col="unit_cost">Unit Cost</div>
+                <div class="th" data-col="total_cost">Total Cost</div>
+                <div class="th" data-col="markup">Markup</div>
+                <div class="th" data-col="selling_price">Selling Price</div>
+                <div class="th" data-col="remarks">Remarks</div>
+                <div class="th" data-col="actions">Action</div>
+            </div>
+        </div>
+        <div class="tbody" id="receiving-logs-tbody">
             {{ template "receiving_rows.html" .ReceivingLogs }}
-        </tbody>
-    </table>
+        </div>
+    </div>
 </div>
 {{ end }}
