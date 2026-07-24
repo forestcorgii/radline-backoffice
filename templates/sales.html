@@ -244,17 +244,9 @@
                                 <input type="checkbox" data-target-col="total_cost" onchange="onSalesViewSettingChange()">
                                 <span>Total Cost</span>
                             </label>
-                            <label class="customize-checkbox-item">
+                            <label class="customize-checkbox-item" title="Patong / POS / WT 2307">
                                 <input type="checkbox" data-target-col="patong" onchange="onSalesViewSettingChange()">
-                                <span>Patong</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="pos_charge" onchange="onSalesViewSettingChange()">
-                                <span>POS Charge</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="wt_2307" onchange="onSalesViewSettingChange()">
-                                <span>WT 2307</span>
+                                <span>Deductions</span>
                             </label>
                             <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-col="total_remit" onchange="onSalesViewSettingChange()">
@@ -325,9 +317,7 @@
                         <div class="th" data-col="total_sales">Total Price</div>
                         <div class="th" data-col="cost">Cost</div>
                         <div class="th" data-col="total_cost">Total Cost</div>
-                        <div class="th" data-col="patong">Patong</div>
-                        <div class="th" data-col="pos_charge">POS Charge</div>
-                        <div class="th" data-col="wt_2307">WT 2307</div>
+                        <div class="th" data-col="patong" title="Patong / POS / WT 2307">Deductions</div>
                         <div class="th" data-col="total_remit">Total Remit</div>
                         <div class="th" data-col="profit">Profit</div>
                         <div class="th" data-col="profit_margin">Profit Margin</div>
@@ -410,8 +400,6 @@
                 cost: true,
                 total_cost: true,
                 patong: true,
-                pos_charge: true,
-                wt_2307: true,
                 total_remit: true,
                 profit: true,
                 profit_margin: true,
@@ -440,9 +428,7 @@
             total_sales: 100,
             cost: 90,
             total_cost: 100,
-            patong: 80,
-            pos_charge: 90,
-            wt_2307: 80,
+            patong: 110,
             total_remit: 100,
             profit: 90,
             profit_margin: 100,

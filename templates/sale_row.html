@@ -25,9 +25,13 @@
     <div class="td" data-col="total_sales" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales }}</div>
     <div class="td" data-col="cost">₱{{ printf "%.2f" .Cost }}</div>
     <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</div>
-    <div class="td" data-col="patong">₱{{ printf "%.2f" .Patong }}</div>
-    <div class="td" data-col="pos_charge">₱{{ printf "%.2f" .POSCharge }}</div>
-    <div class="td" data-col="wt_2307">₱{{ printf "%.2f" .WT2307 }}</div>
+    <div class="td" data-col="patong">
+        <div style="display: flex; flex-direction: column; gap: 2px; font-size: 0.75rem; line-height: 1.2;">
+            <span title="Patong">P: ₱{{ printf "%.2f" .Patong }}</span>
+            <span title="POS Charge">C: ₱{{ printf "%.2f" .POSCharge }}</span>
+            <span title="WT 2307">W: ₱{{ printf "%.2f" .WT2307 }}</span>
+        </div>
+    </div>
     <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .TotalRemit }}</div>
     <div class="td" data-col="profit" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }}</div>
     <div class="td" data-col="profit_margin" style="font-weight: 500;">{{ printf "%.2f" .ProfitMargin }}%</div>
