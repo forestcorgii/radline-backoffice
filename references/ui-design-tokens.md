@@ -257,6 +257,17 @@ See [[htmx-patterns]] for the toast protocol.
 - **Tables & Rows**: Reduced `th, td` cell padding to `0.3rem 0.5rem` with `font-size: 0.8125rem` (`0.75rem` uppercase headers) and table container top margin to `0.5rem`.
 - **Item Entry Grid Cards**: Compacted `.item-card-row` / `.item-grid-row` padding to `0.4rem 0.65rem` with `0.35rem` grid gaps and `0.6875rem` uppercase field labels.
 
+### Context: Stacking Deductions Columns in Sales Log View
+**Problem**: Patong, POS Charge, and WT 2307 occupied three separate columns in the sales log view, consuming excessive horizontal screen space.
+**Enforced Solution**:
+- **Consolidation**: Replaced the three separate columns in the list view with a single combined column.
+- **Naming**: The column header is named `Deductions` with a tooltip (`title`) set to `"Patong / POS / WT 2307"`.
+- **View Configuration & Customization**: The customize view popover contains a single `Deductions` checkbox mapped to the `patong` column visibility key, and the other two keys (`pos_charge`, `wt_2307`) are removed from customization.
+- **Stacked Layout**: 
+  - Read-only rows display a vertical stack with labeled values: `P: ₱X.XX`, `C: ₱Y.YY`, `W: ₱Z.ZZ`.
+  - Batch edit rows display a vertical stack of three compact inputs with `name="patong"`, `name="pos_charge"`, and `name="wt_2307"`, maintaining separate field updates for form submission.
+
+
 
 
 

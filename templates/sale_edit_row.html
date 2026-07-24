@@ -65,13 +65,20 @@
         <span class="calc-total-cost">₱{{ printf "%.2f" $sale.TotalCost }}</span>
     </div>
     <div class="td" data-col="patong">
-        <input type="number" step="any" name="patong" value="{{ printf "%.2f" $sale.Patong }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;">
-    </div>
-    <div class="td" data-col="pos_charge">
-        <input type="number" step="any" name="pos_charge" value="{{ printf "%.2f" $sale.POSCharge }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;">
-    </div>
-    <div class="td" data-col="wt_2307">
-        <input type="number" step="any" name="wt_2307" value="{{ printf "%.2f" $sale.WT2307 }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;">
+        <div style="display: flex; flex-direction: column; gap: 2px; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 2px; width: 100%;">
+                <span style="font-size: 0.65rem; color: var(--text-muted); width: 1.2rem; flex-shrink: 0;" title="Patong">P:</span>
+                <input type="number" step="any" name="patong" value="{{ printf "%.2f" $sale.Patong }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.15rem 0.25rem; font-size: 0.75rem; height: 1.5rem; width: 100%; box-sizing: border-box;" title="Patong">
+            </div>
+            <div style="display: flex; align-items: center; gap: 2px; width: 100%;">
+                <span style="font-size: 0.65rem; color: var(--text-muted); width: 1.2rem; flex-shrink: 0;" title="POS Charge">C:</span>
+                <input type="number" step="any" name="pos_charge" value="{{ printf "%.2f" $sale.POSCharge }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.15rem 0.25rem; font-size: 0.75rem; height: 1.5rem; width: 100%; box-sizing: border-box;" title="POS Charge">
+            </div>
+            <div style="display: flex; align-items: center; gap: 2px; width: 100%;">
+                <span style="font-size: 0.65rem; color: var(--text-muted); width: 1.2rem; flex-shrink: 0;" title="WT 2307">W:</span>
+                <input type="number" step="any" name="wt_2307" value="{{ printf "%.2f" $sale.WT2307 }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.15rem 0.25rem; font-size: 0.75rem; height: 1.5rem; width: 100%; box-sizing: border-box;" title="WT 2307">
+            </div>
+        </div>
     </div>
     <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500; font-size: 0.8125rem;">
         <span class="calc-total-remit">₱{{ printf "%.2f" $sale.TotalRemit }}</span>
