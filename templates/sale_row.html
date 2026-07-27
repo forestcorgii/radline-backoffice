@@ -1,14 +1,16 @@
 {{ define "sale_row.html" }}
 <div id="sale-row-{{ .ID }}" class="tr">
     <div class="td" data-col="doc_status">
-        <select class="form-input" style="padding: 0.25rem 0.5rem; font-size: 0.8125rem; height: auto; width: auto; border: 1px solid var(--border-color); border-radius: var(--radius); background-color: var(--surface-color); color: var(--text-main);"
-                name="doc_status"
-                hx-post="/sales/update-status/{{ .ID }}"
-                hx-target="#sale-row-{{ .ID }}"
-                hx-swap="outerHTML">
-            <option value="Active" {{ if or (eq .DocStatus "Active") (eq .DocStatus "ACTIVE") }}selected{{ end }}>Active</option>
-            <option value="Posted" {{ if or (eq .DocStatus "Posted") (eq .DocStatus "POSTED") }}selected{{ end }}>Posted</option>
-            <option value="Cancelled/Return" {{ if or (eq .DocStatus "Cancelled/Return") (eq .DocStatus "CANCELLED/RETURN") }}selected{{ end }}>Cancelled/Return</option>
+        <select class="form-input"
+            style="padding: 0.25rem 0.5rem; font-size: 0.8125rem; height: auto; width: auto; border: 1px solid var(--border-color); border-radius: var(--radius); background-color: var(--surface-color); color: var(--text-main);"
+            name="doc_status" hx-post="/sales/update-status/{{ .ID }}" hx-target="#sale-row-{{ .ID }}"
+            hx-swap="outerHTML">
+            <option value="Active" {{ if or (eq .DocStatus "Active" ) (eq .DocStatus "ACTIVE" ) }}selected{{ end }}>
+                Active</option>
+            <option value="Posted" {{ if or (eq .DocStatus "Posted" ) (eq .DocStatus "POSTED" ) }}selected{{ end }}>
+                Posted</option>
+            <option value="Cancelled/Return" {{ if or (eq .DocStatus "Cancelled/Return" ) (eq
+                .DocStatus "CANCELLED/RETURN" ) }}selected{{ end }}>Cancelled/Return</option>
         </select>
     </div>
     <div class="td" data-col="doc_date">{{ .DocDate.Format "2006-01-02" }}</div>
@@ -22,9 +24,11 @@
     <div class="td" data-col="qty" style="font-weight: 600;">{{ .Qty }}</div>
     <div class="td" data-col="uom">{{ .UOM }}</div>
     <div class="td" data-col="price">₱{{ printf "%.2f" .Price }}</div>
-    <div class="td" data-col="total_sales" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales }}</div>
+    <div class="td" data-col="total_sales" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales
+        }}</div>
     <div class="td" data-col="cost">₱{{ printf "%.2f" .Cost }}</div>
-    <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</div>
+    <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}
+    </div>
     <div class="td" data-col="patong">
         <div style="display: flex; flex-direction: column; gap: 2px; font-size: 0.75rem; line-height: 1.2;">
             <span title="Patong">P: ₱{{ printf "%.2f" .Patong }}</span>
@@ -32,9 +36,11 @@
             <span title="WT 2307">W: ₱{{ printf "%.2f" .WT2307 }}</span>
         </div>
     </div>
-    <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .TotalRemit }}</div>
-    <div class="td" data-col="profit" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }}</div>
-    <div class="td" data-col="profit_margin" style="font-weight: 500;">{{ printf "%.2f" .ProfitMargin }}%</div>
+    <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .TotalRemit
+        }}</div>
+    <div class="td" data-col="profit" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }} ({{
+        printf "%.2f" .ProfitMargin }}%)</div>
+    <!-- <div class="td" data-col="profit_margin" style="font-weight: 500;">{{ printf "%.2f" .ProfitMargin }}%</div> -->
     <div class="td" data-col="remarks">{{ if .Remarks }}{{ .Remarks }}{{ else }}—{{ end }}</div>
     <div class="td" data-col="actions">
         <div class="actions-cell">

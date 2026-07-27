@@ -13,13 +13,16 @@
 
 <!-- Encode Sales Form Card (hidden by default, shown when + Encode Sales is clicked) -->
 <div class="card mb-4" id="encode-sales-card" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Encode Sales</h3>
-        <button type="button" class="btn btn-secondary" onclick="toggleEncodeSalesForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+        <button type="button" class="btn btn-secondary" onclick="toggleEncodeSalesForm()"
+            style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
             ✕ Close
         </button>
     </div>
-    <form hx-post="/sales/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); const tbody = document.getElementById('sales-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleEncodeSalesForm(); }">
+    <form hx-post="/sales/add" hx-swap="none"
+        hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); const tbody = document.getElementById('sales-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleEncodeSalesForm(); }">
         <div class="grid grid-cols-6">
             <div class="form-group">
                 <label for="doc_date">Document Date</label>
@@ -28,7 +31,8 @@
             </div>
             <div class="form-group">
                 <label for="doc_type">Doc Type</label>
-                <select id="doc_type" name="doc_type" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                <select id="doc_type" name="doc_type" class="form-input" style="padding: 0.75rem 1rem; height: auto;"
+                    required>
                     <option value="SI">Sales Invoice (SI)</option>
                     <option value="DR">Delivery Receipt (DR)</option>
                 </select>
@@ -43,7 +47,8 @@
             </div>
             <div class="form-group">
                 <label for="supplier">Supplier</label>
-                <select id="supplier" name="supplier" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                <select id="supplier" name="supplier" class="form-input" style="padding: 0.75rem 1rem; height: auto;"
+                    required>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
                     <option value="OTHER">OTHER</option>
@@ -51,7 +56,8 @@
             </div>
             <div class="form-group">
                 <label for="doc_status_encode">Status</label>
-                <select id="doc_status_encode" name="doc_status" class="form-input" style="padding: 0.75rem 1rem; height: auto;" required>
+                <select id="doc_status_encode" name="doc_status" class="form-input"
+                    style="padding: 0.75rem 1rem; height: auto;" required>
                     <option value="Active" selected>Active</option>
                     <option value="Posted">Posted</option>
                     <option value="Cancelled/Return">Cancelled/Return</option>
@@ -91,8 +97,10 @@
             </table>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;" class="mt-4">
-            <button type="button" class="btn btn-secondary" hx-get="/sales/new-row" hx-target="#sales-items-tbody" hx-swap="beforeend">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;"
+            class="mt-4">
+            <button type="button" class="btn btn-secondary" hx-get="/sales/new-row" hx-target="#sales-items-tbody"
+                hx-swap="beforeend">
                 + Add Item Row
             </button>
             <button type="submit" class="btn">Save Sales Log</button>
@@ -103,7 +111,8 @@
 <div class="card">
     <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">All Sales Logs</h3>
 
-    <form id="sales-filter-form" style="display: contents;" onsubmit="return false;" hx-indicator="#sales-loading-indicator">
+    <form id="sales-filter-form" style="display: contents;" onsubmit="return false;"
+        hx-indicator="#sales-loading-indicator">
         <input type="hidden" name="is_edit" id="is_edit_input" value="0">
         <div class="search-filter-bar">
             <div class="flex-grow" data-filter="search">
@@ -111,9 +120,8 @@
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search"
                     placeholder="Search sales by doc number, customer name, or item description..." hx-get="/sales"
-                    hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results" hx-include="#sales-filter-form"
-                    hx-indicator="#sales-loading-indicator"
-                    class="form-input">
+                    hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results"
+                    hx-include="#sales-filter-form" hx-indicator="#sales-loading-indicator" class="form-input">
             </div>
             <div class="filter-item" data-filter="doc_type">
                 <label
@@ -141,6 +149,18 @@
                     <option value="OTHER">OTHER</option>
                 </select>
             </div>
+            <div class="filter-item" data-filter="start_date">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Start Date</label>
+                <input type="date" name="start_date" value="{{ .StartDate }}" class="form-input" hx-get="/sales" hx-target="#sales-results"
+                    hx-include="#sales-filter-form" hx-trigger="change, keyup delay:300ms" hx-indicator="#sales-loading-indicator">
+            </div>
+            <div class="filter-item" data-filter="end_date">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">End Date</label>
+                <input type="date" name="end_date" value="{{ .EndDate }}" class="form-input" hx-get="/sales" hx-target="#sales-results"
+                    hx-include="#sales-filter-form" hx-trigger="change, keyup delay:300ms" hx-indicator="#sales-loading-indicator">
+            </div>
             <div class="filter-item" data-filter="sort">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
@@ -167,11 +187,13 @@
                 </select>
             </div>
             <!-- Edit Mode Button & Customize View Button Popover at right side of filter -->
-            <div class="filter-item" style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
+            <div class="filter-item"
+                style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
                 <button type="button" id="edit-mode-btn" class="btn btn-secondary" onclick="toggleSalesEditMode()"
                     style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 0.35rem; height: 38px;"
                     title="Toggle Edit Mode for Sales Rows">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
@@ -181,23 +203,26 @@
                     <button type="button" class="btn btn-secondary" onclick="toggleCustomizeViewPopover(event)"
                         style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; justify-content: center; height: 38px;"
                         title="Customize Visible Columns and Filters">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                         </svg>
                     </button>
 
                     <div id="customize-view-popover" class="customize-view-popover">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
                             <span style="font-weight: 600; font-size: 0.875rem;">Sales Page View</span>
                             <button type="button" onclick="resetSalesViewSettings()"
-                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset
+                                Default</button>
                         </div>
 
                         <div class="customize-section-title">Table Columns</div>
                         <div class="customize-checkbox-grid">
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="doc_status" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-col="doc_status"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Status</span>
                             </label>
                             <label class="customize-checkbox-item">
@@ -205,11 +230,13 @@
                                 <span>Doc Date</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="doc_type_number" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-col="doc_type_number"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Doc Type / Number</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="customer_name" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-col="customer_name"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Customer Name</span>
                             </label>
                             <label class="customize-checkbox-item">
@@ -217,7 +244,8 @@
                                 <span>Supplier</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="item_description" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-col="item_description"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Item Description</span>
                             </label>
                             <label class="customize-checkbox-item">
@@ -233,7 +261,8 @@
                                 <span>Price</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="total_sales" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-col="total_sales"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Total Price</span>
                             </label>
                             <label class="customize-checkbox-item">
@@ -241,7 +270,8 @@
                                 <span>Cost</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="total_cost" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-col="total_cost"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Total Cost</span>
                             </label>
                             <label class="customize-checkbox-item" title="Patong / POS / WT 2307">
@@ -249,7 +279,8 @@
                                 <span>Deductions</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="total_remit" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-col="total_remit"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Total Remit</span>
                             </label>
                             <label class="customize-checkbox-item">
@@ -257,7 +288,8 @@
                                 <span>Profit</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="profit_margin" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-col="profit_margin"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Profit Margin</span>
                             </label>
                             <label class="customize-checkbox-item">
@@ -269,16 +301,29 @@
                         <div class="customize-section-title">Visible Filters</div>
                         <div class="customize-checkbox-grid">
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="search" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-filter="search"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Search Bar</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="doc_type" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-filter="doc_type"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Doc Type Filter</span>
                             </label>
                             <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="supplier" onchange="onSalesViewSettingChange()">
+                                <input type="checkbox" data-target-filter="supplier"
+                                    onchange="onSalesViewSettingChange()">
                                 <span>Supplier Filter</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="start_date"
+                                    onchange="onSalesViewSettingChange()">
+                                <span>Start Date</span>
+                            </label>
+                            <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="end_date"
+                                    onchange="onSalesViewSettingChange()">
+                                <span>End Date</span>
                             </label>
                             <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-filter="sort" onchange="onSalesViewSettingChange()">
@@ -320,7 +365,7 @@
                         <div class="th" data-col="patong" title="Patong / POS / WT 2307">Deductions</div>
                         <div class="th" data-col="total_remit">Total Remit</div>
                         <div class="th" data-col="profit">Profit</div>
-                        <div class="th" data-col="profit_margin">Profit Margin</div>
+                        <!-- <div class="th" data-col="profit_margin">Profit Margin</div> -->
                         <div class="th" data-col="remarks">Remarks</div>
                         <div class="th" data-col="actions">Actions</div>
                     </div>
@@ -334,7 +379,7 @@
 </div>
 
 <script>
-    window.calcSaleRow = function(inputEl) {
+    window.calcSaleRow = function (inputEl) {
         const row = inputEl.closest('.sales-grid-row') || inputEl.closest('.tr') || inputEl.closest('tr');
         if (!row) return;
 
@@ -410,6 +455,8 @@
                 search: true,
                 doc_type: true,
                 supplier: true,
+                start_date: true,
+                end_date: true,
                 sort: true,
                 limit: true
             }
