@@ -248,6 +248,12 @@ This triggers HTMX to navigate to the logs page, similar to `hx-push-url` but tr
 - **Global Indicator Component & Styles**: Define `.htmx-indicator` in `index.css` with a smooth flex layout, `.spinner-sm` keyframe animation, background pill styling, and subtle `.htmx-request` opacity dimming for target tables.
 - **Form & Input Bindings**: Mark filter forms and input/select elements with `hx-indicator="#<page>-loading-indicator"` to automatically toggle visibility on HTMX requests.
 - **Dynamic Action Text**: On pages with mode toggling (such as Sales preview <-> batch edit mode), listen to `htmx:beforeRequest` or update text elements dynamically prior to triggering `htmx.ajax` to provide contextual feedback (e.g. "Loading batch edit mode...", "Searching & filtering sales logs...").
+### Context: HTMX Coordinated Date Range Presets
+**Problem**: In reporting and log screens, users want date presets (e.g., Today, Yesterday, This Week, Last Week, This Month, Last Month, This Year, Last Year) that automatically populate "Start Date" and "End Date" inputs and trigger filters. However, programmatic value updates via JavaScript do not naturally fire the `change` event required by HTMX, and adding listeners directly to inputs can create circular resets when updating values programmatically.
+**Enforced Solution**:
+- **Document-Level Delegation**: Register a single document-level `change` and `input` listener to handle interactions. This survives page navigation swaps and prevents double-binding issues.
+- **Trigger Flag Prevention**: Use a global boolean flag (`isSettingDatePreset`) to guard date inputs. When setting preset values programmatically, set this flag to `true`, update `start_date` and `end_date` input values, dispatch a single `change` event on the `end_date` input (which serializes the form and triggers HTMX once), then reset the flag to `false`.
+- **Manual Override Reset**: Inside the document-level listeners, if a `change` or `input` event is detected on the date inputs while `isSettingDatePreset` is `false` (meaning the user manually edited or picked a date), set the Period dropdown's value to `"custom"`.
 
 ## Related
 - [[handlers-overview]] — `Render` and `RenderPage` methods
