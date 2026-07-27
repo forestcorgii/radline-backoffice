@@ -856,6 +856,24 @@ tr:hover td {
 }
 
 /* Search and Filter Bar */
+.date-filters-row {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: flex-end;
+	margin-top: 0.375rem;
+	margin-bottom: 0.25rem;
+}
+
+.date-filters-row .filter-item.filter-period {
+	width: 9.5rem;
+}
+
+.date-filters-row .filter-item.filter-date {
+	width: 9rem;
+}
+
 .search-filter-bar {
 	display: flex;
 	flex-direction: column;
@@ -881,6 +899,18 @@ tr:hover td {
 	}
 	.filter-item {
 		width: 12rem;
+	}
+	.filter-item.filter-doc-type {
+		width: 9rem;
+	}
+	.filter-item.filter-supplier {
+		width: 9rem;
+	}
+	.filter-item.filter-sort {
+		width: 11rem;
+	}
+	.filter-item.filter-limit {
+		width: 7rem;
 	}
 }
 
@@ -1878,4 +1908,64 @@ tr:hover td {
 .sales-log-table .td[data-col] .form-input {
 	width: 100%;
 	box-sizing: border-box;
+}
+
+/* Doc Status color coding */
+.status-select-active {
+	background-color: var(--surface-color) !important;
+	color: var(--text-main) !important;
+	border-color: var(--border-color) !important;
+}
+.status-select-posted {
+	background-color: rgba(16, 185, 129, 0.08) !important;
+	color: #047857 !important;
+	border-color: rgba(16, 185, 129, 0.2) !important;
+}
+.status-select-cancelled {
+	background-color: rgba(186, 26, 26, 0.08) !important;
+	color: #ba1a1a !important;
+	border-color: rgba(186, 26, 26, 0.2) !important;
+}
+
+select.form-input option[value="Active"] {
+	background-color: var(--surface-color);
+	color: var(--text-main);
+}
+select.form-input option[value="Posted"] {
+	background-color: #f0fdf4;
+	color: #047857;
+}
+select.form-input option[value="Cancelled/Return"], select.form-input option[value="CANCELLED/RETURN"] {
+	background-color: #fef2f2;
+	color: #ba1a1a;
+}
+
+/* Supplier color coding */
+.supplier-select-ascd {
+	background-color: rgba(16, 185, 129, 0.08) !important;
+	color: #047857 !important;
+	border-color: rgba(16, 185, 129, 0.2) !important;
+}
+.supplier-select-renown {
+	background-color: rgba(53, 37, 205, 0.08) !important;
+	color: #3525cd !important;
+	border-color: rgba(53, 37, 205, 0.2) !important;
+}
+.supplier-select-other {
+	background-color: rgba(245, 158, 11, 0.08) !important;
+	color: #b45309 !important;
+	border-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+select.form-input option[value="ASCD"] {
+	background-color: #f0fdf4;
+	color: #047857;
+}
+select.form-input option[value="RENOWN"], select.form-input option[value="Renown"] {
+	background-color: #f5f3ff;
+	color: #3525cd;
+}
+select.form-input option[value="OTHER"], select.form-input option[value="Other"] {
+	background-color: #fffbeb;
+	color: #b45309;
 }

@@ -47,7 +47,7 @@
             </div>
             <div class="form-group">
                 <label for="supplier">Supplier</label>
-                <select id="supplier" name="supplier" class="form-input" style="padding: 0.75rem 1rem; height: auto;"
+                <select id="supplier" name="supplier" class="form-input supplier-select-ascd" style="padding: 0.75rem 1rem; height: auto;" onchange="updateSelectColorClass(this)"
                     required>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
@@ -56,8 +56,8 @@
             </div>
             <div class="form-group">
                 <label for="doc_status_encode">Status</label>
-                <select id="doc_status_encode" name="doc_status" class="form-input"
-                    style="padding: 0.75rem 1rem; height: auto;" required>
+                <select id="doc_status_encode" name="doc_status" class="form-input status-select-active"
+                    style="padding: 0.75rem 1rem; height: auto;" onchange="updateSelectColorClass(this)" required>
                     <option value="Active" selected>Active</option>
                     <option value="Posted">Posted</option>
                     <option value="Cancelled/Return">Cancelled/Return</option>
@@ -114,42 +114,9 @@
     <form id="sales-filter-form" style="display: contents;" onsubmit="return false;"
         hx-indicator="#sales-loading-indicator">
         <input type="hidden" name="is_edit" id="is_edit_input" value="0">
-        <div class="search-filter-bar">
-            <div class="flex-grow" data-filter="search">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
-                <input type="text" name="search"
-                    placeholder="Search sales by doc number, customer name, or item description..." hx-get="/sales"
-                    hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-indicator="#sales-loading-indicator" class="form-input">
-            </div>
-            <div class="filter-item" data-filter="doc_type">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Doc
-                    Type</label>
-                <select name="doc_type_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
-                    <option value="all">All Doc Types</option>
-                    <option value="SI">Sales Invoice (SI)</option>
-                    <option value="DR">Delivery Receipt (DR)</option>
-                    <option value="SU">Store Use (SU)</option>
-                    <option value="PU">Pull Out (PU)</option>
-                    <option value="RI">Request Invoice (RI)</option>
-                </select>
-            </div>
-            <div class="filter-item" data-filter="supplier">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier
-                    Filter</label>
-                <select name="supplier_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
-                    <option value="all">All Suppliers</option>
-                    <option value="ASCD">ASCD</option>
-                    <option value="RENOWN">RENOWN</option>
-                    <option value="OTHER">OTHER</option>
-                </select>
-            </div>
-            <div class="filter-item" data-filter="date_preset">
+        <!-- Date Filters Row -->
+        <div class="date-filters-row">
+            <div class="filter-item filter-period" data-filter="date_preset">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Period</label>
                 <select name="date_preset" id="date_preset_select" class="form-input">
@@ -164,19 +131,56 @@
                     <option value="last_year" {{ if eq .DatePreset "last_year" }}selected{{ end }}>Last Year</option>
                 </select>
             </div>
-            <div class="filter-item" data-filter="start_date">
+            <div class="filter-item filter-date" data-filter="start_date">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Start Date</label>
                 <input type="date" name="start_date" value="{{ .StartDate }}" class="form-input" hx-get="/sales" hx-target="#sales-results"
                     hx-include="#sales-filter-form" hx-trigger="change, keyup delay:300ms" hx-indicator="#sales-loading-indicator">
             </div>
-            <div class="filter-item" data-filter="end_date">
+            <div class="filter-item filter-date" data-filter="end_date">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">End Date</label>
                 <input type="date" name="end_date" value="{{ .EndDate }}" class="form-input" hx-get="/sales" hx-target="#sales-results"
                     hx-include="#sales-filter-form" hx-trigger="change, keyup delay:300ms" hx-indicator="#sales-loading-indicator">
             </div>
-            <div class="filter-item" data-filter="sort">
+        </div>
+
+        <div class="search-filter-bar">
+            <div class="flex-grow" data-filter="search">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+                <input type="text" name="search"
+                    placeholder="Search sales by doc number, customer name, or item description..." hx-get="/sales"
+                    hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results"
+                    hx-include="#sales-filter-form" hx-indicator="#sales-loading-indicator" class="form-input">
+            </div>
+            <div class="filter-item filter-doc-type" data-filter="doc_type">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Doc
+                    Type</label>
+                <select name="doc_type_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
+                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
+                    <option value="all">All Doc Types</option>
+                    <option value="SI">Sales Invoice (SI)</option>
+                    <option value="DR">Delivery Receipt (DR)</option>
+                    <option value="SU">Store Use (SU)</option>
+                    <option value="PU">Pull Out (PU)</option>
+                    <option value="RI">Request Invoice (RI)</option>
+                </select>
+            </div>
+            <div class="filter-item filter-supplier" data-filter="supplier">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier
+                    Filter</label>
+                <select name="supplier_filter" class="form-input" hx-get="/sales" hx-target="#sales-results"
+                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
+                    <option value="all">All Suppliers</option>
+                    <option value="ASCD">ASCD</option>
+                    <option value="RENOWN">RENOWN</option>
+                    <option value="OTHER">OTHER</option>
+                </select>
+            </div>
+            <div class="filter-item filter-sort" data-filter="sort">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
                     By</label>
@@ -188,7 +192,7 @@
                     <option value="profit_desc">Highest Profit First</option>
                 </select>
             </div>
-            <div class="filter-item" data-filter="limit">
+            <div class="filter-item filter-limit" data-filter="limit">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
                     Rows</label>
@@ -746,6 +750,26 @@
                 }
             }
         });
+
+        window.updateSelectColorClass = function (el) {
+            if (!el) return;
+            el.classList.remove('status-select-active', 'status-select-posted', 'status-select-cancelled', 
+                                'supplier-select-ascd', 'supplier-select-renown', 'supplier-select-other');
+            const val = el.value.toUpperCase();
+            if (val === 'ACTIVE') {
+                el.classList.add('status-select-active');
+            } else if (val === 'POSTED') {
+                el.classList.add('status-select-posted');
+            } else if (val === 'CANCELLED/RETURN' || val === 'CANCELLED') {
+                el.classList.add('status-select-cancelled');
+            } else if (val === 'ASCD') {
+                el.classList.add('supplier-select-ascd');
+            } else if (val === 'RENOWN') {
+                el.classList.add('supplier-select-renown');
+            } else if (val === 'OTHER') {
+                el.classList.add('supplier-select-other');
+            }
+        };
 
         window.toggleEncodeSalesForm = function () {
             const card = document.getElementById('encode-sales-card');
