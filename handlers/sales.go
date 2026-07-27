@@ -16,6 +16,8 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	docTypeFilter := r.URL.Query().Get("doc_type_filter")
 	supplierFilter := r.URL.Query().Get("supplier_filter")
+	startDateStr := r.URL.Query().Get("start_date")
+	endDateStr := r.URL.Query().Get("end_date")
 	sort := r.URL.Query().Get("sort") // date_desc, date_asc, sales_desc, profit_desc
 	isEdit := r.FormValue("is_edit") == "1" || r.URL.Query().Get("is_edit") == "1"
 
@@ -43,6 +45,22 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	if docTypeFilter != "" && docTypeFilter != "all" {
 		whereClauses = append(whereClauses, "s.doc_type = ?")
 		args = append(args, docTypeFilter)
+	}
+
+	if startDateStr != "" {
+		if parsedStart, err := time.Parse("2006-01-02", startDateStr); err == nil {
+			whereClauses = append(whereClauses, "s.doc_date >= ?")
+			args = append(args, parsedStart)
+		}
+	}
+
+	if endDateStr != "" {
+		if parsedEnd, err := time.Parse("2006-01-02", endDateStr); err == nil {
+			// Query up to the end of the specified day
+			endOfDay := parsedEnd.Add(24 * time.Hour).Add(-time.Second)
+			whereClauses = append(whereClauses, "s.doc_date <= ?")
+			args = append(args, endOfDay)
+		}
 	}
 
 	if len(whereClauses) > 0 {
@@ -80,24 +98,35 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Sales  []models.SalesDetailWithItem
-			IsEdit bool
-			Items  []models.Item
-			Uoms   []models.Uom
+			Sales     []models.SalesDetailWithItem
+			IsEdit    bool
+			Items     []models.Item
+			Uoms      []models.Uom
+			StartDate string
+			EndDate   string
 		}{
-			Sales:  sales,
-			IsEdit: isEdit,
-			Items:  items,
-			Uoms:   uoms,
+			Sales:     sales,
+			IsEdit:    isEdit,
+			Items:     items,
+			Uoms:      uoms,
+			StartDate: startDateStr,
+			EndDate:   endDateStr,
 		}
 		app.Render(w, "sales_results.html", data)
 	} else {
 		data := struct {
-			Sales        []models.SalesDetailWithItem
-			IsEdit       bool
-			Items        []models.Item
-			Uoms         []models.Uom
-			SalesRowData interface{}
+			Sales          []models.SalesDetailWithItem
+			IsEdit         bool
+			Items          []models.Item
+			Uoms           []models.Uom
+			SalesRowData   interface{}
+			StartDate      string
+			EndDate        string
+			Search         string
+			DocTypeFilter  string
+			SupplierFilter string
+			Sort           string
+			Limit          int
 		}{
 			Sales:  sales,
 			IsEdit: isEdit,
@@ -107,6 +136,13 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 				"Items": items,
 				"Uoms":  uoms,
 			},
+			StartDate:      startDateStr,
+			EndDate:        endDateStr,
+			Search:         search,
+			DocTypeFilter:  docTypeFilter,
+			SupplierFilter: supplierFilter,
+			Sort:           sort,
+			Limit:          limit,
 		}
 		app.RenderPage(w, r, "sales.html", data)
 	}
