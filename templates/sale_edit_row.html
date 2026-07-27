@@ -2,7 +2,7 @@
 {{ $sale := .Sale }}
 <div id="sale-row-{{ $sale.ID }}" class="tr edit-row">
     <div class="td" data-col="doc_status">
-        <select name="doc_status" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" required>
+        <select name="doc_status" class="form-input {{ if or (eq $sale.DocStatus "Posted") (eq $sale.DocStatus "POSTED") }}status-select-posted{{ else if or (eq $sale.DocStatus "Cancelled/Return") (eq $sale.DocStatus "CANCELLED/RETURN") }}status-select-cancelled{{ else }}status-select-active{{ end }}" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" onchange="updateSelectColorClass(this)" required>
             <option value="Active" {{ if or (eq $sale.DocStatus "Active") (eq $sale.DocStatus "ACTIVE") }}selected{{ end }}>Active</option>
             <option value="Posted" {{ if or (eq $sale.DocStatus "Posted") (eq $sale.DocStatus "POSTED") }}selected{{ end }}>Posted</option>
             <option value="Cancelled/Return" {{ if or (eq $sale.DocStatus "Cancelled/Return") (eq $sale.DocStatus "CANCELLED/RETURN") }}selected{{ end }}>Cancelled/Return</option>
@@ -27,7 +27,7 @@
         <input type="text" name="customer_name" value="{{ $sale.CustomerName }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" placeholder="Customer">
     </div>
     <div class="td" data-col="supplier">
-        <select name="supplier" class="form-input" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" required>
+        <select name="supplier" class="form-input {{ if or (eq $sale.Supplier "ASCD") (eq $sale.Supplier "ascd") }}supplier-select-ascd{{ else if or (eq $sale.Supplier "RENOWN") (eq $sale.Supplier "Renown") }}supplier-select-renown{{ else }}supplier-select-other{{ end }}" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" onchange="updateSelectColorClass(this)" required>
             <option value="ASCD" {{ if eq $sale.Supplier "ASCD" }}selected{{ end }}>ASCD</option>
             <option value="RENOWN" {{ if eq $sale.Supplier "RENOWN" }}selected{{ end }}>RENOWN</option>
             <option value="OTHER" {{ if eq $sale.Supplier "OTHER" }}selected{{ end }}>OTHER</option>

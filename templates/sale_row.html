@@ -1,10 +1,10 @@
 {{ define "sale_row.html" }}
 <div id="sale-row-{{ .ID }}" class="tr">
     <div class="td" data-col="doc_status">
-        <select class="form-input"
-            style="padding: 0.25rem 0.5rem; font-size: 0.8125rem; height: auto; width: auto; border: 1px solid var(--border-color); border-radius: var(--radius); background-color: var(--surface-color); color: var(--text-main);"
+        <select class="form-input {{ if or (eq .DocStatus "Posted") (eq .DocStatus "POSTED") }}status-select-posted{{ else if or (eq .DocStatus "Cancelled/Return") (eq .DocStatus "CANCELLED/RETURN") }}status-select-cancelled{{ else }}status-select-active{{ end }}"
+            style="padding: 0.25rem 0.5rem; font-size: 0.8125rem; height: auto; width: auto; border: 1px solid var(--border-color); border-radius: var(--radius);"
             name="doc_status" hx-post="/sales/update-status/{{ .ID }}" hx-target="#sale-row-{{ .ID }}"
-            hx-swap="outerHTML">
+            hx-swap="outerHTML" onchange="updateSelectColorClass(this)">
             <option value="Active" {{ if or (eq .DocStatus "Active" ) (eq .DocStatus "ACTIVE" ) }}selected{{ end }}>
                 Active</option>
             <option value="Posted" {{ if or (eq .DocStatus "Posted" ) (eq .DocStatus "POSTED" ) }}selected{{ end }}>
@@ -19,7 +19,7 @@
         {{ .DocNumber }}
     </div>
     <div class="td" data-col="customer_name">{{ if .CustomerName }}{{ .CustomerName }}{{ else }}—{{ end }}</div>
-    <div class="td" data-col="supplier"><span class="badge badge-primary">{{ .Supplier }}</span></div>
+    <div class="td" data-col="supplier"><span class="badge {{ if or (eq .Supplier "ASCD") (eq .Supplier "ascd") }}badge-success{{ else if or (eq .Supplier "RENOWN") (eq .Supplier "Renown") }}badge-primary{{ else }}badge-warning{{ end }}">{{ .Supplier }}</span></div>
     <div class="td" data-col="item_description" style="font-weight: 500;">{{ .Description }}</div>
     <div class="td" data-col="qty" style="font-weight: 600;">{{ .Qty }}</div>
     <div class="td" data-col="uom">{{ .UOM }}</div>

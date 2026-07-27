@@ -267,6 +267,23 @@ See [[htmx-patterns]] for the toast protocol.
   - Read-only rows display a vertical stack with labeled values: `P: ₱X.XX`, `C: ₱Y.YY`, `W: ₱Z.ZZ`.
   - Batch edit rows display a vertical stack of three compact inputs with `name="patong"`, `name="pos_charge"`, and `name="wt_2307"`, maintaining separate field updates for form submission.
 
+### Context: Filter Bar Clutter and Responsive Filter Widths
+**Problem**: Placing all search and dropdown filters (Period, Start Date, End Date, Doc Type, Supplier, Sort By, Limit) on a single horizontal row on desktop caused dropdown labels/options to truncate and squished the search input.
+**Enforced Solution**:
+- **Row Separation**: Split date-specific filters (Period, Start Date, End Date) into a separate row wrapper (`.date-filters-row`) positioned above the main Search and metadata filter bar (`.search-filter-bar`).
+- **Horizontal Date Row Constraint**: Defined `.date-filters-row` as `flex-direction: row; flex-wrap: wrap;` globally so that Period, Start Date, and End Date filters are always displayed side-by-side instead of stacking vertically.
+- **Custom CSS Specificity and Widths**: Used high specificity rules (`.date-filters-row .filter-item.filter-*`) to override the general `.filter-item { width: 100%; }` mobile style, setting the Period to `9.5rem` and Date inputs to `9rem` on all viewports.
+- **Custom Desktop Widths**: Under the `min-width: 768px` media query, configured specific widths for the remaining filters (Doc Type: `9rem`, Supplier: `9rem`, Sort: `11rem`, Limit: `7rem`) to preserve readability while maximizing space for the full-width search input.
+- **Style Cache Busting**: Incremented the version parameter on the stylesheet link in `templates/base.html` (e.g. `index.css?v=4.3`) to ensure browsers instantly load updated layout and width definitions.
+
+### Context: Dynamic Dropdown & Badge Color Coding for Document Metadata
+**Problem**: The Sales log required color-coded representation for suppliers and document statuses in list row views and form selects. Hardcoding HEX styles inline inside templates violates design tokens consistency and prevents uniform theme updates.
+**Enforced Solution**:
+- **Semantic Classes**: Created specific CSS classes (`.status-select-active`, `.status-select-posted`, `.status-select-cancelled`, and `.supplier-select-ascd` / `-renown` / `-other`) in `static/index.css` mapping to HSL system variables and soft transparent backgrounds.
+- **Dynamic CSS Classes on Load**: Used Go template logic to apply the matching status/supplier class on row select/badge element rendering.
+- **Client-Side Synchronization**: Implemented a lightweight `window.updateSelectColorClass(el)` helper function inside the template's scripts and attached it to `onchange` events of color-coded dropdowns, updating the select's stylesheet class dynamically in response to user inputs.
+
+
 
 
 
