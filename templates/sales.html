@@ -149,6 +149,21 @@
                     <option value="OTHER">OTHER</option>
                 </select>
             </div>
+            <div class="filter-item" data-filter="date_preset">
+                <label
+                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Period</label>
+                <select name="date_preset" id="date_preset_select" class="form-input">
+                    <option value="custom" {{ if or (eq .DatePreset "") (eq .DatePreset "custom") }}selected{{ end }}>Custom Range</option>
+                    <option value="today" {{ if eq .DatePreset "today" }}selected{{ end }}>Today</option>
+                    <option value="yesterday" {{ if eq .DatePreset "yesterday" }}selected{{ end }}>Yesterday</option>
+                    <option value="this_week" {{ if eq .DatePreset "this_week" }}selected{{ end }}>This Week</option>
+                    <option value="last_week" {{ if eq .DatePreset "last_week" }}selected{{ end }}>Last Week</option>
+                    <option value="this_month" {{ if eq .DatePreset "this_month" }}selected{{ end }}>This Month</option>
+                    <option value="last_month" {{ if eq .DatePreset "last_month" }}selected{{ end }}>Last Month</option>
+                    <option value="this_year" {{ if eq .DatePreset "this_year" }}selected{{ end }}>This Year</option>
+                    <option value="last_year" {{ if eq .DatePreset "last_year" }}selected{{ end }}>Last Year</option>
+                </select>
+            </div>
             <div class="filter-item" data-filter="start_date">
                 <label
                     style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Start Date</label>
@@ -316,6 +331,11 @@
                                 <span>Supplier Filter</span>
                             </label>
                             <label class="customize-checkbox-item">
+                                <input type="checkbox" data-target-filter="date_preset"
+                                    onchange="onSalesViewSettingChange()">
+                                <span>Period</span>
+                            </label>
+                            <label class="customize-checkbox-item">
                                 <input type="checkbox" data-target-filter="start_date"
                                     onchange="onSalesViewSettingChange()">
                                 <span>Start Date</span>
@@ -455,6 +475,7 @@
                 search: true,
                 doc_type: true,
                 supplier: true,
+                date_preset: true,
                 start_date: true,
                 end_date: true,
                 sort: true,
@@ -751,6 +772,107 @@
             const popover = document.getElementById('customize-view-popover');
             if (container && popover && !container.contains(event.target)) {
                 popover.classList.remove('show');
+            }
+        });
+
+        let isSettingDatePreset = false;
+
+        function formatDate(date) {
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function applyDatePreset(preset) {
+            if (preset === 'custom') return;
+
+            const today = new Date();
+            let start, end;
+
+            switch (preset) {
+                case 'today':
+                    start = today;
+                    end = today;
+                    break;
+                case 'yesterday':
+                    const yesterday = new Date(today);
+                    yesterday.setDate(today.getDate() - 1);
+                    start = yesterday;
+                    end = yesterday;
+                    break;
+                case 'this_week':
+                    const day = today.getDay();
+                    const diffToMonday = today.getDate() - day + (day === 0 ? -6 : 1);
+                    start = new Date(today.setDate(diffToMonday));
+                    end = new Date(start);
+                    end.setDate(start.getDate() + 6);
+                    break;
+                case 'last_week':
+                    const currentDay = today.getDay();
+                    const diffToMondayCurrent = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+                    const mondayThisWeek = new Date(today.setDate(diffToMondayCurrent));
+                    start = new Date(mondayThisWeek);
+                    start.setDate(mondayThisWeek.getDate() - 7);
+                    end = new Date(mondayThisWeek);
+                    end.setDate(mondayThisWeek.getDate() - 1);
+                    break;
+                case 'this_month':
+                    start = new Date(today.getFullYear(), today.getMonth(), 1);
+                    end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    break;
+                case 'last_month':
+                    start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    end = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'this_year':
+                    start = new Date(today.getFullYear(), 0, 1);
+                    end = new Date(today.getFullYear(), 11, 31);
+                    break;
+                case 'last_year':
+                    start = new Date(today.getFullYear() - 1, 0, 1);
+                    end = new Date(today.getFullYear() - 1, 11, 31);
+                    break;
+                default:
+                    return;
+            }
+
+            const startInput = document.querySelector('input[name="start_date"]');
+            const endInput = document.querySelector('input[name="end_date"]');
+            
+            if (startInput && endInput) {
+                isSettingDatePreset = true;
+                startInput.value = formatDate(start);
+                endInput.value = formatDate(end);
+                
+                // Trigger HTMX request by dispatching change event
+                endInput.dispatchEvent(new Event('change'));
+                isSettingDatePreset = false;
+            }
+        }
+
+        // Set up document-level event delegation
+        document.addEventListener('change', function (e) {
+            if (e.target && e.target.id === 'date_preset_select') {
+                applyDatePreset(e.target.value);
+            } else if (e.target && (e.target.name === 'start_date' || e.target.name === 'end_date')) {
+                if (!isSettingDatePreset && e.target.closest('#sales-filter-form')) {
+                    const select = document.getElementById('date_preset_select');
+                    if (select) {
+                        select.value = 'custom';
+                    }
+                }
+            }
+        });
+
+        document.addEventListener('input', function (e) {
+            if (e.target && (e.target.name === 'start_date' || e.target.name === 'end_date')) {
+                if (!isSettingDatePreset && e.target.closest('#sales-filter-form')) {
+                    const select = document.getElementById('date_preset_select');
+                    if (select) {
+                        select.value = 'custom';
+                    }
+                }
             }
         });
 

@@ -18,6 +18,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	supplierFilter := r.URL.Query().Get("supplier_filter")
 	startDateStr := r.URL.Query().Get("start_date")
 	endDateStr := r.URL.Query().Get("end_date")
+	datePreset := r.URL.Query().Get("date_preset")
 	sort := r.URL.Query().Get("sort") // date_desc, date_asc, sales_desc, profit_desc
 	isEdit := r.FormValue("is_edit") == "1" || r.URL.Query().Get("is_edit") == "1"
 
@@ -98,19 +99,21 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Sales     []models.SalesDetailWithItem
-			IsEdit    bool
-			Items     []models.Item
-			Uoms      []models.Uom
-			StartDate string
-			EndDate   string
+			Sales      []models.SalesDetailWithItem
+			IsEdit     bool
+			Items      []models.Item
+			Uoms       []models.Uom
+			StartDate  string
+			EndDate    string
+			DatePreset string
 		}{
-			Sales:     sales,
-			IsEdit:    isEdit,
-			Items:     items,
-			Uoms:      uoms,
-			StartDate: startDateStr,
-			EndDate:   endDateStr,
+			Sales:      sales,
+			IsEdit:     isEdit,
+			Items:      items,
+			Uoms:       uoms,
+			StartDate:  startDateStr,
+			EndDate:    endDateStr,
+			DatePreset: datePreset,
 		}
 		app.Render(w, "sales_results.html", data)
 	} else {
@@ -122,6 +125,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 			SalesRowData   interface{}
 			StartDate      string
 			EndDate        string
+			DatePreset     string
 			Search         string
 			DocTypeFilter  string
 			SupplierFilter string
@@ -138,6 +142,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			StartDate:      startDateStr,
 			EndDate:        endDateStr,
+			DatePreset:     datePreset,
 			Search:         search,
 			DocTypeFilter:  docTypeFilter,
 			SupplierFilter: supplierFilter,
