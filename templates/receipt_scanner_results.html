@@ -246,6 +246,18 @@
 
         const list = container.querySelector('.dropdown-list');
         if (list) list.style.display = 'none';
+
+        if (row && input) {
+            const inputs = Array.from(row.querySelectorAll('input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([readonly]):not([disabled])'));
+            const index = inputs.indexOf(input);
+            if (index !== -1 && index < inputs.length - 1) {
+                const nextInput = inputs[index + 1];
+                nextInput.focus();
+                if (nextInput.select && nextInput.type === 'text') {
+                    nextInput.select();
+                }
+            }
+        }
     }
 </script>
 {{ end }}
