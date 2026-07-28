@@ -532,10 +532,38 @@
             const uom = item.getAttribute('data-uom');
             
             if (input) input.value = description;
+            
+            let willSwap = false;
             if (hidden) {
                 const oldVal = hidden.value;
                 hidden.value = selectedId;
                 if (oldVal !== selectedId) {
+                    if (hidden.name === 'item_id') {
+                        const itemRow = input.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
+                        const tbody = itemRow ? itemRow.parentElement : null;
+                        if (tbody) {
+                            willSwap = true;
+                            const rowIndex = Array.from(tbody.children).indexOf(itemRow);
+                            const handleRowSwap = function(event) {
+                                tbody.removeEventListener('htmx:afterSwap', handleRowSwap);
+                                setTimeout(() => {
+                                    const newRow = tbody.children[rowIndex];
+                                    if (newRow) {
+                                        const inputs = Array.from(newRow.querySelectorAll('input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([readonly]):not([disabled])'));
+                                        if (inputs.length > 1) {
+                                            const nextInput = inputs[1];
+                                            nextInput.focus();
+                                            if (nextInput.select && nextInput.type === 'text') nextInput.select();
+                                        }
+                                    }
+                                }, 50);
+                            };
+                            tbody.addEventListener('htmx:afterSwap', handleRowSwap);
+                            setTimeout(() => {
+                                tbody.removeEventListener('htmx:afterSwap', handleRowSwap);
+                            }, 2000);
+                        }
+                    }
                     hidden.dispatchEvent(new Event('change'));
                 }
             }
@@ -550,6 +578,21 @@
             const list = container.querySelector('.dropdown-list');
             if (list) list.style.display = 'none';
             cleanupDropdownState(container);
+            
+            if (!willSwap && input) {
+                const itemRow = input.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
+                if (itemRow) {
+                    const inputs = Array.from(itemRow.querySelectorAll('input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([readonly]):not([disabled])'));
+                    const index = inputs.indexOf(input);
+                    if (index !== -1 && index < inputs.length - 1) {
+                        const nextInput = inputs[index + 1];
+                        nextInput.focus();
+                        if (nextInput.select && nextInput.type === 'text') {
+                            nextInput.select();
+                        }
+                    }
+                }
+            }
         }
 
         function handleDropdownKeydown(event, input) {
@@ -664,25 +707,66 @@
                 return;
             }
 
-            // 2. ADDING ITEMS IN RECEIVING, ADJUSTMENTS, OR SALES -> Add another item line
+            // 2. ADDING ITEMS IN RECEIVING, ADJUSTMENTS, OR SALES -> Enter navigates or adds a row
             if (itemForm || isItemTable) {
                 e.preventDefault();
-                const parent = itemForm || target.closest('.card, form, div');
-                if (parent) {
-                    const addRowBtn = parent.querySelector('button[hx-get*="new-row"], button[onclick*="addScanRow"], button[onclick*="addRow"]') ||
-                        Array.from(parent.querySelectorAll('button')).find(btn => btn.textContent.includes('Add Item Row') || btn.textContent.includes('Add Row'));
-                    if (addRowBtn) {
-                        addRowBtn.click();
-                        setTimeout(() => {
-                            const tbody = parent.querySelector('tbody, #sales-items-tbody, #receiving-items-tbody, #adjustment-items-tbody, .item-grid-container > div');
-                            if (tbody && tbody.lastElementChild) {
-                                const newInput = tbody.lastElementChild.querySelector('.dropdown-search, input:not([type="hidden"]), select');
-                                if (newInput) {
-                                    newInput.focus();
-                                    if (newInput.select && newInput.type === 'text') newInput.select();
+                const itemRow = target.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
+                if (itemRow) {
+                    const inputs = Array.from(itemRow.querySelectorAll('input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([readonly]):not([disabled])'));
+                    const index = inputs.indexOf(target);
+                    if (index !== -1) {
+                        if (index < inputs.length - 1) {
+                            // Go to the next input in the current row
+                            const nextInput = inputs[index + 1];
+                            nextInput.focus();
+                            if (nextInput.select && nextInput.type === 'text') {
+                                nextInput.select();
+                            }
+                        } else {
+                            // We are at the last input, add a new itemline
+                            const parent = itemForm || target.closest('.card, form, div');
+                            if (parent) {
+                                const addRowBtn = parent.querySelector('button[hx-get*="new-row"], button[onclick*="addScanRow"], button[onclick*="addRow"]') ||
+                                    Array.from(parent.querySelectorAll('button')).find(btn => btn.textContent.includes('Add Item Row') || btn.textContent.includes('Add Row'));
+                                if (addRowBtn) {
+                                    const isHtmx = addRowBtn.hasAttribute('hx-get') || addRowBtn.hasAttribute('hx-post');
+                                    const tbody = parent.querySelector('tbody, #sales-items-tbody, #receiving-items-tbody, #adjustment-items-tbody, .item-grid-container > div');
+                                    if (isHtmx && tbody) {
+                                        const handleSwap = function(event) {
+                                            tbody.removeEventListener('htmx:afterSwap', handleSwap);
+                                            setTimeout(() => {
+                                                if (tbody.lastElementChild) {
+                                                    const newInput = tbody.lastElementChild.querySelector('.dropdown-search, input:not([type="hidden"]), select');
+                                                    if (newInput) {
+                                                        newInput.focus();
+                                                        if (newInput.select && newInput.type === 'text') newInput.select();
+                                                    }
+                                                }
+                                            }, 50);
+                                        };
+                                        tbody.addEventListener('htmx:afterSwap', handleSwap);
+                                        // Fallback timeout in case of error
+                                        setTimeout(() => {
+                                            tbody.removeEventListener('htmx:afterSwap', handleSwap);
+                                        }, 2000);
+                                    }
+
+                                    addRowBtn.click();
+
+                                    if (!isHtmx && tbody) {
+                                        setTimeout(() => {
+                                            if (tbody.lastElementChild) {
+                                                const newInput = tbody.lastElementChild.querySelector('.dropdown-search, input:not([type="hidden"]), select');
+                                                if (newInput) {
+                                                    newInput.focus();
+                                                    if (newInput.select && newInput.type === 'text') newInput.select();
+                                                }
+                                            }
+                                        }, 50);
+                                    }
                                 }
                             }
-                        }, 100);
+                        }
                     }
                 }
                 return;
