@@ -283,8 +283,10 @@ See [[htmx-patterns]] for the toast protocol.
 - **Dynamic CSS Classes on Load**: Used Go template logic to apply the matching status/supplier class on row select/badge element rendering.
 - **Client-Side Synchronization**: Implemented a lightweight `window.updateSelectColorClass(el)` helper function inside the template's scripts and attached it to `onchange` events of color-coded dropdowns, updating the select's stylesheet class dynamically in response to user inputs.
 
-
-
-
-
-
+### Context: Compact Decluttering, Unified Toolbars, and Subtle Status System
+**Problem**: The UI and UX felt cluttered and visually noisy due to stacked filter rows with duplicate vertical labels, loud colored stripes and emojis on metric cards, bright saturated badge pills across every table row, and bright red delete buttons creating a visual "wall" across large data grids.
+**Enforced Solution**:
+- **Compact Font & Spacing Scale**: Reduced base body font size to `0.75rem` (12px), `line-height: 1.35`, and applied `font-variant-numeric: tabular-nums` globally for number alignment. Compacted control heights to `1.75rem` (28px) and table cell padding to `0.22rem 0.45rem`.
+- **Unified Single-Line Filter Toolbars**: Consolidated stacked filter rows (e.g. date row + search row) into a cohesive single-line toolbar (`.search-filter-bar`) by removing tall `<label>` elements in favor of clean placeholders and inline `title` attributes. Moved view customize triggers and row edit toggles into the card header bar.
+- **Minimalist Metric Cards**: Replaced thick colored left border stripes and decorative emojis (`📈`, `📉`, `💰`) with clean Linear/shadcn-style cards: uppercase muted labels (`0.6875rem`), crisp stat numbers (`1.35rem`), and subtle status dots (`● On Target`).
+- **Subtle Status & Action Badges**: Standardized badges to muted pastel/neutral pills (`0.6875rem` font, `padding: 0.08rem 0.45rem`). Table row delete actions now use `.btn-table-action.btn-delete`, remaining subtle neutral gray until hovered to prevent visual noise across rows.

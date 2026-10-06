@@ -3,10 +3,10 @@
 {{ end }}
 
 {{ define "content" }}
-<div class="header-bar">
-    <h2 style="margin: 0;">Items</h2>
+<div class="header-bar mb-4">
+    <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">Items</h2>
     <button type="button" class="btn" onclick="toggleAddItemForm()"
-        style="padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer;">
+        style="cursor: pointer;">
         + Add Item
     </button>
 </div>
@@ -190,22 +190,91 @@
 
 <!-- Non-collapsible Items List Card occupying the full width -->
 <div class="card" id="items-card">
-    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Items List</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
+        <h3 style="font-size: 0.875rem; font-weight: 600; margin: 0;">Items List</h3>
+        <div class="customize-view-container">
+            <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
+                style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
+                title="Customize Visible Columns and Filters">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+            </button>
+
+            <div id="customize-items-view-popover" class="customize-view-popover">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    <span style="font-weight: 600; font-size: 0.8125rem;">Masterlist View</span>
+                    <button type="button" onclick="resetItemsViewSettings()"
+                        style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                </div>
+
+                <div class="customize-section-title">Table Columns</div>
+                <div class="customize-checkbox-grid">
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="description"
+                            onchange="onItemsViewSettingChange()">
+                        <span>Description</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="model" onchange="onItemsViewSettingChange()">
+                        <span>Model</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="brand" onchange="onItemsViewSettingChange()">
+                        <span>Brand</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="category" onchange="onItemsViewSettingChange()">
+                        <span>Category</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="default_uom"
+                            onchange="onItemsViewSettingChange()">
+                        <span>Default UOM</span>
+                    </label>
+                </div>
+
+                <div class="customize-section-title">Visible Filters</div>
+                <div class="customize-checkbox-grid">
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="search"
+                            onchange="onItemsViewSettingChange()">
+                        <span>Search Bar</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="brand_id_filter"
+                            onchange="onItemsViewSettingChange()">
+                        <span>Brand Filter</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="category_id_filter"
+                            onchange="onItemsViewSettingChange()">
+                        <span>Category Filter</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="sort" onchange="onItemsViewSettingChange()">
+                        <span>Sort By</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="limit" onchange="onItemsViewSettingChange()">
+                        <span>Show Rows (Limit)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#items-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow" data-filter="search">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search item description, or model..." hx-get="/items"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#items-results" hx-include="closest form"
                     hx-indicator="#items-loading-indicator" class="form-input">
             </div>
-            <div class="filter-item" data-filter="brand_id_filter">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Brand
-                    Filter</label>
-                <select name="brand_id_filter" class="form-input" hx-get="/items" hx-target="#items-results"
+            <div class="filter-item" data-filter="brand_id_filter" style="width: 8.5rem;">
+                <select name="brand_id_filter" class="form-input" title="Brand Filter" hx-get="/items" hx-target="#items-results"
                     hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
                     <option value="0">All Brands</option>
                     {{ range .Brands }}
@@ -213,11 +282,8 @@
                     {{ end }}
                 </select>
             </div>
-            <div class="filter-item" data-filter="category_id_filter">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Category
-                    Filter</label>
-                <select name="category_id_filter" class="form-input" hx-get="/items" hx-target="#items-results"
+            <div class="filter-item" data-filter="category_id_filter" style="width: 8.5rem;">
+                <select name="category_id_filter" class="form-input" title="Category Filter" hx-get="/items" hx-target="#items-results"
                     hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
                     <option value="0">All Categories</option>
                     {{ range .Categories }}
@@ -225,11 +291,8 @@
                     {{ end }}
                 </select>
             </div>
-            <div class="filter-item" data-filter="sort">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
-                    By</label>
-                <select name="sort" class="form-input" hx-get="/items" hx-target="#items-results"
+            <div class="filter-item" data-filter="sort" style="width: 8.5rem;">
+                <select name="sort" class="form-input" title="Sort By" hx-get="/items" hx-target="#items-results"
                     hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
                     <option value="code_asc">Code (A-Z)</option>
                     <option value="code_desc">Code (Z-A)</option>
@@ -237,95 +300,15 @@
                     <option value="description_desc">Description (Z-A)</option>
                 </select>
             </div>
-            <div class="filter-item" data-filter="limit">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
-                    Rows</label>
-                <select name="limit" class="form-input" hx-get="/items" hx-target="#items-results"
+            <div class="filter-item" data-filter="limit" style="width: 6rem;">
+                <select name="limit" class="form-input" title="Rows" hx-get="/items" hx-target="#items-results"
                     hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
-                    <option value="25" selected>Top 25</option>
-                    <option value="50">Top 50</option>
-                    <option value="100">Top 100</option>
-                    <option value="200">Top 200</option>
-                    <option value="500">Top 500</option>
+                    <option value="25" selected>25 rows</option>
+                    <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
+                    <option value="200">200 rows</option>
+                    <option value="500">500 rows</option>
                 </select>
-            </div>
-            <!-- Customize View Button Popover -->
-            <div class="filter-item"
-                style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
-                <div class="customize-view-container">
-                    <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
-                        style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; justify-content: center; height: 38px;"
-                        title="Customize Visible Columns and Filters">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                    </button>
-
-                    <div id="customize-items-view-popover" class="customize-view-popover">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                            <span style="font-weight: 600; font-size: 0.875rem;">Masterlist View</span>
-                            <button type="button" onclick="resetItemsViewSettings()"
-                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset
-                                Default</button>
-                        </div>
-
-                        <div class="customize-section-title">Table Columns</div>
-                        <div class="customize-checkbox-grid">
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="description"
-                                    onchange="onItemsViewSettingChange()">
-                                <span>Description</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="model" onchange="onItemsViewSettingChange()">
-                                <span>Model</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="brand" onchange="onItemsViewSettingChange()">
-                                <span>Brand</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="category" onchange="onItemsViewSettingChange()">
-                                <span>Category</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="default_uom"
-                                    onchange="onItemsViewSettingChange()">
-                                <span>Default UOM</span>
-                            </label>
-                        </div>
-
-                        <div class="customize-section-title">Visible Filters</div>
-                        <div class="customize-checkbox-grid">
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="search"
-                                    onchange="onItemsViewSettingChange()">
-                                <span>Search Bar</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="brand_id_filter"
-                                    onchange="onItemsViewSettingChange()">
-                                <span>Brand Filter</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="category_id_filter"
-                                    onchange="onItemsViewSettingChange()">
-                                <span>Category Filter</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="sort" onchange="onItemsViewSettingChange()">
-                                <span>Sort By</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="limit" onchange="onItemsViewSettingChange()">
-                                <span>Show Rows (Limit)</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
