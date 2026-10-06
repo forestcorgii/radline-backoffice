@@ -3,16 +3,16 @@
 {{ end }}
 
 {{ define "content" }}
-<div class="header-bar">
-    <h2 style="margin: 0;">Inventory</h2>
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+<div class="header-bar mb-4">
+    <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">Inventory</h2>
+    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
         <button type="button" onclick="toggleReceiveStockForm()"
-            class="btn" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem; cursor: pointer;">
-            📦 Receive Stock
+            class="btn" style="cursor: pointer;">
+            + Receive Stock
         </button>
         <button type="button" onclick="toggleAdjustStockForm()"
-            class="btn btn-secondary" style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem; cursor: pointer;">
-            📋 Adjust Stock
+            class="btn btn-secondary" style="cursor: pointer;">
+            Adjust Stock
         </button>
     </div>
 </div>
@@ -21,22 +21,89 @@
 {{ template "adjust_stock_form.html" . }}
 
 <div class="card">
-    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Current Stock Levels</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
+        <h3 style="font-size: 0.875rem; font-weight: 600; margin: 0;">Current Stock Levels</h3>
+        <div class="customize-view-container">
+            <button type="button" class="btn btn-secondary" onclick="toggleCustomizeInventoryViewPopover(event)"
+                style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
+                title="Customize Visible Columns and Filters">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+            </button>
+
+            <div id="customize-inventory-view-popover" class="customize-view-popover">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    <span style="font-weight: 600; font-size: 0.8125rem;">Inventory View</span>
+                    <button type="button" onclick="resetInventoryViewSettings()"
+                        style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                </div>
+
+                <div class="customize-section-title">Table Columns</div>
+                <div class="customize-checkbox-grid">
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="description" onchange="onInventoryViewSettingChange()">
+                        <span>Description</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="uom" onchange="onInventoryViewSettingChange()">
+                        <span>UOM</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="received" onchange="onInventoryViewSettingChange()">
+                        <span>Received</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="sold" onchange="onInventoryViewSettingChange()">
+                        <span>Sold</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="adjusted" onchange="onInventoryViewSettingChange()">
+                        <span>Adjusted</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="on_hand" onchange="onInventoryViewSettingChange()">
+                        <span>On Hand</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="current_cost" onchange="onInventoryViewSettingChange()">
+                        <span>Current Cost</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-col="current_price" onchange="onInventoryViewSettingChange()">
+                        <span>Current Price</span>
+                    </label>
+                </div>
+
+                <div class="customize-section-title">Visible Filters</div>
+                <div class="customize-checkbox-grid">
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="search" onchange="onInventoryViewSettingChange()">
+                        <span>Search Bar</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="stock_filter" onchange="onInventoryViewSettingChange()">
+                        <span>Stock Filter</span>
+                    </label>
+                    <label class="customize-checkbox-item">
+                        <input type="checkbox" data-target-filter="limit" onchange="onInventoryViewSettingChange()">
+                        <span>Show Rows (Limit)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#inventory-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow" data-filter="search">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
                 <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/stock"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#inventory-stock-results"
                     hx-include="closest form" hx-indicator="#inventory-loading-indicator" class="form-input">
             </div>
-            <div class="filter-item" data-filter="stock_filter">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Stock
-                    Filter</label>
-                <select name="stock_filter" class="form-input" hx-get="/inventory/stock"
+            <div class="filter-item" data-filter="stock_filter" style="width: 8.5rem;">
+                <select name="stock_filter" class="form-input" title="Stock Filter" hx-get="/inventory/stock"
                     hx-target="#inventory-stock-results" hx-include="closest form" hx-trigger="change"
                     hx-indicator="#inventory-loading-indicator">
                     <option value="all">All Items</option>
@@ -45,91 +112,15 @@
                     <option value="low_stock">Low Stock (≤ 10)</option>
                 </select>
             </div>
-            <div class="filter-item" data-filter="limit">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
-                    Rows</label>
-                <select name="limit" class="form-input" hx-get="/inventory/stock" hx-target="#inventory-stock-results"
+            <div class="filter-item" data-filter="limit" style="width: 6rem;">
+                <select name="limit" class="form-input" title="Rows" hx-get="/inventory/stock" hx-target="#inventory-stock-results"
                     hx-include="closest form" hx-trigger="change" hx-indicator="#inventory-loading-indicator">
-                    <option value="25" selected>Top 25</option>
-                    <option value="50">Top 50</option>
-                    <option value="100">Top 100</option>
-                    <option value="200">Top 200</option>
-                    <option value="500">Top 500</option>
+                    <option value="25" selected>25 rows</option>
+                    <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
+                    <option value="200">200 rows</option>
+                    <option value="500">500 rows</option>
                 </select>
-            </div>
-            <!-- Customize View Button Popover -->
-            <div class="filter-item" style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
-                <div class="customize-view-container">
-                    <button type="button" class="btn btn-secondary" onclick="toggleCustomizeInventoryViewPopover(event)"
-                        style="padding: 0.55rem 0.75rem; font-size: 0.8125rem; display: inline-flex; align-items: center; justify-content: center; height: 38px;"
-                        title="Customize Visible Columns and Filters">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                    </button>
-
-                    <div id="customize-inventory-view-popover" class="customize-view-popover">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                            <span style="font-weight: 600; font-size: 0.875rem;">Inventory View</span>
-                            <button type="button" onclick="resetInventoryViewSettings()"
-                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
-                        </div>
-
-                        <div class="customize-section-title">Table Columns</div>
-                        <div class="customize-checkbox-grid">
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="description" onchange="onInventoryViewSettingChange()">
-                                <span>Description</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="uom" onchange="onInventoryViewSettingChange()">
-                                <span>UOM</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="received" onchange="onInventoryViewSettingChange()">
-                                <span>Received</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="sold" onchange="onInventoryViewSettingChange()">
-                                <span>Sold</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="adjusted" onchange="onInventoryViewSettingChange()">
-                                <span>Adjusted</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="on_hand" onchange="onInventoryViewSettingChange()">
-                                <span>On Hand</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="current_cost" onchange="onInventoryViewSettingChange()">
-                                <span>Current Cost</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="current_price" onchange="onInventoryViewSettingChange()">
-                                <span>Current Price</span>
-                            </label>
-                        </div>
-
-                        <div class="customize-section-title">Visible Filters</div>
-                        <div class="customize-checkbox-grid">
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="search" onchange="onInventoryViewSettingChange()">
-                                <span>Search Bar</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="stock_filter" onchange="onInventoryViewSettingChange()">
-                                <span>Stock Filter</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="limit" onchange="onInventoryViewSettingChange()">
-                                <span>Show Rows (Limit)</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
