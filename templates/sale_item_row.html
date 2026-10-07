@@ -13,7 +13,7 @@
                 hx-swap="outerHTML" hx-trigger="change">
             <div class="dropdown-list">
                 {{ range .Items }}
-                <div class="dropdown-item" data-id="{{ .ID }}" data-description="{{ .Description }}"
+                <div class="dropdown-item" data-id="{{ .ID }}" data-description="{{ .Description }}" data-uom="{{ .DefaultUOM }}"
                     onmousedown="selectDropdownItem(this)">
                     {{ .Description }}
                 </div>

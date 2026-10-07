@@ -30,11 +30,13 @@
     <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}
     </div>
     <div class="td" data-col="patong">
+        {{ if or (ne .Patong 0.0) (ne .POSCharge 0.0) (ne .WT2307 0.0) }}
         <div style="display: flex; flex-direction: column; gap: 1px; font-size: 0.6875rem; line-height: 1.15; color: var(--text-muted);">
-            <span title="Patong">P: ₱{{ printf "%.2f" .Patong }}</span>
-            <span title="POS Charge">C: ₱{{ printf "%.2f" .POSCharge }}</span>
-            <span title="WT 2307">W: ₱{{ printf "%.2f" .WT2307 }}</span>
+            {{ if ne .Patong 0.0 }}<span title="Patong">P: ₱{{ printf "%.2f" .Patong }}</span>{{ end }}
+            {{ if ne .POSCharge 0.0 }}<span title="POS Charge">C: ₱{{ printf "%.2f" .POSCharge }}</span>{{ end }}
+            {{ if ne .WT2307 0.0 }}<span title="WT 2307">W: ₱{{ printf "%.2f" .WT2307 }}</span>{{ end }}
         </div>
+        {{ else }}—{{ end }}
     </div>
     <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .TotalRemit
         }}</div>

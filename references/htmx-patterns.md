@@ -259,9 +259,17 @@ This triggers HTMX to navigate to the logs page, similar to `hx-push-url` but tr
 - **Explicit Content Targets**: Any link or button inside page templates navigating to another view must explicitly specify `hx-target="#main-content" hx-push-url="true"` (e.g., `Manage Goals →`, `Full Calendar →`, `← Dashboard`).
 - **Seamless Redirects with HX-Location**: Handlers performing redirects after form submissions (like `ToggleReminderHandler` or `DeleteGoalHandler`) should inspect `r.Header.Get("HX-Current-URL")` or target `#main-content`, and emit `HX-Location: {"path": returnUrl, "target": "#main-content"}` rather than hard `HX-Redirect`, preserving toast triggers and maintaining fluid SPA navigation.
 
+### Context: Global Script Scope Pollution in HTMX SPAs and Hidden Input Event Dispatch
+**Problem**: In an HTMX SPA where pages swap partial content into `#main-content`, `<script>` tags inside swapped templates execute in the global `window` scope. Duplicate function definitions in sub-templates (such as `settings.html`) overwrite canonical functions in `base.html` (e.g. `selectDropdownItem`), breaking dynamic row swaps and auto-population across other views. In addition, updating `<input type="hidden">` programmatically requires explicit HTMX trigger execution to ensure hypermedia swaps fire consistently.
+**Enforced Solution**:
+- **Eliminate Sub-Template Script Duplication**: Maintain all global input and dropdown lifecycle functions centrally in `base.html`. Avoid re-declaring dropdown handlers inside page fragments or sub-views.
+- **Dual Triggering for Programmatic Hidden Inputs**: When updating hidden inputs carrying `hx-trigger="change"`, always execute `htmx.trigger(hidden, 'change')` when `window.htmx` is available alongside `hidden.dispatchEvent(new Event('change', { bubbles: true }))`.
+- **Flexible Attribute Selectors for Inline Forms**: In DOM helper scripts that update companion fields (e.g. default UOM fields), use broad query selectors like `querySelector('#uom, #uom-inline-uom, [name="uom"]')` to cover diverse sub-template DOM IDs.
+
 ## Related
 - [[handlers-overview]] — `Render` and `RenderPage` methods
 - [[templates-overview]] — Template structure
 - [[sidebar-navigation]] — Navigation setup
 - [[ui-design-tokens]] — CSS classes referenced in templates
+
 
