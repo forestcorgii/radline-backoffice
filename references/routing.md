@@ -164,5 +164,5 @@ Providing dynamic financial and operational management on the dashboard while su
 - Dashboard (`/`) accepts `start_date` and `end_date` query params. When filtered via HTMX, `fragment=trends` re-renders `dashboard_trends.html` containing dual SVG charts (Sales vs Profit and Sales vs Inventory intake).
 - Top Products card queries top 5 items by units sold from `sales_details`.
 - Earning Goals (`/goals`): `GET /goals`, `POST /goals/add`, `DELETE /goals/delete/{id}` calculates dynamic variance and progress percentages against posted sales.
-- Reminders Calendar (`/reminders`): `GET /reminders`, `POST /reminders/add`, `POST /reminders/toggle/{id}`, `DELETE /reminders/delete/{id}` organizes monthly calendar grid and operational agenda.
+- Reminders & Operational Calendar (`/calendar` and `/reminders`): `GET /calendar`, `GET /reminders`, `POST /reminders/add`, `POST /calendar/add`, `POST /reminders/toggle/{id}`, `POST /calendar/toggle/{id}`, `DELETE /reminders/delete/{id}`, `DELETE /calendar/delete/{id}` organizes monthly calendar grid and operational agenda. Aliasing `/calendar` ensures consistent navigation from sidebar, quick-actions, and direct URL entry without fallback to the dashboard.
 

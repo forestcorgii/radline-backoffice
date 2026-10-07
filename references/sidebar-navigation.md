@@ -201,6 +201,25 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
 - **Immediate Dropdown State Cleanup**: Added `cleanupDropdownState(container)` in `base.html` to instantly strip `active`, `has-dropdown`, `active-dropdown-row`, and `active-dropdown-cell` classes on item selection, blur, escape, or outside clicks.
 - **Grid Row Container Focus**: Updated Enter keydown listener to target `#sales-items-tbody`, `#receiving-items-tbody`, `#adjustment-items-tbody` grid containers when auto-focusing newly added item rows.
 
+### Context: Profile Sub-Menu Migration (User Accounts, Roles & Permissions, Activity Logs)
+**Problem**: The sidebar `Masterlist` dropdown was congested with administrative and security items (`/settings/roles`, `/settings/users`, `/activity-logs`), conflating product catalog configuration with operator security/audit controls and leaving the profile chip static.
+**Enforced Solution**:
+- **Masterlist Streamlining**: Removed User Accounts, Roles & Permissions, and Activity Logs from `#masterlist-dropdown` in `templates/base.html`, keeping it focused on catalog and business configurations (`/items` and `/settings`).
+- **Profile Popover Sub-Menu**: Converted the bottom profile chip (`#user-chip-container` rendered by `UserChipHandler` in `handlers/auth.go`) into an interactive flyout menu (`#profile-menu`).
+- **Sub-Menu Contents**:
+  1. Profile header with user avatar, full name, role badge pill, and `@username`.
+  2. Administration section containing:
+     - **User Accounts** (`/settings/users`)
+     - **Roles & Permissions** (`/settings/roles`)
+     - **Activity Logs** (`/activity-logs`)
+  3. Sign Out action with `hx-post="/logout"` and confirmation.
+- **Interactivity & SPA Navigation**:
+  - `toggleProfileMenu(event)` and `closeProfileMenu()` JavaScript helpers in `templates/base.html`.
+  - Outside click and `Escape` key handlers.
+  - All navigation links use `hx-target="#main-content" hx-push-url="true"` for seamless SPA transitions.
+  - Active page highlight dynamically applies to `.profile-menu-item` and marks `#profile-chip-btn` with an active accent.
+  - Responsive positioning: floats above profile chip on normal view (`bottom: calc(100% + 6px)`), flies out to the right (`left: calc(100% + 8px)`) when `.sidebar.collapsed`.
+
 ## Related
 - [[ui-design-tokens]] — CSS classes and variables
 - [[responsive-design]] — Mobile breakpoints

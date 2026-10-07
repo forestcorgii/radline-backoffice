@@ -180,7 +180,7 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder created successfully!"}}`)
 	returnUrl := r.Header.Get("Referer")
 	if returnUrl == "" {
-		returnUrl = "/reminders"
+		returnUrl = "/calendar"
 	}
 	w.Header().Set("HX-Redirect", returnUrl)
 	w.WriteHeader(http.StatusOK)
@@ -215,7 +215,7 @@ func (app *App) ToggleReminderHandler(w http.ResponseWriter, r *http.Request) {
 		returnUrl = r.Header.Get("Referer")
 	}
 	if returnUrl == "" {
-		returnUrl = "/reminders"
+		returnUrl = "/calendar"
 	}
 
 	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "success", "message": "Reminder marked as %s"}}`, newStatus))
@@ -244,7 +244,7 @@ func (app *App) DeleteReminderHandler(w http.ResponseWriter, r *http.Request) {
 		returnUrl = r.Header.Get("Referer")
 	}
 	if returnUrl == "" {
-		returnUrl = "/reminders"
+		returnUrl = "/calendar"
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder deleted"}}`)

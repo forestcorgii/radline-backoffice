@@ -21,11 +21,11 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0; color: var(--text-main);">{{ .DisplayMonthName }}</h3>
-                <a href="/reminders" hx-get="/reminders" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.6875rem;">Today</a>
+                <a href="/calendar" hx-get="/calendar" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.6875rem;">Today</a>
             </div>
             <div style="display: flex; gap: 0.25rem;">
-                <a href="/reminders?month={{ .PrevMonthStr }}" hx-get="/reminders?month={{ .PrevMonthStr }}" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem;">‹ Prev</a>
-                <a href="/reminders?month={{ .NextMonthStr }}" hx-get="/reminders?month={{ .NextMonthStr }}" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem;">Next ›</a>
+                <a href="/calendar?month={{ .PrevMonthStr }}" hx-get="/calendar?month={{ .PrevMonthStr }}" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem;">‹ Prev</a>
+                <a href="/calendar?month={{ .NextMonthStr }}" hx-get="/calendar?month={{ .NextMonthStr }}" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem;">Next ›</a>
             </div>
         </div>
 
