@@ -436,13 +436,13 @@ func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	// Insert the header into stock_adjustments
-	result, err := tx.Exec(`INSERT INTO stock_adjustments (date, remarks) VALUES (?, ?)`, stockAdj.Date, stockAdj.Remarks)
+	var adjustmentID int64
+	err = tx.QueryRow(`INSERT INTO stock_adjustments (date, remarks) VALUES (?, ?) RETURNING id`, stockAdj.Date, stockAdj.Remarks).Scan(&adjustmentID)
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save adjustment header."}}`)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	adjustmentID, _ := result.LastInsertId()
 
 	// Insert all item rows
 	adjustments := stockAdj.ToInventoryAdjustments()

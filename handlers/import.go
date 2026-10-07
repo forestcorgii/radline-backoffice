@@ -135,7 +135,7 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 					if code == "" || name == "" {
 						continue
 					}
-					_, err = tx.Exec("INSERT OR IGNORE INTO brands (code, name) VALUES (?, ?)", code, name)
+					_, err = tx.Exec("INSERT INTO brands (code, name) VALUES (?, ?) ON CONFLICT DO NOTHING", code, name)
 					if err == nil {
 						summary.Brands++
 					}
@@ -161,7 +161,7 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 					if code == "" || name == "" {
 						continue
 					}
-					_, err = tx.Exec("INSERT OR IGNORE INTO categories (code, name) VALUES (?, ?)", code, name)
+					_, err = tx.Exec("INSERT INTO categories (code, name) VALUES (?, ?) ON CONFLICT DO NOTHING", code, name)
 					if err == nil {
 						summary.Categories++
 					}
@@ -258,8 +258,9 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 					}
 
 					_, err = tx.Exec(`
-						INSERT OR IGNORE INTO items (code, description, default_uom, model, brand_id, category_id, variation, remarks)
+						INSERT INTO items (code, description, default_uom, model, brand_id, category_id, variation, remarks)
 						VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+						ON CONFLICT DO NOTHING
 					`, code, desc, defaultUom, model, brandID, categoryID, variation, remarks)
 					if err == nil {
 						summary.Items++
@@ -547,16 +548,13 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 						adjRemark = "Excel Imported Adjustment"
 					}
 
-					res, errHeader := tx.Exec(`
+					var headerID int64
+					errHeader := tx.QueryRow(`
 						INSERT INTO stock_adjustments (date, remarks)
 						VALUES (?, ?)
-					`, date, adjRemark)
+						RETURNING id
+					`, date, adjRemark).Scan(&headerID)
 					if errHeader != nil {
-						continue
-					}
-
-					headerID, errID := res.LastInsertId()
-					if errID != nil {
 						continue
 					}
 

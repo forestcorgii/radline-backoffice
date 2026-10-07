@@ -111,6 +111,16 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		endDateStr = now.Format("2006-01-02")
 	}
 
+	startDate, errStart := time.Parse("2006-01-02", startDateStr)
+	if errStart != nil {
+		startDate = now.AddDate(0, -5, 0)
+	}
+	endDate, errEnd := time.Parse("2006-01-02", endDateStr)
+	if errEnd != nil {
+		endDate = now
+	}
+	endOfDay := endDate.Add(24 * time.Hour).Add(-time.Second)
+
 	// 3. Metrics within Selected Range (or fallback to lifetime if empty range)
 	var metrics struct {
 		TotalSales  float64 `db:"total_sales"`
@@ -123,8 +133,8 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			COALESCE(SUM(total_cost), 0.0) as total_costs,
 			COALESCE(SUM(profit), 0.0) as gross_profit
 		FROM sales_details
-		WHERE doc_status IN ('Posted', 'POSTED') AND doc_date >= ? AND doc_date <= (? || ' 23:59:59')
-	`, startDateStr, endDateStr)
+		WHERE doc_status IN ('Posted', 'POSTED') AND doc_date >= ? AND doc_date <= ?
+	`, startDate, endOfDay)
 	if err != nil || metrics.TotalSales == 0 {
 		// Fallback to all posted sales if filtered range has zero sales
 		_ = db.DB.Get(&metrics, `
@@ -154,10 +164,10 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		       COALESCE(SUM(total_sales), 0.0) as sales, 
 		       COALESCE(SUM(profit), 0.0) as profit
 		FROM sales_details
-		WHERE doc_status IN ('Posted', 'POSTED') AND doc_date >= ? AND doc_date <= (? || ' 23:59:59')
+		WHERE doc_status IN ('Posted', 'POSTED') AND doc_date >= ? AND doc_date <= ?
 		GROUP BY month
 		ORDER BY month ASC
-	`, startDateStr, endDateStr)
+	`, startDate, endOfDay)
 
 	if len(trend) == 0 {
 		// Fallback to recent 6 months

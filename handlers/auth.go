@@ -53,7 +53,7 @@ func GetUserFromSession(token string) (*CurrentUserContext, error) {
 		SELECT u.id, u.username, u.password_hash, u.full_name, u.role_id, r.name as role_name, u.is_active, u.created_at
 		FROM users u
 		JOIN roles r ON u.role_id = r.id
-		WHERE u.id = ? AND u.is_active = 1
+		WHERE u.id = ? AND u.is_active = TRUE
 	`, session.UserID)
 	if err != nil {
 		return nil, err

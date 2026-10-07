@@ -71,17 +71,17 @@ func (app *App) AddRoleHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec("INSERT INTO roles (name, description) VALUES (?, ?)", name, desc)
+	var roleID int64
+	err := db.DB.QueryRow("INSERT INTO roles (name, description) VALUES (?, ?) RETURNING id", name, desc).Scan(&roleID)
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to create role: name may already exist"}}`)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	roleID, _ := res.LastInsertId()
 
 	selectedPerms := r.Form["permissions"]
 	for _, p := range selectedPerms {
-		_, _ = db.DB.Exec("INSERT OR IGNORE INTO role_permissions (role_id, permission_key) VALUES (?, ?)", roleID, p)
+		_, _ = db.DB.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", roleID, p)
 	}
 
 	app.LogActivity(r, "CREATE_ROLE", "Role", fmt.Sprintf("%d", roleID), fmt.Sprintf("Created role %s with %d permissions", name, len(selectedPerms)))
@@ -138,7 +138,7 @@ func (app *App) UpdateRoleHandler(w http.ResponseWriter, r *http.Request) {
 		_, _ = db.DB.Exec("DELETE FROM role_permissions WHERE role_id = ?", roleID)
 		selectedPerms := r.Form["permissions"]
 		for _, p := range selectedPerms {
-			_, _ = db.DB.Exec("INSERT OR IGNORE INTO role_permissions (role_id, permission_key) VALUES (?, ?)", roleID, p)
+			_, _ = db.DB.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", roleID, p)
 		}
 	}
 
@@ -253,17 +253,17 @@ func (app *App) AddUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec(`
+	var newUserID int64
+	err = db.DB.QueryRow(`
 		INSERT INTO users (username, password_hash, full_name, role_id, is_active)
-		VALUES (?, ?, ?, ?, 1)
-	`, username, hash, fullName, roleID)
+		VALUES (?, ?, ?, ?, TRUE)
+		RETURNING id
+	`, username, hash, fullName, roleID).Scan(&newUserID)
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Username already exists"}}`)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	newUserID, _ := res.LastInsertId()
 	app.LogActivity(r, "CREATE_USER", "User", fmt.Sprintf("%d", newUserID), fmt.Sprintf("Created user account %s (%s)", username, fullName))
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "User account created successfully"}}`)
 	w.Header().Set("HX-Redirect", "/settings/users")
