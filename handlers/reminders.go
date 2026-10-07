@@ -164,17 +164,18 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec(`
+	var newID int64
+	err = db.DB.QueryRow(`
 		INSERT INTO reminders (title, details, due_date, priority, category, status)
 		VALUES (?, ?, ?, ?, ?, 'Pending')
-	`, title, details, dueDate, priorityStr, category)
+		RETURNING id
+	`, title, details, dueDate, priorityStr, category).Scan(&newID)
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to create reminder."}}`)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	newID, _ := res.LastInsertId()
 	app.LogActivity(r, "CREATE_REMINDER", "Reminder", fmt.Sprintf("%d", newID), fmt.Sprintf("Scheduled reminder '%s' for %s", title, dueDateStr))
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder created successfully!"}}`)
 	returnUrl := r.Header.Get("Referer")

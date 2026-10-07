@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 
 	"radline/db"
 	"radline/domain"
@@ -12,8 +13,16 @@ import (
 )
 
 func main() {
-	// Initialize Database
-	err := db.InitDB("backoffice.db")
+	// Initialize Database (PostgreSQL via DATABASE_URL in production, SQLite locally)
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		if os.Getenv("APP_ENV") == "production" {
+			log.Fatalf("DATABASE_URL environment variable is required when APP_ENV=production")
+		}
+		dbURL = "backoffice.db"
+	}
+
+	err := db.InitDB(dbURL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

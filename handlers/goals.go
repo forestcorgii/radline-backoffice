@@ -109,17 +109,18 @@ func (app *App) AddGoalHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := db.DB.Exec(`
+	var newID int64
+	err := db.DB.QueryRow(`
 		INSERT INTO earning_goals (title, period_type, target_period, target_revenue, target_profit)
 		VALUES (?, ?, ?, ?, ?)
-	`, title, periodType, targetPeriod, targetRevenue, targetProfit)
+		RETURNING id
+	`, title, periodType, targetPeriod, targetRevenue, targetProfit).Scan(&newID)
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to create earning goal"}}`)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	newID, _ := res.LastInsertId()
 	app.LogActivity(r, "CREATE_GOAL", "EarningGoal", fmt.Sprintf("%d", newID), fmt.Sprintf("Created %s target '%s' for period %s", periodType, title, targetPeriod))
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Earning goal set successfully!"}}`)
 	if r.Header.Get("HX-Target") == "#main-content" {

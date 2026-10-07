@@ -18,8 +18,9 @@
 | Package | Purpose | Notes |
 |---|---|---|
 | `github.com/jmoiron/sqlx` | SQL extensions for `database/sql` | Struct scanning via `db:` tags |
+| `github.com/jackc/pgx/v5/stdlib` | PostgreSQL driver | Pure-Go production database driver |
 | `github.com/xuri/excelize/v2` | Excel file reader and writer | Used for batch data importing |
-| `modernc.org/sqlite` | Pure-Go SQLite driver | **No CGO required** — critical for Windows dev. Registered as `"sqlite"` not `"sqlite3"` |
+| `modernc.org/sqlite` | Pure-Go SQLite driver | **No CGO required** — local dev. Registered as `"sqlite"` |
 
 ### Frontend (CDN)
 

@@ -319,6 +319,7 @@ func FetchItemsStockBatch(db *sqlx.DB, itemIDs []int) (map[int]domain.ItemStock,
 	if err != nil {
 		return nil, err
 	}
+	query = db.Rebind(query)
 	var dbItems []Item
 	err = db.Select(&dbItems, query, args...)
 	if err != nil {
@@ -335,6 +336,7 @@ func FetchItemsStockBatch(db *sqlx.DB, itemIDs []int) (map[int]domain.ItemStock,
 	if err != nil {
 		return nil, err
 	}
+	query = db.Rebind(query)
 	var dbUomSettings []UomSetting
 	err = db.Select(&dbUomSettings, query, args...)
 	if err != nil && err != sql.ErrNoRows {
@@ -350,6 +352,7 @@ func FetchItemsStockBatch(db *sqlx.DB, itemIDs []int) (map[int]domain.ItemStock,
 	if err != nil {
 		return nil, err
 	}
+	query = db.Rebind(query)
 	var dbReceivingLogs []ReceivingLog
 	err = db.Select(&dbReceivingLogs, query, args...)
 	if err != nil && err != sql.ErrNoRows {
@@ -365,6 +368,7 @@ func FetchItemsStockBatch(db *sqlx.DB, itemIDs []int) (map[int]domain.ItemStock,
 	if err != nil {
 		return nil, err
 	}
+	query = db.Rebind(query)
 	var dbSalesDetails []SalesDetail
 	err = db.Select(&dbSalesDetails, query, args...)
 	if err != nil && err != sql.ErrNoRows {
@@ -380,6 +384,7 @@ func FetchItemsStockBatch(db *sqlx.DB, itemIDs []int) (map[int]domain.ItemStock,
 	if err != nil {
 		return nil, err
 	}
+	query = db.Rebind(query)
 	var dbAdjustments []InventoryAdjustment
 	err = db.Select(&dbAdjustments, query, args...)
 	if err != nil && err != sql.ErrNoRows {

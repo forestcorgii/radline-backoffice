@@ -1,31 +1,161 @@
 package db
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 	_ "modernc.org/sqlite"
 )
 
-var DB *sqlx.DB
+// DBConn wraps sqlx.DB to automatically rebind SQL parameter placeholders
+// across different SQL dialects (SQLite '?' vs PostgreSQL '$1, $2, ...').
+type DBConn struct {
+	*sqlx.DB
+	DriverName string
+}
+
+func (db *DBConn) Rebind(query string) string {
+	if db == nil || db.DB == nil {
+		return query
+	}
+	return db.DB.Rebind(query)
+}
+
+func (db *DBConn) Get(dest interface{}, query string, args ...interface{}) error {
+	return db.DB.Get(dest, db.Rebind(query), args...)
+}
+
+func (db *DBConn) Select(dest interface{}, query string, args ...interface{}) error {
+	return db.DB.Select(dest, db.Rebind(query), args...)
+}
+
+func (db *DBConn) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return db.DB.Exec(db.Rebind(query), args...)
+}
+
+func (db *DBConn) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	return db.DB.Query(db.Rebind(query), args...)
+}
+
+func (db *DBConn) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	return db.DB.Queryx(db.Rebind(query), args...)
+}
+
+func (db *DBConn) QueryRow(query string, args ...interface{}) *sql.Row {
+	return db.DB.QueryRow(db.Rebind(query), args...)
+}
+
+func (db *DBConn) QueryRowx(query string, args ...interface{}) *sqlx.Row {
+	return db.DB.QueryRowx(db.Rebind(query), args...)
+}
+
+func (db *DBConn) Beginx() (*TxConn, error) {
+	tx, err := db.DB.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	return &TxConn{Tx: tx, db: db}, nil
+}
+
+func (db *DBConn) IsPostgres() bool {
+	return db != nil && (db.DriverName == "pgx" || db.DriverName == "postgres")
+}
+
+// TxConn wraps sqlx.Tx to automatically rebind parameters for transactions.
+type TxConn struct {
+	*sqlx.Tx
+	db *DBConn
+}
+
+func (tx *TxConn) Rebind(query string) string {
+	if tx == nil || tx.Tx == nil {
+		return query
+	}
+	return tx.Tx.Rebind(query)
+}
+
+func (tx *TxConn) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return tx.Tx.Exec(tx.Rebind(query), args...)
+}
+
+func (tx *TxConn) Get(dest interface{}, query string, args ...interface{}) error {
+	return tx.Tx.Get(dest, tx.Rebind(query), args...)
+}
+
+func (tx *TxConn) Select(dest interface{}, query string, args ...interface{}) error {
+	return tx.Tx.Select(dest, tx.Rebind(query), args...)
+}
+
+func (tx *TxConn) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	return tx.Tx.Query(tx.Rebind(query), args...)
+}
+
+func (tx *TxConn) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	return tx.Tx.Queryx(tx.Rebind(query), args...)
+}
+
+func (tx *TxConn) QueryRow(query string, args ...interface{}) *sql.Row {
+	return tx.Tx.QueryRow(tx.Rebind(query), args...)
+}
+
+func (tx *TxConn) QueryRowx(query string, args ...interface{}) *sqlx.Row {
+	return tx.Tx.QueryRowx(tx.Rebind(query), args...)
+}
+
+var DB *DBConn
 
 func InitDB(datasource string) error {
-	var err error
-	DB, err = sqlx.Connect("sqlite", datasource)
-	if err != nil {
-		return err
+	driver := "sqlite"
+	if strings.HasPrefix(datasource, "postgres://") || strings.HasPrefix(datasource, "postgresql://") {
+		driver = "pgx"
 	}
 
-	// Enable foreign key constraints in SQLite
-	_, err = DB.Exec("PRAGMA foreign_keys = ON;")
+	sqlx.BindDriver("pgx", sqlx.DOLLAR)
+	sqlx.BindDriver("sqlite", sqlx.QUESTION)
+
+	rawDB, err := sqlx.Connect(driver, datasource)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to connect to %s: %w", driver, err)
 	}
 
+	DB = &DBConn{
+		DB:         rawDB,
+		DriverName: driver,
+	}
+
+	if driver == "pgx" {
+		DB.SetMaxOpenConns(25)
+		DB.SetMaxIdleConns(5)
+		DB.SetConnMaxLifetime(5 * time.Minute)
+		DB.SetConnMaxIdleTime(2 * time.Minute)
+
+		if err := createSchemaPostgres(); err != nil {
+			return err
+		}
+	} else {
+		// Enable foreign key constraints in SQLite
+		if _, err := DB.Exec("PRAGMA foreign_keys = ON;"); err != nil {
+			return err
+		}
+		runSQLiteMigrations()
+		if err := createSchemaSQLite(); err != nil {
+			return err
+		}
+	}
+
+	seedDefaults()
+	return nil
+}
+
+func runSQLiteMigrations() {
 	// Safe migration check for receiving_logs
-	_, err = DB.Exec("SELECT total_cost FROM receiving_logs LIMIT 0")
+	_, err := DB.Exec("SELECT total_cost FROM receiving_logs LIMIT 0")
 	if err != nil {
 		var rowCount int
 		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM receiving_logs")
@@ -89,7 +219,6 @@ func InitDB(datasource string) error {
 	// Safe migration: add adjustment_id column to inventory_adjustments if it doesn't exist
 	_, err = DB.Exec("SELECT adjustment_id FROM inventory_adjustments LIMIT 0")
 	if err != nil {
-		// Table exists but column doesn't — add it
 		var rowCount int
 		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM inventory_adjustments")
 		if errCount == nil {
@@ -120,12 +249,9 @@ func InitDB(datasource string) error {
 			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN remarks TEXT NOT NULL DEFAULT '';")
 		}
 	}
-
-	createSchema()
-	return nil
 }
 
-func createSchema() {
+func createSchemaSQLite() error {
 	schema := `
 	CREATE TABLE IF NOT EXISTS brands (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -265,7 +391,7 @@ func createSchema() {
 		password_hash TEXT NOT NULL,
 		full_name TEXT NOT NULL,
 		role_id INTEGER NOT NULL,
-		is_active INTEGER NOT NULL DEFAULT 1,
+		is_active BOOLEAN NOT NULL DEFAULT 1,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY(role_id) REFERENCES roles(id)
 	);
@@ -321,14 +447,222 @@ func createSchema() {
 	CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
 	CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
 	`
-	_, err := DB.Exec(schema)
+	_, err := DB.DB.Exec(schema)
 	if err != nil {
-		log.Fatalf("Failed to create schema: %v", err)
+		return fmt.Errorf("failed to create sqlite schema: %w", err)
 	}
+	return nil
+}
 
+func createSchemaPostgres() error {
+	schema := `
+	CREATE TABLE IF NOT EXISTS brands (
+		id SERIAL PRIMARY KEY,
+		code TEXT UNIQUE NOT NULL,
+		name TEXT NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS categories (
+		id SERIAL PRIMARY KEY,
+		code TEXT UNIQUE NOT NULL,
+		name TEXT NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS uoms (
+		id SERIAL PRIMARY KEY,
+		code TEXT UNIQUE NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS items (
+		id SERIAL PRIMARY KEY,
+		code TEXT UNIQUE NOT NULL,
+		description TEXT NOT NULL,
+		default_uom TEXT NOT NULL,
+		model TEXT,
+		brand_id INTEGER REFERENCES brands(id),
+		category_id INTEGER REFERENCES categories(id),
+		variation TEXT,
+		remarks TEXT
+	);
+
+	CREATE TABLE IF NOT EXISTS uom_settings (
+		id SERIAL PRIMARY KEY,
+		item_id INTEGER NOT NULL REFERENCES items(id),
+		muom TEXT NOT NULL,
+		conversion_factor DOUBLE PRECISION NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS receiving_logs (
+		id SERIAL PRIMARY KEY,
+		supplier TEXT NOT NULL,
+		date TIMESTAMPTZ NOT NULL,
+		pl_no TEXT,
+		item_id INTEGER NOT NULL REFERENCES items(id),
+		qty DOUBLE PRECISION NOT NULL,
+		uom TEXT NOT NULL,
+		unit_price DOUBLE PRECISION,
+		less1 DOUBLE PRECISION NOT NULL DEFAULT 0,
+		less2 DOUBLE PRECISION NOT NULL DEFAULT 0,
+		cost DOUBLE PRECISION NOT NULL,
+		total_cost DOUBLE PRECISION NOT NULL,
+		markup DOUBLE PRECISION NOT NULL DEFAULT 130,
+		selling_price DOUBLE PRECISION,
+		remarks TEXT NOT NULL DEFAULT ''
+	);
+
+	CREATE TABLE IF NOT EXISTS sales_details (
+		id SERIAL PRIMARY KEY,
+		doc_type TEXT NOT NULL,
+		doc_status TEXT NOT NULL DEFAULT 'POSTED',
+		doc_date TIMESTAMPTZ NOT NULL,
+		doc_number TEXT NOT NULL,
+		customer_name TEXT,
+		supplier TEXT NOT NULL,
+		item_id INTEGER NOT NULL REFERENCES items(id),
+		qty DOUBLE PRECISION NOT NULL,
+		uom TEXT NOT NULL,
+		price DOUBLE PRECISION NOT NULL,
+		total_sales DOUBLE PRECISION NOT NULL,
+		cost DOUBLE PRECISION NOT NULL,
+		total_cost DOUBLE PRECISION NOT NULL,
+		patong DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		pos_charge DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		wt_2307 DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		total_remit DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		profit DOUBLE PRECISION NOT NULL,
+		profit_margin DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		remarks TEXT NOT NULL DEFAULT '',
+		ref_pl TEXT
+	);
+
+	CREATE TABLE IF NOT EXISTS stock_adjustments (
+		id SERIAL PRIMARY KEY,
+		date TIMESTAMPTZ NOT NULL,
+		remarks TEXT
+	);
+
+	CREATE TABLE IF NOT EXISTS inventory_adjustments (
+		id SERIAL PRIMARY KEY,
+		adjustment_id INTEGER REFERENCES stock_adjustments(id),
+		date TIMESTAMPTZ NOT NULL,
+		item_id INTEGER NOT NULL REFERENCES items(id),
+		uom TEXT NOT NULL,
+		adjustment_qty DOUBLE PRECISION NOT NULL,
+		cost DOUBLE PRECISION NOT NULL,
+		remarks TEXT
+	);
+
+	CREATE TABLE IF NOT EXISTS system_settings (
+		key TEXT PRIMARY KEY,
+		value TEXT NOT NULL
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_items_code ON items(code);
+	CREATE INDEX IF NOT EXISTS idx_uom_settings_item_id ON uom_settings(item_id);
+	CREATE INDEX IF NOT EXISTS idx_receiving_logs_item_id ON receiving_logs(item_id);
+	CREATE INDEX IF NOT EXISTS idx_receiving_logs_date ON receiving_logs(date);
+	CREATE INDEX IF NOT EXISTS idx_sales_details_item_id ON sales_details(item_id);
+	CREATE INDEX IF NOT EXISTS idx_sales_details_doc_date ON sales_details(doc_date);
+	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_item_id ON inventory_adjustments(item_id);
+	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_date ON inventory_adjustments(date);
+	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_adj_id ON inventory_adjustments(adjustment_id);
+
+	CREATE TABLE IF NOT EXISTS roles (
+		id SERIAL PRIMARY KEY,
+		name TEXT UNIQUE NOT NULL,
+		description TEXT NOT NULL,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS role_permissions (
+		role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+		permission_key TEXT NOT NULL,
+		PRIMARY KEY(role_id, permission_key)
+	);
+
+	CREATE TABLE IF NOT EXISTS users (
+		id SERIAL PRIMARY KEY,
+		username TEXT UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL,
+		full_name TEXT NOT NULL,
+		role_id INTEGER NOT NULL REFERENCES roles(id),
+		is_active BOOLEAN NOT NULL DEFAULT TRUE,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS user_sessions (
+		id TEXT PRIMARY KEY,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		expires_at TIMESTAMPTZ NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS activity_logs (
+		id SERIAL PRIMARY KEY,
+		user_id INTEGER,
+		username TEXT NOT NULL,
+		action TEXT NOT NULL,
+		entity_type TEXT NOT NULL,
+		entity_id TEXT NOT NULL DEFAULT '',
+		details TEXT NOT NULL DEFAULT '',
+		ip_address TEXT NOT NULL DEFAULT '',
+		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+	CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+	CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+	CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at);
+	CREATE INDEX IF NOT EXISTS idx_activity_logs_username ON activity_logs(username);
+	CREATE INDEX IF NOT EXISTS idx_activity_logs_entity_type ON activity_logs(entity_type);
+
+	CREATE TABLE IF NOT EXISTS earning_goals (
+		id SERIAL PRIMARY KEY,
+		title TEXT NOT NULL,
+		period_type TEXT NOT NULL,
+		target_period TEXT NOT NULL,
+		target_revenue DOUBLE PRECISION NOT NULL,
+		target_profit DOUBLE PRECISION NOT NULL,
+		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS reminders (
+		id SERIAL PRIMARY KEY,
+		title TEXT NOT NULL,
+		details TEXT NOT NULL DEFAULT '',
+		due_date TIMESTAMPTZ NOT NULL,
+		priority TEXT NOT NULL DEFAULT 'Medium',
+		category TEXT NOT NULL DEFAULT 'General',
+		status TEXT NOT NULL DEFAULT 'Pending',
+		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
+	CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
+	CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
+
+	CREATE OR REPLACE FUNCTION substr(val timestamptz, s int, l int) RETURNS text AS $$
+	SELECT substr(to_char(val, 'YYYY-MM-DD HH24:MI:SS'), s, l);
+	$$ LANGUAGE SQL IMMUTABLE;
+
+	CREATE OR REPLACE FUNCTION substr(val timestamp, s int, l int) RETURNS text AS $$
+	SELECT substr(to_char(val, 'YYYY-MM-DD HH24:MI:SS'), s, l);
+	$$ LANGUAGE SQL IMMUTABLE;
+
+	CREATE OR REPLACE FUNCTION substr(val date, s int, l int) RETURNS text AS $$
+	SELECT substr(to_char(val, 'YYYY-MM-DD'), s, l);
+	$$ LANGUAGE SQL IMMUTABLE;
+	`
+	_, err := DB.DB.Exec(schema)
+	if err != nil {
+		return fmt.Errorf("failed to create postgres schema: %w", err)
+	}
+	return nil
+}
+
+func seedDefaults() {
 	// Seed default UOM values if table is empty
 	var uomCount int
-	err = DB.Get(&uomCount, "SELECT COUNT(*) FROM uoms")
+	err := DB.Get(&uomCount, "SELECT COUNT(*) FROM uoms")
 	if err == nil && uomCount == 0 {
 		_, errSeed := DB.Exec(`
 			INSERT INTO uoms (code) VALUES
@@ -385,26 +719,20 @@ func seedAuthDefaults() {
 	}
 
 	// Insert Admin role
-	resAdmin, err := DB.Exec("INSERT INTO roles (name, description) VALUES ('Admin', 'Full administrative access across all system modules')")
+	var adminRoleID int64
+	err = DB.QueryRow("INSERT INTO roles (name, description) VALUES ('Admin', 'Full administrative access across all system modules') RETURNING id").Scan(&adminRoleID)
 	if err != nil {
 		log.Printf("Failed to seed Admin role: %v", err)
 		return
 	}
-	adminRoleID, _ := resAdmin.LastInsertId()
 
 	// Insert Manager role
-	resManager, err := DB.Exec("INSERT INTO roles (name, description) VALUES ('Manager', 'Access to sales, inventory operations, and viewing logs')")
 	var managerRoleID int64
-	if err == nil {
-		managerRoleID, _ = resManager.LastInsertId()
-	}
+	_ = DB.QueryRow("INSERT INTO roles (name, description) VALUES ('Manager', 'Access to sales, inventory operations, and viewing logs') RETURNING id").Scan(&managerRoleID)
 
 	// Insert Staff role
-	resStaff, err := DB.Exec("INSERT INTO roles (name, description) VALUES ('Staff', 'Daily sales entry and inventory view access')")
 	var staffRoleID int64
-	if err == nil {
-		staffRoleID, _ = resStaff.LastInsertId()
-	}
+	_ = DB.QueryRow("INSERT INTO roles (name, description) VALUES ('Staff', 'Daily sales entry and inventory view access') RETURNING id").Scan(&staffRoleID)
 
 	allPerms := []string{
 		"dashboard:view", "sales:view", "sales:create", "sales:edit", "sales:delete",
@@ -415,7 +743,7 @@ func seedAuthDefaults() {
 
 	// Assign all perms to Admin
 	for _, p := range allPerms {
-		_, _ = DB.Exec("INSERT OR IGNORE INTO role_permissions (role_id, permission_key) VALUES (?, ?)", adminRoleID, p)
+		_, _ = DB.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", adminRoleID, p)
 	}
 
 	// Assign Manager perms
@@ -425,7 +753,7 @@ func seedAuthDefaults() {
 		"items:view", "items:edit", "settings:view", "logs:view", "tools:scanner",
 	}
 	for _, p := range managerPerms {
-		_, _ = DB.Exec("INSERT OR IGNORE INTO role_permissions (role_id, permission_key) VALUES (?, ?)", managerRoleID, p)
+		_, _ = DB.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", managerRoleID, p)
 	}
 
 	// Assign Staff perms
@@ -433,23 +761,21 @@ func seedAuthDefaults() {
 		"dashboard:view", "sales:view", "sales:create", "inventory:view", "items:view",
 	}
 	for _, p := range staffPerms {
-		_, _ = DB.Exec("INSERT OR IGNORE INTO role_permissions (role_id, permission_key) VALUES (?, ?)", staffRoleID, p)
+		_, _ = DB.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", staffRoleID, p)
 	}
 
 	// Seed default users: admin / admin123 and staff / staff123
-	// bcrypt hashes:
-	// admin123 -> $2a$10$wE1Uu2HqU6K6w1mKz9eI2eY3jDqM9wE4.w8aG1YvDq1d5.p1J4mK. (will generate directly via bcrypt to ensure validity)
 	bytesAdmin, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
 	bytesStaff, _ := bcrypt.GenerateFromPassword([]byte("staff123"), bcrypt.DefaultCost)
 
 	_, _ = DB.Exec(`
 		INSERT INTO users (username, password_hash, full_name, role_id, is_active)
-		VALUES (?, ?, 'System Administrator', ?, 1)
+		VALUES (?, ?, 'System Administrator', ?, TRUE)
 	`, "admin", string(bytesAdmin), adminRoleID)
 
 	_, _ = DB.Exec(`
 		INSERT INTO users (username, password_hash, full_name, role_id, is_active)
-		VALUES (?, ?, 'Staff Operator', ?, 1)
+		VALUES (?, ?, 'Staff Operator', ?, TRUE)
 	`, "staff", string(bytesStaff), staffRoleID)
 }
 
@@ -474,8 +800,7 @@ func SetSystemSetting(key, value string) error {
 	_, err := DB.Exec(`
 		INSERT INTO system_settings (key, value)
 		VALUES (?, ?)
-		ON CONFLICT(key) DO UPDATE SET value = excluded.value
+		ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value
 	`, key, value)
 	return err
 }
-

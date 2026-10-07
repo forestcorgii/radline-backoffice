@@ -165,6 +165,15 @@ SQLite does **not** enforce foreign keys by default. The `PRAGMA foreign_keys = 
   - `Profit Margin (%)` = `(Profit / Total Sales) * 100` if `Total Sales > 0` else `0%`
 - **UI & Import Alignment**: All fields are supported across list view columns, customize view popovers, real-time JS client-side encoding, and Excel sheet import.
 
+### Context: Dual-Engine SQLite & PostgreSQL Production Architecture
+**Problem**: The application needs to run lightweight pure-Go SQLite locally during development, but seamlessly switch to high-concurrency PostgreSQL in production without breaking SQL dialect syntax (parameter placeholders `?` vs `$1`, generated keys `LastInsertId` vs `RETURNING id`, conflict resolution `INSERT OR IGNORE` vs `ON CONFLICT DO NOTHING`, and date functions).
+**Enforced Solution**:
+- **Automatic Driver & URL Detection**: `db.InitDB` parses connection string. When starting with `postgres://` or `postgresql://` (or `DATABASE_URL` env in production), connects via `pgx` (`github.com/jackc/pgx/v5/stdlib`), otherwise defaults to SQLite (`backoffice.db`).
+- **Dynamic Rebinding Wrapper (`DBConn` & `TxConn`)**: `db.DB` and transactions wrap `*sqlx.DB` and `*sqlx.Tx` to intercept all `Get`, `Select`, `Exec`, `Query`, and `QueryRow` calls, running `Rebind(query)` automatically to map `?` to `$1, $2, ...` in Postgres while preserving `?` for SQLite.
+- **Universal `RETURNING id`**: Insert queries that require generated primary keys use `RETURNING id` with `QueryRow().Scan(&id)` instead of driver-dependent `result.LastInsertId()` (unsupported in PostgreSQL drivers). Both modernc SQLite and PostgreSQL support `RETURNING id`.
+- **Universal `ON CONFLICT DO NOTHING`**: Replaced non-standard `INSERT OR IGNORE` with ANSI `ON CONFLICT DO NOTHING`.
+- **Postgres Date Substring Polyfills**: Defined immutable PostgreSQL functions `substr(timestamptz, int, int)`, `substr(timestamp, int, int)`, and `substr(date, int, int)` so existing `substr(date, 1, 7)` reporting queries work identically without syntax errors.
+
 ## Related
 - [[00-index]]
 - [[database-migrations]]
@@ -172,3 +181,4 @@ SQLite does **not** enforce foreign keys by default. The `PRAGMA foreign_keys = 
 - [[database-migrations]] — How schema evolves at startup
 - [[models-layer]] — DTO structs mapping these tables
 - [[domain-overview]] — Domain entities these tables represent
+
