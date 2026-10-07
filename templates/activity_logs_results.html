@@ -1,0 +1,91 @@
+{{ define "activity_logs_results.html" }}
+<div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border-color);">
+    <div class="table-container">
+        <table class="table-scroll-lg" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.75rem;">
+            <thead>
+                <tr style="background: hsl(var(--secondary) / 0.5); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.6875rem; text-transform: uppercase;">
+                    <th style="padding: 0.75rem 1rem; width: 140px;">Timestamp</th>
+                    <th style="padding: 0.75rem 1rem; width: 120px;">Operator</th>
+                    <th style="padding: 0.75rem 1rem; width: 130px;">Action</th>
+                    <th style="padding: 0.75rem 1rem; width: 100px;">Target</th>
+                    <th style="padding: 0.75rem 1rem;">Details</th>
+                    <th style="padding: 0.75rem 1rem; width: 110px;">IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ if eq (len .Logs) 0 }}
+                <tr>
+                    <td colspan="6" style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted);">
+                        No activity records found matching criteria.
+                    </td>
+                </tr>
+                {{ else }}
+                {{ range .Logs }}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.75rem 1rem; color: var(--text-muted); font-variant-numeric: tabular-nums;">
+                        {{ .CreatedAt.Format "Jan 02, 15:04:05" }}
+                    </td>
+                    <td style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-main);">
+                        {{ .Username }}
+                    </td>
+                    <td style="padding: 0.75rem 1rem;">
+                        {{ if or (eq .Action "LOGIN") (eq .Action "LOGOUT") }}
+                        <span class="badge" style="background: hsl(215 90% 92%); color: hsl(215 90% 32%);">
+                            {{ .Action }}
+                        </span>
+                        {{ else if or (eq .Action "CREATE_SALE") (eq .Action "RECEIVE_STOCK") (eq .Action "CREATE_USER") (eq .Action "CREATE_ROLE") }}
+                        <span class="badge badge-active">
+                            {{ .Action }}
+                        </span>
+                        {{ else if or (eq .Action "DELETE_SALE") (eq .Action "DELETE_ROLE") (eq .Action "DELETE_RECEIVING_LOG") }}
+                        <span class="badge badge-danger">
+                            {{ .Action }}
+                        </span>
+                        {{ else }}
+                        <span class="badge" style="background: hsl(38 92% 90%); color: hsl(38 92% 30%);">
+                            {{ .Action }}
+                        </span>
+                        {{ end }}
+                    </td>
+                    <td style="padding: 0.75rem 1rem; color: var(--text-muted); font-weight: 500;">
+                        {{ .EntityType }}{{ if .EntityID }} #{{ .EntityID }}{{ end }}
+                    </td>
+                    <td style="padding: 0.75rem 1rem; color: var(--text-main); word-break: break-word;">
+                        {{ .Details }}
+                    </td>
+                    <td style="padding: 0.75rem 1rem; color: var(--text-muted); font-family: monospace; font-size: 0.6875rem;">
+                        {{ .IPAddress }}
+                    </td>
+                </tr>
+                {{ end }}
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: hsl(var(--secondary) / 0.3); border-top: 1px solid var(--border-color); font-size: 0.75rem;">
+        <div style="color: var(--text-muted);">
+            Showing {{ len .Logs }} of {{ .TotalRecords }} event(s) &bull; Page {{ .Page }} of {{ .TotalPages }}
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            {{ if gt .Page 1 }}
+            <button hx-get="/activity-logs?fragment=true&page={{ add .Page -1 }}"
+                    hx-target="#logs-container"
+                    hx-include="[name='search'],[name='action'],[name='entity']"
+                    class="btn btn-secondary btn-sm">
+                ← Previous
+            </button>
+            {{ end }}
+            {{ if lt .Page .TotalPages }}
+            <button hx-get="/activity-logs?fragment=true&page={{ add .Page 1 }}"
+                    hx-target="#logs-container"
+                    hx-include="[name='search'],[name='action'],[name='entity']"
+                    class="btn btn-secondary btn-sm">
+                Next →
+            </button>
+            {{ end }}
+        </div>
+    </div>
+</div>
+{{ end }}

@@ -1,0 +1,76 @@
+{{ define "activity_logs.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="header-bar mb-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">Activity & Audit Logs</h2>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Real-time immutable audit trail tracking system operations and user actions</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <button hx-get="/activity-logs?fragment=true" hx-target="#logs-container" hx-include="[name='search'],[name='action'],[name='entity']" class="btn btn-secondary" style="font-size: 0.75rem;">
+            ⟳ Refresh Logs
+        </button>
+    </div>
+</div>
+
+<div class="sub-tabs mb-4">
+    <a href="/settings/roles" hx-get="/settings/roles" class="sub-tab-item">Roles & Permissions</a>
+    <a href="/settings/users" hx-get="/settings/users" class="sub-tab-item">User Accounts</a>
+    <a href="/activity-logs" class="sub-tab-item active">Activity Logs</a>
+</div>
+
+<!-- Search & Filter Controls -->
+<div class="search-filter-bar mb-4" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 220px;">
+        <input type="search" name="search" placeholder="Search by operator, details, or ID..."
+               value="{{ .Search }}"
+               class="form-input" style="width: 100%;"
+               hx-get="/activity-logs?fragment=true"
+               hx-trigger="keyup changed delay:350ms, search"
+               hx-target="#logs-container"
+               hx-include="[name='action'],[name='entity']">
+    </div>
+
+    <div style="min-width: 160px;">
+        <select name="action" class="form-input" style="width: 100%;"
+                hx-get="/activity-logs?fragment=true"
+                hx-trigger="change"
+                hx-target="#logs-container"
+                hx-include="[name='search'],[name='entity']">
+            <option value="">All Actions</option>
+            <option value="LOGIN" {{ if eq .ActionFilter "LOGIN" }}selected{{ end }}>User Logins</option>
+            <option value="LOGOUT" {{ if eq .ActionFilter "LOGOUT" }}selected{{ end }}>User Logouts</option>
+            <option value="CREATE_SALE" {{ if eq .ActionFilter "CREATE_SALE" }}selected{{ end }}>Sales Created</option>
+            <option value="UPDATE_SALE" {{ if eq .ActionFilter "UPDATE_SALE" }}selected{{ end }}>Sales Updated</option>
+            <option value="DELETE_SALE" {{ if eq .ActionFilter "DELETE_SALE" }}selected{{ end }}>Sales Deleted</option>
+            <option value="RECEIVE_STOCK" {{ if eq .ActionFilter "RECEIVE_STOCK" }}selected{{ end }}>Stock Received</option>
+            <option value="ADJUST_STOCK" {{ if eq .ActionFilter "ADJUST_STOCK" }}selected{{ end }}>Stock Adjusted</option>
+            <option value="CREATE_USER" {{ if eq .ActionFilter "CREATE_USER" }}selected{{ end }}>User Admin</option>
+            <option value="UPDATE_ROLE" {{ if eq .ActionFilter "UPDATE_ROLE" }}selected{{ end }}>Role Changes</option>
+        </select>
+    </div>
+
+    <div style="min-width: 160px;">
+        <select name="entity" class="form-input" style="width: 100%;"
+                hx-get="/activity-logs?fragment=true"
+                hx-trigger="change"
+                hx-target="#logs-container"
+                hx-include="[name='search'],[name='action']">
+            <option value="">All Entities</option>
+            <option value="User" {{ if eq .EntityFilter "User" }}selected{{ end }}>User Accounts</option>
+            <option value="Role" {{ if eq .EntityFilter "Role" }}selected{{ end }}>Roles</option>
+            <option value="Sale" {{ if eq .EntityFilter "Sale" }}selected{{ end }}>Sales</option>
+            <option value="Inventory" {{ if eq .EntityFilter "Inventory" }}selected{{ end }}>Inventory</option>
+            <option value="Item" {{ if eq .EntityFilter "Item" }}selected{{ end }}>Items</option>
+            <option value="Brand" {{ if eq .EntityFilter "Brand" }}selected{{ end }}>Brands</option>
+            <option value="Category" {{ if eq .EntityFilter "Category" }}selected{{ end }}>Categories</option>
+        </select>
+    </div>
+</div>
+
+<div id="logs-container">
+    {{ template "activity_logs_results.html" . }}
+</div>
+{{ end }}

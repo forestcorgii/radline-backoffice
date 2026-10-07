@@ -1,0 +1,163 @@
+{{ define "users.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="header-bar mb-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">User Accounts</h2>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Manage operator logins, assigned roles, and credentials</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="/settings" hx-get="/settings" class="btn btn-secondary" style="font-size: 0.75rem;">← Back to Settings</a>
+        <button onclick="document.getElementById('add-user-modal').style.display='flex'" class="btn" style="font-size: 0.75rem;">+ Add New User</button>
+    </div>
+</div>
+
+<div class="sub-tabs mb-4">
+    <a href="/settings/roles" hx-get="/settings/roles" class="sub-tab-item">Roles & Permissions</a>
+    <a href="/settings/users" class="sub-tab-item active">User Accounts</a>
+    <a href="/activity-logs" hx-get="/activity-logs" class="sub-tab-item">Activity Logs</a>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border-color);">
+    <div class="table-container">
+        <table class="table-scroll-md" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.75rem;">
+            <thead>
+                <tr style="background: hsl(var(--secondary) / 0.5); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.6875rem; text-transform: uppercase;">
+                    <th style="padding: 0.75rem 1rem;">ID</th>
+                    <th style="padding: 0.75rem 1rem;">Username</th>
+                    <th style="padding: 0.75rem 1rem;">Full Name</th>
+                    <th style="padding: 0.75rem 1rem;">Assigned Role</th>
+                    <th style="padding: 0.75rem 1rem;">Status</th>
+                    <th style="padding: 0.75rem 1rem; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range .Users }}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.75rem 1rem; color: var(--text-muted);">{{ .ID }}</td>
+                    <td style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-main);">{{ .Username }}</td>
+                    <td style="padding: 0.75rem 1rem;">{{ .FullName }}</td>
+                    <td style="padding: 0.75rem 1rem;">
+                        <span class="badge" style="background: hsl(var(--primary)); color: #ffffff; font-size: 0.6875rem;">
+                            {{ .RoleName }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem 1rem;">
+                        {{ if .IsActive }}
+                        <span class="badge badge-active">Active</span>
+                        {{ else }}
+                        <span class="badge badge-danger">Disabled</span>
+                        {{ end }}
+                    </td>
+                    <td style="padding: 0.75rem 1rem; text-align: right;">
+                        <button onclick="openEditUserModal({{ .ID }}, '{{ .FullName }}', {{ .RoleID }}, {{ .IsActive }})" class="btn btn-secondary btn-sm" style="font-size: 0.6875rem;">
+                            Edit User
+                        </button>
+                    </td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: Add New User -->
+<div id="add-user-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 0.5rem; max-width: 480px; width: 100%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">Create User Account</h3>
+            <button onclick="document.getElementById('add-user-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form hx-post="/settings/users/add">
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Username</label>
+                <input type="text" name="username" required placeholder="e.g. cashier1" class="form-input" style="width: 100%;">
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Full Name</label>
+                <input type="text" name="full_name" required placeholder="e.g. Maria Santos" class="form-input" style="width: 100%;">
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Password</label>
+                <input type="password" name="password" required placeholder="At least 4 characters" class="form-input" style="width: 100%;">
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Assigned Role</label>
+                <select name="role_id" required class="form-input" style="width: 100%;">
+                    {{ range .Roles }}
+                    <option value="{{ .ID }}">{{ .Name }} - {{ .Description }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button type="button" onclick="document.getElementById('add-user-modal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Edit User -->
+<div id="edit-user-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 0.5rem; max-width: 480px; width: 100%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">Edit User Account</h3>
+            <button onclick="document.getElementById('edit-user-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form id="edit-user-form" method="POST">
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Full Name</label>
+                <input type="text" id="edit-user-fullname" name="full_name" required class="form-input" style="width: 100%;">
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Assigned Role</label>
+                <select id="edit-user-role" name="role_id" required class="form-input" style="width: 100%;">
+                    {{ range .Roles }}
+                    <option value="{{ .ID }}">{{ .Name }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Reset Password (Optional)</label>
+                <input type="password" name="new_password" placeholder="Leave blank to keep unchanged" class="form-input" style="width: 100%;">
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; cursor: pointer;">
+                    <input type="checkbox" id="edit-user-active" name="is_active" value="1">
+                    <span style="font-weight: 600;">Account is Active</span>
+                </label>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button type="button" onclick="document.getElementById('edit-user-modal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn">Update User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditUserModal(id, fullName, roleId, isActive) {
+        const modal = document.getElementById('edit-user-modal');
+        const form = document.getElementById('edit-user-form');
+        form.setAttribute('hx-post', '/settings/users/update/' + id);
+        htmx.process(form);
+
+        document.getElementById('edit-user-fullname').value = fullName;
+        document.getElementById('edit-user-role').value = roleId;
+        document.getElementById('edit-user-active').checked = isActive;
+        modal.style.display = 'flex';
+    }
+</script>
+{{ end }}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Radline BackOffice</title>
+    <script src="/static/htmx.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/index.css?v=4.4">
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, hsl(240 4.8% 96%) 0%, hsl(240 5.9% 90%) 100%);
+            padding: 1.5rem;
+        }
+        .login-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 400px;
+            padding: 2.25rem 2rem;
+        }
+        .brand-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: var(--text-main);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div style="text-align: center; margin-bottom: 1.75rem;">
+                <div class="brand-badge">R</div>
+                <h1 style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">Radline BackOffice</h1>
+                <p style="font-size: 0.8125rem; color: var(--text-muted);">Sign in with your assigned account to proceed</p>
+            </div>
+
+            <form hx-post="/login" hx-target="#login-feedback" hx-swap="innerHTML">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">Username</label>
+                    <input type="text" name="username" required autofocus placeholder="e.g. admin"
+                           style="width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius); font-size: 0.8125rem; background: #fafafa;" autocomplete="username">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem;">Password</label>
+                    <input type="password" name="password" required placeholder="••••••••"
+                           style="width: 100%; padding: 0.625rem 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius); font-size: 0.8125rem; background: #fafafa;" autocomplete="current-password">
+                </div>
+
+                <div id="login-feedback" style="min-height: 1.5rem; margin-bottom: 0.75rem;"></div>
+
+                <button type="submit" class="btn" style="width: 100%; padding: 0.6875rem; font-size: 0.8125rem; font-weight: 600; justify-content: center; cursor: pointer;">
+                    Sign In
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.6875rem; color: var(--text-muted);">
+                Protected BackOffice System &bull; Radline
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+    <script>
+        document.body.addEventListener('show-toast', function(evt) {
+            const data = evt.detail;
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-' + (data.type || 'info');
+            toast.innerText = data.message || '';
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('toast-fade');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        });
+    </script>
+</body>
+</html>

@@ -135,3 +135,34 @@ Never change the configured listener port in `main.go` (keep it as `:8080`). If 
 - Check for existing processes running on port `8080` (e.g. using `netstat -ano | findstr :8080`).
 - If you need to stop the old process, prompt/explain to the user why it needs to be stopped, and ask for permission before running process termination commands like `taskkill` or `kill`.
 - Never commit port number modifications to `main.go` under any circumstances.
+
+---
+
+### Context: Role-Based Authentication & Logging Service Routing
+
+**Problem:**
+Securing system routes and tracking user actions without breaking hypermedia/HTMX partial swaps or leaking protected backoffice actions.
+
+**Enforced Solution:**
+- `AuthMiddleware` verifies session token from HTTP-only cookie `radline_session`. Unauthenticated requests redirect to `/login` (issuing `HX-Redirect: /login` on HTMX requests).
+- Public paths `/login`, `/static/` bypass authentication.
+- `RequirePermission(permKey, handler)` guards all sensitive endpoints. Unauthorized attempts return HTTP 403 with `HX-Trigger: show-toast` notification.
+- Auditing is performed via `app.LogActivity(r, action, entityType, entityID, details)` storing immutable records into `activity_logs`.
+- Routes:
+  - Auth: `GET /login`, `POST /login`, `POST /logout`, `GET /logout`, `GET /auth/user-chip`
+  - Roles & Users: `GET /settings/roles`, `POST /settings/roles/add`, `POST /settings/roles/update/{id}`, `DELETE /settings/roles/delete/{id}`, `GET /settings/users`, `POST /settings/users/add`, `POST /settings/users/update/{id}`
+  - Activity Logs: `GET /activity-logs`
+
+---
+
+### Context: Dynamic Dashboard Trends, Earning Goals & Reminders Routing
+
+**Problem:**
+Providing dynamic financial and operational management on the dashboard while supporting dedicated pages for goal setting and calendar scheduling.
+
+**Enforced Solution:**
+- Dashboard (`/`) accepts `start_date` and `end_date` query params. When filtered via HTMX, `fragment=trends` re-renders `dashboard_trends.html` containing dual SVG charts (Sales vs Profit and Sales vs Inventory intake).
+- Top Products card queries top 5 items by units sold from `sales_details`.
+- Earning Goals (`/goals`): `GET /goals`, `POST /goals/add`, `DELETE /goals/delete/{id}` calculates dynamic variance and progress percentages against posted sales.
+- Reminders Calendar (`/reminders`): `GET /reminders`, `POST /reminders/add`, `POST /reminders/toggle/{id}`, `DELETE /reminders/delete/{id}` organizes monthly calendar grid and operational agenda.
+
