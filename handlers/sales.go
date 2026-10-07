@@ -138,7 +138,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 			Uoms:   uoms,
 			SalesRowData: map[string]interface{}{
 				"Items": items,
-				"Uoms":  uoms,
+				"Uoms":  []models.Uom{},
 			},
 			StartDate:      startDateStr,
 			EndDate:        endDateStr,
@@ -365,12 +365,12 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 					COALESCE((SELECT SUM(a.adjustment_qty) FROM inventory_adjustments a WHERE a.item_id = ?), 0) AS total_adjusted
 			),
 			oh AS (SELECT (total_received - total_sold + total_adjusted) AS on_hand FROM item_stats)
-			SELECT r.cost, r.selling_price, r.pl_no
+			SELECT COALESCE(r.cost, 0.0) AS cost, COALESCE(r.selling_price, 0.0) AS selling_price, COALESCE(r.pl_no, '') AS pl_no
 			FROM receiving_logs r, oh
 			WHERE r.item_id = ? AND oh.on_hand > 0
 			  AND (SELECT COALESCE(SUM(r2.qty), 0) FROM receiving_logs r2
-			       WHERE r2.item_id = ? AND (r2.date < r.date OR (r2.date = r.date AND r2.id < r.id)))
-			      < (SELECT COALESCE(SUM(s.qty), 0) FROM sales_details s WHERE s.item_id = ? AND s.doc_status IN ('Posted', 'POSTED'))
+			       WHERE r2.item_id = ? AND (r2.date < r.date OR (r2.date = r.date AND r2.id <= r.id)))
+			      > (SELECT COALESCE(SUM(s.qty), 0) FROM sales_details s WHERE s.item_id = ? AND s.doc_status IN ('Posted', 'POSTED'))
 			ORDER BY r.date ASC, r.id ASC
 			LIMIT 1
 		`, itemID, itemID, itemID, itemID, itemID, itemID)
@@ -379,12 +379,11 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 			lastPrice = result.SellingPrice
 			lastPLNo = result.PLNo
 		} else {
-			var lastRec models.ReceivingLog
-			err := db.DB.Get(&lastRec, "SELECT cost, selling_price, pl_no FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
+			err := db.DB.Get(&result, "SELECT COALESCE(cost, 0.0) AS cost, COALESCE(selling_price, 0.0) AS selling_price, COALESCE(pl_no, '') AS pl_no FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
 			if err == nil {
-				lastCost = lastRec.Cost
-				lastPrice = lastRec.SellingPrice
-				lastPLNo = lastRec.PLNo
+				lastCost = result.Cost
+				lastPrice = result.SellingPrice
+				lastPLNo = result.PLNo
 			}
 		}
 	}
@@ -397,7 +396,8 @@ func (app *App) SaleItemRowDetailsHandler(w http.ResponseWriter, r *http.Request
 				SELECT default_uom AS code FROM items WHERE id = ?
 				UNION
 				SELECT muom AS code FROM uom_settings WHERE item_id = ?
-			) ORDER BY code ASC
+			) WHERE code != '' AND code IS NOT NULL
+			ORDER BY code ASC
 		`, itemID, itemID)
 	}
 

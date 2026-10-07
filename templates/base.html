@@ -828,7 +828,10 @@
                     if (input.value.trim() === '') {
                         if (hidden && hidden.value !== '') {
                             hidden.value = '';
-                            hidden.dispatchEvent(new Event('change'));
+                            if (window.htmx) {
+                                htmx.trigger(hidden, 'change');
+                            }
+                            hidden.dispatchEvent(new Event('change', { bubbles: true }));
                         }
                     } else {
                         const currentText = input.value.trim();
@@ -845,7 +848,10 @@
                             input.value = match.getAttribute('data-description');
                             if (hidden && hidden.value !== selectedId) {
                                 hidden.value = selectedId;
-                                hidden.dispatchEvent(new Event('change'));
+                                if (window.htmx) {
+                                    htmx.trigger(hidden, 'change');
+                                }
+                                hidden.dispatchEvent(new Event('change', { bubbles: true }));
                             }
                         } else if (hidden && hidden.value) {
                             for (const item of items) {
@@ -900,7 +906,7 @@
             if (hidden) {
                 const oldVal = hidden.value;
                 hidden.value = selectedId;
-                if (oldVal !== selectedId) {
+                if (oldVal !== selectedId || hidden.name === 'item_id') {
                     if (hidden.name === 'item_id') {
                         const itemRow = input.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
                         const tbody = itemRow ? itemRow.parentElement : null;
@@ -927,12 +933,15 @@
                             }, 2000);
                         }
                     }
-                    hidden.dispatchEvent(new Event('change'));
+                    if (window.htmx) {
+                        htmx.trigger(hidden, 'change');
+                    }
+                    hidden.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
             
             if (uom) {
-                const uomInput = container.closest('form')?.querySelector('#uom');
+                const uomInput = container.closest('form')?.querySelector('#uom, #uom-inline-uom, [name="uom"]');
                 if (uomInput) {
                     uomInput.value = uom;
                 }

@@ -264,7 +264,7 @@ See [[htmx-patterns]] for the toast protocol.
 - **Naming**: The column header is named `Deductions` with a tooltip (`title`) set to `"Patong / POS / WT 2307"`.
 - **View Configuration & Customization**: The customize view popover contains a single `Deductions` checkbox mapped to the `patong` column visibility key, and the other two keys (`pos_charge`, `wt_2307`) are removed from customization.
 - **Stacked Layout**: 
-  - Read-only rows display a vertical stack with labeled values: `P: ₱X.XX`, `C: ₱Y.YY`, `W: ₱Z.ZZ`.
+  - Read-only rows display a vertical stack containing only non-zero deductions (e.g. `P: ₱X.XX`, `C: ₱Y.YY`, `W: ₱Z.ZZ`), or a dash `—` if all deductions are zero.
   - Batch edit rows display a vertical stack of three compact inputs with `name="patong"`, `name="pos_charge"`, and `name="wt_2307"`, maintaining separate field updates for form submission.
 
 ### Context: Filter Bar Clutter and Responsive Filter Widths
