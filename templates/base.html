@@ -11,7 +11,7 @@
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/index.css?v=4.4">
+    <link rel="stylesheet" href="/static/index.css?v=5.0">
 </head>
 
 <body>
@@ -20,7 +20,6 @@
         <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleMobileSidebar()"></div>
 
         <!-- Sidebar Navigation -->
-        <!-- Sidebar Navigation -->
         <aside id="sidebar" class="sidebar">
             <script>
                 if (localStorage.getItem("sidebar-collapsed") === "true") {
@@ -28,8 +27,16 @@
                 }
             </script>
             <div class="sidebar-brand">
-                <h1 class="brand-full">Radline BackOffice</h1>
-                <h1 class="brand-mini">R</h1>
+                <div class="brand-wrapper brand-full">
+                    <div class="brand-badge">R</div>
+                    <div class="brand-info">
+                        <span class="brand-title">Radline</span>
+                        <span class="brand-sub">Enterprise Suite</span>
+                    </div>
+                </div>
+                <div class="brand-mini">
+                    <div class="brand-badge">R</div>
+                </div>
                 <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse Sidebar" title="Collapse Sidebar">
                     <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -39,7 +46,7 @@
                     </svg>
                 </button>
                 <button class="sidebar-close-btn" onclick="toggleMobileSidebar()" aria-label="Close Sidebar">
-                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -47,225 +54,449 @@
                 </button>
             </div>
 
-            <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
-                <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()" title="Dashboard">
-                    <span class="nav-icon-text">
-                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="7" height="9"></rect>
-                            <rect x="14" y="3" width="7" height="5"></rect>
-                            <rect x="14" y="12" width="7" height="9"></rect>
-                            <rect x="3" y="16" width="7" height="5"></rect>
+            <!-- QuickBooks Signature "+ New" Quick Action Button -->
+            <div class="quick-create-section">
+                <button id="quick-create-btn" class="quick-create-btn" onclick="toggleQuickCreateMenu(event)" aria-haspopup="true" aria-expanded="false" title="Quick Create (+ New)">
+                    <span class="quick-create-icon">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
-                        <span class="nav-text">Dashboard</span>
                     </span>
-                </a>
+                    <span class="quick-create-label">+ New</span>
+                    <svg class="quick-create-caret" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
 
-                <a href="/sales" hx-get="/sales" onclick="closeMobileSidebarOnNav()" title="Sales">
-                    <span class="nav-icon-text">
-                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="1" x2="12" y2="23"></line>
-                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                        </svg>
-                        <span class="nav-text">Sales</span>
-                    </span>
-                </a>
-
-                <a href="/goals" hx-get="/goals" onclick="closeMobileSidebarOnNav()" title="Earning Goals">
-                    <span class="nav-icon-text">
-                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <circle cx="12" cy="12" r="6"></circle>
-                            <circle cx="12" cy="12" r="2"></circle>
-                        </svg>
-                        <span class="nav-text">Earning Goals</span>
-                    </span>
-                </a>
-
-                <a href="/reminders" hx-get="/reminders" onclick="closeMobileSidebarOnNav()" title="Calendar & Reminders">
-                    <span class="nav-icon-text">
-                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                        </svg>
-                        <span class="nav-text">Calendar</span>
-                    </span>
-                </a>
-
-                <div class="sidebar-dropdown" id="inventory-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Inventory">
-                        <span class="nav-icon-text">
-                            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
-                                <polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon>
-                                <polygon points="12 22.08 12 12 21 6.92 21 17.08 12 22.08"></polygon>
-                                <polygon points="12 2 21 6.92 12 12 3 6.92 12 2"></polygon>
-                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                            </svg>
-                            <span class="nav-text">Inventory</span>
+                <!-- Quick Create Popover Menu (Categorized 4-Column Panel) -->
+                <div id="quick-create-menu" class="quick-create-menu" hx-target="#main-content" hx-push-url="true">
+                    <div class="quick-create-header">
+                        <span class="quick-create-header-title">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Quick Actions
                         </span>
+                        <span class="quick-create-header-sub">Create transactions & records</span>
+                    </div>
+                    <div class="quick-create-grid">
+                        <!-- Column 1: Sales -->
+                        <div class="quick-create-col">
+                            <div class="quick-create-col-title">Sales & Billing</div>
+                            <a href="/sales" hx-get="/sales" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon sales-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Record Sale</span>
+                                    <span class="quick-create-item-desc">Customer invoice / receipt</span>
+                                </div>
+                            </a>
+                            <a href="/goals" hx-get="/goals" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon sales-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Earning Goal</span>
+                                    <span class="quick-create-item-desc">Set revenue target</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Column 2: Inventory -->
+                        <div class="quick-create-col">
+                            <div class="quick-create-col-title">Stock & Warehousing</div>
+                            <a href="/inventory/receiving" hx-get="/inventory/receiving" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon receiving-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Receive Stock</span>
+                                    <span class="quick-create-item-desc">Log vendor delivery</span>
+                                </div>
+                            </a>
+                            <a href="/inventory/adjustments" hx-get="/inventory/adjustments" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon adj-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="20" y1="21" x2="20" y2="16"></line></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Adjust Stock</span>
+                                    <span class="quick-create-item-desc">Audit & correct count</span>
+                                </div>
+                            </a>
+                            <a href="/inventory" hx-get="/inventory" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon receiving-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Stock Levels</span>
+                                    <span class="quick-create-item-desc">Real-time balances</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Column 3: Masterlist -->
+                        <div class="quick-create-col">
+                            <div class="quick-create-col-title">Masterlist & Items</div>
+                            <a href="/items" hx-get="/items" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon item-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">New Product</span>
+                                    <span class="quick-create-item-desc">Catalog item & barcode</span>
+                                </div>
+                            </a>
+                            <a href="/settings" hx-get="/settings" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon settings-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Brands & Categories</span>
+                                    <span class="quick-create-item-desc">Master classifications</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Column 4: Tools -->
+                        <div class="quick-create-col">
+                            <div class="quick-create-col-title">Operations & Tools</div>
+                            <a href="/import" hx-get="/import" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon import-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Import Data</span>
+                                    <span class="quick-create-item-desc">Batch Excel & CSV upload</span>
+                                </div>
+                            </a>
+                            <a href="/reminders" hx-get="/reminders" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon reminder-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Add Reminder</span>
+                                    <span class="quick-create-item-desc">Task deadline & alert</span>
+                                </div>
+                            </a>
+                            <a href="/tools/receipt-scanner" hx-get="/tools/receipt-scanner" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                                <div class="quick-create-item-icon scanner-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">Receipt Scanner</span>
+                                    <span class="quick-create-item-desc">OCR invoice extractor</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar Navigation with Crisp Icons and Descriptions -->
+            <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
+                <!-- Dashboard -->
+                <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()" title="Dashboard: Financial overview & analytics">
+                    <div class="nav-item-content">
+                        <div class="nav-icon-wrapper">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="7" height="9"></rect>
+                                <rect x="14" y="3" width="7" height="5"></rect>
+                                <rect x="14" y="12" width="7" height="9"></rect>
+                                <rect x="3" y="16" width="7" height="5"></rect>
+                            </svg>
+                        </div>
+                        <div class="nav-text-group">
+                            <span class="nav-title">Dashboard</span>
+                            <span class="nav-subtitle">Financial overview & analytics</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Sales -->
+                <a href="/sales" hx-get="/sales" onclick="closeMobileSidebarOnNav()" title="Sales: Invoices, orders & revenue">
+                    <div class="nav-item-content">
+                        <div class="nav-icon-wrapper">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                        </div>
+                        <div class="nav-text-group">
+                            <span class="nav-title">Sales</span>
+                            <span class="nav-subtitle">Invoices, orders & revenue</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Earning Goals -->
+                <a href="/goals" hx-get="/goals" onclick="closeMobileSidebarOnNav()" title="Earning Goals: Revenue targets & tracking">
+                    <div class="nav-item-content">
+                        <div class="nav-icon-wrapper">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="6"></circle>
+                                <circle cx="12" cy="12" r="2"></circle>
+                            </svg>
+                        </div>
+                        <div class="nav-text-group">
+                            <span class="nav-title">Earning Goals</span>
+                            <span class="nav-subtitle">Revenue targets & tracking</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Calendar & Reminders -->
+                <a href="/reminders" hx-get="/reminders" onclick="closeMobileSidebarOnNav()" title="Calendar: Schedules & operational tasks">
+                    <div class="nav-item-content">
+                        <div class="nav-icon-wrapper">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="nav-text-group">
+                            <span class="nav-title">Calendar</span>
+                            <span class="nav-subtitle">Schedules & task reminders</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Inventory Dropdown -->
+                <div class="sidebar-dropdown" id="inventory-dropdown">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Inventory: Stock levels, logs & counts">
+                        <div class="nav-item-content">
+                            <div class="nav-icon-wrapper">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                                    <polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon>
+                                    <polygon points="12 22.08 12 12 21 6.92 21 17.08 12 22.08"></polygon>
+                                    <polygon points="12 2 21 6.92 12 12 3 6.92 12 2"></polygon>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                            </div>
+                            <div class="nav-text-group">
+                                <span class="nav-title">Inventory</span>
+                                <span class="nav-subtitle">Stock levels, logs & counts</span>
+                            </div>
+                        </div>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
-                        <a href="/inventory" hx-get="/inventory" onclick="closeMobileSidebarOnNav()" title="Overview">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="7" height="7"></rect>
-                                    <rect x="14" y="3" width="7" height="7"></rect>
-                                    <rect x="14" y="14" width="7" height="7"></rect>
-                                    <rect x="3" y="14" width="7" height="7"></rect>
-                                </svg>
-                                <span class="nav-text">Overview</span>
-                            </span>
+                        <a href="/inventory" hx-get="/inventory" onclick="closeMobileSidebarOnNav()" title="Overview: Real-time stock balances">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <rect x="3" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="14" width="7" height="7"></rect>
+                                        <rect x="3" y="14" width="7" height="7"></rect>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Stock Overview</span>
+                                    <span class="nav-subtitle">Real-time balances & alerts</span>
+                                </div>
+                            </div>
                         </a>
-                        <a href="/inventory/monthly" hx-get="/inventory/monthly" onclick="closeMobileSidebarOnNav()" title="Monthly Inventory">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                                <span class="nav-text">Monthly Inventory</span>
-                            </span>
+                        <a href="/inventory/monthly" hx-get="/inventory/monthly" onclick="closeMobileSidebarOnNav()" title="Monthly: Monthly period reconciliation">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Monthly Inventory</span>
+                                    <span class="nav-subtitle">Monthly period reconciliation</span>
+                                </div>
+                            </div>
                         </a>
-                        <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs" onclick="closeMobileSidebarOnNav()" title="Receiving Logs">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                <span class="nav-text">Receiving Logs</span>
-                            </span>
+                        <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs" onclick="closeMobileSidebarOnNav()" title="Receiving Logs: Inbound supplier shipments">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Receiving Logs</span>
+                                    <span class="nav-subtitle">Inbound supplier shipments</span>
+                                </div>
+                            </div>
                         </a>
-                        <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs" onclick="closeMobileSidebarOnNav()" title="Adjustment Logs">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="4" y1="21" x2="4" y2="14"></line>
-                                    <line x1="4" y1="10" x2="4" y2="3"></line>
-                                    <line x1="12" y1="21" x2="12" y2="12"></line>
-                                    <line x1="12" y1="8" x2="12" y2="3"></line>
-                                    <line x1="20" y1="21" x2="20" y2="16"></line>
-                                    <line x1="20" y1="12" x2="20" y2="3"></line>
-                                    <line x1="1" y1="14" x2="7" y2="14"></line>
-                                    <line x1="9" y1="8" x2="15" y2="8"></line>
-                                    <line x1="17" y1="16" x2="23" y2="16"></line>
-                                </svg>
-                                <span class="nav-text">Adjustment Logs</span>
-                            </span>
+                        <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs" onclick="closeMobileSidebarOnNav()" title="Adjustment Logs: Stock variance audit trail">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <line x1="4" y1="21" x2="4" y2="14"></line>
+                                        <line x1="4" y1="10" x2="4" y2="3"></line>
+                                        <line x1="12" y1="21" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12" y2="3"></line>
+                                        <line x1="20" y1="21" x2="20" y2="16"></line>
+                                        <line x1="20" y1="12" x2="20" y2="3"></line>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Adjustment Logs</span>
+                                    <span class="nav-subtitle">Stock variance audit trail</span>
+                                </div>
+                            </div>
                         </a>
                     </div>
                 </div>
 
+                <!-- Masterlist Dropdown -->
                 <div class="sidebar-dropdown" id="masterlist-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Masterlist">
-                        <span class="nav-icon-text">
-                            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-                                <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
-                            </svg>
-                            <span class="nav-text">Masterlist</span>
-                        </span>
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Masterlist: Catalog, settings & users">
+                        <div class="nav-item-content">
+                            <div class="nav-icon-wrapper">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                    <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
+                                </svg>
+                            </div>
+                            <div class="nav-text-group">
+                                <span class="nav-title">Masterlist</span>
+                                <span class="nav-subtitle">Catalog, settings & users</span>
+                            </div>
+                        </div>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
-                        <a href="/items" hx-get="/items" onclick="closeMobileSidebarOnNav()" title="Items">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                                </svg>
-                                <span class="nav-text">Items</span>
-                            </span>
+                        <a href="/items" hx-get="/items" onclick="closeMobileSidebarOnNav()" title="Items: Product catalog & barcodes">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Product Items</span>
+                                    <span class="nav-subtitle">Catalog codes, prices & UOM</span>
+                                </div>
+                            </div>
                         </a>
-                        <a href="/settings" hx-get="/settings" onclick="closeMobileSidebarOnNav()" title="Settings">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                                </svg>
-                                <span class="nav-text">Settings</span>
-                            </span>
+                        <a href="/settings" hx-get="/settings" onclick="closeMobileSidebarOnNav()" title="Settings: Brands, categories & units">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Settings & Config</span>
+                                    <span class="nav-subtitle">Brands, categories & UOMs</span>
+                                </div>
+                            </div>
                         </a>
-                        <a href="/settings/roles" hx-get="/settings/roles" onclick="closeMobileSidebarOnNav()" title="Roles & Permissions">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                                </svg>
-                                <span class="nav-text">Roles & Permissions</span>
-                            </span>
+                        <a href="/settings/roles" hx-get="/settings/roles" onclick="closeMobileSidebarOnNav()" title="Roles: Access control & permissions">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Roles & Access</span>
+                                    <span class="nav-subtitle">Security profiles & roles</span>
+                                </div>
+                            </div>
                         </a>
-                        <a href="/settings/users" hx-get="/settings/users" onclick="closeMobileSidebarOnNav()" title="User Accounts">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="9" cy="7" r="4"></circle>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                </svg>
-                                <span class="nav-text">User Accounts</span>
-                            </span>
+                        <a href="/settings/users" hx-get="/settings/users" onclick="closeMobileSidebarOnNav()" title="Users: Staff credentials & accounts">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">User Accounts</span>
+                                    <span class="nav-subtitle">System staff credentials</span>
+                                </div>
+                            </div>
                         </a>
-                        <a href="/activity-logs" hx-get="/activity-logs" onclick="closeMobileSidebarOnNav()" title="Activity Logs">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                                </svg>
-                                <span class="nav-text">Activity Logs</span>
-                            </span>
+                        <a href="/activity-logs" hx-get="/activity-logs" onclick="closeMobileSidebarOnNav()" title="Activity Logs: System audit trail">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Activity Logs</span>
+                                    <span class="nav-subtitle">Audit trail of operations</span>
+                                </div>
+                            </div>
                         </a>
                     </div>
                 </div>
 
                 <!-- Tools Dropdown -->
                 <div class="sidebar-dropdown" id="tools-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Tools">
-                        <span class="nav-icon-text">
-                            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
-                            </svg>
-                            <span class="nav-text">Tools</span>
-                        </span>
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Tools: Data migration & utilities">
+                        <div class="nav-item-content">
+                            <div class="nav-icon-wrapper">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                                </svg>
+                            </div>
+                            <div class="nav-text-group">
+                                <span class="nav-title">Tools</span>
+                                <span class="nav-subtitle">Data migration & utilities</span>
+                            </div>
+                        </div>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
-                        <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()" title="Import">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg>
-                                <span class="nav-text">Import</span>
-                            </span>
+                        <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()" title="Import: Batch Excel & CSV upload">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Import Data</span>
+                                    <span class="nav-subtitle">Batch Excel & CSV upload</span>
+                                </div>
+                            </div>
                         </a>
-                        <a href="/tools/receipt-scanner" hx-get="/tools/receipt-scanner" onclick="closeMobileSidebarOnNav()" title="Receipt Scanner">
-                            <span class="nav-icon-text">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4 7V4h3"></path>
-                                    <path d="M20 7V4h-3"></path>
-                                    <path d="M4 17v3h3"></path>
-                                    <path d="M20 17v3h-3"></path>
-                                    <rect x="7" y="7" width="10" height="10" rx="1"></rect>
-                                </svg>
-                                <span class="nav-text">Receipt Scanner</span>
-                            </span>
+                        <a href="/tools/receipt-scanner" hx-get="/tools/receipt-scanner" onclick="closeMobileSidebarOnNav()" title="Receipt Scanner: OCR receipt extractor">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path d="M4 7V4h3"></path>
+                                        <path d="M20 7V4h-3"></path>
+                                        <path d="M4 17v3h3"></path>
+                                        <path d="M20 17v3h-3"></path>
+                                        <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Receipt Scanner</span>
+                                    <span class="nav-subtitle">OCR invoice & receipt capture</span>
+                                </div>
+                            </div>
                         </a>
                     </div>
                 </div>
@@ -277,18 +508,23 @@
 
         <!-- Main Layout Container -->
         <div class="main-layout-container">
-            <!-- Mobile top header -->
+            <!-- Mobile top header with + New button -->
             <header class="top-header">
-                <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleMobileSidebar()"
-                    aria-label="Toggle Sidebar">
-                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleMobileSidebar()"
+                        aria-label="Toggle Sidebar">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="top-header-title">Radline BackOffice</div>
+                </div>
+                <button class="quick-create-btn-mobile" onclick="toggleQuickCreateMenu(event)" aria-label="Create New Record">
+                    + New
                 </button>
-                <div class="top-header-title">Radline BackOffice</div>
             </header>
 
             <main id="main-content">
@@ -395,6 +631,45 @@
                 backdrop.classList.remove("show");
             }
         }
+
+        // Toggle QuickBooks "+ New" Quick Create Menu
+        function toggleQuickCreateMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const menu = document.getElementById("quick-create-menu");
+            const btn = document.getElementById("quick-create-btn");
+            if (!menu) return;
+            const isOpen = menu.classList.toggle("show");
+            if (btn) btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        }
+
+        function closeQuickCreateMenu() {
+            const menu = document.getElementById("quick-create-menu");
+            const btn = document.getElementById("quick-create-btn");
+            if (menu) menu.classList.remove("show");
+            if (btn) btn.setAttribute("aria-expanded", "false");
+            closeMobileSidebarOnNav();
+        }
+
+        // Outside click and ESC handler for Quick Create Menu
+        document.addEventListener("click", function (evt) {
+            const menu = document.getElementById("quick-create-menu");
+            const btn = document.getElementById("quick-create-btn");
+            const mobileBtn = evt.target.closest(".quick-create-btn-mobile");
+            if (menu && menu.classList.contains("show")) {
+                if (!menu.contains(evt.target) && !btn?.contains(evt.target) && !mobileBtn) {
+                    closeQuickCreateMenu();
+                }
+            }
+        });
+
+        document.addEventListener("keydown", function (evt) {
+            if (evt.key === "Escape") {
+                closeQuickCreateMenu();
+            }
+        });
 
         document.addEventListener("DOMContentLoaded", updateActiveNavLink);
         document.body.addEventListener("htmx:afterOnLoad", updateActiveNavLink);

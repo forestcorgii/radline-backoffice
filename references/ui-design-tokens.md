@@ -290,3 +290,13 @@ See [[htmx-patterns]] for the toast protocol.
 - **Unified Single-Line Filter Toolbars**: Consolidated stacked filter rows (e.g. date row + search row) into a cohesive single-line toolbar (`.search-filter-bar`) by removing tall `<label>` elements in favor of clean placeholders and inline `title` attributes. Moved view customize triggers and row edit toggles into the card header bar.
 - **Minimalist Metric Cards**: Replaced thick colored left border stripes and decorative emojis (`📈`, `📉`, `💰`) with clean Linear/shadcn-style cards: uppercase muted labels (`0.6875rem`), crisp stat numbers (`1.35rem`), and subtle status dots (`● On Target`).
 - **Subtle Status & Action Badges**: Standardized badges to muted pastel/neutral pills (`0.6875rem` font, `padding: 0.08rem 0.45rem`). Table row delete actions now use `.btn-table-action.btn-delete`, remaining subtle neutral gray until hovered to prevent visual noise across rows.
+
+### Context: QuickBooks Visual Makeover (Purple-ish Blue & White Theme, + New Action, Nav Icons & Subtitles, Workflow Hub)
+**Problem**: The system required a visual makeover adopting QuickBooks Online patterns, featuring a purple-ish blue and white color scheme, a signature "+ New" Quick Action button, and icons with descriptive helper text across navigation and dashboard.
+**Enforced Solution**:
+- **Color Palette & Theme Tokens**: Configured royal indigo / purple-ish blue (`--primary: 243 75% 59%` / `#4f46e5`, `--primary-hover: 244 75% 51%` / `#4338ca`, `--primary-tint: 243 100% 96%` / `#eef2ff`), crisp white surfaces (`#ffffff`), and a clean, cool-tinted background (`--bg-color: hsl(232 30% 98%)` / `#f8f9fd`).
+- **Signature "+ New" Quick Action Button**: Added a prominent pill button (`.quick-create-btn`) at the top of the sidebar and a compact mobile button in `.top-header`. Toggles a floating 4-column QuickBooks-style popover matrix (`#quick-create-menu`) with categorized shortcuts for Sales, Inventory, Masterlist, and Tools, each with color-accented icons and descriptions.
+- **Rich Sidebar Navigation with Icons & Subtitles**: Expanded sidebar width to 254px to accommodate two-line navigation items (`.nav-item-content` containing `.nav-icon-wrapper`, `.nav-title`, and `.nav-subtitle`). Collapses down cleanly to 68px icon-only mode when toggled.
+- **QuickBooks Business Flow Hub & KPI Cards**:
+  - Implemented `.qb-workflow-ribbon` with an interactive 4-step cycle: Inbound Receiving ➔ Track Inventory ➔ Record Sales ➔ Financial Analytics.
+  - Revamped Financial Overview into 4 QuickBooks KPI cards (`.qb-kpi-card`) highlighting Money In (Revenue), Money Out (COGS), Net Gross Profit, and Profit Margin with category labels, icon badges, formatted figures, and actionable footer links.
