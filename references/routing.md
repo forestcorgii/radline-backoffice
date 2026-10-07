@@ -166,3 +166,17 @@ Providing dynamic financial and operational management on the dashboard while su
 - Earning Goals (`/goals`): `GET /goals`, `POST /goals/add`, `DELETE /goals/delete/{id}` calculates dynamic variance and progress percentages against posted sales.
 - Reminders & Operational Calendar (`/calendar` and `/reminders`): `GET /calendar`, `GET /reminders`, `POST /reminders/add`, `POST /calendar/add`, `POST /reminders/toggle/{id}`, `POST /calendar/toggle/{id}`, `DELETE /reminders/delete/{id}`, `DELETE /calendar/delete/{id}` organizes monthly calendar grid and operational agenda. Aliasing `/calendar` ensures consistent navigation from sidebar, quick-actions, and direct URL entry without fallback to the dashboard.
 
+---
+
+### Context: Calendar Production 500 Error Resolution (PostgreSQL TIMESTAMPTZ & Schema Migration)
+
+**Problem:**
+Accessing `/calendar` in production (running PostgreSQL with `pgx`) returned HTTP 500. Two interrelated causes:
+1. `RemindersHandler` passed string-formatted dates (`"2006-01-02 00:00:00"`) into `WHERE due_date >= ? AND due_date <= ?`. In PostgreSQL, `due_date` is `TIMESTAMPTZ`. Comparing `timestamptz >= text` fails with `operator does not exist: timestamp with time zone >= text (SQLSTATE 42883)`.
+2. Direct database failure in `RemindersHandler` called `http.Error(w, err.Error(), http.StatusInternalServerError)` without resilience or automated table check.
+
+**Enforced Solution:**
+- **Typed Bounds**: Pass `time.Time` structs (`firstOfMonth`, `endOfMonth`) into queries rather than string formatting. `pgx` binds them as native `TIMESTAMPTZ` in PostgreSQL, while `modernc.org/sqlite` handles them seamlessly in SQLite.
+- **Ensure Table Invariant**: Added `db.EnsureRemindersTable()` executing `CREATE TABLE IF NOT EXISTS reminders` and indexes, called both on database initialization (`db.InitDB`) and as a proactive check in `RemindersHandler`.
+- **Fault-Tolerant Rendering**: Log warnings instead of returning raw 500 errors, falling back to an empty slice so the calendar page always renders successfully.
+
