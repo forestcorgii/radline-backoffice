@@ -285,6 +285,7 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	app.LogActivity(r, "CREATE_SALE", "Sale", docNumber, "Logged "+docType+" #"+docNumber+" ("+customerName+") with "+strconv.Itoa(len(saleItems))+" items")
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Sales logged successfully!"}, "sales-added": ""}`)
 	w.WriteHeader(http.StatusOK)
 }
@@ -326,6 +327,7 @@ func (app *App) DeleteSalesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	app.LogActivity(r, "DELETE_SALE", "Sale", idStr, "Deleted sales record ID "+idStr)
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Sales record deleted successfully!"}}`)
 	w.WriteHeader(http.StatusOK)
 }

@@ -253,10 +253,15 @@ This triggers HTMX to navigate to the logs page, similar to `hx-push-url` but tr
 **Enforced Solution**:
 - **Document-Level Delegation**: Register a single document-level `change` and `input` listener to handle interactions. This survives page navigation swaps and prevents double-binding issues.
 - **Trigger Flag Prevention**: Use a global boolean flag (`isSettingDatePreset`) to guard date inputs. When setting preset values programmatically, set this flag to `true`, update `start_date` and `end_date` input values, dispatch a single `change` event on the `end_date` input (which serializes the form and triggers HTMX once), then reset the flag to `false`.
-- **Manual Override Reset**: Inside the document-level listeners, if a `change` or `input` event is detected on the date inputs while `isSettingDatePreset` is `false` (meaning the user manually edited or picked a date), set the Period dropdown's value to `"custom"`.
+### Context: HTMX Navigation Targets Outside Sidebar Navigation
+**Problem**: In `base.html`, `hx-target="#main-content"` and `hx-push-url="true"` are defined on `<nav class="sidebar-nav">`. Elements rendered inside `<main id="main-content">` (such as dashboard cards, widgets, or back buttons) do **not** inherit this target. Without explicit attributes, clicking `hx-get` or `hx-post` links/buttons defaults the swap target to the element itself (`this`), dumping full sub-page HTML inside tiny card links or buttons. Additionally, using `HX-Redirect` forces full-page reloads and clears pending toasts.
+**Enforced Solution**:
+- **Explicit Content Targets**: Any link or button inside page templates navigating to another view must explicitly specify `hx-target="#main-content" hx-push-url="true"` (e.g., `Manage Goals →`, `Full Calendar →`, `← Dashboard`).
+- **Seamless Redirects with HX-Location**: Handlers performing redirects after form submissions (like `ToggleReminderHandler` or `DeleteGoalHandler`) should inspect `r.Header.Get("HX-Current-URL")` or target `#main-content`, and emit `HX-Location: {"path": returnUrl, "target": "#main-content"}` rather than hard `HX-Redirect`, preserving toast triggers and maintaining fluid SPA navigation.
 
 ## Related
 - [[handlers-overview]] — `Render` and `RenderPage` methods
 - [[templates-overview]] — Template structure
 - [[sidebar-navigation]] — Navigation setup
 - [[ui-design-tokens]] — CSS classes referenced in templates
+

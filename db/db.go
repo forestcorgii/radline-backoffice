@@ -2,8 +2,10 @@ package db
 
 import (
 	"log"
+	"time"
 
 	"github.com/jmoiron/sqlx"
+	"golang.org/x/crypto/bcrypt"
 	_ "modernc.org/sqlite"
 )
 
@@ -242,6 +244,82 @@ func createSchema() {
 	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_item_id ON inventory_adjustments(item_id);
 	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_date ON inventory_adjustments(date);
 	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_adj_id ON inventory_adjustments(adjustment_id);
+
+	CREATE TABLE IF NOT EXISTS roles (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT UNIQUE NOT NULL,
+		description TEXT NOT NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS role_permissions (
+		role_id INTEGER NOT NULL,
+		permission_key TEXT NOT NULL,
+		PRIMARY KEY(role_id, permission_key),
+		FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
+	);
+
+	CREATE TABLE IF NOT EXISTS users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		username TEXT UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL,
+		full_name TEXT NOT NULL,
+		role_id INTEGER NOT NULL,
+		is_active INTEGER NOT NULL DEFAULT 1,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY(role_id) REFERENCES roles(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS user_sessions (
+		id TEXT PRIMARY KEY,
+		user_id INTEGER NOT NULL,
+		expires_at DATETIME NOT NULL,
+		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE TABLE IF NOT EXISTS activity_logs (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER,
+		username TEXT NOT NULL,
+		action TEXT NOT NULL,
+		entity_type TEXT NOT NULL,
+		entity_id TEXT NOT NULL DEFAULT '',
+		details TEXT NOT NULL DEFAULT '',
+		ip_address TEXT NOT NULL DEFAULT '',
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+	CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
+	CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+	CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at);
+	CREATE INDEX IF NOT EXISTS idx_activity_logs_username ON activity_logs(username);
+	CREATE INDEX IF NOT EXISTS idx_activity_logs_entity_type ON activity_logs(entity_type);
+
+	CREATE TABLE IF NOT EXISTS earning_goals (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		title TEXT NOT NULL,
+		period_type TEXT NOT NULL,
+		target_period TEXT NOT NULL,
+		target_revenue REAL NOT NULL,
+		target_profit REAL NOT NULL,
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS reminders (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		title TEXT NOT NULL,
+		details TEXT NOT NULL DEFAULT '',
+		due_date DATETIME NOT NULL,
+		priority TEXT NOT NULL DEFAULT 'Medium',
+		category TEXT NOT NULL DEFAULT 'General',
+		status TEXT NOT NULL DEFAULT 'Pending',
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
+	CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
+	CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
 	`
 	_, err := DB.Exec(schema)
 	if err != nil {
@@ -260,6 +338,119 @@ func createSchema() {
 			log.Printf("Failed to seed default UOMs: %v", errSeed)
 		}
 	}
+
+	seedAuthDefaults()
+	seedGoalsAndRemindersDefaults()
+}
+
+func seedGoalsAndRemindersDefaults() {
+	var goalCount int
+	_ = DB.Get(&goalCount, "SELECT COUNT(*) FROM earning_goals")
+	if goalCount == 0 {
+		now := time.Now()
+		curMonth := now.Format("2006-01")
+		curYear := now.Format("2006")
+		_, _ = DB.Exec(`
+			INSERT INTO earning_goals (title, period_type, target_period, target_revenue, target_profit)
+			VALUES 
+			(?, 'Monthly', ?, 500000.0, 140000.0),
+			(?, 'Yearly', ?, 4500000.0, 1200000.0)
+		`, "Monthly Revenue & Profit Sprint", curMonth, "Annual Milestone Growth", curYear)
+	}
+
+	var remCount int
+	_ = DB.Get(&remCount, "SELECT COUNT(*) FROM reminders")
+	if remCount == 0 {
+		now := time.Now()
+		d1 := now.AddDate(0, 0, 2)
+		d2 := now.AddDate(0, 0, 5)
+		d3 := now.AddDate(0, 0, 7)
+		d4 := now.AddDate(0, 0, 10)
+		_, _ = DB.Exec(`
+			INSERT INTO reminders (title, details, due_date, priority, category, status)
+			VALUES
+			('Monthly Stock Inventory Reconciliation', 'Audit physical count against warehouse records', ?, 'High', 'Stock Check', 'Pending'),
+			('Supplier Delivery Verification', 'Cross-check PL documents with incoming hardware crates', ?, 'Medium', 'Delivery', 'Pending'),
+			('BIR 2307 Withholding Tax Filing', 'Prepare tax certificates for accredited vendors', ?, 'High', 'Payment', 'Pending'),
+			('Hardware Fasteners Restock Review', 'Evaluate screw and bolt stock levels against low-stock threshold', ?, 'Low', 'General', 'Pending')
+		`, d1, d2, d3, d4)
+	}
+}
+
+func seedAuthDefaults() {
+	var roleCount int
+	err := DB.Get(&roleCount, "SELECT COUNT(*) FROM roles")
+	if err != nil || roleCount > 0 {
+		return
+	}
+
+	// Insert Admin role
+	resAdmin, err := DB.Exec("INSERT INTO roles (name, description) VALUES ('Admin', 'Full administrative access across all system modules')")
+	if err != nil {
+		log.Printf("Failed to seed Admin role: %v", err)
+		return
+	}
+	adminRoleID, _ := resAdmin.LastInsertId()
+
+	// Insert Manager role
+	resManager, err := DB.Exec("INSERT INTO roles (name, description) VALUES ('Manager', 'Access to sales, inventory operations, and viewing logs')")
+	var managerRoleID int64
+	if err == nil {
+		managerRoleID, _ = resManager.LastInsertId()
+	}
+
+	// Insert Staff role
+	resStaff, err := DB.Exec("INSERT INTO roles (name, description) VALUES ('Staff', 'Daily sales entry and inventory view access')")
+	var staffRoleID int64
+	if err == nil {
+		staffRoleID, _ = resStaff.LastInsertId()
+	}
+
+	allPerms := []string{
+		"dashboard:view", "sales:view", "sales:create", "sales:edit", "sales:delete",
+		"inventory:view", "inventory:receive", "inventory:adjust",
+		"items:view", "items:edit", "settings:view", "settings:edit",
+		"settings:roles", "settings:users", "logs:view", "tools:import", "tools:scanner",
+	}
+
+	// Assign all perms to Admin
+	for _, p := range allPerms {
+		_, _ = DB.Exec("INSERT OR IGNORE INTO role_permissions (role_id, permission_key) VALUES (?, ?)", adminRoleID, p)
+	}
+
+	// Assign Manager perms
+	managerPerms := []string{
+		"dashboard:view", "sales:view", "sales:create", "sales:edit",
+		"inventory:view", "inventory:receive", "inventory:adjust",
+		"items:view", "items:edit", "settings:view", "logs:view", "tools:scanner",
+	}
+	for _, p := range managerPerms {
+		_, _ = DB.Exec("INSERT OR IGNORE INTO role_permissions (role_id, permission_key) VALUES (?, ?)", managerRoleID, p)
+	}
+
+	// Assign Staff perms
+	staffPerms := []string{
+		"dashboard:view", "sales:view", "sales:create", "inventory:view", "items:view",
+	}
+	for _, p := range staffPerms {
+		_, _ = DB.Exec("INSERT OR IGNORE INTO role_permissions (role_id, permission_key) VALUES (?, ?)", staffRoleID, p)
+	}
+
+	// Seed default users: admin / admin123 and staff / staff123
+	// bcrypt hashes:
+	// admin123 -> $2a$10$wE1Uu2HqU6K6w1mKz9eI2eY3jDqM9wE4.w8aG1YvDq1d5.p1J4mK. (will generate directly via bcrypt to ensure validity)
+	bytesAdmin, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	bytesStaff, _ := bcrypt.GenerateFromPassword([]byte("staff123"), bcrypt.DefaultCost)
+
+	_, _ = DB.Exec(`
+		INSERT INTO users (username, password_hash, full_name, role_id, is_active)
+		VALUES (?, ?, 'System Administrator', ?, 1)
+	`, "admin", string(bytesAdmin), adminRoleID)
+
+	_, _ = DB.Exec(`
+		INSERT INTO users (username, password_hash, full_name, role_id, is_active)
+		VALUES (?, ?, 'Staff Operator', ?, 1)
+	`, "staff", string(bytesStaff), staffRoleID)
 }
 
 // GetSystemSetting retrieves a configuration value by key from system_settings

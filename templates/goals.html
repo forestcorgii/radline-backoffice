@@ -1,0 +1,158 @@
+{{ define "goals.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="header-bar mb-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">Earning Goals & Performance Targets</h2>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Set revenue and net profit objectives and track actual realization</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="/" hx-get="/" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="font-size: 0.75rem;">← Dashboard</a>
+        <button onclick="document.getElementById('add-goal-modal').style.display='flex'" class="btn" style="font-size: 0.75rem;">+ Set New Goal</button>
+    </div>
+</div>
+
+<div class="grid grid-cols-1" style="gap: 1.25rem;">
+    {{ if eq (len .Goals) 0 }}
+    <div class="card" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <p style="font-size: 0.875rem; margin-bottom: 0.75rem;">No earning goals set yet.</p>
+        <button onclick="document.getElementById('add-goal-modal').style.display='flex'" class="btn">
+            Create Your First Goal
+        </button>
+    </div>
+    {{ else }}
+    {{ range .Goals }}
+    <div class="card" style="padding: 1.25rem; background: #ffffff; border: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-main);">{{ .Title }}</h3>
+                    <span class="badge badge-secondary" style="font-weight: 600;">
+                        {{ .PeriodType }}: {{ .TargetPeriod }}
+                    </span>
+                    <span class="badge {{ if eq .Status "Exceeded" }}badge-success{{ else if eq .Status "Behind" }}badge-danger{{ else }}badge-primary{{ end }}">
+                        {{ .Status }}
+                    </span>
+                </div>
+                <p style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.25rem;">Configured on {{ .CreatedAt.Format "January 02, 2006" }}</p>
+            </div>
+            <div>
+                <button hx-delete="/goals/delete/{{ .ID }}" hx-target="#main-content" hx-confirm="Are you sure you want to remove goal '{{ .Title }}'?" class="btn btn-danger btn-sm" style="font-size: 0.6875rem;">
+                    Remove Goal
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2" style="gap: 1.5rem;">
+            <!-- Revenue Progress -->
+            <div style="background: var(--bg-color); padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-main);">Revenue Target</span>
+                    <span style="font-size: 1rem; font-weight: 700; color: var(--text-main);">{{ printf "%.1f" .RevenueProgress }}%</span>
+                </div>
+                <div style="height: 8px; background: hsl(var(--secondary)); border-radius: 4px; overflow: hidden; margin-bottom: 0.75rem;">
+                    <div style="height: 100%; width: {{ if gt .RevenueProgress 100.0 }}100{{ else if lt .RevenueProgress 0.0 }}0{{ else }}{{ .RevenueProgress }}{{ end }}%; background: hsl(var(--primary)); border-radius: 4px;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                    <span>Actual: <strong style="color: var(--text-main);">₱{{ printf "%.2f" .ActualRevenue }}</strong></span>
+                    <span>Target: <strong>₱{{ printf "%.2f" .TargetRevenue }}</strong></span>
+                </div>
+                <div style="margin-top: 0.35rem; font-size: 0.6875rem; color: var(--text-muted);">
+                    {{ if le .RevenueVariance 0.0 }}
+                    <span style="color: hsl(142 72% 35%); font-weight: 600;">Surplus: +₱{{ printf "%.2f" (mul .RevenueVariance -1.0) }}</span>
+                    {{ else }}
+                    <span>Remaining to reach goal: ₱{{ printf "%.2f" .RevenueVariance }}</span>
+                    {{ end }}
+                </div>
+            </div>
+
+            <!-- Profit Progress -->
+            <div style="background: var(--bg-color); padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-main);">Gross Profit Target</span>
+                    <span style="font-size: 1rem; font-weight: 700; color: hsl(142 72% 35%);">{{ printf "%.1f" .ProfitProgress }}%</span>
+                </div>
+                <div style="height: 8px; background: hsl(var(--secondary)); border-radius: 4px; overflow: hidden; margin-bottom: 0.75rem;">
+                    <div style="height: 100%; width: {{ if gt .ProfitProgress 100.0 }}100{{ else if lt .ProfitProgress 0.0 }}0{{ else }}{{ .ProfitProgress }}{{ end }}%; background: hsl(142 72% 35%); border-radius: 4px;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                    <span>Actual: <strong style="color: hsl(142 72% 35%);">₱{{ printf "%.2f" .ActualProfit }}</strong></span>
+                    <span>Target: <strong>₱{{ printf "%.2f" .TargetProfit }}</strong></span>
+                </div>
+                <div style="margin-top: 0.35rem; font-size: 0.6875rem; color: var(--text-muted);">
+                    {{ if le .ProfitVariance 0.0 }}
+                    <span style="color: hsl(142 72% 35%); font-weight: 600;">Surplus: +₱{{ printf "%.2f" (mul .ProfitVariance -1.0) }}</span>
+                    {{ else }}
+                    <span>Remaining to reach goal: ₱{{ printf "%.2f" .ProfitVariance }}</span>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+    {{ end }}
+</div>
+
+<!-- Modal: Add Earning Goal -->
+<div id="add-goal-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 0.5rem; max-width: 500px; width: 100%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">Set New Earning Goal</h3>
+            <button onclick="document.getElementById('add-goal-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form hx-post="/goals/add">
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Goal Title</label>
+                <input type="text" name="title" required placeholder="e.g. October 2026 Sales Target" class="form-input" style="width: 100%;">
+            </div>
+
+            <div class="grid grid-cols-2 mb-4" style="gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Period Cadence</label>
+                    <select name="period_type" id="goal-period-type" class="form-input" style="width: 100%;" onchange="updatePeriodPlaceholder()">
+                        <option value="Monthly">Monthly</option>
+                        <option value="Yearly">Yearly</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Target Period</label>
+                    <input type="text" name="target_period" id="goal-target-period" required value="{{ .CurrentMonth }}" placeholder="YYYY-MM (e.g. 2026-10)" class="form-input" style="width: 100%;">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 mb-4" style="gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Revenue Target (₱)</label>
+                    <input type="number" step="0.01" name="target_revenue" required placeholder="50000.00" class="form-input" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Gross Profit Target (₱)</label>
+                    <input type="number" step="0.01" name="target_profit" required placeholder="15000.00" class="form-input" style="width: 100%;">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button type="button" onclick="document.getElementById('add-goal-modal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn">Set Goal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updatePeriodPlaceholder() {
+        const type = document.getElementById('goal-period-type').value;
+        const input = document.getElementById('goal-target-period');
+        if (type === 'Yearly') {
+            input.value = '{{ .CurrentYear }}';
+            input.placeholder = 'YYYY (e.g. 2026)';
+        } else {
+            input.value = '{{ .CurrentMonth }}';
+            input.placeholder = 'YYYY-MM (e.g. 2026-10)';
+        }
+    }
+</script>
+{{ end }}

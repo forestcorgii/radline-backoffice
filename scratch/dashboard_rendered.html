@@ -1,0 +1,1545 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BackOffice System</title>
+    
+    <script src="/static/htmx.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/index.css?v=4.4">
+</head>
+
+<body>
+    <div class="app-layout">
+        
+        <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleMobileSidebar()"></div>
+
+        
+        
+        <aside id="sidebar" class="sidebar">
+            <script>
+                if (localStorage.getItem("sidebar-collapsed") === "true") {
+                    document.getElementById("sidebar").classList.add("collapsed");
+                }
+            </script>
+            <div class="sidebar-brand">
+                <h1 class="brand-full">Radline BackOffice</h1>
+                <h1 class="brand-mini">R</h1>
+                <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse Sidebar" title="Collapse Sidebar">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                        <path d="M16 15l-3-3 3-3"></path>
+                    </svg>
+                </button>
+                <button class="sidebar-close-btn" onclick="toggleMobileSidebar()" aria-label="Close Sidebar">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
+                <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()" title="Dashboard">
+                    <span class="nav-icon-text">
+                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="9"></rect>
+                            <rect x="14" y="3" width="7" height="5"></rect>
+                            <rect x="14" y="12" width="7" height="9"></rect>
+                            <rect x="3" y="16" width="7" height="5"></rect>
+                        </svg>
+                        <span class="nav-text">Dashboard</span>
+                    </span>
+                </a>
+
+                <a href="/sales" hx-get="/sales" onclick="closeMobileSidebarOnNav()" title="Sales">
+                    <span class="nav-icon-text">
+                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        <span class="nav-text">Sales</span>
+                    </span>
+                </a>
+
+                <a href="/goals" hx-get="/goals" onclick="closeMobileSidebarOnNav()" title="Earning Goals">
+                    <span class="nav-icon-text">
+                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="6"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                        <span class="nav-text">Earning Goals</span>
+                    </span>
+                </a>
+
+                <a href="/reminders" hx-get="/reminders" onclick="closeMobileSidebarOnNav()" title="Calendar & Reminders">
+                    <span class="nav-icon-text">
+                        <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span class="nav-text">Calendar</span>
+                    </span>
+                </a>
+
+                <div class="sidebar-dropdown" id="inventory-dropdown">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Inventory">
+                        <span class="nav-icon-text">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                                <polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon>
+                                <polygon points="12 22.08 12 12 21 6.92 21 17.08 12 22.08"></polygon>
+                                <polygon points="12 2 21 6.92 12 12 3 6.92 12 2"></polygon>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            <span class="nav-text">Inventory</span>
+                        </span>
+                        <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="/inventory" hx-get="/inventory" onclick="closeMobileSidebarOnNav()" title="Overview">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                <span class="nav-text">Overview</span>
+                            </span>
+                        </a>
+                        <a href="/inventory/monthly" hx-get="/inventory/monthly" onclick="closeMobileSidebarOnNav()" title="Monthly Inventory">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                <span class="nav-text">Monthly Inventory</span>
+                            </span>
+                        </a>
+                        <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs" onclick="closeMobileSidebarOnNav()" title="Receiving Logs">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span class="nav-text">Receiving Logs</span>
+                            </span>
+                        </a>
+                        <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs" onclick="closeMobileSidebarOnNav()" title="Adjustment Logs">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="4" y1="21" x2="4" y2="14"></line>
+                                    <line x1="4" y1="10" x2="4" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12" y2="3"></line>
+                                    <line x1="20" y1="21" x2="20" y2="16"></line>
+                                    <line x1="20" y1="12" x2="20" y2="3"></line>
+                                    <line x1="1" y1="14" x2="7" y2="14"></line>
+                                    <line x1="9" y1="8" x2="15" y2="8"></line>
+                                    <line x1="17" y1="16" x2="23" y2="16"></line>
+                                </svg>
+                                <span class="nav-text">Adjustment Logs</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sidebar-dropdown" id="masterlist-dropdown">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Masterlist">
+                        <span class="nav-icon-text">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                                <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
+                            </svg>
+                            <span class="nav-text">Masterlist</span>
+                        </span>
+                        <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="/items" hx-get="/items" onclick="closeMobileSidebarOnNav()" title="Items">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                                <span class="nav-text">Items</span>
+                            </span>
+                        </a>
+                        <a href="/settings" hx-get="/settings" onclick="closeMobileSidebarOnNav()" title="Settings">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                                <span class="nav-text">Settings</span>
+                            </span>
+                        </a>
+                        <a href="/settings/roles" hx-get="/settings/roles" onclick="closeMobileSidebarOnNav()" title="Roles & Permissions">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                                <span class="nav-text">Roles & Permissions</span>
+                            </span>
+                        </a>
+                        <a href="/settings/users" hx-get="/settings/users" onclick="closeMobileSidebarOnNav()" title="User Accounts">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                <span class="nav-text">User Accounts</span>
+                            </span>
+                        </a>
+                        <a href="/activity-logs" hx-get="/activity-logs" onclick="closeMobileSidebarOnNav()" title="Activity Logs">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                <span class="nav-text">Activity Logs</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+
+                
+                <div class="sidebar-dropdown" id="tools-dropdown">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Tools">
+                        <span class="nav-icon-text">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                            </svg>
+                            <span class="nav-text">Tools</span>
+                        </span>
+                        <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()" title="Import">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span class="nav-text">Import</span>
+                            </span>
+                        </a>
+                        <a href="/tools/receipt-scanner" hx-get="/tools/receipt-scanner" onclick="closeMobileSidebarOnNav()" title="Receipt Scanner">
+                            <span class="nav-icon-text">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 7V4h3"></path>
+                                    <path d="M20 7V4h-3"></path>
+                                    <path d="M4 17v3h3"></path>
+                                    <path d="M20 17v3h-3"></path>
+                                    <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+                                </svg>
+                                <span class="nav-text">Receipt Scanner</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+
+            </nav>
+            
+            <div id="user-chip" hx-get="/auth/user-chip" hx-trigger="load" hx-swap="outerHTML"></div>
+        </aside>
+
+        
+        <div class="main-layout-container">
+            
+            <header class="top-header">
+                <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleMobileSidebar()"
+                    aria-label="Toggle Sidebar">
+                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="top-header-title">Radline BackOffice</div>
+            </header>
+
+            <main id="main-content">
+                
+
+<div class="header-bar mb-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text-main);">Good evening, System Administrator!</h2>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Tuesday, October 06, 2026 &bull; Radline Business Intelligence</span>
+    </div>
+    
+    
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="/sales" hx-get="/sales" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">+ Record Sale</a>
+        <a href="/goals" hx-get="/goals" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">🎯 Earning Goals</a>
+        <a href="/reminders" hx-get="/reminders" hx-target="#main-content" hx-push-url="true" class="btn btn-sm" style="font-size: 0.75rem;">📅 Reminders Calendar</a>
+    </div>
+</div>
+
+
+<div class="grid grid-cols-4 mb-4">
+    <div class="card">
+        <div style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Total Sales</div>
+        <div style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); font-variant-numeric: tabular-nums;">₱735823.00</div>
+        <div style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.25rem;">Recorded sales revenue</div>
+    </div>
+    
+    <div class="card">
+        <div style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Total Costs</div>
+        <div style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); font-variant-numeric: tabular-nums;">₱523376.18</div>
+        <div style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.25rem;">Cost of goods sold</div>
+    </div>
+
+    <div class="card">
+        <div style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Gross Profit</div>
+        <div style="font-size: 1.35rem; font-weight: 700; color: hsl(142 72% 29%); font-variant-numeric: tabular-nums;">₱212446.82</div>
+        <div style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.25rem;">Net profit before expenses</div>
+    </div>
+
+    <div class="card">
+        <div style="font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">Profit Margin</div>
+        <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+            <div style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); font-variant-numeric: tabular-nums;">28.9%</div>
+            
+            <span class="badge badge-success">● On Target</span>
+            
+        </div>
+        <div style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 0.25rem;">Target threshold: 25.0%</div>
+    </div>
+</div>
+
+
+<div class="card mb-4" style="padding: 0.75rem 1rem; background: #ffffff; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-main);">Trend Timeframe:</span>
+        <span style="font-size: 0.6875rem; color: var(--text-muted);">Filter dynamic charts by custom date interval</span>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <input type="date" name="start_date" value="2026-05-05"
+               class="form-input" style="font-size: 0.75rem; padding: 0.35rem 0.5rem;"
+               hx-get="/?fragment=trends"
+               hx-trigger="change"
+               hx-target="#dashboard-trends-container"
+               hx-include="[name='end_date']">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">to</span>
+        <input type="date" name="end_date" value="2026-10-06"
+               class="form-input" style="font-size: 0.75rem; padding: 0.35rem 0.5rem;"
+               hx-get="/?fragment=trends"
+               hx-trigger="change"
+               hx-target="#dashboard-trends-container"
+               hx-include="[name='start_date']">
+        
+        <button hx-get="/?fragment=trends&start_date=2026-05-05&end_date=2026-10-06"
+                hx-target="#dashboard-trends-container"
+                class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
+            Apply Filter
+        </button>
+    </div>
+</div>
+
+
+<div id="dashboard-trends-container" class="mb-4">
+    
+<div class="grid grid-cols-2" style="gap: 1.25rem;">
+    
+    <div class="card" style="padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div>
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Sales & Profit Trend</div>
+                <div style="font-size: 0.6875rem; color: var(--text-muted);">Monthly revenue vs gross profit margins</div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; font-size: 0.6875rem; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                    <div style="width: 10px; height: 10px; background-color: hsl(var(--primary)); border-radius: 2px;"></div>
+                    <span class="text-muted">Total Sales</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                    <div style="width: 10px; height: 10px; background-color: hsl(142 72% 35%); border-radius: 2px;"></div>
+                    <span class="text-muted">Gross Profit</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="width: 100%; display: flex; justify-content: center;">
+            <svg viewBox="0 0 520 210" style="width: 100%; height: auto; max-height: 210px;">
+                
+                <line x1="30" y1="10" x2="500" y2="10" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+                <line x1="30" y1="65" x2="500" y2="65" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+                <line x1="30" y1="120" x2="500" y2="120" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+                <line x1="30" y1="175" x2="500" y2="175" stroke="hsl(var(--border) / 0.8)" />
+                
+                
+                
+                <rect x="30" y="32.17391304347825" width="15" height="147.82608695652175" rx="2" fill="hsl(var(--primary))" style="transition: all 0.2s ease; opacity: 0.88;">
+                    <title>May Sales: ₱408425.00</title>
+                </rect>
+                
+                
+                <rect x="49" y="138.5718644527892" width="15" height="41.42813554721079" rx="2" fill="hsl(142 72% 35%)" style="transition: all 0.2s ease; opacity: 0.88;">
+                    <title>May Profit: ₱114460.76</title>
+                </rect>
+                
+                
+                <text x="46" y="196" text-anchor="middle" class="text-muted" style="font-size: 0.6875rem; font-weight: 500;">May</text>
+                
+                
+                <rect x="250" y="61.50097271863547" width="15" height="118.49902728136453" rx="2" fill="hsl(var(--primary))" style="transition: all 0.2s ease; opacity: 0.88;">
+                    <title>Jun Sales: ₱327398.00</title>
+                </rect>
+                
+                
+                <rect x="269" y="144.53474731936842" width="15" height="35.46525268063159" rx="2" fill="hsl(142 72% 35%)" style="transition: all 0.2s ease; opacity: 0.88;">
+                    <title>Jun Profit: ₱97986.06</title>
+                </rect>
+                
+                
+                <text x="266" y="196" text-anchor="middle" class="text-muted" style="font-size: 0.6875rem; font-weight: 500;">Jun</text>
+                
+            </svg>
+        </div>
+    </div>
+
+    
+    <div class="card" style="padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div>
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Sales & Inventory Trend</div>
+                <div style="font-size: 0.6875rem; color: var(--text-muted);">Comparing sales revenue vs inventory intake</div>
+            </div>
+            <div style="display: flex; gap: 0.75rem; font-size: 0.6875rem; font-weight: 500;">
+                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                    <div style="width: 10px; height: 10px; background-color: hsl(var(--primary)); border-radius: 2px;"></div>
+                    <span class="text-muted">Sales</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                    <div style="width: 10px; height: 10px; background-color: hsl(280 65% 55%); border-radius: 2px;"></div>
+                    <span class="text-muted">Inventory Intake</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="width: 100%; display: flex; justify-content: center;">
+            <svg viewBox="0 0 520 210" style="width: 100%; height: auto; max-height: 210px;">
+                
+                <line x1="30" y1="10" x2="500" y2="10" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+                <line x1="30" y1="65" x2="500" y2="65" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+                <line x1="30" y1="120" x2="500" y2="120" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+                <line x1="30" y1="175" x2="500" y2="175" stroke="hsl(var(--border) / 0.8)" />
+                
+                
+                
+                <rect x="30" y="32.17391304347825" width="15" height="147.82608695652175" rx="2" fill="hsl(var(--primary))" style="transition: all 0.2s ease; opacity: 0.88;">
+                    <title>May Sales: ₱408425.00</title>
+                </rect>
+                
+                
+                <rect x="49" y="53.58639098764871" width="15" height="126.41360901235129" rx="2" fill="hsl(280 65% 55%)" style="transition: all 0.2s ease; opacity: 0.88;">
+                    <title>May Inventory Intake: ₱349265.00</title>
+                </rect>
+                
+                
+                <text x="46" y="196" text-anchor="middle" class="text-muted" style="font-size: 0.6875rem; font-weight: 500;">May</text>
+                
+                
+                <rect x="250" y="61.50097271863547" width="15" height="118.49902728136453" rx="2" fill="hsl(var(--primary))" style="transition: all 0.2s ease; opacity: 0.88;">
+                    <title>Jun Sales: ₱327398.00</title>
+                </rect>
+                
+                
+                <rect x="269" y="137.80518481654073" width="15" height="42.19481518345926" rx="2" fill="hsl(280 65% 55%)" style="transition: all 0.2s ease; opacity: 0.88;">
+                    <title>Jun Inventory Intake: ₱116579.00</title>
+                </rect>
+                
+                
+                <text x="266" y="196" text-anchor="middle" class="text-muted" style="font-size: 0.6875rem; font-weight: 500;">Jun</text>
+                
+            </svg>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+<div class="grid grid-cols-3" style="gap: 1.25rem;">
+    
+    <div class="card" style="padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <div>
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Top Most Purchased Products</div>
+                <div style="font-size: 0.6875rem; color: var(--text-muted);">Best performing items by units sold</div>
+            </div>
+            <a href="/items" hx-get="/items" hx-target="#main-content" hx-push-url="true" style="font-size: 0.6875rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">View Catalog →</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.625rem;">
+            
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden;">
+                    <div style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        1
+                    </div>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="BLACK SCREW 1-1/4">BLACK SCREW 1-1/4</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">NO BRAND &bull; NBRND-BLCKSCRW-1-1/4</div>
+                    </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
+                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">10000 PC/S</div>
+                    <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱8000.00</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden;">
+                    <div style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        2
+                    </div>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="TILE SCREW 1X1">TILE SCREW 1X1</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">NO BRAND &bull; NBRND-TLSCRW-1X1</div>
+                    </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
+                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">4250 PC/S</div>
+                    <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱3230.00</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden;">
+                    <div style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        3
+                    </div>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="BLACK SCREW 1 1/4&#34; GYPSUM">BLACK SCREW 1 1/4&#34; GYPSUM</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">NO BRAND &bull; NBRND-SCRW-1-1/4&#34;</div>
+                    </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
+                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">4100 PC/S</div>
+                    <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱3265.00</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden;">
+                    <div style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        4
+                    </div>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="BLACK SCREW 1&#34;">BLACK SCREW 1&#34;</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">NO BRAND &bull; NBRND-SCRW-1&#34;</div>
+                    </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
+                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">3000 PC/S</div>
+                    <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱2100.00</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden;">
+                    <div style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        5
+                    </div>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="KANTO CUTTING DISC 4&#34;">KANTO CUTTING DISC 4&#34;</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">KANTO &bull; KNT-CTTNGDSC-4</div>
+                    </div>
+                </div>
+                <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
+                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">2649 PC/S</div>
+                    <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱68337.00</div>
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+
+    
+    <div class="card" style="padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <div>
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Earning Goals</div>
+                <div style="font-size: 0.6875rem; color: var(--text-muted);">Revenue and profit target tracking</div>
+            </div>
+            <a href="/goals" hx-get="/goals" hx-target="#main-content" hx-push-url="true" style="font-size: 0.6875rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">Manage Goals →</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            
+            
+            <div style="padding: 0.75rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 0.375rem; min-width: 0;">
+                        <span style="font-weight: 700; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Monthly Revenue &amp; Profit Sprint</span>
+                        <span class="badge badge-secondary" style="font-size: 0.625rem; flex-shrink: 0;">Monthly (2026-10)</span>
+                    </div>
+                    <span class="badge badge-danger" style="font-size: 0.625rem; flex-shrink: 0;">
+                        Behind
+                    </span>
+                </div>
+                
+                <div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted); margin-bottom: 0.25rem; display: flex; justify-content: space-between;">
+                        <span>Revenue Target</span>
+                        <span style="font-weight: 600; color: var(--text-main);">₱0 / ₱500000 <span style="color: var(--text-muted); font-weight: normal;">(0.0%)</span></span>
+                    </div>
+                    <div style="height: 6px; background: hsl(var(--secondary)); border-radius: 3px; overflow: hidden;">
+                        <div style="height: 100%; width: 0%; background: hsl(var(--primary)); border-radius: 3px; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted); margin-bottom: 0.25rem; display: flex; justify-content: space-between;">
+                        <span>Profit Target</span>
+                        <span style="font-weight: 600; color: hsl(142 72% 29%);">₱0 / ₱140000 <span style="color: var(--text-muted); font-weight: normal;">(0.0%)</span></span>
+                    </div>
+                    <div style="height: 6px; background: hsl(var(--secondary)); border-radius: 3px; overflow: hidden;">
+                        <div style="height: 100%; width: 0%; background: hsl(142 72% 35%); border-radius: 3px; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="padding: 0.75rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 0.375rem; min-width: 0;">
+                        <span style="font-weight: 700; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Annual Milestone Growth</span>
+                        <span class="badge badge-secondary" style="font-size: 0.625rem; flex-shrink: 0;">Yearly (2026)</span>
+                    </div>
+                    <span class="badge badge-primary" style="font-size: 0.625rem; flex-shrink: 0;">
+                        In Progress
+                    </span>
+                </div>
+                
+                <div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted); margin-bottom: 0.25rem; display: flex; justify-content: space-between;">
+                        <span>Revenue Target</span>
+                        <span style="font-weight: 600; color: var(--text-main);">₱2889840 / ₱4500000 <span style="color: var(--text-muted); font-weight: normal;">(64.2%)</span></span>
+                    </div>
+                    <div style="height: 6px; background: hsl(var(--secondary)); border-radius: 3px; overflow: hidden;">
+                        <div style="height: 100%; width: 64.2%; background: hsl(var(--primary)); border-radius: 3px; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted); margin-bottom: 0.25rem; display: flex; justify-content: space-between;">
+                        <span>Profit Target</span>
+                        <span style="font-weight: 600; color: hsl(142 72% 29%);">₱827793 / ₱1200000 <span style="color: var(--text-muted); font-weight: normal;">(69.0%)</span></span>
+                    </div>
+                    <div style="height: 6px; background: hsl(var(--secondary)); border-radius: 3px; overflow: hidden;">
+                        <div style="height: 100%; width: 69%; background: hsl(142 72% 35%); border-radius: 3px; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+
+    
+    <div class="card" style="padding: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <div>
+                <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Upcoming Reminders</div>
+                <div style="font-size: 0.6875rem; color: var(--text-muted);">Due dates and operational tasks</div>
+            </div>
+            <a href="/reminders" hx-get="/reminders" hx-target="#main-content" hx-push-url="true" style="font-size: 0.6875rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">Full Calendar →</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color); gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                    <button hx-post="/reminders/toggle/1" hx-target="#main-content" class="btn-sm" style="background: hsl(var(--card)); border: 1.5px solid var(--border-color); width: 20px; height: 20px; border-radius: 4px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease;" title="Mark Completed">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.2;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="Monthly Stock Inventory Reconciliation">Monthly Stock Inventory Reconciliation</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">Due: Oct 08, 2026 &bull; Stock Check</div>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge badge-danger" style="font-size: 0.625rem; flex-shrink: 0;">
+                        High
+                    </span>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color); gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                    <button hx-post="/reminders/toggle/2" hx-target="#main-content" class="btn-sm" style="background: hsl(var(--card)); border: 1.5px solid var(--border-color); width: 20px; height: 20px; border-radius: 4px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease;" title="Mark Completed">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.2;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="Supplier Delivery Verification">Supplier Delivery Verification</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">Due: Oct 11, 2026 &bull; Delivery</div>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge badge-warning" style="font-size: 0.625rem; flex-shrink: 0;">
+                        Medium
+                    </span>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color); gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                    <button hx-post="/reminders/toggle/3" hx-target="#main-content" class="btn-sm" style="background: hsl(var(--card)); border: 1.5px solid var(--border-color); width: 20px; height: 20px; border-radius: 4px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease;" title="Mark Completed">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.2;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="BIR 2307 Withholding Tax Filing">BIR 2307 Withholding Tax Filing</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">Due: Oct 13, 2026 &bull; Payment</div>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge badge-danger" style="font-size: 0.625rem; flex-shrink: 0;">
+                        High
+                    </span>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color); gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                    <button hx-post="/reminders/toggle/4" hx-target="#main-content" class="btn-sm" style="background: hsl(var(--card)); border: 1.5px solid var(--border-color); width: 20px; height: 20px; border-radius: 4px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease;" title="Mark Completed">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.2;">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                    <div style="min-width: 0;">
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="Hardware Fasteners Restock Review">Hardware Fasteners Restock Review</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">Due: Oct 16, 2026 &bull; General</div>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge badge-success" style="font-size: 0.625rem; flex-shrink: 0;">
+                        Low
+                    </span>
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+</div>
+
+            </main>
+        </div>
+    </div>
+
+    
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+        
+        function updateActiveNavLink() {
+            const currentPath = window.location.pathname;
+
+            
+            document.querySelectorAll(".sidebar-nav > a").forEach(link => {
+                const href = link.getAttribute("href");
+                const isActive = href === "/" ? currentPath === "/" : currentPath.startsWith(href);
+                if (isActive) {
+                    link.classList.add("active");
+                } else {
+                    link.classList.remove("active");
+                }
+            });
+
+            
+            document.querySelectorAll(".sidebar-dropdown").forEach(dropdown => {
+                let hasActive = false;
+                const links = dropdown.querySelectorAll(".sidebar-dropdown-menu a");
+                
+                links.forEach(link => {
+                    const href = link.getAttribute("href");
+                    if (currentPath === href || currentPath.startsWith(href + "/")) {
+                        link.classList.add("active");
+                        hasActive = true;
+                    } else {
+                        link.classList.remove("active");
+                    }
+                });
+                
+                
+                const activeLinks = dropdown.querySelectorAll(".sidebar-dropdown-menu a.active");
+                if (activeLinks.length > 1) {
+                    let longest = activeLinks[0];
+                    activeLinks.forEach(link => {
+                        if ((link.getAttribute("href") || "").length > (longest.getAttribute("href") || "").length) {
+                            longest = link;
+                        }
+                    });
+                    activeLinks.forEach(link => {
+                        if (link !== longest) link.classList.remove("active");
+                    });
+                    hasActive = true;
+                }
+                if (hasActive) {
+                    dropdown.classList.add("open");
+                } else {
+                    dropdown.classList.remove("open");
+                }
+            });
+        }
+
+        
+        function toggleSidebarDropdown(event) {
+            event.preventDefault();
+            
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar && sidebar.classList.contains("collapsed") && window.innerWidth > 768) {
+                return;
+            }
+            const dropdown = event.currentTarget.closest(".sidebar-dropdown");
+            if (dropdown) {
+                dropdown.classList.toggle("open");
+            }
+        }
+
+        
+        function toggleSidebarCollapse() {
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar) {
+                const isCollapsed = sidebar.classList.toggle("collapsed");
+                localStorage.setItem("sidebar-collapsed", isCollapsed ? "true" : "false");
+            }
+        }
+
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const backdrop = document.getElementById("sidebar-backdrop");
+            if (sidebar && backdrop) {
+                sidebar.classList.toggle("open");
+                backdrop.classList.toggle("show");
+            }
+        }
+
+        
+        function closeMobileSidebarOnNav() {
+            const sidebar = document.getElementById("sidebar");
+            const backdrop = document.getElementById("sidebar-backdrop");
+            if (sidebar && backdrop) {
+                sidebar.classList.remove("open");
+                backdrop.classList.remove("show");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", updateActiveNavLink);
+        document.body.addEventListener("htmx:afterOnLoad", updateActiveNavLink);
+        document.body.addEventListener("htmx:historyRestore", updateActiveNavLink);
+        document.body.addEventListener("htmx:afterSwap", function (evt) {
+            if (evt.detail.target.id === "main-content") {
+                window.scrollTo(0, 0);
+            }
+        });
+
+        
+        document.body.addEventListener('show-toast', function (evt) {
+            const type = evt.detail.type || 'info';
+            const message = evt.detail.message || '';
+
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            
+            let icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'error') icon = '❌';
+            if (type === 'warning') icon = '⚠️';
+
+            const iconSpan = document.createElement('span');
+            iconSpan.style.marginRight = '0.5rem';
+            iconSpan.textContent = icon;
+            toast.appendChild(iconSpan);
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = message;
+            toast.appendChild(textSpan);
+
+            container.appendChild(toast);
+
+            
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.5s ease forwards';
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 4000);
+        });
+
+        
+        function updateDropdownPosition(input) {
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            const list = container.querySelector('.dropdown-list');
+            if (!list || list.style.display === 'none') return;
+
+            const rect = input.getBoundingClientRect();
+            list.style.position = 'fixed';
+            list.style.top = (rect.bottom + 2) + 'px';
+            list.style.bottom = 'auto';
+            list.style.left = rect.left + 'px';
+            list.style.width = rect.width + 'px';
+            list.style.zIndex = '999999';
+            list.style.marginTop = '0px';
+        }
+
+        function cleanupDropdownState(container) {
+            if (!container) return;
+            container.classList.remove('active');
+            const card = container.closest('.card');
+            if (card) card.classList.remove('has-dropdown');
+            const form = container.closest('form');
+            if (form) form.classList.remove('has-dropdown');
+            const tableContainer = container.closest('.table-container');
+            if (tableContainer) tableContainer.classList.remove('has-dropdown');
+            const row = container.closest('tr, .tr, .item-grid-row');
+            if (row) row.classList.remove('active-dropdown-row');
+            const cell = container.closest('td, .td');
+            if (cell) cell.classList.remove('active-dropdown-cell');
+        }
+
+        function showDropdown(input) {
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            container.classList.add('active');
+            const card = input.closest('.card');
+            if (card) card.classList.add('has-dropdown');
+            const form = input.closest('form');
+            if (form) form.classList.add('has-dropdown');
+            const tableContainer = input.closest('.table-container');
+            if (tableContainer) tableContainer.classList.add('has-dropdown');
+            const row = input.closest('tr, .tr, .item-grid-row');
+            if (row) {
+                document.querySelectorAll('tr.active-dropdown-row, .tr.active-dropdown-row, .item-grid-row.active-dropdown-row').forEach(r => r.classList.remove('active-dropdown-row'));
+                row.classList.add('active-dropdown-row');
+            }
+            const cell = input.closest('td, .td');
+            if (cell) {
+                document.querySelectorAll('td.active-dropdown-cell, .td.active-dropdown-cell').forEach(c => c.classList.remove('active-dropdown-cell'));
+                cell.classList.add('active-dropdown-cell');
+            }
+            const list = container.querySelector('.dropdown-list');
+            if (list) {
+                document.querySelectorAll('.dropdown-list').forEach(l => {
+                    if (l !== list) l.style.display = 'none';
+                });
+                list.style.display = 'block';
+                updateDropdownPosition(input);
+                filterDropdown(input);
+            }
+        }
+
+        function hideDropdown(input) {
+            setTimeout(() => {
+                const container = input.closest('.searchable-dropdown');
+                if (!container) return;
+                cleanupDropdownState(container);
+                const list = container.querySelector('.dropdown-list');
+                if (list) {
+                    list.style.display = 'none';
+                    const hidden = container.querySelector('input[type="hidden"]');
+                    if (input.value.trim() === '') {
+                        if (hidden && hidden.value !== '') {
+                            hidden.value = '';
+                            hidden.dispatchEvent(new Event('change'));
+                        }
+                    } else {
+                        const currentText = input.value.trim();
+                        const items = container.querySelectorAll('.dropdown-item');
+                        let match = null;
+                        for (const item of items) {
+                            if ((item.getAttribute('data-description') || '').toLowerCase() === currentText.toLowerCase()) {
+                                match = item;
+                                break;
+                            }
+                        }
+                        if (match) {
+                            const selectedId = match.getAttribute('data-id');
+                            input.value = match.getAttribute('data-description');
+                            if (hidden && hidden.value !== selectedId) {
+                                hidden.value = selectedId;
+                                hidden.dispatchEvent(new Event('change'));
+                            }
+                        } else if (hidden && hidden.value) {
+                            for (const item of items) {
+                                if (item.getAttribute('data-id') === hidden.value) {
+                                    input.value = item.getAttribute('data-description');
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }, 200);
+        }
+
+        function filterDropdown(input) {
+            const filter = input.value.trim().toLowerCase();
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            const items = container.querySelectorAll('.dropdown-item');
+            let firstVisible = null;
+            let visibleCount = 0;
+            items.forEach(item => {
+                const text = (item.getAttribute('data-description') || '').toLowerCase();
+                if (visibleCount < 50 && (filter === '' || text.includes(filter))) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                    if (!firstVisible) firstVisible = item;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            items.forEach(item => item.classList.remove('active'));
+            if (firstVisible) {
+                firstVisible.classList.add('active');
+            }
+            updateDropdownPosition(input);
+        }
+
+        function selectDropdownItem(item) {
+            const container = item.closest('.searchable-dropdown');
+            if (!container) return;
+            const input = container.querySelector('.dropdown-search');
+            const hidden = container.querySelector('input[type="hidden"]');
+            
+            const selectedId = item.getAttribute('data-id');
+            const description = item.getAttribute('data-description');
+            const uom = item.getAttribute('data-uom');
+            
+            if (input) input.value = description;
+            
+            let willSwap = false;
+            if (hidden) {
+                const oldVal = hidden.value;
+                hidden.value = selectedId;
+                if (oldVal !== selectedId) {
+                    if (hidden.name === 'item_id') {
+                        const itemRow = input.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
+                        const tbody = itemRow ? itemRow.parentElement : null;
+                        if (tbody) {
+                            willSwap = true;
+                            const rowIndex = Array.from(tbody.children).indexOf(itemRow);
+                            const handleRowSwap = function(event) {
+                                tbody.removeEventListener('htmx:afterSwap', handleRowSwap);
+                                setTimeout(() => {
+                                    const newRow = tbody.children[rowIndex];
+                                    if (newRow) {
+                                        const inputs = Array.from(newRow.querySelectorAll('input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([readonly]):not([disabled])'));
+                                        if (inputs.length > 1) {
+                                            const nextInput = inputs[1];
+                                            nextInput.focus();
+                                            if (nextInput.select && nextInput.type === 'text') nextInput.select();
+                                        }
+                                    }
+                                }, 50);
+                            };
+                            tbody.addEventListener('htmx:afterSwap', handleRowSwap);
+                            setTimeout(() => {
+                                tbody.removeEventListener('htmx:afterSwap', handleRowSwap);
+                            }, 2000);
+                        }
+                    }
+                    hidden.dispatchEvent(new Event('change'));
+                }
+            }
+            
+            if (uom) {
+                const uomInput = container.closest('form')?.querySelector('#uom');
+                if (uomInput) {
+                    uomInput.value = uom;
+                }
+            }
+            
+            const list = container.querySelector('.dropdown-list');
+            if (list) list.style.display = 'none';
+            cleanupDropdownState(container);
+            
+            if (!willSwap && input) {
+                const itemRow = input.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
+                if (itemRow) {
+                    const inputs = Array.from(itemRow.querySelectorAll('input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([readonly]):not([disabled])'));
+                    const index = inputs.indexOf(input);
+                    if (index !== -1 && index < inputs.length - 1) {
+                        const nextInput = inputs[index + 1];
+                        nextInput.focus();
+                        if (nextInput.select && nextInput.type === 'text') {
+                            nextInput.select();
+                        }
+                    }
+                }
+            }
+        }
+
+        function handleDropdownKeydown(event, input) {
+            const container = input.closest('.searchable-dropdown');
+            if (!container) return;
+            const list = container.querySelector('.dropdown-list');
+            if (!list || list.style.display === 'none') {
+                if (event.key === 'ArrowDown') {
+                    showDropdown(input);
+                    event.preventDefault();
+                }
+                return;
+            }
+            
+            const visibleItems = Array.from(container.querySelectorAll('.dropdown-item')).filter(item => item.style.display !== 'none');
+            if (visibleItems.length === 0) return;
+            
+            let activeIndex = visibleItems.findIndex(item => item.classList.contains('active'));
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (activeIndex >= 0) visibleItems[activeIndex].classList.remove('active');
+                activeIndex = (activeIndex + 1) % visibleItems.length;
+                visibleItems[activeIndex].classList.add('active');
+                visibleItems[activeIndex].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (activeIndex >= 0) visibleItems[activeIndex].classList.remove('active');
+                activeIndex = (activeIndex - 1 + visibleItems.length) % visibleItems.length;
+                visibleItems[activeIndex].classList.add('active');
+                visibleItems[activeIndex].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                if (activeIndex >= 0) {
+                    selectDropdownItem(visibleItems[activeIndex]);
+                } else {
+                    selectDropdownItem(visibleItems[0]);
+                }
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                list.style.display = 'none';
+                cleanupDropdownState(container);
+                input.blur();
+            }
+        }
+
+        
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.searchable-dropdown')) {
+                document.querySelectorAll('.dropdown-list').forEach(list => {
+                    list.style.display = 'none';
+                });
+                document.querySelectorAll('.searchable-dropdown.active').forEach(c => {
+                    cleanupDropdownState(c);
+                });
+            }
+        });
+
+        window.addEventListener('scroll', function() {
+            const activeInput = document.activeElement;
+            if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
+                updateDropdownPosition(activeInput);
+            }
+        }, true);
+
+        window.addEventListener('resize', function() {
+            const activeInput = document.activeElement;
+            if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
+                updateDropdownPosition(activeInput);
+            }
+        });
+
+        
+        
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Enter') return;
+            const target = e.target;
+            if (!target || !['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) return;
+
+            
+            const dropdown = target.closest('.searchable-dropdown');
+            if (dropdown) {
+                const list = dropdown.querySelector('.dropdown-list');
+                if (list && list.style.display !== 'none' && list.style.display !== '') {
+                    return;
+                }
+            }
+
+            
+            const itemForm = target.closest('form[hx-post*="/receiving/add"], form[hx-post*="/adjustments/add"], form[hx-post*="/sales/add"], #receipt-scan-form');
+            const isItemTable = target.closest('#receiving-items-tbody, #adjustment-items-tbody, #sales-items-tbody, #scan-items-body');
+
+            
+            const filterContainer = target.closest('.search-filter-bar, form[id*="filter"], form[onsubmit*="return false"]');
+            const isFilterInput = filterContainer || target.name === 'search' || (target.name && target.name.includes('filter')) || target.hasAttribute('data-filter');
+
+            if (isFilterInput && !itemForm && !isItemTable) {
+                e.preventDefault();
+                const container = filterContainer || target.closest('form, div') || target.parentElement;
+                if (container) {
+                    const hxTarget = target.hasAttribute('hx-get') ? target : (container.querySelector('[hx-get]') || target);
+                    if (window.htmx && hxTarget && hxTarget.hasAttribute('hx-get')) {
+                        htmx.trigger(hxTarget, 'search');
+                        htmx.trigger(hxTarget, 'change');
+                        htmx.trigger(hxTarget, 'keyup');
+                    } else if (target.form && target.form.onsubmit !== false) {
+                        target.form.submit();
+                    }
+                }
+                return;
+            }
+
+            
+            if (itemForm || isItemTable) {
+                e.preventDefault();
+                const itemRow = target.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
+                if (itemRow) {
+                    const inputs = Array.from(itemRow.querySelectorAll('input:not([type="hidden"]):not([readonly]):not([disabled]), select:not([readonly]):not([disabled])'));
+                    const index = inputs.indexOf(target);
+                    if (index !== -1) {
+                        if (index < inputs.length - 1) {
+                            
+                            const nextInput = inputs[index + 1];
+                            nextInput.focus();
+                            if (nextInput.select && nextInput.type === 'text') {
+                                nextInput.select();
+                            }
+                        } else {
+                            
+                            const parent = itemForm || target.closest('.card, form, div');
+                            if (parent) {
+                                const addRowBtn = parent.querySelector('button[hx-get*="new-row"], button[onclick*="addScanRow"], button[onclick*="addRow"]') ||
+                                    Array.from(parent.querySelectorAll('button')).find(btn => btn.textContent.includes('Add Item Row') || btn.textContent.includes('Add Row'));
+                                if (addRowBtn) {
+                                    const isHtmx = addRowBtn.hasAttribute('hx-get') || addRowBtn.hasAttribute('hx-post');
+                                    const tbody = parent.querySelector('tbody, #sales-items-tbody, #receiving-items-tbody, #adjustment-items-tbody, .item-grid-container > div');
+                                    if (isHtmx && tbody) {
+                                        const handleSwap = function(event) {
+                                            tbody.removeEventListener('htmx:afterSwap', handleSwap);
+                                            setTimeout(() => {
+                                                if (tbody.lastElementChild) {
+                                                    const newInput = tbody.lastElementChild.querySelector('.dropdown-search, input:not([type="hidden"]), select');
+                                                    if (newInput) {
+                                                        newInput.focus();
+                                                        if (newInput.select && newInput.type === 'text') newInput.select();
+                                                    }
+                                                }
+                                            }, 50);
+                                        };
+                                        tbody.addEventListener('htmx:afterSwap', handleSwap);
+                                        
+                                        setTimeout(() => {
+                                            tbody.removeEventListener('htmx:afterSwap', handleSwap);
+                                        }, 2000);
+                                    }
+
+                                    addRowBtn.click();
+
+                                    if (!isHtmx && tbody) {
+                                        setTimeout(() => {
+                                            if (tbody.lastElementChild) {
+                                                const newInput = tbody.lastElementChild.querySelector('.dropdown-search, input:not([type="hidden"]), select');
+                                                if (newInput) {
+                                                    newInput.focus();
+                                                    if (newInput.select && newInput.type === 'text') newInput.select();
+                                                }
+                                            }
+                                        }, 50);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+        });
+
+        
+        window.showShadcnAlertDialog = function(options) {
+            return new Promise((resolve) => {
+                const dialog = document.getElementById('shadcn-alert-dialog');
+                const titleEl = document.getElementById('shadcn-alert-dialog-title');
+                const descEl = document.getElementById('shadcn-alert-dialog-description');
+                const cancelBtn = document.getElementById('shadcn-alert-dialog-cancel');
+                const actionBtn = document.getElementById('shadcn-alert-dialog-action');
+
+                if (!dialog || !titleEl || !descEl || !cancelBtn || !actionBtn) {
+                    if (options.isConfirm) {
+                        const res = window.nativeConfirm ? window.nativeConfirm(options.description) : confirm(options.description);
+                        if (options.onConfirm && res) options.onConfirm();
+                        if (options.onCancel && !res) options.onCancel();
+                        resolve(res);
+                    } else {
+                        window.nativeAlert ? window.nativeAlert(options.description) : alert(options.description);
+                        if (options.onAction) options.onAction();
+                        resolve(true);
+                    }
+                    return;
+                }
+
+                titleEl.textContent = options.title || (options.isConfirm ? 'Are you sure?' : 'Alert');
+                descEl.textContent = options.description || '';
+
+                if (options.isConfirm || options.showCancel) {
+                    cancelBtn.style.display = 'inline-flex';
+                    cancelBtn.textContent = options.cancelText || 'Cancel';
+                } else {
+                    cancelBtn.style.display = 'none';
+                }
+
+                actionBtn.textContent = options.actionText || options.confirmText || (options.isConfirm ? 'Continue' : 'OK');
+                
+                const isDestructive = options.isDestructive || 
+                    (options.description && (options.description.toLowerCase().includes('delete') || options.description.toLowerCase().includes('remove')));
+                
+                actionBtn.className = isDestructive ? 'btn btn-danger' : 'btn btn-primary';
+
+                function close(confirmed) {
+                    dialog.style.display = 'none';
+                    cleanup();
+                    if (confirmed) {
+                        if (options.onConfirm) options.onConfirm();
+                        if (options.onAction) options.onAction();
+                        resolve(true);
+                    } else {
+                        if (options.onCancel) options.onCancel();
+                        resolve(false);
+                    }
+                }
+
+                function handleCancel() { close(false); }
+                function handleAction() { close(true); }
+                function handleKeydown(e) {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        close(false);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        close(true);
+                    }
+                }
+                function handleBackdropClick(e) {
+                    if (e.target === dialog) {
+                        close(false);
+                    }
+                }
+
+                function cleanup() {
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    actionBtn.removeEventListener('click', handleAction);
+                    document.removeEventListener('keydown', handleKeydown);
+                    dialog.removeEventListener('click', handleBackdropClick);
+                }
+
+                cancelBtn.addEventListener('click', handleCancel);
+                actionBtn.addEventListener('click', handleAction);
+                document.addEventListener('keydown', handleKeydown);
+                dialog.addEventListener('click', handleBackdropClick);
+
+                dialog.style.display = 'flex';
+                actionBtn.focus();
+            });
+        };
+
+        
+        document.addEventListener('htmx:confirm', function(evt) {
+            const question = evt.detail.question;
+            
+            if (!question) return;
+            evt.preventDefault();
+            showShadcnAlertDialog({
+                title: 'Are you sure?',
+                description: question,
+                isConfirm: true,
+                confirmText: 'Continue',
+                cancelText: 'Cancel',
+                isDestructive: question.toLowerCase().includes('delete') || question.toLowerCase().includes('remove'),
+                onConfirm: function() {
+                    evt.detail.issueRequest(true);
+                }
+            });
+        });
+
+        
+        if (!window.nativeAlert) {
+            window.nativeAlert = window.alert;
+        }
+        window.alert = function(message) {
+            showShadcnAlertDialog({
+                title: 'Alert',
+                description: message,
+                isConfirm: false,
+                actionText: 'OK'
+            });
+        };
+
+        
+        if (!window.nativeConfirm) {
+            window.nativeConfirm = window.confirm;
+        }
+        window.confirm = function(message) {
+            return showShadcnAlertDialog({
+                title: 'Are you sure?',
+                description: message,
+                isConfirm: true,
+                confirmText: 'Continue',
+                cancelText: 'Cancel'
+            });
+        };
+    </script>
+
+    
+    <div id="shadcn-alert-dialog" class="alert-dialog-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="shadcn-alert-dialog-title" aria-describedby="shadcn-alert-dialog-description">
+        <div class="alert-dialog-content">
+            <div class="alert-dialog-header">
+                <h2 id="shadcn-alert-dialog-title" class="alert-dialog-title">Are you sure?</h2>
+                <p id="shadcn-alert-dialog-description" class="alert-dialog-description">This action cannot be undone.</p>
+            </div>
+            <div class="alert-dialog-footer">
+                <button id="shadcn-alert-dialog-cancel" type="button" class="btn btn-secondary">Cancel</button>
+                <button id="shadcn-alert-dialog-action" type="button" class="btn btn-primary">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <div id="uom-setting-modal"
+         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;"
+         role="dialog" aria-modal="true" aria-labelledby="uom-modal-title">
+        <div style="background:var(--bg-card, #fff); border-radius:0.5rem; box-shadow:0 20px 60px rgba(0,0,0,0.3); width:100%; max-width:400px; padding:1.5rem; margin:1rem;">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <div>
+                    <h2 id="uom-modal-title" style="font-size:1rem; font-weight:700; margin:0; color:var(--text-primary);">Add UOM Setting</h2>
+                    <p id="uom-modal-subtitle" style="font-size:0.78rem; color:var(--text-muted); margin:0.2rem 0 0;"></p>
+                </div>
+                <button type="button" onclick="closeUomSettingModal()"
+                        style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:0.25rem; border-radius:0.25rem; line-height:1;"
+                        aria-label="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="uom-setting-modal-form"
+                  hx-post="/uom-settings/add"
+                  hx-swap="none"
+                  hx-on::after-request="handleUomModalAfterRequest(event)">
+                <input type="hidden" id="uom-modal-item-id" name="item_id" value="">
+                <div style="display:flex; flex-direction:column; gap:1rem;">
+                    <div>
+                        <label for="uom-modal-muom" style="font-size:0.8rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:0.35rem;">MUOM Code <span style="color:var(--color-danger,#ef4444);">*</span></label>
+                        <input type="text" id="uom-modal-muom" name="muom" class="form-input" placeholder="e.g. BOX, CASE, DOZ"
+                               required style="width:100%; text-transform:uppercase;"
+                               oninput="this.value = this.value.toUpperCase()">
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0 0;">The multiple unit of measure code to add for this item.</p>
+                    </div>
+                    <div>
+                        <label for="uom-modal-factor" style="font-size:0.8rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:0.35rem;">Conversion Rate <span style="color:var(--color-danger,#ef4444);">*</span></label>
+                        <input type="number" id="uom-modal-factor" name="conversion_factor" class="form-input" placeholder="e.g. 12 (1 BOX = 12 base units)"
+                               step="any" min="0.0001" required style="width:100%;">
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0 0;">How many base units are in 1 MUOM unit.</p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeUomSettingModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save UOM Setting</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        
+        window._uomModalSourceRow = null;
+
+        window.openUomSettingModal = function(itemId, itemDesc) {
+            document.getElementById('uom-modal-item-id').value = itemId;
+            document.getElementById('uom-modal-subtitle').textContent = itemDesc ? 'Item: ' + itemDesc : '';
+            document.getElementById('uom-modal-muom').value = '';
+            document.getElementById('uom-modal-factor').value = '';
+            
+            window._uomModalSourceRow = document.querySelector('.item-grid-row input[name="item_id"][value="' + itemId + '"]');
+            const modal = document.getElementById('uom-setting-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => document.getElementById('uom-modal-muom').focus(), 50);
+        };
+
+        window.closeUomSettingModal = function() {
+            document.getElementById('uom-setting-modal').style.display = 'none';
+            window._uomModalSourceRow = null;
+        };
+
+        window.handleUomModalAfterRequest = function(event) {
+            if (event.detail.successful) {
+                closeUomSettingModal();
+                
+                if (window._uomModalSourceRow) {
+                    htmx.trigger(window._uomModalSourceRow, 'change');
+                }
+            }
+        };
+
+        
+        document.getElementById('uom-setting-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeUomSettingModal();
+        });
+
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('uom-setting-modal').style.display === 'flex') {
+                closeUomSettingModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

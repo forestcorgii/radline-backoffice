@@ -1,0 +1,176 @@
+{{ define "reminders.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="header-bar mb-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+    <div>
+        <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">Reminders & Operational Calendar</h2>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Manage payment dues, deliveries, stock counts, and business milestones</span>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+        <a href="/" hx-get="/" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="font-size: 0.75rem;">← Dashboard</a>
+        <button onclick="document.getElementById('add-reminder-modal').style.display='flex'" class="btn" style="font-size: 0.75rem;">+ Add Reminder</button>
+    </div>
+</div>
+
+<div class="grid grid-cols-3" style="gap: 1.25rem; align-items: start;">
+    <!-- Calendar View (2 columns) -->
+    <div class="card" style="grid-column: span 2; padding: 1.25rem; background: #ffffff; border: 1px solid var(--border-color);">
+        <!-- Month Navigation Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0; color: var(--text-main);">{{ .DisplayMonthName }}</h3>
+                <a href="/reminders" hx-get="/reminders" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.6875rem;">Today</a>
+            </div>
+            <div style="display: flex; gap: 0.25rem;">
+                <a href="/reminders?month={{ .PrevMonthStr }}" hx-get="/reminders?month={{ .PrevMonthStr }}" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem;">‹ Prev</a>
+                <a href="/reminders?month={{ .NextMonthStr }}" hx-get="/reminders?month={{ .NextMonthStr }}" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem;">Next ›</a>
+            </div>
+        </div>
+
+        <!-- Days of Week Header -->
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.6875rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+        </div>
+
+        <!-- Calendar Month Grid -->
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+            {{ range .Weeks }}
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+                {{ range .Days }}
+                {{ if eq .DayNumber 0 }}
+                <div style="min-height: 85px; background: hsl(var(--secondary) / 0.2); border-radius: 4px; opacity: 0.4;"></div>
+                {{ else }}
+                <div style="min-height: 85px; background: {{ if .IsToday }}hsl(215 90% 97%){{ else }}#ffffff{{ end }}; border: 1px solid {{ if .IsToday }}var(--primary-color){{ else }}var(--border-color){{ end }}; border-radius: 4px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.6875rem; font-weight: {{ if .IsToday }}800{{ else }}600{{ end }}; color: {{ if .IsToday }}var(--primary-color){{ else }}var(--text-main){{ end }};">
+                            {{ .DayNumber }}
+                        </span>
+                        {{ if .IsToday }}
+                        <span style="font-size: 0.5625rem; background: var(--primary-color); color: #fff; padding: 1px 4px; border-radius: 2px; font-weight: 600;">TODAY</span>
+                        {{ end }}
+                    </div>
+                    
+                    <!-- Events List for this Day -->
+                    <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 58px;">
+                        {{ range .Reminders }}
+                        <div style="font-size: 0.625rem; padding: 2px 4px; border-radius: 2px; background: {{ if eq .Priority "High" }}hsl(0 84% 95%){{ else if eq .Priority "Medium" }}hsl(38 92% 95%){{ else }}hsl(142 72% 95%){{ end }}; color: {{ if eq .Priority "High" }}#b91c1c{{ else if eq .Priority "Medium" }}#b45309{{ else }}#047857{{ end }}; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid {{ if eq .Priority "High" }}#ef4444{{ else if eq .Priority "Medium" }}#f59e0b{{ else }}#10b981{{ end }};" title="{{ .Title }} - {{ .Details }}">
+                            {{ .Title }}
+                        </div>
+                        {{ end }}
+                    </div>
+                </div>
+                {{ end }}
+                {{ end }}
+            </div>
+            {{ end }}
+        </div>
+    </div>
+
+    <!-- Upcoming Agenda Sidebar (1 column) -->
+    <div class="card" style="padding: 1.25rem; background: #ffffff; border: 1px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Pending Agenda</h3>
+            <span class="badge" style="background: hsl(var(--secondary)); font-size: 0.625rem;">{{ len .Agenda }} tasks</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.625rem; max-height: 600px; overflow-y: auto;">
+            {{ if eq (len .Agenda) 0 }}
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; padding: 2rem 0;">
+                All caught up! No pending reminders.
+            </div>
+            {{ else }}
+            {{ range .Agenda }}
+            <div style="padding: 0.625rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                    <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <button hx-post="/reminders/toggle/{{ .ID }}" hx-target="#main-content" class="btn-sm" style="background: hsl(var(--card)); border: 1.5px solid var(--border-color); width: 20px; height: 20px; border-radius: 4px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 2px; flex-shrink: 0; transition: all 0.15s ease;" title="Mark Completed">
+                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.2;">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </button>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main);">{{ .Title }}</div>
+                            {{ if .Details }}
+                            <div style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 2px;">{{ .Details }}</div>
+                            {{ end }}
+                            <div style="font-size: 0.625rem; color: var(--text-muted); margin-top: 4px;">
+                                📅 Due: <strong style="color: var(--text-main);">{{ .DueDate.Format "Jan 02, 2006" }}</strong> &bull; {{ .Category }}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
+                        <span class="badge {{ if eq .Priority "High" }}badge-danger{{ else if eq .Priority "Medium" }}badge-warning{{ else }}badge-success{{ end }}" style="font-size: 0.625rem;">
+                            {{ .Priority }}
+                        </span>
+                        <button hx-delete="/reminders/delete/{{ .ID }}" hx-target="#main-content" hx-confirm="Delete this reminder?" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; font-size: 1rem; line-height: 1;" title="Delete">
+                            &times;
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {{ end }}
+            {{ end }}
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Reminder -->
+<div id="add-reminder-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 0.5rem; max-width: 480px; width: 100%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">Add Reminder</h3>
+            <button onclick="document.getElementById('add-reminder-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form hx-post="/reminders/add">
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Title</label>
+                <input type="text" name="title" required placeholder="e.g. Check monthly stock reconciliation" class="form-input" style="width: 100%;">
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Details / Notes</label>
+                <textarea name="details" rows="2" placeholder="Optional notes, invoice numbers, or instructions" class="form-input" style="width: 100%;"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 mb-4" style="gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Due Date</label>
+                    <input type="date" name="due_date" required value="{{ .TodayDateStr }}" class="form-input" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Priority</label>
+                    <select name="priority" class="form-input" style="width: 100%;">
+                        <option value="Medium">Medium Priority</option>
+                        <option value="High">High Priority</option>
+                        <option value="Low">Low Priority</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Category</label>
+                <select name="category" class="form-input" style="width: 100%;">
+                    <option value="General">General Milestone</option>
+                    <option value="Payment">Payment Due</option>
+                    <option value="Delivery">Supplier Delivery</option>
+                    <option value="Stock Check">Inventory / Stock Check</option>
+                </select>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button type="button" onclick="document.getElementById('add-reminder-modal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn">Schedule Reminder</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{ end }}
