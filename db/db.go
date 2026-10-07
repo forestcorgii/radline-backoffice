@@ -149,6 +149,7 @@ func InitDB(datasource string) error {
 		}
 	}
 
+	_ = EnsureRemindersTable()
 	seedDefaults()
 	return nil
 }
@@ -675,6 +676,65 @@ func seedDefaults() {
 
 	seedAuthDefaults()
 	seedGoalsAndRemindersDefaults()
+}
+
+// EnsureRemindersTable guarantees the earning_goals and reminders tables and indexes exist
+func EnsureRemindersTable() error {
+	if DB == nil {
+		return nil
+	}
+	if DB.IsPostgres() {
+		_, err := DB.Exec(`
+			CREATE TABLE IF NOT EXISTS earning_goals (
+				id SERIAL PRIMARY KEY,
+				title TEXT NOT NULL,
+				period_type TEXT NOT NULL,
+				target_period TEXT NOT NULL,
+				target_revenue DOUBLE PRECISION NOT NULL,
+				target_profit DOUBLE PRECISION NOT NULL,
+				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			CREATE TABLE IF NOT EXISTS reminders (
+				id SERIAL PRIMARY KEY,
+				title TEXT NOT NULL,
+				details TEXT NOT NULL DEFAULT '',
+				due_date TIMESTAMPTZ NOT NULL,
+				priority TEXT NOT NULL DEFAULT 'Medium',
+				category TEXT NOT NULL DEFAULT 'General',
+				status TEXT NOT NULL DEFAULT 'Pending',
+				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
+			CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
+			CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
+		`)
+		return err
+	}
+	_, err := DB.Exec(`
+		CREATE TABLE IF NOT EXISTS earning_goals (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT NOT NULL,
+			period_type TEXT NOT NULL,
+			target_period TEXT NOT NULL,
+			target_revenue REAL NOT NULL,
+			target_profit REAL NOT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE TABLE IF NOT EXISTS reminders (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT NOT NULL,
+			details TEXT NOT NULL DEFAULT '',
+			due_date DATETIME NOT NULL,
+			priority TEXT NOT NULL DEFAULT 'Medium',
+			category TEXT NOT NULL DEFAULT 'General',
+			status TEXT NOT NULL DEFAULT 'Pending',
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
+		CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
+		CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
+	`)
+	return err
 }
 
 func seedGoalsAndRemindersDefaults() {

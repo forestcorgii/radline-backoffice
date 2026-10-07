@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -37,23 +38,38 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 	year, month, _ := viewDate.Date()
 	firstOfMonth := time.Date(year, month, 1, 0, 0, 0, 0, viewDate.Location())
 	lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+	endOfMonth := time.Date(year, month, lastOfMonth.Day(), 23, 59, 59, 999999999, viewDate.Location())
 
 	prevMonthStr := firstOfMonth.AddDate(0, -1, 0).Format("2006-01")
 	nextMonthStr := firstOfMonth.AddDate(0, 1, 0).Format("2006-01")
 	currentMonthStr := firstOfMonth.Format("2006-01")
 	displayMonthName := firstOfMonth.Format("January 2006")
 
-	// Fetch all reminders for this month
+	// Ensure reminders table exists in the active database
+	_ = db.EnsureRemindersTable()
+
+	// Fetch all reminders for this month using typed time.Time parameters for PostgreSQL TIMESTAMPTZ compatibility
 	var monthlyReminders []models.Reminder
-	err := db.DB.Select(&monthlyReminders, `
-		SELECT id, title, details, due_date, priority, category, status, created_at
-		FROM reminders
-		WHERE due_date >= ? AND due_date <= ?
-		ORDER BY due_date ASC, priority DESC
-	`, firstOfMonth.Format("2006-01-02 00:00:00"), lastOfMonth.Format("2006-01-02 23:59:59"))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if db.DB != nil {
+		err := db.DB.Select(&monthlyReminders, `
+			SELECT id, title, details, due_date, priority, category, status, created_at
+			FROM reminders
+			WHERE due_date >= ? AND due_date <= ?
+			ORDER BY due_date ASC, priority DESC
+		`, firstOfMonth, endOfMonth)
+		if err != nil {
+			log.Printf("[RemindersHandler] Warning: failed to fetch monthly reminders with time.Time: %v. Retrying with string fallback...", err)
+			_ = db.EnsureRemindersTable()
+			_ = db.DB.Select(&monthlyReminders, `
+				SELECT id, title, details, due_date, priority, category, status, created_at
+				FROM reminders
+				WHERE due_date >= ? AND due_date <= ?
+				ORDER BY due_date ASC, priority DESC
+			`, firstOfMonth.Format("2006-01-02 00:00:00"), lastOfMonth.Format("2006-01-02 23:59:59"))
+		}
+	}
+	if monthlyReminders == nil {
+		monthlyReminders = []models.Reminder{}
 	}
 
 	// Group reminders by date string ("YYYY-MM-DD")
@@ -102,13 +118,21 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch upcoming pending agenda
 	var agenda []models.Reminder
-	_ = db.DB.Select(&agenda, `
-		SELECT id, title, details, due_date, priority, category, status, created_at
-		FROM reminders
-		WHERE status = 'Pending'
-		ORDER BY due_date ASC
-		LIMIT 15
-	`)
+	if db.DB != nil {
+		errAgenda := db.DB.Select(&agenda, `
+			SELECT id, title, details, due_date, priority, category, status, created_at
+			FROM reminders
+			WHERE status = 'Pending'
+			ORDER BY due_date ASC
+			LIMIT 15
+		`)
+		if errAgenda != nil {
+			log.Printf("[RemindersHandler] Warning: failed to fetch agenda: %v", errAgenda)
+		}
+	}
+	if agenda == nil {
+		agenda = []models.Reminder{}
+	}
 
 	data := struct {
 		Weeks            []CalendarWeek
