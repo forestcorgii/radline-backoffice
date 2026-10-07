@@ -161,8 +161,13 @@ func main() {
 	// Wrap entire router with AuthMiddleware
 	handler := app.AuthMiddleware(mux)
 
-	log.Println("Server starting on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server starting on http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
 func parseTemplates() map[string]*template.Template {
