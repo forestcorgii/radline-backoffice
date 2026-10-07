@@ -11,6 +11,8 @@ __debug_bin*
 *.db-journal
 *.db-shm
 *.db-wal
+*.sqlite
+*.sqlite3
 
 # Environment & secrets
 .env
@@ -34,6 +36,3 @@ Desktop.ini
 # Go
 vendor/
 Copy of RADLINE REPORT - BACKUP 6_13_26.xlsx
-backoffice.db
-backoffice.db
-backoffice.db
