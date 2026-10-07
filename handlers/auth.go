@@ -201,7 +201,7 @@ func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UserChipHandler returns the current authenticated user's badge for the sidebar/header
+// UserChipHandler returns the current authenticated user's badge and popover sub-menu for the sidebar
 func (app *App) UserChipHandler(w http.ResponseWriter, r *http.Request) {
 	ctxUser := GetCurrentUser(r)
 	if ctxUser == nil {
@@ -218,34 +218,118 @@ func (app *App) UserChipHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	roleColor := "var(--primary-color)"
+	roleBgColor := "rgba(79, 70, 229, 0.1)"
+	roleBorderColor := "rgba(79, 70, 229, 0.25)"
 	if strings.EqualFold(ctxUser.User.RoleName, "Admin") {
 		roleColor = "#dc2626"
+		roleBgColor = "rgba(220, 38, 38, 0.1)"
+		roleBorderColor = "rgba(220, 38, 38, 0.25)"
 	} else if strings.EqualFold(ctxUser.User.RoleName, "Manager") {
 		roleColor = "#d97706"
+		roleBgColor = "rgba(217, 119, 6, 0.1)"
+		roleBorderColor = "rgba(217, 119, 6, 0.25)"
 	} else {
 		roleColor = "#059669"
+		roleBgColor = "rgba(5, 150, 105, 0.1)"
+		roleBorderColor = "rgba(5, 150, 105, 0.25)"
 	}
 
+	safeFullName := htmlEscape(ctxUser.User.FullName)
+	safeUsername := htmlEscape(ctxUser.User.Username)
+	safeRoleName := htmlEscape(ctxUser.User.RoleName)
+
 	html := fmt.Sprintf(`
-	<div id="user-chip-container" class="user-chip-container" style="display:flex; align-items:center; justify-content:space-between; padding:0.625rem 0.75rem; background:var(--glass-bg); border-top:1px solid var(--border-color); gap:0.5rem;">
-		<div style="display:flex; align-items:center; gap:0.5rem; overflow:hidden;">
-			<div style="width:28px; height:28px; border-radius:50%%; background:%s; color:#ffffff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8125rem; flex-shrink:0;">
+	<div id="user-chip-container" class="user-chip-container">
+		<!-- Profile & Admin Sub-Menu Popover -->
+		<div id="profile-menu" class="profile-menu" role="menu" aria-label="Profile and Admin Menu">
+			<div class="profile-menu-header">
+				<div class="profile-menu-avatar" style="background:%s;">%s</div>
+				<div class="profile-menu-user-meta">
+					<div class="profile-menu-name">%s</div>
+					<div class="profile-menu-sub">
+						<span class="profile-menu-role-pill" style="color:%s; background:%s; border-color:%s;">%s</span>
+						<span class="profile-menu-username">@%s</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="profile-menu-divider"></div>
+
+			<div class="profile-menu-section-title">Administration</div>
+
+			<nav class="profile-menu-nav">
+				<a href="/settings/users" hx-get="/settings/users" hx-target="#main-content" hx-push-url="true" onclick="closeProfileMenu(); closeMobileSidebarOnNav();" class="profile-menu-item" role="menuitem">
+					<div class="profile-menu-item-icon">
+						<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+							<circle cx="9" cy="7" r="4"></circle>
+							<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+							<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+						</svg>
+					</div>
+					<div class="profile-menu-item-content">
+						<span class="profile-menu-item-title">User Accounts</span>
+						<span class="profile-menu-item-sub">Staff logins & credentials</span>
+					</div>
+				</a>
+
+				<a href="/settings/roles" hx-get="/settings/roles" hx-target="#main-content" hx-push-url="true" onclick="closeProfileMenu(); closeMobileSidebarOnNav();" class="profile-menu-item" role="menuitem">
+					<div class="profile-menu-item-icon">
+						<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+						</svg>
+					</div>
+					<div class="profile-menu-item-content">
+						<span class="profile-menu-item-title">Roles & Permissions</span>
+						<span class="profile-menu-item-sub">Security profiles & access</span>
+					</div>
+				</a>
+
+				<a href="/activity-logs" hx-get="/activity-logs" hx-target="#main-content" hx-push-url="true" onclick="closeProfileMenu(); closeMobileSidebarOnNav();" class="profile-menu-item" role="menuitem">
+					<div class="profile-menu-item-icon">
+						<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+						</svg>
+					</div>
+					<div class="profile-menu-item-content">
+						<span class="profile-menu-item-title">Activity Logs</span>
+						<span class="profile-menu-item-sub">System audit trail & history</span>
+					</div>
+				</a>
+			</nav>
+
+			<div class="profile-menu-divider"></div>
+
+			<button hx-post="/logout" hx-confirm="Are you sure you want to log out?" class="profile-menu-logout-btn" role="menuitem">
+				<svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+					<polyline points="16 17 21 12 16 7"></polyline>
+					<line x1="21" y1="12" x2="9" y2="12"></line>
+				</svg>
+				<span>Sign Out</span>
+			</button>
+		</div>
+
+		<!-- Profile Trigger Button -->
+		<button id="profile-chip-btn" class="profile-chip-btn" onclick="toggleProfileMenu(event)" aria-haspopup="true" aria-expanded="false" title="Account & Admin Menu">
+			<div class="profile-chip-avatar" style="background:%s;">
 				%s
 			</div>
-			<div style="display:flex; flex-direction:column; min-width:0;">
-				<span style="font-size:0.78125rem; font-weight:600; color:var(--text-main); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">%s</span>
-				<span style="font-size:0.65625rem; color:%s; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;">%s</span>
+			<div class="profile-chip-info">
+				<span class="profile-chip-name">%s</span>
+				<span class="profile-chip-role" style="color:%s;">%s</span>
 			</div>
-		</div>
-		<button hx-post="/logout" hx-confirm="Are you sure you want to log out?" class="btn-logout" title="Sign Out" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:0.25rem; border-radius:4px; display:flex; align-items:center;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-muted)'">
-			<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-				<polyline points="16 17 21 12 16 7"></polyline>
-				<line x1="21" y1="12" x2="9" y2="12"></line>
-			</svg>
+			<div class="profile-chip-caret">
+				<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor">
+					<path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
+				</svg>
+			</div>
 		</button>
 	</div>
-	`, roleColor, initial, htmlEscape(ctxUser.User.FullName), roleColor, htmlEscape(ctxUser.User.RoleName))
+	`,
+		roleColor, initial, safeFullName, roleColor, roleBgColor, roleBorderColor, safeRoleName, safeUsername,
+		roleColor, initial, safeFullName, roleColor, safeRoleName,
+	)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write([]byte(html))

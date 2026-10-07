@@ -300,3 +300,10 @@ See [[htmx-patterns]] for the toast protocol.
 - **QuickBooks Business Flow Hub & KPI Cards**:
   - Implemented `.qb-workflow-ribbon` with an interactive 4-step cycle: Inbound Receiving ➔ Track Inventory ➔ Record Sales ➔ Financial Analytics.
   - Revamped Financial Overview into 4 QuickBooks KPI cards (`.qb-kpi-card`) highlighting Money In (Revenue), Money Out (COGS), Net Gross Profit, and Profit Margin with category labels, icon badges, formatted figures, and actionable footer links.
+
+### Context: Alternating Background (Zebra Striping) for Data List Views
+**Problem**: Scanning through dense tables and converted list views (Items, Sales, Inventory, Receiving Logs, Brands, Categories, Users, Activity Logs) with tens to hundreds of rows strained eye-tracking across wide screens.
+**Enforced Solution**:
+- **Universal Alternating Selector**: Styled both standard tables (`tbody tr:nth-child(even)`, `tbody tr:nth-child(even) td`) and div-based list views (`.tbody .tr:nth-child(even)`, `.tbody .tr:nth-child(even) .td`) with `background-color: hsl(var(--secondary) / 0.6)` for a subtle slate-indigo tint against white surface backgrounds.
+- **Interactive States**: Configured `tr:hover td` and `.tr:hover .td` with `background-color: hsl(var(--accent))` and smooth `transition: background-color 0.15s ease`. Active inline edit rows override zebra striping with high-priority `hsl(var(--primary-tint) / 0.6) !important`.
+

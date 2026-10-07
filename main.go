@@ -149,10 +149,14 @@ func main() {
 	mux.HandleFunc("DELETE /goals/delete/{id}", app.RequirePermission(domain.PermDashboardView, app.DeleteGoalHandler))
 
 	// Reminders & Calendar Routing
+	mux.HandleFunc("GET /calendar", app.RequirePermission(domain.PermDashboardView, app.RemindersHandler))
 	mux.HandleFunc("GET /reminders", app.RequirePermission(domain.PermDashboardView, app.RemindersHandler))
 	mux.HandleFunc("POST /reminders/add", app.RequirePermission(domain.PermDashboardView, app.AddReminderHandler))
+	mux.HandleFunc("POST /calendar/add", app.RequirePermission(domain.PermDashboardView, app.AddReminderHandler))
 	mux.HandleFunc("POST /reminders/toggle/{id}", app.RequirePermission(domain.PermDashboardView, app.ToggleReminderHandler))
+	mux.HandleFunc("POST /calendar/toggle/{id}", app.RequirePermission(domain.PermDashboardView, app.ToggleReminderHandler))
 	mux.HandleFunc("DELETE /reminders/delete/{id}", app.RequirePermission(domain.PermDashboardView, app.DeleteReminderHandler))
+	mux.HandleFunc("DELETE /calendar/delete/{id}", app.RequirePermission(domain.PermDashboardView, app.DeleteReminderHandler))
 
 	// Receipt Scanner Routing
 	mux.HandleFunc("GET /tools/receipt-scanner", app.RequirePermission(domain.PermToolsScanner, app.ReceiptScannerHandler))
