@@ -94,6 +94,8 @@ type SalesDetail struct {
 	DocDate      time.Time `db:"doc_date"`
 	DocNumber    string    `db:"doc_number"`
 	CustomerName string    `db:"customer_name"`
+	TINNo        string    `db:"tin_no"`
+	Address      string    `db:"address"`
 	Supplier     string    `db:"supplier"`
 	ItemID       int       `db:"item_id"`
 	Qty          float64   `db:"qty"`
@@ -119,6 +121,8 @@ type SalesDetailWithItem struct {
 	DocDate      time.Time `db:"doc_date"`
 	DocNumber    string    `db:"doc_number"`
 	CustomerName string    `db:"customer_name"`
+	TINNo        string    `db:"tin_no"`
+	Address      string    `db:"address"`
 	Supplier     string    `db:"supplier"`
 	ItemID       int       `db:"item_id"`
 	Qty          float64   `db:"qty"`

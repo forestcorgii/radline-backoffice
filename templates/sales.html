@@ -23,7 +23,7 @@
     </div>
     <form hx-post="/sales/add" hx-swap="none"
         hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); const tbody = document.getElementById('sales-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleEncodeSalesForm(); }">
-        <div class="grid grid-cols-6">
+        <div class="grid grid-cols-4">
             <div class="form-group">
                 <label for="doc_date">Document Date</label>
                 <input type="date" id="doc_date" name="doc_date" required class="form-input">
@@ -42,10 +42,6 @@
                 <input type="text" id="doc_number" name="doc_number" required class="form-input">
             </div>
             <div class="form-group">
-                <label for="customer_name">Customer Name</label>
-                <input type="text" id="customer_name" name="customer_name" class="form-input">
-            </div>
-            <div class="form-group">
                 <label for="supplier">Supplier</label>
                 <select id="supplier" name="supplier" class="form-input supplier-select-ascd" style="padding: 0.75rem 1rem; height: auto;" onchange="updateSelectColorClass(this)"
                     required>
@@ -53,6 +49,18 @@
                     <option value="RENOWN">RENOWN</option>
                     <option value="OTHER">OTHER</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="customer_name">Customer Name</label>
+                <input type="text" id="customer_name" name="customer_name" class="form-input" placeholder="Client / Company">
+            </div>
+            <div class="form-group">
+                <label for="tin_no">TIN No.</label>
+                <input type="text" id="tin_no" name="tin_no" class="form-input" placeholder="000-000-000-000">
+            </div>
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text" id="address" name="address" class="form-input" placeholder="Business address">
             </div>
             <div class="form-group">
                 <label for="doc_status_encode">Status</label>
@@ -157,6 +165,14 @@
                         <label class="customize-checkbox-item">
                             <input type="checkbox" data-target-col="customer_name" onchange="onSalesViewSettingChange()">
                             <span>Customer Name</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="tin_no" onchange="onSalesViewSettingChange()">
+                            <span>TIN No.</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="address" onchange="onSalesViewSettingChange()">
+                            <span>Address</span>
                         </label>
                         <label class="customize-checkbox-item">
                             <input type="checkbox" data-target-col="supplier" onchange="onSalesViewSettingChange()">
@@ -340,6 +356,8 @@
                         <div class="th" data-col="doc_date">Date</div>
                         <div class="th" data-col="doc_type_number">Doc Type / Number</div>
                         <div class="th" data-col="customer_name">Customer Name</div>
+                        <div class="th" data-col="tin_no">TIN No.</div>
+                        <div class="th" data-col="address">Address</div>
                         <div class="th" data-col="supplier">Supplier</div>
                         <div class="th" data-col="item_description">Item Description</div>
                         <div class="th" data-col="qty">Qty</div>
@@ -422,6 +440,8 @@
                 doc_date: true,
                 doc_type_number: true,
                 customer_name: true,
+                tin_no: true,
+                address: true,
                 supplier: true,
                 item_description: true,
                 qty: true,
@@ -450,10 +470,12 @@
         };
 
         const DEFAULT_SALES_COL_WIDTHS = {
-            doc_status: 110,
+            doc_status: 48,
             doc_date: 100,
             doc_type_number: 140,
-            customer_name: 140,
+            customer_name: 130,
+            tin_no: 110,
+            address: 150,
             supplier: 90,
             item_description: 200,
             qty: 75,
@@ -469,6 +491,28 @@
             remarks: 120,
             actions: 90
         };
+
+        window.toggleRowStatusMenu = function (event, id) {
+            if (event) {
+                event.stopPropagation();
+            }
+            const popover = document.getElementById('status-popover-' + id);
+            if (!popover) return;
+            const isShown = popover.style.display === 'flex';
+            document.querySelectorAll('.status-menu-popover').forEach(el => el.style.display = 'none');
+            popover.style.display = isShown ? 'none' : 'flex';
+        };
+
+        window.closeRowStatusMenu = function (id) {
+            const popover = document.getElementById('status-popover-' + id);
+            if (popover) popover.style.display = 'none';
+        };
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.status-icon-dropdown')) {
+                document.querySelectorAll('.status-menu-popover').forEach(el => el.style.display = 'none');
+            }
+        });
 
         function getSalesColumnWidths() {
             try {

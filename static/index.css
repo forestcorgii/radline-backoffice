@@ -2561,6 +2561,100 @@ tbody tr.edit-row td {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	text-align: center;
+}
+
+.sales-log-table .th {
+	text-align: center;
+}
+
+/* Compact Sales Status Icons */
+.sales-log-table .th[data-col="doc_status"],
+.sales-log-table .td[data-col="doc_status"] {
+	text-align: center;
+	padding: 0.15rem 0.25rem;
+}
+
+.status-icon-dropdown {
+	position: relative;
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.status-icon-btn {
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid transparent;
+	cursor: pointer;
+	padding: 0;
+	transition: all 0.15s ease;
+	background: transparent;
+}
+
+.status-icon-btn:hover {
+	transform: scale(1.15);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.status-icon-posted {
+	background: rgba(16, 185, 129, 0.14);
+	color: #059669;
+	border-color: rgba(16, 185, 129, 0.35);
+}
+
+.status-icon-active {
+	background: rgba(37, 99, 235, 0.14);
+	color: #2563eb;
+	border-color: rgba(37, 99, 235, 0.35);
+}
+
+.status-icon-cancelled {
+	background: rgba(239, 68, 68, 0.14);
+	color: #dc2626;
+	border-color: rgba(239, 68, 68, 0.35);
+}
+
+.status-menu-popover {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 50%;
+	transform: translateX(-50%);
+	background: var(--surface-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	z-index: 10005;
+	min-width: 140px;
+	padding: 0.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.status-menu-item {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.35rem 0.5rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	border-radius: 4px;
+	border: none;
+	background: none;
+	width: 100%;
+	text-align: left;
+	cursor: pointer;
+	color: var(--text-main);
+	transition: background-color 0.1s ease;
+}
+
+.status-menu-item:hover {
+	background-color: var(--secondary, rgba(0, 0, 0, 0.05));
 }
 
 .resizable-table .td[data-col],

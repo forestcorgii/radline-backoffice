@@ -48,7 +48,12 @@
                 {{ if eq .DayNumber 0 }}
                 <div style="min-height: 85px; background: hsl(var(--secondary) / 0.2); border-radius: 4px; opacity: 0.4; min-width: 0;"></div>
                 {{ else }}
-                <div style="min-height: 85px; background: {{ if .IsToday }}hsl(215 90% 97%){{ else }}#ffffff{{ end }}; border: 1px solid {{ if .IsToday }}var(--primary-color){{ else }}var(--border-color){{ end }}; border-radius: 4px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; overflow: hidden;">
+                <div class="calendar-day-cell"
+                    data-date="{{ .DateStr }}"
+                    ondragover="handleDayDragOver(event)"
+                    ondragleave="handleDayDragLeave(event)"
+                    ondrop="handleDayDrop(event)"
+                    style="min-height: 85px; background: {{ if .IsToday }}hsl(215 90% 97%){{ else }}#ffffff{{ end }}; border: 1px solid {{ if .IsToday }}var(--primary-color){{ else }}var(--border-color){{ end }}; border-radius: 4px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; overflow: hidden;">
                     <div style="display: flex; justify-content: space-between; align-items: center; min-width: 0;">
                         <span style="font-size: 0.6875rem; font-weight: {{ if .IsToday }}800{{ else }}600{{ end }}; color: {{ if .IsToday }}var(--primary-color){{ else }}var(--text-main){{ end }};">
                             {{ .DayNumber }}
@@ -62,6 +67,7 @@
                     <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 58px; min-width: 0;">
                         {{ range .Reminders }}
                         <div class="calendar-reminder-chip"
+                            draggable="true"
                             data-id="{{ .ID }}"
                             data-title="{{ .Title }}"
                             data-details="{{ .Details }}"
@@ -70,9 +76,11 @@
                             data-category="{{ .Category }}"
                             data-assigned="{{ if .AssignedToUserID }}{{ .AssignedToUserID }}{{ end }}"
                             data-status="{{ .Status }}"
+                            ondragstart="handleChipDragStart(event)"
+                            ondragend="handleChipDragEnd(event)"
                             onclick="handleEditReminderClick(this)"
-                            style="font-size: 0.625rem; padding: 2px 4px; border-radius: 2px; background: {{ if eq .Priority "High" }}hsl(0 84% 95%){{ else if eq .Priority "Medium" }}hsl(38 92% 95%){{ else }}hsl(142 72% 95%){{ end }}; color: {{ if eq .Priority "High" }}#b91c1c{{ else if eq .Priority "Medium" }}#b45309{{ else }}#047857{{ end }}; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid {{ if eq .Priority "High" }}#ef4444{{ else if eq .Priority "Medium" }}#f59e0b{{ else }}#10b981{{ end }}; cursor: pointer; min-width: 0; max-width: 100%; box-sizing: border-box;" 
-                            title="{{ .Title }}{{ if .Details }} - {{ .Details }}{{ end }}{{ if .AssignedToName }} (Assigned: {{ .AssignedToName }}){{ end }} • Click to edit">
+                            style="font-size: 0.625rem; padding: 2px 4px; border-radius: 2px; background: {{ if eq .Priority "High" }}hsl(0 84% 95%){{ else if eq .Priority "Medium" }}hsl(38 92% 95%){{ else }}hsl(142 72% 95%){{ end }}; color: {{ if eq .Priority "High" }}#b91c1c{{ else if eq .Priority "Medium" }}#b45309{{ else }}#047857{{ end }}; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid {{ if eq .Priority "High" }}#ef4444{{ else if eq .Priority "Medium" }}#f59e0b{{ else }}#10b981{{ end }}; cursor: grab; min-width: 0; max-width: 100%; box-sizing: border-box;" 
+                            title="{{ .Title }}{{ if .Details }} - {{ .Details }}{{ end }}{{ if .AssignedToName }} (Assigned: {{ .AssignedToName }}){{ end }} • Drag to reschedule or click to edit">
                             {{ if .AssignedToName }}<span style="opacity: 0.8; font-size: 0.5625rem; margin-right: 2px;">👤</span>{{ end }}{{ .Title }}
                         </div>
                         {{ end }}
@@ -99,7 +107,20 @@
             </div>
             {{ else }}
             {{ range .Agenda }}
-            <div style="padding: 0.625rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+            <div class="agenda-reminder-card"
+                draggable="true"
+                data-id="{{ .ID }}"
+                data-title="{{ .Title }}"
+                data-details="{{ .Details }}"
+                data-duedate="{{ .DueDate.Format "2006-01-02" }}"
+                data-priority="{{ .Priority }}"
+                data-category="{{ .Category }}"
+                data-assigned="{{ if .AssignedToUserID }}{{ .AssignedToUserID }}{{ end }}"
+                data-status="{{ .Status }}"
+                ondragstart="handleChipDragStart(event)"
+                ondragend="handleChipDragEnd(event)"
+                style="padding: 0.625rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color); cursor: grab; transition: transform 0.15s ease, box-shadow 0.15s ease;"
+                title="Drag to calendar to reschedule">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
                     <div style="display: flex; align-items: flex-start; gap: 0.5rem; min-width: 0;">
                         <button hx-post="/reminders/toggle/{{ .ID }}" hx-target="#main-content" class="btn-sm" style="background: hsl(var(--card)); border: 1.5px solid var(--border-color); width: 20px; height: 20px; border-radius: 4px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 2px; flex-shrink: 0; transition: all 0.15s ease;" title="Mark Completed">
@@ -293,8 +314,98 @@
     </div>
 </div>
 
+<style>
+    .calendar-day-cell {
+        transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+    }
+    .calendar-day-cell.calendar-day-drop-target {
+        background: hsl(215 90% 93%) !important;
+        border: 2px dashed var(--primary-color) !important;
+        box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.35), 0 4px 12px rgba(59, 130, 246, 0.2) !important;
+        transform: scale(1.02);
+        z-index: 2;
+    }
+    .calendar-reminder-chip {
+        user-select: none;
+        -webkit-user-drag: element;
+    }
+    .calendar-reminder-chip:active, .agenda-reminder-card:active {
+        cursor: grabbing !important;
+    }
+    .calendar-reminder-chip.is-dragging, .agenda-reminder-card.is-dragging {
+        opacity: 0.4;
+        border-style: dashed !important;
+        transform: scale(0.98);
+    }
+</style>
+
 <script>
+    let _calendarDragActive = false;
+    let _draggedReminderId = null;
+    let _draggedOriginDate = null;
+
+    function handleChipDragStart(e) {
+        _calendarDragActive = true;
+        const target = e.currentTarget;
+        _draggedReminderId = target.dataset.id;
+        _draggedOriginDate = target.dataset.duedate;
+        target.classList.add('is-dragging');
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', _draggedReminderId);
+        }
+    }
+
+    function handleChipDragEnd(e) {
+        e.currentTarget.classList.remove('is-dragging');
+        document.querySelectorAll('.calendar-day-cell.calendar-day-drop-target').forEach(el => {
+            el.classList.remove('calendar-day-drop-target');
+        });
+        setTimeout(() => {
+            _calendarDragActive = false;
+            _draggedReminderId = null;
+            _draggedOriginDate = null;
+        }, 120);
+    }
+
+    function handleDayDragOver(e) {
+        e.preventDefault();
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = 'move';
+        }
+        const cell = e.currentTarget;
+        if (!cell.classList.contains('calendar-day-drop-target')) {
+            cell.classList.add('calendar-day-drop-target');
+        }
+    }
+
+    function handleDayDragLeave(e) {
+        const cell = e.currentTarget;
+        const rect = cell.getBoundingClientRect();
+        if (e.clientX <= rect.left || e.clientX >= rect.right || e.clientY <= rect.top || e.clientY >= rect.bottom) {
+            cell.classList.remove('calendar-day-drop-target');
+        }
+    }
+
+    function handleDayDrop(e) {
+        e.preventDefault();
+        const cell = e.currentTarget;
+        cell.classList.remove('calendar-day-drop-target');
+
+        const reminderId = _draggedReminderId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
+        const targetDate = cell.dataset.date;
+
+        if (!reminderId || !targetDate) return;
+        if (_draggedOriginDate === targetDate) return; // Dropped on same date, no update needed
+
+        htmx.ajax('POST', '/reminders/reschedule/' + reminderId, {
+            target: '#main-content',
+            values: { due_date: targetDate }
+        });
+    }
+
     function handleEditReminderClick(el) {
+        if (_calendarDragActive) return;
         const ds = el.dataset;
         const modal = document.getElementById('edit-reminder-modal');
         const form = document.getElementById('edit-reminder-form');

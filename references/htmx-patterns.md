@@ -266,10 +266,19 @@ This triggers HTMX to navigate to the logs page, similar to `hx-push-url` but tr
 - **Dual Triggering for Programmatic Hidden Inputs**: When updating hidden inputs carrying `hx-trigger="change"`, always execute `htmx.trigger(hidden, 'change')` when `window.htmx` is available alongside `hidden.dispatchEvent(new Event('change', { bubbles: true }))`.
 - **Flexible Attribute Selectors for Inline Forms**: In DOM helper scripts that update companion fields (e.g. default UOM fields), use broad query selectors like `querySelector('#uom, #uom-inline-uom, [name="uom"]')` to cover diverse sub-template DOM IDs.
 
+### Context: Calendar Drag & Drop Rescheduling via HTMX
+**Problem**: In an operational calendar view, rescheduling items (reminders, milestones, tasks) by dragging and dropping between calendar days can inadvertently trigger modal click handlers upon mouse release. Furthermore, dropping on the same day should avoid redundant network round-trips, and backend responses must update `#main-content` seamlessly without full page refreshes.
+**Enforced Solution**:
+- **Drag-Active Click Guard**: Maintain a temporary `_calendarDragActive` boolean set to `true` on `dragstart`, and reset in `dragend` inside a `setTimeout(..., 120)` callback. In item click handlers (e.g. `handleEditReminderClick`), check `if (_calendarDragActive) return;` immediately.
+- **Visual Target Feedback**: Apply `.calendar-day-drop-target` on day cell `dragover` (with `e.preventDefault()` and `e.dataTransfer.dropEffect = 'move'`) and remove on `dragleave` and `drop`.
+- **Programmatic HTMX Dispatch**: On drop, check if `_draggedOriginDate === targetDate`. If changed, call `htmx.ajax('POST', '/reminders/reschedule/' + reminderId, { target: '#main-content', values: { due_date: targetDate } })`.
+- **Dual HX-Target Inspection**: Handlers accept both `HX-Target: #main-content` and `HX-Target: main-content`, emitting `HX-Location: {"path": returnUrl, "target": "#main-content"}` and `HX-Trigger: {"show-toast": ...}` for instantaneous toast notification and partial SPA refresh.
+
 ## Related
 - [[handlers-overview]] — `Render` and `RenderPage` methods
 - [[templates-overview]] — Template structure
 - [[sidebar-navigation]] — Navigation setup
 - [[ui-design-tokens]] — CSS classes referenced in templates
+
 
 

@@ -1,0 +1,681 @@
+{{ define "form_quotation.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="form-document-container">
+    <!-- Non-printable top action bar -->
+    <div class="document-action-bar no-print">
+        <div class="action-bar-left">
+            <span class="action-badge">Document Generator</span>
+            <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700;">Price Quotation Form</h2>
+        </div>
+        <div class="action-bar-right">
+            <button type="button" class="btn btn-secondary" onclick="resetQuoteForm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                Reset
+            </button>
+            <button type="button" class="btn" onclick="window.print()" style="background: #2563eb; color: #fff;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                Print / Save PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- The Printable Document Card -->
+    <div class="document-sheet card" id="quotation-sheet">
+        <!-- Sheet Header -->
+        <div class="sheet-header">
+            <div class="sheet-company-info">
+                <div class="sheet-logo-badge">R</div>
+                <div>
+                    <h1 class="sheet-company-title">RADLINE ENTERPRISES</h1>
+                    <p class="sheet-company-sub">Auto Parts, Hardware & Industrial Solutions</p>
+                    <p class="sheet-meta-line">TIN: 123-456-789-000 · VAT Registered</p>
+                    <p class="sheet-meta-line">Tel: (02) 8123-4567 · Email: sales@radline.ph</p>
+                </div>
+            </div>
+            <div class="sheet-doc-badge">
+                <div class="sheet-doc-type">PRICE QUOTATION</div>
+                <div class="sheet-doc-number-row">
+                    <span class="sheet-label-sm">QUOTE NO:</span>
+                    <input type="text" id="quote_no" class="sheet-input-clean bold" value="{{ .DefaultQuoteNo }}" style="width: 150px; font-weight: 700; text-align: right;">
+                </div>
+                <div class="sheet-doc-date-row">
+                    <span class="sheet-label-sm">DATE:</span>
+                    <input type="date" id="quote_date" class="sheet-input-clean" value="{{ .CurrentDate }}" style="width: 130px; text-align: right;">
+                </div>
+                <div class="sheet-doc-date-row">
+                    <span class="sheet-label-sm">VALID UNTIL:</span>
+                    <input type="date" id="quote_valid_until" class="sheet-input-clean" style="width: 130px; text-align: right;">
+                </div>
+            </div>
+        </div>
+
+        <hr class="sheet-divider">
+
+        <!-- Parties Section: Bill To / Customer -->
+        <div class="sheet-parties-grid">
+            <div class="sheet-party-box">
+                <div class="sheet-party-heading">CUSTOMER / CLIENT DETAILS</div>
+                <div class="sheet-form-row">
+                    <label class="sheet-field-label">Customer Name:</label>
+                    <input type="text" id="cust_name" class="sheet-input-clean" placeholder="Client / Company Name" style="flex: 1; font-weight: 600;">
+                </div>
+                <div class="sheet-form-row">
+                    <label class="sheet-field-label">TIN No.:</label>
+                    <input type="text" id="cust_tin" class="sheet-input-clean" placeholder="000-000-000-000" style="flex: 1;">
+                </div>
+                <div class="sheet-form-row">
+                    <label class="sheet-field-label">Address:</label>
+                    <input type="text" id="cust_address" class="sheet-input-clean" placeholder="Complete Billing / Delivery Address" style="flex: 1;">
+                </div>
+                <div class="sheet-form-row">
+                    <label class="sheet-field-label">Contact Person:</label>
+                    <input type="text" id="cust_contact" class="sheet-input-clean" placeholder="Attn: Purchasing Officer / Manager" style="flex: 1;">
+                </div>
+            </div>
+
+            <div class="sheet-party-box">
+                <div class="sheet-party-heading">TERMS & REFERENCE</div>
+                <div class="sheet-form-row">
+                    <label class="sheet-field-label">Payment Terms:</label>
+                    <select id="quote_terms" class="sheet-input-clean" style="flex: 1;">
+                        <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
+                        <option value="Net 7 Days">Net 7 Days</option>
+                        <option value="Net 15 Days">Net 15 Days</option>
+                        <option value="Net 30 Days" selected>Net 30 Days</option>
+                        <option value="50% Downpayment, 50% Delivery">50% Downpayment, 50% Delivery</option>
+                    </select>
+                </div>
+                <div class="sheet-form-row">
+                    <label class="sheet-field-label">Delivery Period:</label>
+                    <input type="text" id="quote_delivery" class="sheet-input-clean" value="3 - 5 Business Days" style="flex: 1;">
+                </div>
+                <div class="sheet-form-row">
+                    <label class="sheet-field-label">Prepared By:</label>
+                    <input type="text" id="quote_prepared_by" class="sheet-input-clean" value="{{ .PreparedBy }}" placeholder="Sales Representative" style="flex: 1;">
+                </div>
+                <div class="sheet-form-row">
+                    <label class="sheet-field-label">Project / Ref:</label>
+                    <input type="text" id="quote_ref" class="sheet-input-clean" placeholder="Project name or requisition ref." style="flex: 1;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="sheet-table-wrapper">
+            <table class="sheet-items-table" id="quote-items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">#</th>
+                        <th style="width: 140px;">Item Code</th>
+                        <th>Description / Specification</th>
+                        <th style="width: 80px; text-align: center;">UOM</th>
+                        <th style="width: 90px; text-align: right;">Qty</th>
+                        <th style="width: 120px; text-align: right;">Unit Price</th>
+                        <th style="width: 130px; text-align: right;">Line Total</th>
+                        <th style="width: 45px; text-align: center;" class="no-print"></th>
+                    </tr>
+                </thead>
+                <tbody id="quote-items-tbody">
+                    <tr class="quote-item-row">
+                        <td class="row-index" style="text-align: center; color: var(--text-muted);">1</td>
+                        <td>
+                            <input type="text" class="sheet-input-table item-code-input" list="catalog-items-list" placeholder="Select or type" oninput="onQuoteItemSelect(this)">
+                        </td>
+                        <td>
+                            <input type="text" class="sheet-input-table item-desc-input" placeholder="Product details / specifications">
+                        </td>
+                        <td>
+                            <input type="text" class="sheet-input-table item-uom-input" placeholder="PCS" style="text-align: center;">
+                        </td>
+                        <td>
+                            <input type="number" step="any" min="0" value="1" class="sheet-input-table item-qty-input" style="text-align: right;" oninput="recalcQuoteSheet()">
+                        </td>
+                        <td>
+                            <input type="number" step="any" min="0" value="0.00" class="sheet-input-table item-price-input" style="text-align: right;" oninput="recalcQuoteSheet()">
+                        </td>
+                        <td style="text-align: right; font-weight: 600;" class="item-line-total">₱0.00</td>
+                        <td class="no-print" style="text-align: center;">
+                            <button type="button" class="btn-sheet-del" onclick="removeQuoteRow(this)" title="Delete row">✕</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <datalist id="catalog-items-list">
+            {{ range .Items }}
+            <option value="{{ .Code }}" data-desc="{{ .Description }}" data-uom="{{ .DefaultUOM }}">{{ .Description }}</option>
+            {{ end }}
+        </datalist>
+
+        <div class="sheet-table-actions no-print">
+            <button type="button" class="btn btn-secondary" onclick="addQuoteRow()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+                + Add Item Row
+            </button>
+        </div>
+
+        <!-- Calculation Summary & Notes -->
+        <div class="sheet-summary-grid">
+            <div class="sheet-notes-box">
+                <div class="sheet-party-heading">TERMS & CONDITIONS</div>
+                <textarea class="sheet-textarea-clean" rows="4" placeholder="1. Prices quoted are inclusive of VAT unless otherwise stated.&#10;2. Delivery lead time begins upon receipt of approved Purchase Order.&#10;3. Inquiries regarding this quotation can be directed to the contact above."></textarea>
+            </div>
+
+            <div class="sheet-totals-box">
+                <div class="totals-row">
+                    <span class="totals-label">Subtotal:</span>
+                    <span class="totals-value" id="quote-subtotal">₱0.00</span>
+                </div>
+                <div class="totals-row">
+                    <span class="totals-label">Discount (%):</span>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                        <input type="number" step="any" min="0" max="100" id="quote_discount_pct" class="sheet-input-clean" value="0" style="width: 55px; text-align: right;" oninput="recalcQuoteSheet()">
+                        <span class="totals-value" id="quote-discount-amt" style="font-size: 0.8125rem; color: #dc2626;">-₱0.00</span>
+                    </div>
+                </div>
+                <div class="totals-row">
+                    <span class="totals-label">VAT (12%):</span>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                        <label class="no-print" style="font-size: 0.75rem; display: flex; align-items: center; gap: 3px; cursor: pointer;">
+                            <input type="checkbox" id="quote_apply_vat" onchange="recalcQuoteSheet()"> Apply VAT
+                        </label>
+                        <span class="totals-value" id="quote-vat-amt">₱0.00</span>
+                    </div>
+                </div>
+                <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid var(--border-color);">
+                <div class="totals-row grand-total">
+                    <span class="totals-label bold">GRAND TOTAL:</span>
+                    <span class="totals-value bold text-primary" id="quote-grand-total">₱0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signatures Section -->
+        <div class="sheet-signatures">
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-title">Prepared By</div>
+                <div class="sig-subtitle" id="sig-prepared-name">Authorized Representative</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-title">Approved By</div>
+                <div class="sig-subtitle">Management / Sales Head</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-title">Customer Acceptance</div>
+                <div class="sig-subtitle">Signature over Printed Name & Date</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-document-container {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-bottom: 3rem;
+}
+.document-action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: var(--shadow);
+}
+.action-bar-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.action-badge {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--primary-color);
+}
+.action-bar-right {
+    display: flex;
+    gap: 0.5rem;
+}
+.document-sheet {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 2.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    color: #1e293b;
+}
+.sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+.sheet-company-info {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+.sheet-logo-badge {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #ffffff;
+    font-weight: 900;
+    font-size: 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+.sheet-company-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 0.02em;
+}
+.sheet-company-sub {
+    margin: 0.15rem 0 0.35rem;
+    font-size: 0.8125rem;
+    color: #64748b;
+    font-weight: 500;
+}
+.sheet-meta-line {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #64748b;
+    line-height: 1.35;
+}
+.sheet-doc-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+}
+.sheet-doc-type {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #2563eb;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+}
+.sheet-doc-number-row, .sheet-doc-date-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.sheet-label-sm {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.04em;
+}
+.sheet-divider {
+    margin: 1.5rem 0;
+    border: none;
+    border-top: 1px solid #e2e8f0;
+}
+.sheet-parties-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.sheet-party-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.sheet-party-heading {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    color: #475569;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.35rem;
+}
+.sheet-form-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.sheet-field-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+    width: 110px;
+    flex-shrink: 0;
+}
+.sheet-input-clean {
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8125rem;
+    background: #ffffff;
+    color: #0f172a;
+    outline: none;
+}
+.sheet-input-clean:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+.sheet-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+.sheet-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+.sheet-items-table th {
+    background: #f1f5f9;
+    padding: 0.6rem 0.75rem;
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #cbd5e1;
+}
+.sheet-items-table td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+.sheet-input-table {
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 0.3rem 0.4rem;
+    font-size: 0.8125rem;
+    background: transparent;
+    color: #0f172a;
+    box-sizing: border-box;
+}
+.sheet-input-table:hover, .sheet-input-table:focus {
+    border-color: #94a3b8;
+    background: #ffffff;
+}
+.btn-sheet-del {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+}
+.btn-sheet-del:hover {
+    background: #fee2e2;
+}
+.sheet-table-actions {
+    margin-bottom: 1.5rem;
+}
+.sheet-summary-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+.sheet-notes-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1rem;
+}
+.sheet-textarea-clean {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    background: #ffffff;
+    color: #334155;
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+}
+.sheet-totals-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+.totals-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8125rem;
+}
+.totals-label {
+    color: #475569;
+    font-weight: 500;
+}
+.totals-value {
+    color: #0f172a;
+    font-weight: 600;
+}
+.totals-row.grand-total {
+    font-size: 1rem;
+}
+.totals-row.grand-total .totals-label {
+    color: #0f172a;
+    font-weight: 800;
+}
+.totals-row.grand-total .totals-value {
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: #2563eb;
+}
+.sheet-signatures {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+    margin-top: 3rem;
+    padding-top: 1rem;
+}
+.sig-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.sig-line {
+    width: 85%;
+    border-top: 1px solid #64748b;
+    margin-bottom: 0.5rem;
+}
+.sig-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+.sig-subtitle {
+    font-size: 0.6875rem;
+    color: #64748b;
+}
+
+@media print {
+    body {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .no-print, .sidebar, .top-header, .sidebar-backdrop, #user-chip {
+        display: none !important;
+    }
+    .main-layout-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    .form-document-container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    .document-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 1.5cm !important;
+    }
+    .sheet-input-clean, .sheet-input-table, .sheet-textarea-clean {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+    .sheet-items-table th {
+        background: #f1f5f9 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+</style>
+
+<script>
+function onQuoteItemSelect(inputEl) {
+    const val = inputEl.value;
+    const row = inputEl.closest('tr');
+    if (!row) return;
+
+    const datalist = document.getElementById('catalog-items-list');
+    if (!datalist) return;
+
+    const opt = Array.from(datalist.options).find(o => o.value === val);
+    if (opt) {
+        const descInput = row.querySelector('.item-desc-input');
+        const uomInput = row.querySelector('.item-uom-input');
+        if (descInput) descInput.value = opt.getAttribute('data-desc') || '';
+        if (uomInput) uomInput.value = opt.getAttribute('data-uom') || 'PCS';
+    }
+    recalcQuoteSheet();
+}
+
+function recalcQuoteSheet() {
+    let subtotal = 0;
+    const rows = document.querySelectorAll('#quote-items-tbody .quote-item-row');
+    rows.forEach((row, idx) => {
+        const indexEl = row.querySelector('.row-index');
+        if (indexEl) indexEl.textContent = idx + 1;
+
+        const qty = parseFloat(row.querySelector('.item-qty-input')?.value) || 0;
+        const price = parseFloat(row.querySelector('.item-price-input')?.value) || 0;
+        const lineTotal = qty * price;
+        subtotal += lineTotal;
+
+        const totalCell = row.querySelector('.item-line-total');
+        if (totalCell) totalCell.textContent = '₱' + lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    });
+
+    const discountPct = parseFloat(document.getElementById('quote_discount_pct')?.value) || 0;
+    const discountAmt = subtotal * (discountPct / 100);
+    const discountedTotal = Math.max(0, subtotal - discountAmt);
+
+    const applyVat = document.getElementById('quote_apply_vat')?.checked || false;
+    const vatAmt = applyVat ? discountedTotal * 0.12 : 0;
+    const grandTotal = discountedTotal + vatAmt;
+
+    const subtotalEl = document.getElementById('quote-subtotal');
+    if (subtotalEl) subtotalEl.textContent = '₱' + subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const discountAmtEl = document.getElementById('quote-discount-amt');
+    if (discountAmtEl) discountAmtEl.textContent = '-₱' + discountAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const vatAmtEl = document.getElementById('quote-vat-amt');
+    if (vatAmtEl) vatAmtEl.textContent = '₱' + vatAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const grandTotalEl = document.getElementById('quote-grand-total');
+    if (grandTotalEl) grandTotalEl.textContent = '₱' + grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function addQuoteRow() {
+    const tbody = document.getElementById('quote-items-tbody');
+    if (!tbody) return;
+
+    const newRow = document.createElement('tr');
+    newRow.className = 'quote-item-row';
+    newRow.innerHTML = `
+        <td class="row-index" style="text-align: center; color: var(--text-muted);"></td>
+        <td>
+            <input type="text" class="sheet-input-table item-code-input" list="catalog-items-list" placeholder="Select or type" oninput="onQuoteItemSelect(this)">
+        </td>
+        <td>
+            <input type="text" class="sheet-input-table item-desc-input" placeholder="Product details / specifications">
+        </td>
+        <td>
+            <input type="text" class="sheet-input-table item-uom-input" placeholder="PCS" style="text-align: center;">
+        </td>
+        <td>
+            <input type="number" step="any" min="0" value="1" class="sheet-input-table item-qty-input" style="text-align: right;" oninput="recalcQuoteSheet()">
+        </td>
+        <td>
+            <input type="number" step="any" min="0" value="0.00" class="sheet-input-table item-price-input" style="text-align: right;" oninput="recalcQuoteSheet()">
+        </td>
+        <td style="text-align: right; font-weight: 600;" class="item-line-total">₱0.00</td>
+        <td class="no-print" style="text-align: center;">
+            <button type="button" class="btn-sheet-del" onclick="removeQuoteRow(this)" title="Delete row">✕</button>
+        </td>
+    `;
+    tbody.appendChild(newRow);
+    recalcQuoteSheet();
+}
+
+function removeQuoteRow(btn) {
+    const tbody = document.getElementById('quote-items-tbody');
+    if (tbody && tbody.children.length > 1) {
+        btn.closest('tr')?.remove();
+        recalcQuoteSheet();
+    }
+}
+
+function resetQuoteForm() {
+    if (confirm("Reset the quotation form to default?")) {
+        document.getElementById('cust_name').value = '';
+        document.getElementById('cust_tin').value = '';
+        document.getElementById('cust_address').value = '';
+        document.getElementById('cust_contact').value = '';
+        document.getElementById('quote_discount_pct').value = '0';
+        document.getElementById('quote_apply_vat').checked = false;
+        const tbody = document.getElementById('quote-items-tbody');
+        if (tbody) {
+            while (tbody.children.length > 1) {
+                tbody.removeChild(tbody.lastChild);
+            }
+            const firstRow = tbody.children[0];
+            firstRow.querySelector('.item-code-input').value = '';
+            firstRow.querySelector('.item-desc-input').value = '';
+            firstRow.querySelector('.item-uom-input').value = '';
+            firstRow.querySelector('.item-qty-input').value = '1';
+            firstRow.querySelector('.item-price-input').value = '0.00';
+        }
+        recalcQuoteSheet();
+    }
+}
+
+// Initial calculation
+recalcQuoteSheet();
+</script>
+{{ end }}

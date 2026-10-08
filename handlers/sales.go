@@ -23,7 +23,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	isEdit := r.FormValue("is_edit") == "1" || r.URL.Query().Get("is_edit") == "1"
 
 	baseQuery := `
-		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
+		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.tin_no, s.address, s.supplier,
 		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost,
 		       s.patong, s.pos_charge, s.wt_2307, s.total_remit, s.profit, s.profit_margin, s.remarks,
 		       i.code as item_code, i.description as item_description
@@ -34,8 +34,8 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	var whereClauses []string
 
 	if search != "" {
-		whereClauses = append(whereClauses, "(s.doc_number LIKE ? OR s.customer_name LIKE ? OR i.code LIKE ? OR i.description LIKE ?)")
-		args = append(args, "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%")
+		whereClauses = append(whereClauses, "(s.doc_number LIKE ? OR s.customer_name LIKE ? OR s.tin_no LIKE ? OR s.address LIKE ? OR i.code LIKE ? OR i.description LIKE ?)")
+		args = append(args, "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
 	if supplierFilter != "" && supplierFilter != "all" {
@@ -166,6 +166,8 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	docType := r.FormValue("doc_type")
 	docNumber := r.FormValue("doc_number")
 	customerName := r.FormValue("customer_name")
+	tinNo := r.FormValue("tin_no")
+	address := r.FormValue("address")
 	supplier := r.FormValue("supplier")
 	docStatus := r.FormValue("doc_status")
 	if docStatus == "" {
@@ -256,6 +258,7 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	sale.SetCustomerDetails(tinNo, address)
 
 	tx, err := db.DB.Beginx()
 	if err != nil {
@@ -268,9 +271,9 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	details := sale.ToSalesDetails()
 	for _, sd := range details {
 		_, err = tx.Exec(`
-			INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, patong, pos_charge, wt_2307, total_remit, profit, profit_margin, remarks, ref_pl)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, sd.DocType, sd.DocStatus, sd.DocDate, sd.DocNumber, sd.CustomerName, sd.Supplier, sd.ItemID, sd.Qty, sd.UOM, sd.Price, sd.TotalSales, sd.Cost, sd.TotalCost, sd.Patong, sd.POSCharge, sd.WT2307, sd.TotalRemit, sd.Profit, sd.ProfitMargin, sd.Remarks, sd.RefPL)
+			INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, tin_no, address, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, patong, pos_charge, wt_2307, total_remit, profit, profit_margin, remarks, ref_pl)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, sd.DocType, sd.DocStatus, sd.DocDate, sd.DocNumber, sd.CustomerName, sd.TINNo, sd.Address, sd.Supplier, sd.ItemID, sd.Qty, sd.UOM, sd.Price, sd.TotalSales, sd.Cost, sd.TotalCost, sd.Patong, sd.POSCharge, sd.WT2307, sd.TotalRemit, sd.Profit, sd.ProfitMargin, sd.Remarks, sd.RefPL)
 		if err != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save sale detail."}}`)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -437,6 +440,8 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	docNumber := r.FormValue("doc_number")
 	customerName := r.FormValue("customer_name")
+	tinNo := r.FormValue("tin_no")
+	address := r.FormValue("address")
 	supplier := r.FormValue("supplier")
 	itemIDStr := r.FormValue("item_id")
 	qtyStr := r.FormValue("qty")
@@ -472,9 +477,9 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.DB.Exec(`
 		UPDATE sales_details 
-		SET doc_type = ?, doc_status = ?, doc_date = ?, doc_number = ?, customer_name = ?, supplier = ?, item_id = ?, qty = ?, uom = ?, price = ?, total_sales = ?, cost = ?, total_cost = ?, patong = ?, pos_charge = ?, wt_2307 = ?, total_remit = ?, profit = ?, profit_margin = ?, remarks = ?
+		SET doc_type = ?, doc_status = ?, doc_date = ?, doc_number = ?, customer_name = ?, tin_no = ?, address = ?, supplier = ?, item_id = ?, qty = ?, uom = ?, price = ?, total_sales = ?, cost = ?, total_cost = ?, patong = ?, pos_charge = ?, wt_2307 = ?, total_remit = ?, profit = ?, profit_margin = ?, remarks = ?
 		WHERE id = ?
-	`, salesDetail.DocType, salesDetail.DocStatus, salesDetail.DocDate, salesDetail.DocNumber, salesDetail.CustomerName, salesDetail.Supplier, salesDetail.ItemID, salesDetail.Qty, salesDetail.UOM, salesDetail.Price, salesDetail.TotalSales, salesDetail.Cost, salesDetail.TotalCost, salesDetail.Patong, salesDetail.POSCharge, salesDetail.WT2307, salesDetail.TotalRemit, salesDetail.Profit, salesDetail.ProfitMargin, salesDetail.Remarks, id)
+	`, salesDetail.DocType, salesDetail.DocStatus, salesDetail.DocDate, salesDetail.DocNumber, salesDetail.CustomerName, tinNo, address, salesDetail.Supplier, salesDetail.ItemID, salesDetail.Qty, salesDetail.UOM, salesDetail.Price, salesDetail.TotalSales, salesDetail.Cost, salesDetail.TotalCost, salesDetail.Patong, salesDetail.POSCharge, salesDetail.WT2307, salesDetail.TotalRemit, salesDetail.Profit, salesDetail.ProfitMargin, salesDetail.Remarks, id)
 
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update sale log."}}`)
@@ -484,7 +489,7 @@ func (app *App) UpdateSalesHandler(w http.ResponseWriter, r *http.Request) {
 
 	var updatedSale models.SalesDetailWithItem
 	err = db.DB.Get(&updatedSale, `
-		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
+		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.tin_no, s.address, s.supplier,
 		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost,
 		       s.patong, s.pos_charge, s.wt_2307, s.total_remit, s.profit, s.profit_margin, s.remarks,
 		       i.code as item_code, i.description as item_description
@@ -570,7 +575,7 @@ func (app *App) UpdateSalesStatusHandler(w http.ResponseWriter, r *http.Request)
 
 	var updatedSale models.SalesDetailWithItem
 	err = db.DB.Get(&updatedSale, `
-		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.supplier,
+		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.tin_no, s.address, s.supplier,
 		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost,
 		       s.patong, s.pos_charge, s.wt_2307, s.total_remit, s.profit, s.profit_margin, s.remarks,
 		       i.code as item_code, i.description as item_description

@@ -26,6 +26,12 @@
     <div class="td" data-col="customer_name">
         <input type="text" name="customer_name" value="{{ $sale.CustomerName }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" placeholder="Customer">
     </div>
+    <div class="td" data-col="tin_no">
+        <input type="text" name="tin_no" value="{{ $sale.TINNo }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" placeholder="TIN No.">
+    </div>
+    <div class="td" data-col="address">
+        <input type="text" name="address" value="{{ $sale.Address }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" placeholder="Address">
+    </div>
     <div class="td" data-col="supplier">
         <select name="supplier" class="form-input {{ if or (eq $sale.Supplier "ASCD") (eq $sale.Supplier "ascd") }}supplier-select-ascd{{ else if or (eq $sale.Supplier "RENOWN") (eq $sale.Supplier "Renown") }}supplier-select-renown{{ else }}supplier-select-other{{ end }}" style="padding: 0.35rem 0.2rem; font-size: 0.8125rem; height: auto; width: 100%; box-sizing: border-box;" onchange="updateSelectColorClass(this)" required>
             <option value="ASCD" {{ if eq $sale.Supplier "ASCD" }}selected{{ end }}>ASCD</option>
