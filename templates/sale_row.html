@@ -1,17 +1,33 @@
 {{ define "sale_row.html" }}
 <div id="sale-row-{{ .ID }}" class="tr">
     <div class="td" data-col="doc_status">
-        <select class="form-input {{ if or (eq .DocStatus "Posted") (eq .DocStatus "POSTED") }}status-select-posted{{ else if or (eq .DocStatus "Cancelled/Return") (eq .DocStatus "CANCELLED/RETURN") }}status-select-cancelled{{ else }}status-select-active{{ end }}"
-            style="padding: 0.1rem 0.35rem; font-size: 0.6875rem; height: 1.5rem; width: auto; border: 1px solid var(--border-color); border-radius: var(--radius);"
-            name="doc_status" hx-post="/sales/update-status/{{ .ID }}" hx-target="#sale-row-{{ .ID }}"
-            hx-swap="outerHTML" onchange="updateSelectColorClass(this)">
-            <option value="Active" {{ if or (eq .DocStatus "Active" ) (eq .DocStatus "ACTIVE" ) }}selected{{ end }}>
-                Active</option>
-            <option value="Posted" {{ if or (eq .DocStatus "Posted" ) (eq .DocStatus "POSTED" ) }}selected{{ end }}>
-                Posted</option>
-            <option value="Cancelled/Return" {{ if or (eq .DocStatus "Cancelled/Return" ) (eq
-                .DocStatus "CANCELLED/RETURN" ) }}selected{{ end }}>Cancelled/Return</option>
-        </select>
+        <div class="status-icon-dropdown">
+            <button type="button" class="status-icon-btn {{ if or (eq .DocStatus "Posted") (eq .DocStatus "POSTED") }}status-icon-posted{{ else if or (eq .DocStatus "Cancelled/Return") (eq .DocStatus "CANCELLED/RETURN") }}status-icon-cancelled{{ else }}status-icon-active{{ end }}"
+                title="Status: {{ .DocStatus }} (Click to change)"
+                onclick="toggleRowStatusMenu(event, {{ .ID }})">
+                {{ if or (eq .DocStatus "Posted") (eq .DocStatus "POSTED") }}
+                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                {{ else if or (eq .DocStatus "Cancelled/Return") (eq .DocStatus "CANCELLED/RETURN") }}
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                {{ else }}
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg>
+                {{ end }}
+            </button>
+            <div id="status-popover-{{ .ID }}" class="status-menu-popover" style="display: none;">
+                <button type="button" class="status-menu-item" hx-post="/sales/update-status/{{ .ID }}?doc_status=Active" hx-target="#sale-row-{{ .ID }}" hx-swap="outerHTML" onclick="closeRowStatusMenu({{ .ID }})">
+                    <span class="status-icon-btn status-icon-active" style="width: 16px; height: 16px; pointer-events: none;"><svg viewBox="0 0 24 24" width="8" height="8" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg></span>
+                    Active
+                </button>
+                <button type="button" class="status-menu-item" hx-post="/sales/update-status/{{ .ID }}?doc_status=Posted" hx-target="#sale-row-{{ .ID }}" hx-swap="outerHTML" onclick="closeRowStatusMenu({{ .ID }})">
+                    <span class="status-icon-btn status-icon-posted" style="width: 16px; height: 16px; pointer-events: none;"><svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                    Posted
+                </button>
+                <button type="button" class="status-menu-item" hx-post="/sales/update-status/{{ .ID }}?doc_status=Cancelled/Return" hx-target="#sale-row-{{ .ID }}" hx-swap="outerHTML" onclick="closeRowStatusMenu({{ .ID }})">
+                    <span class="status-icon-btn status-icon-cancelled" style="width: 16px; height: 16px; pointer-events: none;"><svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
+                    Cancelled
+                </button>
+            </div>
+        </div>
     </div>
     <div class="td" data-col="doc_date">{{ .DocDate.Format "2006-01-02" }}</div>
     <div class="td" data-col="doc_type_number">
@@ -19,6 +35,8 @@
         {{ .DocNumber }}
     </div>
     <div class="td" data-col="customer_name">{{ if .CustomerName }}{{ .CustomerName }}{{ else }}—{{ end }}</div>
+    <div class="td" data-col="tin_no">{{ if .TINNo }}{{ .TINNo }}{{ else }}—{{ end }}</div>
+    <div class="td" data-col="address" title="{{ .Address }}">{{ if .Address }}{{ .Address }}{{ else }}—{{ end }}</div>
     <div class="td" data-col="supplier"><span class="badge {{ if or (eq .Supplier "ASCD") (eq .Supplier "ascd") }}badge-success{{ else if or (eq .Supplier "RENOWN") (eq .Supplier "Renown") }}badge-primary{{ else }}badge-warning{{ end }}">{{ .Supplier }}</span></div>
     <div class="td" data-col="item_description" style="font-weight: 500;">{{ .Description }}</div>
     <div class="td" data-col="qty" style="font-weight: 600;">{{ .Qty }}</div>

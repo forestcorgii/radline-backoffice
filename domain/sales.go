@@ -13,6 +13,8 @@ type SalesDetail struct {
 	DocDate      time.Time
 	DocNumber    string
 	CustomerName string
+	TINNo        string
+	Address      string
 	Supplier     string
 	ItemID       int
 	Qty          float64
@@ -57,8 +59,16 @@ type Sale struct {
 	DocDate      time.Time
 	DocNumber    string
 	CustomerName string
+	TINNo        string
+	Address      string
 	Supplier     string
 	Items        []SaleItem
+}
+
+// SetCustomerDetails updates the customer TIN and Address on the Sale aggregate.
+func (s *Sale) SetCustomerDetails(tinNo, address string) {
+	s.TINNo = tinNo
+	s.Address = address
 }
 
 func isValidStatus(status string) bool {
@@ -160,6 +170,8 @@ func (s Sale) ToSalesDetails() []SalesDetail {
 			DocDate:      s.DocDate,
 			DocNumber:    s.DocNumber,
 			CustomerName: s.CustomerName,
+			TINNo:        s.TINNo,
+			Address:      s.Address,
 			Supplier:     s.Supplier,
 			ItemID:       item.ItemID,
 			Qty:          item.Qty,

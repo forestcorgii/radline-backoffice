@@ -170,3 +170,77 @@ func TestReminders_AddEditAndAssign(t *testing.T) {
 		t.Fatalf("Expected 200 OK for RemindersHandler, got %d", calRec.Code)
 	}
 }
+
+func TestReminders_RescheduleDragAndDrop(t *testing.T) {
+	err := db.InitDB("../backoffice.db")
+	if err != nil {
+		t.Fatalf("Failed to init db: %v", err)
+	}
+
+	app := &App{
+		Templates: parseRemindersTemplatesForTest(),
+	}
+
+	// 1. Create a reminder
+	origDate := time.Now().Format("2006-01-02")
+	res, err := db.DB.Exec("INSERT INTO reminders (title, details, due_date, priority, category, status) VALUES (?, ?, ?, ?, ?, ?)",
+		"Drag Test Reminder", "Test drag and drop reschedule", origDate, "Low", "General", "Pending")
+	if err != nil {
+		t.Fatalf("Failed to insert test reminder: %v", err)
+	}
+	remID, _ := res.LastInsertId()
+	defer func() {
+		_, _ = db.DB.Exec("DELETE FROM reminders WHERE id = ?", remID)
+	}()
+
+	// 2. Reschedule to next week via POST /reminders/reschedule/{id}
+	targetDate := time.Now().AddDate(0, 0, 7).Format("2006-01-02")
+	reschedForm := url.Values{}
+	reschedForm.Set("due_date", targetDate)
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/reminders/reschedule/%d", remID), nil)
+	req.SetPathValue("id", fmt.Sprintf("%d", remID))
+	req.PostForm = reschedForm
+	req.Header.Set("HX-Target", "main-content")
+	req.Header.Set("HX-Current-URL", "/calendar")
+	rec := httptest.NewRecorder()
+
+	app.RescheduleReminderHandler(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for RescheduleReminderHandler, got %d", rec.Code)
+	}
+
+	if loc := rec.Header().Get("HX-Location"); loc == "" {
+		t.Fatalf("Expected HX-Location header to be set, got empty")
+	}
+
+	if trig := rec.Header().Get("HX-Trigger"); trig == "" {
+		t.Fatalf("Expected HX-Trigger header with toast to be set, got empty")
+	}
+
+	// Verify in DB that due_date was updated
+	var updated models.Reminder
+	err = db.DB.Get(&updated, "SELECT id, title, due_date FROM reminders WHERE id = ?", remID)
+	if err != nil {
+		t.Fatalf("Failed to load rescheduled reminder: %v", err)
+	}
+
+	if updated.DueDate.Format("2006-01-02") != targetDate {
+		t.Fatalf("Expected due_date to be %s, got %s", targetDate, updated.DueDate.Format("2006-01-02"))
+	}
+
+	// 3. Test invalid date format
+	badForm := url.Values{}
+	badForm.Set("due_date", "invalid-date")
+	badReq := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/reminders/reschedule/%d", remID), nil)
+	badReq.SetPathValue("id", fmt.Sprintf("%d", remID))
+	badReq.PostForm = badForm
+	badRec := httptest.NewRecorder()
+
+	app.RescheduleReminderHandler(badRec, badReq)
+	if badRec.Code != http.StatusBadRequest {
+		t.Fatalf("Expected 400 Bad Request for invalid date, got %d", badRec.Code)
+	}
+}
+

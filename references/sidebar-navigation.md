@@ -220,10 +220,20 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
   - Active page highlight dynamically applies to `.profile-menu-item` and marks `#profile-chip-btn` with an active accent.
   - Responsive positioning: floats above profile chip on normal view (`bottom: calc(100% + 6px)`), flies out to the right (`left: calc(100% + 8px)`) when `.sidebar.collapsed`.
 
+### Context: Forms Menu Navigation (Quotation Forms & Purchase Order Forms)
+**Problem**: Operators required dedicated access to printable document generators for Price Quotations and Purchase Orders both from the collapsible sidebar and the Quick Actions popover, distinct from transaction logging.
+**Enforced Solution**:
+- **Dedicated Forms Dropdown**: Added `#forms-dropdown` in `templates/base.html` containing:
+  - **Quotation Forms** (`/forms/quotation`)
+  - **Purchase Order Forms** (`/forms/purchase-order`)
+- **Quick Create Integration**: Added quick create links in `#quick-create-menu` under Sales & Billing and Stock & Warehousing columns.
+- **Printable Document Sheets**: Dedicated printable sheet templates (`form_quotation.html`, `form_purchase_order.html`) equipped with client-side calculations, catalog item auto-fill, and `@media print` CSS.
+
 ## Related
 - [[ui-design-tokens]] — CSS classes and variables
 - [[responsive-design]] — Mobile breakpoints
 - [[htmx-patterns]] — SPA navigation via HTMX
 - [[templates-overview]] — Base template structure
+
 
 

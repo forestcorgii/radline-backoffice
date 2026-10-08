@@ -250,6 +250,18 @@ func runSQLiteMigrations() {
 			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN remarks TEXT NOT NULL DEFAULT '';")
 		}
 	}
+
+	// Safe migration: add tin_no and address columns to sales_details if they don't exist
+	_, err = DB.Exec("SELECT tin_no FROM sales_details LIMIT 0")
+	if err != nil {
+		if DB.IsPostgres() {
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS tin_no TEXT DEFAULT '';")
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';")
+		} else {
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN tin_no TEXT DEFAULT '';")
+			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN address TEXT DEFAULT '';")
+		}
+	}
 }
 
 func createSchemaSQLite() error {
@@ -319,6 +331,8 @@ func createSchemaSQLite() error {
 		doc_date DATETIME NOT NULL,
 		doc_number TEXT NOT NULL,
 		customer_name TEXT,
+		tin_no TEXT DEFAULT '',
+		address TEXT DEFAULT '',
 		supplier TEXT NOT NULL,
 		item_id INTEGER NOT NULL,
 		qty REAL NOT NULL,
@@ -518,6 +532,8 @@ func createSchemaPostgres() error {
 		doc_date TIMESTAMPTZ NOT NULL,
 		doc_number TEXT NOT NULL,
 		customer_name TEXT,
+		tin_no TEXT DEFAULT '',
+		address TEXT DEFAULT '',
 		supplier TEXT NOT NULL,
 		item_id INTEGER NOT NULL REFERENCES items(id),
 		qty DOUBLE PRECISION NOT NULL,

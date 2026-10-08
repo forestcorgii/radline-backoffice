@@ -406,3 +406,56 @@ func (app *App) DeleteReminderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+// RescheduleReminderHandler updates only the due_date of a reminder (for calendar drag & drop)
+func (app *App) RescheduleReminderHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid reminder ID", http.StatusBadRequest)
+		return
+	}
+
+	dueDateStr := strings.TrimSpace(r.FormValue("due_date"))
+	dueDate, err := time.Parse("2006-01-02", dueDateStr)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid date format. Expected YYYY-MM-DD."}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var title string
+	err = db.DB.Get(&title, "SELECT title FROM reminders WHERE id = ?", id)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Reminder not found."}}`)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	_, err = db.DB.Exec("UPDATE reminders SET due_date = ? WHERE id = ?", dueDate, id)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to reschedule reminder."}}`)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	app.LogActivity(r, "RESCHEDULE_REMINDER", "Reminder", idStr, fmt.Sprintf("Rescheduled reminder '%s' to %s", title, dueDateStr))
+
+	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "success", "message": "Rescheduled '%s' to %s!"}}`, title, dueDate.Format("Jan 02, 2006")))
+
+	returnUrl := r.Header.Get("HX-Current-URL")
+	if returnUrl == "" {
+		returnUrl = r.Header.Get("Referer")
+	}
+	if returnUrl == "" {
+		returnUrl = "/calendar"
+	}
+
+	target := r.Header.Get("HX-Target")
+	if target == "#main-content" || target == "main-content" {
+		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
+	} else {
+		w.Header().Set("HX-Redirect", returnUrl)
+	}
+	w.WriteHeader(http.StatusOK)
+}

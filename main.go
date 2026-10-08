@@ -182,10 +182,16 @@ func main() {
 	mux.HandleFunc("POST /calendar/toggle/{id}", app.RequirePermission(domain.PermDashboardView, app.ToggleReminderHandler))
 	mux.HandleFunc("DELETE /reminders/delete/{id}", app.RequirePermission(domain.PermDashboardView, app.DeleteReminderHandler))
 	mux.HandleFunc("DELETE /calendar/delete/{id}", app.RequirePermission(domain.PermDashboardView, app.DeleteReminderHandler))
+	mux.HandleFunc("POST /reminders/reschedule/{id}", app.RequirePermission(domain.PermDashboardView, app.RescheduleReminderHandler))
+	mux.HandleFunc("POST /calendar/reschedule/{id}", app.RequirePermission(domain.PermDashboardView, app.RescheduleReminderHandler))
 
 	// Receipt Scanner Routing
 	mux.HandleFunc("GET /tools/receipt-scanner", app.RequirePermission(domain.PermToolsScanner, app.ReceiptScannerHandler))
 	mux.HandleFunc("POST /tools/receipt-scanner/parse", app.RequirePermission(domain.PermToolsScanner, app.ReceiptScannerParseHandler))
+
+	// Forms Routing (Quotation & Purchase Order)
+	mux.HandleFunc("GET /forms/quotation", app.RequirePermission(domain.PermSalesView, app.QuotationFormHandler))
+	mux.HandleFunc("GET /forms/purchase-order", app.RequirePermission(domain.PermInventoryView, app.PurchaseOrderFormHandler))
 
 	// Wrap entire router with AuthMiddleware
 	handler := app.AuthMiddleware(mux)
@@ -240,6 +246,7 @@ func parseTemplates() map[string]*template.Template {
 		"import.html", "settings.html", "settings_new.html", "uom_settings_new.html",
 		"receipt_scanner.html", "roles.html", "users.html", "activity_logs.html",
 		"goals.html", "reminders.html",
+		"form_quotation.html", "form_purchase_order.html",
 	}
 
 	for _, page := range pages {
