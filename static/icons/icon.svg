@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#24211e"/>
+      <stop offset="100%" stop-color="#141211"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle border highlight -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="none" stroke="#ffffff" stroke-opacity="0.1" stroke-width="4"/>
+
+  <!-- Geometric Modern 'R' Monogram -->
+  <g filter="url(#shadow)">
+    <!-- Vertical stem -->
+    <rect x="136" y="128" width="60" height="256" rx="12" fill="#ffffff"/>
+    
+    <!-- Top bowl curve -->
+    <path d="M 176 128
+             H 290
+             C 350 128, 386 160, 386 216
+             C 386 270, 350 300, 290 300
+             H 176
+             Z"
+          fill="#ffffff"/>
+    
+    <!-- Inner bowl cutout -->
+    <path d="M 196 178
+             H 282
+             C 316 178, 334 194, 334 216
+             C 334 238, 316 252, 282 252
+             H 196
+             Z"
+          fill="#1c1917"/>
+
+    <!-- Diagonal leg -->
+    <path d="M 264 278
+             L 344 374
+             C 349 380, 357 384, 366 384
+             H 390
+             L 298 274
+             Z"
+          fill="#ffffff"/>
+  </g>
+
+  <!-- Blue accent radar / spark node -->
+  <circle cx="376" cy="144" r="28" fill="url(#accentGrad)"/>
+  <circle cx="376" cy="144" r="14" fill="#ffffff" fill-opacity="0.9"/>
+</svg>

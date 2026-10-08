@@ -16,7 +16,7 @@
 
 <div class="grid grid-cols-3" style="gap: 1.25rem; align-items: start;">
     <!-- Calendar View (2 columns) -->
-    <div class="card" style="grid-column: span 2; padding: 1.25rem; background: #ffffff; border: 1px solid var(--border-color);">
+    <div class="card" style="grid-column: span 2; padding: 1.25rem; background: #ffffff; border: 1px solid var(--border-color); min-width: 0; overflow: hidden;">
         <!-- Month Navigation Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -29,8 +29,8 @@
             </div>
         </div>
 
-        <!-- Days of Week Header -->
-        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.6875rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+        <!-- Days of Week Header (strictly equal fixed 1/7 widths) -->
+        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; font-size: 0.6875rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
             <div>Sun</div>
             <div>Mon</div>
             <div>Tue</div>
@@ -40,16 +40,16 @@
             <div>Sat</div>
         </div>
 
-        <!-- Calendar Month Grid -->
+        <!-- Calendar Month Grid (strictly equal fixed 1/7 widths with truncation) -->
         <div style="display: flex; flex-direction: column; gap: 4px;">
             {{ range .Weeks }}
-            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;">
                 {{ range .Days }}
                 {{ if eq .DayNumber 0 }}
-                <div style="min-height: 85px; background: hsl(var(--secondary) / 0.2); border-radius: 4px; opacity: 0.4;"></div>
+                <div style="min-height: 85px; background: hsl(var(--secondary) / 0.2); border-radius: 4px; opacity: 0.4; min-width: 0;"></div>
                 {{ else }}
-                <div style="min-height: 85px; background: {{ if .IsToday }}hsl(215 90% 97%){{ else }}#ffffff{{ end }}; border: 1px solid {{ if .IsToday }}var(--primary-color){{ else }}var(--border-color){{ end }}; border-radius: 4px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="min-height: 85px; background: {{ if .IsToday }}hsl(215 90% 97%){{ else }}#ffffff{{ end }}; border: 1px solid {{ if .IsToday }}var(--primary-color){{ else }}var(--border-color){{ end }}; border-radius: 4px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; min-width: 0;">
                         <span style="font-size: 0.6875rem; font-weight: {{ if .IsToday }}800{{ else }}600{{ end }}; color: {{ if .IsToday }}var(--primary-color){{ else }}var(--text-main){{ end }};">
                             {{ .DayNumber }}
                         </span>
@@ -59,10 +59,21 @@
                     </div>
                     
                     <!-- Events List for this Day -->
-                    <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 58px;">
+                    <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 58px; min-width: 0;">
                         {{ range .Reminders }}
-                        <div style="font-size: 0.625rem; padding: 2px 4px; border-radius: 2px; background: {{ if eq .Priority "High" }}hsl(0 84% 95%){{ else if eq .Priority "Medium" }}hsl(38 92% 95%){{ else }}hsl(142 72% 95%){{ end }}; color: {{ if eq .Priority "High" }}#b91c1c{{ else if eq .Priority "Medium" }}#b45309{{ else }}#047857{{ end }}; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid {{ if eq .Priority "High" }}#ef4444{{ else if eq .Priority "Medium" }}#f59e0b{{ else }}#10b981{{ end }};" title="{{ .Title }} - {{ .Details }}">
-                            {{ .Title }}
+                        <div class="calendar-reminder-chip"
+                            data-id="{{ .ID }}"
+                            data-title="{{ .Title }}"
+                            data-details="{{ .Details }}"
+                            data-duedate="{{ .DueDate.Format "2006-01-02" }}"
+                            data-priority="{{ .Priority }}"
+                            data-category="{{ .Category }}"
+                            data-assigned="{{ if .AssignedToUserID }}{{ .AssignedToUserID }}{{ end }}"
+                            data-status="{{ .Status }}"
+                            onclick="handleEditReminderClick(this)"
+                            style="font-size: 0.625rem; padding: 2px 4px; border-radius: 2px; background: {{ if eq .Priority "High" }}hsl(0 84% 95%){{ else if eq .Priority "Medium" }}hsl(38 92% 95%){{ else }}hsl(142 72% 95%){{ end }}; color: {{ if eq .Priority "High" }}#b91c1c{{ else if eq .Priority "Medium" }}#b45309{{ else }}#047857{{ end }}; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid {{ if eq .Priority "High" }}#ef4444{{ else if eq .Priority "Medium" }}#f59e0b{{ else }}#10b981{{ end }}; cursor: pointer; min-width: 0; max-width: 100%; box-sizing: border-box;" 
+                            title="{{ .Title }}{{ if .Details }} - {{ .Details }}{{ end }}{{ if .AssignedToName }} (Assigned: {{ .AssignedToName }}){{ end }} • Click to edit">
+                            {{ if .AssignedToName }}<span style="opacity: 0.8; font-size: 0.5625rem; margin-right: 2px;">👤</span>{{ end }}{{ .Title }}
                         </div>
                         {{ end }}
                     </div>
@@ -75,7 +86,7 @@
     </div>
 
     <!-- Upcoming Agenda Sidebar (1 column) -->
-    <div class="card" style="padding: 1.25rem; background: #ffffff; border: 1px solid var(--border-color);">
+    <div class="card" style="padding: 1.25rem; background: #ffffff; border: 1px solid var(--border-color); min-width: 0;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Pending Agenda</h3>
             <span class="badge" style="background: hsl(var(--secondary)); font-size: 0.625rem;">{{ len .Agenda }} tasks</span>
@@ -90,29 +101,55 @@
             {{ range .Agenda }}
             <div style="padding: 0.625rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
-                    <div style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                    <div style="display: flex; align-items: flex-start; gap: 0.5rem; min-width: 0;">
                         <button hx-post="/reminders/toggle/{{ .ID }}" hx-target="#main-content" class="btn-sm" style="background: hsl(var(--card)); border: 1.5px solid var(--border-color); width: 20px; height: 20px; border-radius: 4px; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 2px; flex-shrink: 0; transition: all 0.15s ease;" title="Mark Completed">
                             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.2;">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                         </button>
-                        <div>
-                            <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main);">{{ .Title }}</div>
+                        <div style="min-width: 0; overflow: hidden;">
+                            <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ .Title }}">{{ .Title }}</div>
                             {{ if .Details }}
-                            <div style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 2px;">{{ .Details }}</div>
+                            <div style="font-size: 0.6875rem; color: var(--text-muted); margin-top: 2px; white-space: normal; word-break: break-word;">{{ .Details }}</div>
                             {{ end }}
                             <div style="font-size: 0.625rem; color: var(--text-muted); margin-top: 4px;">
                                 📅 Due: <strong style="color: var(--text-main);">{{ .DueDate.Format "Jan 02, 2006" }}</strong> &bull; {{ .Category }}
                             </div>
+                            {{ if .AssignedToName }}
+                            <div style="font-size: 0.625rem; color: var(--primary-color); font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 3px;">
+                                <span>👤</span> <span>Assigned: {{ .AssignedToName }}</span>
+                            </div>
+                            {{ end }}
                         </div>
                     </div>
-                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; flex-shrink: 0;">
                         <span class="badge {{ if eq .Priority "High" }}badge-danger{{ else if eq .Priority "Medium" }}badge-warning{{ else }}badge-success{{ end }}" style="font-size: 0.625rem;">
                             {{ .Priority }}
                         </span>
-                        <button hx-delete="/reminders/delete/{{ .ID }}" hx-target="#main-content" hx-confirm="Delete this reminder?" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; font-size: 1rem; line-height: 1;" title="Delete">
-                            &times;
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 0.25rem;">
+                            <button type="button"
+                                data-id="{{ .ID }}"
+                                data-title="{{ .Title }}"
+                                data-details="{{ .Details }}"
+                                data-duedate="{{ .DueDate.Format "2006-01-02" }}"
+                                data-priority="{{ .Priority }}"
+                                data-category="{{ .Category }}"
+                                data-assigned="{{ if .AssignedToUserID }}{{ .AssignedToUserID }}{{ end }}"
+                                data-status="{{ .Status }}"
+                                onclick="handleEditReminderClick(this)"
+                                style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; display: flex; align-items: center; transition: color 0.15s ease;"
+                                onmouseover="this.style.color='var(--primary-color)'"
+                                onmouseout="this.style.color='var(--text-muted)'"
+                                title="Edit reminder">
+                                <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button hx-delete="/reminders/delete/{{ .ID }}" hx-target="#main-content" hx-confirm="Delete this reminder?" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; font-size: 1rem; line-height: 1; transition: color 0.15s ease;" onmouseover="this.style.color='hsl(0 84% 60%)'" onmouseout="this.style.color='var(--text-muted)'" title="Delete">
+                                &times;
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -156,14 +193,25 @@
                 </div>
             </div>
 
-            <div class="form-group mb-4">
-                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Category</label>
-                <select name="category" class="form-input" style="width: 100%;">
-                    <option value="General">General Milestone</option>
-                    <option value="Payment">Payment Due</option>
-                    <option value="Delivery">Supplier Delivery</option>
-                    <option value="Stock Check">Inventory / Stock Check</option>
-                </select>
+            <div class="grid grid-cols-2 mb-4" style="gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Category</label>
+                    <select name="category" class="form-input" style="width: 100%;">
+                        <option value="General">General Milestone</option>
+                        <option value="Payment">Payment Due</option>
+                        <option value="Delivery">Supplier Delivery</option>
+                        <option value="Stock Check">Inventory / Stock Check</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Assign To User</label>
+                    <select name="assigned_to_user_id" class="form-input" style="width: 100%;">
+                        <option value="">-- Unassigned --</option>
+                        {{ range .Users }}
+                        <option value="{{ .ID }}">{{ .FullName }} ({{ .Username }})</option>
+                        {{ end }}
+                    </select>
+                </div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
@@ -173,4 +221,97 @@
         </form>
     </div>
 </div>
+
+<!-- Modal: Edit Reminder -->
+<div id="edit-reminder-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
+    <div style="background: #ffffff; border-radius: 0.5rem; max-width: 480px; width: 100%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">Edit Reminder</h3>
+            <button type="button" onclick="document.getElementById('edit-reminder-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+
+        <form id="edit-reminder-form" method="POST">
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Title</label>
+                <input type="text" id="edit-reminder-title" name="title" required placeholder="e.g. Check monthly stock reconciliation" class="form-input" style="width: 100%;">
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Details / Notes</label>
+                <textarea id="edit-reminder-details" name="details" rows="2" placeholder="Optional notes, invoice numbers, or instructions" class="form-input" style="width: 100%;"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 mb-4" style="gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Due Date</label>
+                    <input type="date" id="edit-reminder-due-date" name="due_date" required class="form-input" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Priority</label>
+                    <select id="edit-reminder-priority" name="priority" class="form-input" style="width: 100%;">
+                        <option value="Medium">Medium Priority</option>
+                        <option value="High">High Priority</option>
+                        <option value="Low">Low Priority</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 mb-4" style="gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Category</label>
+                    <select id="edit-reminder-category" name="category" class="form-input" style="width: 100%;">
+                        <option value="General">General Milestone</option>
+                        <option value="Payment">Payment Due</option>
+                        <option value="Delivery">Supplier Delivery</option>
+                        <option value="Stock Check">Inventory / Stock Check</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Status</label>
+                    <select id="edit-reminder-status" name="status" class="form-input" style="width: 100%;">
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group mb-4">
+                <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Assign To User</label>
+                <select id="edit-reminder-assigned" name="assigned_to_user_id" class="form-input" style="width: 100%;">
+                    <option value="">-- Unassigned --</option>
+                    {{ range .Users }}
+                    <option value="{{ .ID }}">{{ .FullName }} ({{ .Username }})</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button type="button" onclick="document.getElementById('edit-reminder-modal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function handleEditReminderClick(el) {
+        const ds = el.dataset;
+        const modal = document.getElementById('edit-reminder-modal');
+        const form = document.getElementById('edit-reminder-form');
+        form.setAttribute('hx-post', '/reminders/edit/' + ds.id);
+        htmx.process(form);
+
+        document.getElementById('edit-reminder-title').value = ds.title || '';
+        document.getElementById('edit-reminder-details').value = ds.details || '';
+        document.getElementById('edit-reminder-due-date').value = ds.duedate || '';
+        document.getElementById('edit-reminder-priority').value = ds.priority || 'Medium';
+        document.getElementById('edit-reminder-category').value = ds.category || 'General';
+        document.getElementById('edit-reminder-assigned').value = ds.assigned || '';
+        const statusSelect = document.getElementById('edit-reminder-status');
+        if (statusSelect) {
+            statusSelect.value = ds.status || 'Pending';
+        }
+        modal.style.display = 'flex';
+    }
+</script>
 {{ end }}

@@ -24,14 +24,16 @@ type GoalWithProgress struct {
 }
 
 type Reminder struct {
-	ID        int64     `db:"id"`
-	Title     string    `db:"title"`
-	Details   string    `db:"details"`
-	DueDate   time.Time `db:"due_date"`
-	Priority  string    `db:"priority"`
-	Category  string    `db:"category"`
-	Status    string    `db:"status"`
-	CreatedAt time.Time `db:"created_at"`
+	ID               int64     `db:"id"`
+	Title            string    `db:"title"`
+	Details          string    `db:"details"`
+	DueDate          time.Time `db:"due_date"`
+	Priority         string    `db:"priority"`
+	Category         string    `db:"category"`
+	Status           string    `db:"status"`
+	AssignedToUserID *int64    `db:"assigned_to_user_id"`
+	AssignedToName   string    `db:"assigned_to_name"`
+	CreatedAt        time.Time `db:"created_at"`
 }
 
 type TopProduct struct {

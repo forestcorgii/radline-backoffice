@@ -33,8 +33,9 @@ func (app *App) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
-		// Public bypass paths
-		if path == "/login" || strings.HasPrefix(path, "/static/") || path == "/favicon.ico" {
+		// Public bypass paths (including PWA shell assets)
+		if path == "/login" || strings.HasPrefix(path, "/static/") || path == "/favicon.ico" ||
+			path == "/sw.js" || path == "/manifest.webmanifest" || path == "/offline.html" {
 			next.ServeHTTP(w, r)
 			return
 		}

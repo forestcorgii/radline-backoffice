@@ -52,3 +52,40 @@ func TestValidateReminder(t *testing.T) {
 		t.Errorf("expected error for zero due date")
 	}
 }
+
+func TestReminder_Assignment(t *testing.T) {
+	r := domain.Reminder{Title: "Audit warehouse"}
+	if r.IsAssigned() {
+		t.Errorf("expected new reminder not to be assigned")
+	}
+
+	uid := int64(42)
+	r.AssignTo(&uid, "Alice")
+	if !r.IsAssigned() {
+		t.Errorf("expected reminder to be assigned")
+	}
+	if *r.AssignedToUserID != 42 || r.AssignedToName != "Alice" {
+		t.Errorf("unexpected assigned user data: %v, %s", r.AssignedToUserID, r.AssignedToName)
+	}
+
+	r.Unassign()
+	if r.IsAssigned() {
+		t.Errorf("expected reminder to be unassigned")
+	}
+	if r.AssignedToUserID != nil || r.AssignedToName != "" {
+		t.Errorf("expected nil user and empty name after unassign")
+	}
+}
+
+func TestValidateReminderStatus(t *testing.T) {
+	if err := domain.ValidateReminderStatus(domain.StatusPending); err != nil {
+		t.Errorf("expected pending status to be valid, got: %v", err)
+	}
+	if err := domain.ValidateReminderStatus(domain.StatusCompleted); err != nil {
+		t.Errorf("expected completed status to be valid, got: %v", err)
+	}
+	if err := domain.ValidateReminderStatus("Invalid"); err == nil {
+		t.Errorf("expected invalid status to return error")
+	}
+}
+

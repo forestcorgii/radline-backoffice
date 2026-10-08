@@ -41,6 +41,29 @@ func main() {
 	fs := http.FileServer(http.Dir("static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
+	// PWA Endpoints
+	mux.HandleFunc("GET /sw.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		w.Header().Set("Service-Worker-Allowed", "/")
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		http.ServeFile(w, r, "static/sw.js")
+	})
+
+	mux.HandleFunc("GET /manifest.webmanifest", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/manifest+json")
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		http.ServeFile(w, r, "static/manifest.webmanifest")
+	})
+
+	mux.HandleFunc("GET /offline.html", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		http.ServeFile(w, r, "static/offline.html")
+	})
+
+	mux.HandleFunc("GET /favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/icons/icon-192.png")
+	})
+
 	// Public Authentication Routes
 	mux.HandleFunc("GET /login", app.LoginPageHandler)
 	mux.HandleFunc("POST /login", app.LoginSubmitHandler)
@@ -153,6 +176,8 @@ func main() {
 	mux.HandleFunc("GET /reminders", app.RequirePermission(domain.PermDashboardView, app.RemindersHandler))
 	mux.HandleFunc("POST /reminders/add", app.RequirePermission(domain.PermDashboardView, app.AddReminderHandler))
 	mux.HandleFunc("POST /calendar/add", app.RequirePermission(domain.PermDashboardView, app.AddReminderHandler))
+	mux.HandleFunc("POST /reminders/edit/{id}", app.RequirePermission(domain.PermDashboardView, app.EditReminderHandler))
+	mux.HandleFunc("POST /calendar/edit/{id}", app.RequirePermission(domain.PermDashboardView, app.EditReminderHandler))
 	mux.HandleFunc("POST /reminders/toggle/{id}", app.RequirePermission(domain.PermDashboardView, app.ToggleReminderHandler))
 	mux.HandleFunc("POST /calendar/toggle/{id}", app.RequirePermission(domain.PermDashboardView, app.ToggleReminderHandler))
 	mux.HandleFunc("DELETE /reminders/delete/{id}", app.RequirePermission(domain.PermDashboardView, app.DeleteReminderHandler))
