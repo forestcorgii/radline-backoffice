@@ -180,3 +180,45 @@ Accessing `/calendar` in production (running PostgreSQL with `pgx`) returned HTT
 - **Ensure Table Invariant**: Added `db.EnsureRemindersTable()` executing `CREATE TABLE IF NOT EXISTS reminders` and indexes, called both on database initialization (`db.InitDB`) and as a proactive check in `RemindersHandler`.
 - **Fault-Tolerant Rendering**: Log warnings instead of returning raw 500 errors, falling back to an empty slice so the calendar page always renders successfully.
 
+---
+
+### Context: Progressive Web App (PWA) Endpoints & Auth Bypass
+
+**Problem:**
+Enabling standalone installability and offline fallback for Radline BackOffice while preventing authentication redirects for core PWA shell assets (`/sw.js`, `/manifest.webmanifest`, `/offline.html`).
+
+**Enforced Solution:**
+- **PWA Endpoints (`main.go`):**
+  - `GET /sw.js`: Serves `static/sw.js` with `Content-Type: application/javascript; charset=utf-8`, `Service-Worker-Allowed: /`, and `Cache-Control: no-cache`.
+  - `GET /manifest.webmanifest`: Serves `static/manifest.webmanifest` with `Content-Type: application/manifest+json`.
+  - `GET /offline.html`: Serves `static/offline.html` (Radline-themed offline fallback page with auto-reconnect).
+  - `GET /favicon.ico`: Serves `static/icons/icon-192.png`.
+- **Public Auth Bypass (`handlers/middleware.go`):**
+  - `AuthMiddleware` excludes `/sw.js`, `/manifest.webmanifest`, and `/offline.html` in addition to `/login` and `/static/`, allowing browsers and unauthenticated clients to register the worker and download the manifest cleanly.
+- **Service Worker Strategy (`static/sw.js`):**
+  - Static assets (`/static/`, fonts): Cache-first with background revalidation.
+  - Page Navigation: Network-first falling back to `/offline.html`.
+  - HTMX partials (`HX-Request: true`): Network-first falling back to an inline offline notice card.
+  - Mutations (POST/PUT/DELETE): Network-only (no caching).
+
+---
+
+### Context: Reminders Operational Calendar (Grid Stability, User Assignment, and In-Place Editing)
+
+**Problem:**
+1. Long reminder titles caused calendar day cells to expand horizontally because default CSS grid `1fr` translates to `minmax(auto, 1fr)`.
+2. Reminders lacked delegation capability (assigning tasks to specific operators/users).
+3. Operators had no mechanism to edit existing scheduled reminders (due date, priority, notes, assigned user, or status) without deleting and recreating them.
+
+**Enforced Solution:**
+- **Rigid 7-Column Grid Layout (`templates/reminders.html`):**
+  - Applied `grid-template-columns: repeat(7, minmax(0, 1fr))` on day headers and week rows.
+  - Added `min-width: 0; overflow: hidden;` to day containers and reminder chips, paired with `white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; box-sizing: border-box;`. This guarantees strict equal 1/7 cell widths regardless of title length.
+- **User Assignment (`db/db.go`, `domain/reminder.go`, `models/goals_reminders.go`):**
+  - Added `assigned_to_user_id INTEGER REFERENCES users(id)` column with safe non-blocking startup migration (`EnsureRemindersTable`).
+  - Queries join `users u ON r.assigned_to_user_id = u.id` returning `COALESCE(u.full_name, u.username, '') AS assigned_to_name`.
+  - Added assignment dropdowns in both Add and Edit modals, displaying operator indicator `👤 <Name>` on calendar chips, agenda cards, and the dashboard.
+- **Reminder Edit Endpoints & Modals (`main.go`, `handlers/reminders.go`):**
+  - Added `POST /reminders/edit/{id}` and `POST /calendar/edit/{id}` mapped to `EditReminderHandler`.
+  - Added client-side data binding with HTML5 dataset attributes (`handleEditReminderClick(el)`) to avoid quote injection/escaping issues, opening `#edit-reminder-modal` from both calendar day chips and agenda edit buttons.
+

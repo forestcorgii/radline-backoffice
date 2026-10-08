@@ -702,6 +702,7 @@ func EnsureRemindersTable() error {
 				priority TEXT NOT NULL DEFAULT 'Medium',
 				category TEXT NOT NULL DEFAULT 'General',
 				status TEXT NOT NULL DEFAULT 'Pending',
+				assigned_to_user_id INTEGER REFERENCES users(id),
 				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 			);
 			CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
@@ -728,13 +729,32 @@ func EnsureRemindersTable() error {
 			priority TEXT NOT NULL DEFAULT 'Medium',
 			category TEXT NOT NULL DEFAULT 'General',
 			status TEXT NOT NULL DEFAULT 'Pending',
+			assigned_to_user_id INTEGER REFERENCES users(id),
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
 		CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
 		CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
 	`)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Safe migration check: add assigned_to_user_id if not present
+	rows, err := DB.Query("SELECT assigned_to_user_id FROM reminders LIMIT 0")
+	if err != nil {
+		if DB.IsPostgres() {
+			_, _ = DB.Exec("ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id);")
+		} else {
+			_, _ = DB.Exec("ALTER TABLE reminders ADD COLUMN assigned_to_user_id INTEGER;")
+		}
+	} else {
+		_ = rows.Close()
+	}
+
+	_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_reminders_assigned_to ON reminders(assigned_to_user_id);")
+
+	return nil
 }
 
 func seedGoalsAndRemindersDefaults() {

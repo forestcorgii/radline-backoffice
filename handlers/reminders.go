@@ -52,19 +52,27 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 	var monthlyReminders []models.Reminder
 	if db.DB != nil {
 		err := db.DB.Select(&monthlyReminders, `
-			SELECT id, title, details, due_date, priority, category, status, created_at
-			FROM reminders
-			WHERE due_date >= ? AND due_date <= ?
-			ORDER BY due_date ASC, priority DESC
+			SELECT 
+				r.id, r.title, r.details, r.due_date, r.priority, r.category, r.status, r.created_at,
+				r.assigned_to_user_id,
+				COALESCE(u.full_name, u.username, '') AS assigned_to_name
+			FROM reminders r
+			LEFT JOIN users u ON r.assigned_to_user_id = u.id
+			WHERE r.due_date >= ? AND r.due_date <= ?
+			ORDER BY r.due_date ASC, r.priority DESC
 		`, firstOfMonth, endOfMonth)
 		if err != nil {
 			log.Printf("[RemindersHandler] Warning: failed to fetch monthly reminders with time.Time: %v. Retrying with string fallback...", err)
 			_ = db.EnsureRemindersTable()
 			_ = db.DB.Select(&monthlyReminders, `
-				SELECT id, title, details, due_date, priority, category, status, created_at
-				FROM reminders
-				WHERE due_date >= ? AND due_date <= ?
-				ORDER BY due_date ASC, priority DESC
+				SELECT 
+					r.id, r.title, r.details, r.due_date, r.priority, r.category, r.status, r.created_at,
+					r.assigned_to_user_id,
+					COALESCE(u.full_name, u.username, '') AS assigned_to_name
+				FROM reminders r
+				LEFT JOIN users u ON r.assigned_to_user_id = u.id
+				WHERE r.due_date >= ? AND r.due_date <= ?
+				ORDER BY r.due_date ASC, r.priority DESC
 			`, firstOfMonth.Format("2006-01-02 00:00:00"), lastOfMonth.Format("2006-01-02 23:59:59"))
 		}
 	}
@@ -120,10 +128,14 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 	var agenda []models.Reminder
 	if db.DB != nil {
 		errAgenda := db.DB.Select(&agenda, `
-			SELECT id, title, details, due_date, priority, category, status, created_at
-			FROM reminders
-			WHERE status = 'Pending'
-			ORDER BY due_date ASC
+			SELECT 
+				r.id, r.title, r.details, r.due_date, r.priority, r.category, r.status, r.created_at,
+				r.assigned_to_user_id,
+				COALESCE(u.full_name, u.username, '') AS assigned_to_name
+			FROM reminders r
+			LEFT JOIN users u ON r.assigned_to_user_id = u.id
+			WHERE r.status = 'Pending'
+			ORDER BY r.due_date ASC
 			LIMIT 15
 		`)
 		if errAgenda != nil {
@@ -134,9 +146,21 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 		agenda = []models.Reminder{}
 	}
 
+	// Fetch active users for assignment dropdown
+	var users []models.User
+	if db.DB != nil {
+		_ = db.DB.Select(&users, `
+			SELECT id, username, full_name
+			FROM users
+			WHERE is_active = TRUE
+			ORDER BY full_name ASC, username ASC
+		`)
+	}
+
 	data := struct {
 		Weeks            []CalendarWeek
 		Agenda           []models.Reminder
+		Users            []models.User
 		CurrentMonthStr  string
 		DisplayMonthName string
 		PrevMonthStr     string
@@ -145,6 +169,7 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		Weeks:            weeks,
 		Agenda:           agenda,
+		Users:            users,
 		CurrentMonthStr:  currentMonthStr,
 		DisplayMonthName: displayMonthName,
 		PrevMonthStr:     prevMonthStr,
@@ -167,6 +192,7 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 	dueDateStr := strings.TrimSpace(r.FormValue("due_date"))
 	priorityStr := strings.TrimSpace(r.FormValue("priority"))
 	category := strings.TrimSpace(r.FormValue("category"))
+	assignedToStr := strings.TrimSpace(r.FormValue("assigned_to_user_id"))
 
 	if priorityStr == "" {
 		priorityStr = "Medium"
@@ -188,12 +214,20 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var assignedToUserID *int64
+	if assignedToStr != "" {
+		if uid, err := strconv.ParseInt(assignedToStr, 10, 64); err == nil && uid > 0 {
+			assignedToUserID = &uid
+		}
+	}
+
 	var newID int64
+	_ = db.EnsureRemindersTable()
 	err = db.DB.QueryRow(`
-		INSERT INTO reminders (title, details, due_date, priority, category, status)
-		VALUES (?, ?, ?, ?, ?, 'Pending')
+		INSERT INTO reminders (title, details, due_date, priority, category, status, assigned_to_user_id)
+		VALUES (?, ?, ?, ?, ?, 'Pending', ?)
 		RETURNING id
-	`, title, details, dueDate, priorityStr, category).Scan(&newID)
+	`, title, details, dueDate, priorityStr, category, assignedToUserID).Scan(&newID)
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to create reminder."}}`)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -202,11 +236,104 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 
 	app.LogActivity(r, "CREATE_REMINDER", "Reminder", fmt.Sprintf("%d", newID), fmt.Sprintf("Scheduled reminder '%s' for %s", title, dueDateStr))
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder created successfully!"}}`)
-	returnUrl := r.Header.Get("Referer")
+	returnUrl := r.Header.Get("HX-Current-URL")
+	if returnUrl == "" {
+		returnUrl = r.Header.Get("Referer")
+	}
 	if returnUrl == "" {
 		returnUrl = "/calendar"
 	}
-	w.Header().Set("HX-Redirect", returnUrl)
+	if r.Header.Get("HX-Target") == "#main-content" {
+		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
+	} else {
+		w.Header().Set("HX-Redirect", returnUrl)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+// EditReminderHandler updates an existing scheduled reminder
+func (app *App) EditReminderHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid reminder ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	title := strings.TrimSpace(r.FormValue("title"))
+	details := strings.TrimSpace(r.FormValue("details"))
+	dueDateStr := strings.TrimSpace(r.FormValue("due_date"))
+	priorityStr := strings.TrimSpace(r.FormValue("priority"))
+	category := strings.TrimSpace(r.FormValue("category"))
+	assignedToStr := strings.TrimSpace(r.FormValue("assigned_to_user_id"))
+	status := strings.TrimSpace(r.FormValue("status"))
+
+	if priorityStr == "" {
+		priorityStr = "Medium"
+	}
+	if category == "" {
+		category = "General"
+	}
+	if status == "" {
+		status = "Pending"
+	}
+
+	dueDate, err := time.Parse("2006-01-02", dueDateStr)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid due date format. Expected YYYY-MM-DD."}}`)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err := domain.ValidateReminder(title, dueDate, domain.ReminderPriority(priorityStr)); err != nil {
+		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if err := domain.ValidateReminderStatus(domain.ReminderStatus(status)); err != nil {
+		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var assignedToUserID *int64
+	if assignedToStr != "" {
+		if uid, err := strconv.ParseInt(assignedToStr, 10, 64); err == nil && uid > 0 {
+			assignedToUserID = &uid
+		}
+	}
+
+	_, err = db.DB.Exec(`
+		UPDATE reminders
+		SET title = ?, details = ?, due_date = ?, priority = ?, category = ?, status = ?, assigned_to_user_id = ?
+		WHERE id = ?
+	`, title, details, dueDate, priorityStr, category, status, assignedToUserID, id)
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update reminder."}}`)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	app.LogActivity(r, "UPDATE_REMINDER", "Reminder", idStr, fmt.Sprintf("Updated reminder '%s' (due %s)", title, dueDateStr))
+	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder updated successfully!"}}`)
+	returnUrl := r.Header.Get("HX-Current-URL")
+	if returnUrl == "" {
+		returnUrl = r.Header.Get("Referer")
+	}
+	if returnUrl == "" {
+		returnUrl = "/calendar"
+	}
+	if r.Header.Get("HX-Target") == "#main-content" {
+		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
+	} else {
+		w.Header().Set("HX-Redirect", returnUrl)
+	}
 	w.WriteHeader(http.StatusOK)
 }
 

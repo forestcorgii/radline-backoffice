@@ -373,10 +373,14 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	// 10. Upcoming Reminders
 	var upcomingReminders []models.Reminder
 	_ = db.DB.Select(&upcomingReminders, `
-		SELECT id, title, details, due_date, priority, category, status, created_at
-		FROM reminders
-		WHERE status = 'Pending'
-		ORDER BY due_date ASC
+		SELECT 
+			r.id, r.title, r.details, r.due_date, r.priority, r.category, r.status, r.created_at,
+			r.assigned_to_user_id,
+			COALESCE(u.full_name, u.username, '') AS assigned_to_name
+		FROM reminders r
+		LEFT JOIN users u ON r.assigned_to_user_id = u.id
+		WHERE r.status = 'Pending'
+		ORDER BY r.due_date ASC
 		LIMIT 4
 	`)
 

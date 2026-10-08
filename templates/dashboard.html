@@ -365,7 +365,7 @@
                     </button>
                     <div style="min-width: 0;">
                         <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ .Title }}">{{ .Title }}</div>
-                        <div style="font-size: 0.65625rem; color: var(--text-muted);">Due: {{ .DueDate.Format "Jan 02, 2006" }} &bull; {{ .Category }}</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">Due: {{ .DueDate.Format "Jan 02, 2006" }} &bull; {{ .Category }}{{ if .AssignedToName }} &bull; <span style="color: var(--primary-color); font-weight: 600;">👤 {{ .AssignedToName }}</span>{{ end }}</div>
                     </div>
                 </div>
                 <div>
