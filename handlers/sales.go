@@ -270,15 +270,25 @@ func (app *App) AddSalesHandler(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	details := sale.ToSalesDetails()
-	for _, sd := range details {
-		_, err = tx.Exec(`
+	if len(details) > 0 {
+		stmt, err := tx.Prepare(`
 			INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, tin_no, address, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, patong, pos_charge, wt_2307, total_remit, profit, profit_margin, remarks, ref_pl)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, sd.DocType, sd.DocStatus, sd.DocDate, sd.DocNumber, sd.CustomerName, sd.TINNo, sd.Address, sd.Supplier, sd.ItemID, sd.Qty, sd.UOM, sd.Price, sd.TotalSales, sd.Cost, sd.TotalCost, sd.Patong, sd.POSCharge, sd.WT2307, sd.TotalRemit, sd.Profit, sd.ProfitMargin, sd.Remarks, sd.RefPL)
+		`)
 		if err != nil {
-			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save sale detail."}}`)
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to prepare sale detail statement."}}`)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
+		}
+		defer stmt.Close()
+
+		for _, sd := range details {
+			_, err = stmt.Exec(sd.DocType, sd.DocStatus, sd.DocDate, sd.DocNumber, sd.CustomerName, sd.TINNo, sd.Address, sd.Supplier, sd.ItemID, sd.Qty, sd.UOM, sd.Price, sd.TotalSales, sd.Cost, sd.TotalCost, sd.Patong, sd.POSCharge, sd.WT2307, sd.TotalRemit, sd.Profit, sd.ProfitMargin, sd.Remarks, sd.RefPL)
+			if err != nil {
+				w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save sale detail."}}`)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 
