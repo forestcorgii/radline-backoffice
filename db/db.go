@@ -288,6 +288,7 @@ func runPostgresMigrations() {
 		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS total_cost DOUBLE PRECISION NOT NULL DEFAULT 0.0;",
 		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS selling_price DOUBLE PRECISION;",
 		"ALTER TABLE inventory_adjustments ADD COLUMN IF NOT EXISTS adjustment_id INTEGER REFERENCES stock_adjustments(id);",
+		"ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id);",
 	}
 
 	for _, stmt := range migrations {
@@ -758,7 +759,12 @@ func EnsureRemindersTable() error {
 			CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
 			CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
 		`)
-		return err
+		if err != nil {
+			return err
+		}
+		_, _ = DB.Exec("ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id);")
+		_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_reminders_assigned_to ON reminders(assigned_to_user_id);")
+		return nil
 	}
 	_, err := DB.Exec(`
 		CREATE TABLE IF NOT EXISTS earning_goals (
