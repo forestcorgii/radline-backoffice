@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -98,6 +99,7 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	var sales []models.SalesDetailWithItem
 	err := db.DB.Select(&sales, query, selectArgs...)
 	if err != nil {
+		log.Printf("ERROR: SalesHandler failed to fetch sales: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

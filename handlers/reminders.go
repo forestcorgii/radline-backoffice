@@ -229,6 +229,7 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 		RETURNING id
 	`, title, details, dueDate, priorityStr, category, assignedToUserID).Scan(&newID)
 	if err != nil {
+		log.Printf("ERROR: Failed to create reminder: %v", err)
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to create reminder."}}`)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
