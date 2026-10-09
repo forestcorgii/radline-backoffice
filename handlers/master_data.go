@@ -753,7 +753,7 @@ func (app *App) SelectCategoriesHandler(w http.ResponseWriter, r *http.Request) 
 // SelectItemsHandler renders the updated item select fragment
 func (app *App) SelectItemsHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 20")
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -761,25 +761,38 @@ func (app *App) SelectItemsHandler(w http.ResponseWriter, r *http.Request) {
 	app.Render(w, "item_select.html", items)
 }
 
-// SearchItemsHandler handles debounced item searching with result limits
+// SearchItemsHandler handles debounced item searching with result limits and multi-keyword matching
 func (app *App) SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	limitStr := r.URL.Query().Get("limit")
-	limit := 20
-	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+	limit := 100
+	if limitStr == "all" {
+		limit = 1000
+	} else if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
 		limit = l
 	}
-	if limit > 50 {
-		limit = 50
+	if limit > 1000 {
+		limit = 1000
 	}
 
 	var items []models.Item
 	var err error
+
 	if q != "" {
-		term := "%" + q + "%"
-		err = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items WHERE code LIKE ? OR description LIKE ? OR model LIKE ? ORDER BY description ASC LIMIT ?", term, term, term, limit)
+		words := strings.Fields(q)
+		var clauses []string
+		var args []interface{}
+		for _, w := range words {
+			term := "%" + w + "%"
+			clauses = append(clauses, "(i.code LIKE ? OR i.description LIKE ? OR i.model LIKE ? OR i.variation LIKE ? OR i.brand_id IN (SELECT id FROM brands WHERE name LIKE ?) OR i.category_id IN (SELECT id FROM categories WHERE name LIKE ?))")
+			args = append(args, term, term, term, term, term, term)
+		}
+		query := "SELECT i.id, i.code, i.description, i.default_uom, i.model FROM items i WHERE " + strings.Join(clauses, " AND ") + " ORDER BY i.description ASC LIMIT ?"
+		args = append(args, limit)
+		err = db.DB.Select(&items, query, args...)
 	} else {
-		err = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT ?", limit)
+		query := "SELECT i.id, i.code, i.description, i.default_uom, i.model FROM items i ORDER BY i.description ASC LIMIT ?"
+		err = db.DB.Select(&items, query, limit)
 	}
 
 	if err != nil {

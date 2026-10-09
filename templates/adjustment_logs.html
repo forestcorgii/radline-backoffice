@@ -142,74 +142,7 @@
         };
 
         window.initAdjustmentColumnResizing = function () {
-            const headers = document.querySelectorAll('.adjustment-logs-table .th[data-col]');
-            headers.forEach(th => {
-                if (th.querySelector('.table-col-resizer')) return;
-
-                const resizer = document.createElement('div');
-                resizer.className = 'table-col-resizer';
-                th.appendChild(resizer);
-
-                const colKey = th.getAttribute('data-col');
-
-                let startX = 0;
-                let startWidth = 0;
-
-                const onPointerDown = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    startX = clientX;
-                    startWidth = th.offsetWidth;
-
-                    resizer.classList.add('resizing');
-                    document.body.style.cursor = 'col-resize';
-                    document.body.style.userSelect = 'none';
-
-                    const onPointerMove = function (moveEvent) {
-                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
-                        const deltaX = currentX - startX;
-                        const newWidth = Math.max(40, startWidth + deltaX);
-
-                        currentAdjustmentColumnWidths[colKey] = newWidth;
-                        window.applyAdjustmentColumnWidths();
-                    };
-
-                    const onPointerUp = function () {
-                        resizer.classList.remove('resizing');
-                        document.body.style.cursor = '';
-                        document.body.style.userSelect = '';
-
-                        document.removeEventListener('mousemove', onPointerMove);
-                        document.removeEventListener('mouseup', onPointerUp);
-                        document.removeEventListener('touchmove', onPointerMove);
-                        document.removeEventListener('touchend', onPointerUp);
-
-                        saveAdjustmentColumnWidths();
-                    };
-
-                    document.addEventListener('mousemove', onPointerMove);
-                    document.addEventListener('mouseup', onPointerUp);
-                    document.addEventListener('touchmove', onPointerMove, { passive: false });
-                    document.addEventListener('touchend', onPointerUp);
-                };
-
-                resizer.addEventListener('mousedown', onPointerDown);
-                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
-
-                resizer.addEventListener('dblclick', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (DEFAULT_ADJUSTMENT_COL_WIDTHS[colKey]) {
-                        currentAdjustmentColumnWidths[colKey] = DEFAULT_ADJUSTMENT_COL_WIDTHS[colKey];
-                    } else {
-                        delete currentAdjustmentColumnWidths[colKey];
-                    }
-                    saveAdjustmentColumnWidths();
-                    window.applyAdjustmentColumnWidths();
-                });
-            });
+            // Disabled in favor of authentic Excel double-line collapsible columns
         };
 
         window.applyAdjustmentColumnWidths();

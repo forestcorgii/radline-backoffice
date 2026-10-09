@@ -3,12 +3,10 @@
 {{ end }}
 
 {{ define "content" }}
-<div class="header-bar">
-    <h2 style="margin: 0;">Monthly Inventory Movements</h2>
-</div>
-
-<div class="card">
-    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Inventory Movements by Month</h3>
+<div class="card" id="monthly-inventory-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
+        <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Monthly Inventory Movements</h3>
+    </div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#monthly-loading-indicator">
         <div class="search-filter-bar">
@@ -225,74 +223,7 @@
         };
 
         window.initMonthlyColumnResizing = function () {
-            const headers = document.querySelectorAll('.monthly-inventory-table .th[data-col]');
-            headers.forEach(th => {
-                if (th.querySelector('.table-col-resizer')) return;
-
-                const resizer = document.createElement('div');
-                resizer.className = 'table-col-resizer';
-                th.appendChild(resizer);
-
-                const colKey = th.getAttribute('data-col');
-
-                let startX = 0;
-                let startWidth = 0;
-
-                const onPointerDown = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    startX = clientX;
-                    startWidth = th.offsetWidth;
-
-                    resizer.classList.add('resizing');
-                    document.body.style.cursor = 'col-resize';
-                    document.body.style.userSelect = 'none';
-
-                    const onPointerMove = function (moveEvent) {
-                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
-                        const deltaX = currentX - startX;
-                        const newWidth = Math.max(40, startWidth + deltaX);
-
-                        currentMonthlyColumnWidths[colKey] = newWidth;
-                        window.applyMonthlyColumnWidths();
-                    };
-
-                    const onPointerUp = function () {
-                        resizer.classList.remove('resizing');
-                        document.body.style.cursor = '';
-                        document.body.style.userSelect = '';
-
-                        document.removeEventListener('mousemove', onPointerMove);
-                        document.removeEventListener('mouseup', onPointerUp);
-                        document.removeEventListener('touchmove', onPointerMove);
-                        document.removeEventListener('touchend', onPointerUp);
-
-                        saveMonthlyColumnWidths();
-                    };
-
-                    document.addEventListener('mousemove', onPointerMove);
-                    document.addEventListener('mouseup', onPointerUp);
-                    document.addEventListener('touchmove', onPointerMove, { passive: false });
-                    document.addEventListener('touchend', onPointerUp);
-                };
-
-                resizer.addEventListener('mousedown', onPointerDown);
-                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
-
-                resizer.addEventListener('dblclick', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (DEFAULT_MONTHLY_COL_WIDTHS[colKey]) {
-                        currentMonthlyColumnWidths[colKey] = DEFAULT_MONTHLY_COL_WIDTHS[colKey];
-                    } else {
-                        delete currentMonthlyColumnWidths[colKey];
-                    }
-                    saveMonthlyColumnWidths();
-                    window.applyMonthlyColumnWidths();
-                });
-            });
+            // Disabled in favor of authentic Excel double-line collapsible columns
         };
 
         function getMonthlyViewConfig() {

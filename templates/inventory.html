@@ -3,35 +3,32 @@
 {{ end }}
 
 {{ define "content" }}
-<div class="header-bar mb-4">
-    <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">Inventory</h2>
-    <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
-        <button type="button" onclick="toggleReceiveStockForm()"
-            class="btn" style="cursor: pointer;">
-            + Receive Stock
-        </button>
-        <button type="button" onclick="toggleAdjustStockForm()"
-            class="btn btn-secondary" style="cursor: pointer;">
-            Adjust Stock
-        </button>
-    </div>
-</div>
-
 {{ template "receive_stock_form.html" . }}
 {{ template "adjust_stock_form.html" . }}
 
-<div class="card">
+<div class="card" id="inventory-stock-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
-        <h3 style="font-size: 0.875rem; font-weight: 600; margin: 0;">Current Stock Levels</h3>
-        <div class="customize-view-container">
-            <button type="button" class="btn btn-secondary" onclick="toggleCustomizeInventoryViewPopover(event)"
-                style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
-                title="Customize Visible Columns and Filters">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                </svg>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Current Stock Levels</h3>
+        </div>
+        <div style="display: flex; gap: 0.35rem; align-items: center;">
+            <button type="button" onclick="toggleReceiveStockForm()"
+                class="btn" style="cursor: pointer; height: 1.75rem; font-size: 0.75rem; padding: 0 0.65rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                + Receive Stock
             </button>
+            <button type="button" onclick="toggleAdjustStockForm()"
+                class="btn btn-secondary" style="cursor: pointer; height: 1.75rem; font-size: 0.75rem; padding: 0 0.65rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                Adjust Stock
+            </button>
+            <div class="customize-view-container">
+                <button type="button" class="btn btn-secondary" onclick="toggleCustomizeInventoryViewPopover(event)"
+                    style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
+                    title="Customize Visible Columns and Filters">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                </button>
 
             <div id="customize-inventory-view-popover" class="customize-view-popover">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
@@ -94,6 +91,7 @@
             </div>
         </div>
     </div>
+</div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#inventory-loading-indicator">
         <div class="search-filter-bar">
@@ -234,74 +232,7 @@
         };
 
         window.initInventoryColumnResizing = function () {
-            const headers = document.querySelectorAll('.inventory-stock-table .th[data-col]');
-            headers.forEach(th => {
-                if (th.querySelector('.table-col-resizer')) return;
-
-                const resizer = document.createElement('div');
-                resizer.className = 'table-col-resizer';
-                th.appendChild(resizer);
-
-                const colKey = th.getAttribute('data-col');
-
-                let startX = 0;
-                let startWidth = 0;
-
-                const onPointerDown = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    startX = clientX;
-                    startWidth = th.offsetWidth;
-
-                    resizer.classList.add('resizing');
-                    document.body.style.cursor = 'col-resize';
-                    document.body.style.userSelect = 'none';
-
-                    const onPointerMove = function (moveEvent) {
-                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
-                        const deltaX = currentX - startX;
-                        const newWidth = Math.max(40, startWidth + deltaX);
-
-                        currentInventoryColumnWidths[colKey] = newWidth;
-                        window.applyInventoryColumnWidths();
-                    };
-
-                    const onPointerUp = function () {
-                        resizer.classList.remove('resizing');
-                        document.body.style.cursor = '';
-                        document.body.style.userSelect = '';
-
-                        document.removeEventListener('mousemove', onPointerMove);
-                        document.removeEventListener('mouseup', onPointerUp);
-                        document.removeEventListener('touchmove', onPointerMove);
-                        document.removeEventListener('touchend', onPointerUp);
-
-                        saveInventoryColumnWidths();
-                    };
-
-                    document.addEventListener('mousemove', onPointerMove);
-                    document.addEventListener('mouseup', onPointerUp);
-                    document.addEventListener('touchmove', onPointerMove, { passive: false });
-                    document.addEventListener('touchend', onPointerUp);
-                };
-
-                resizer.addEventListener('mousedown', onPointerDown);
-                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
-
-                resizer.addEventListener('dblclick', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (DEFAULT_INVENTORY_COL_WIDTHS[colKey]) {
-                        currentInventoryColumnWidths[colKey] = DEFAULT_INVENTORY_COL_WIDTHS[colKey];
-                    } else {
-                        delete currentInventoryColumnWidths[colKey];
-                    }
-                    saveInventoryColumnWidths();
-                    window.applyInventoryColumnWidths();
-                });
-            });
+            // Disabled in favor of authentic Excel double-line collapsible columns
         };
 
         function getInventoryViewConfig() {
@@ -336,13 +267,17 @@
                 cb.checked = !!config.filters[filterKey];
             });
 
-            Object.keys(config.columns).forEach(colKey => {
-                const isVisible = config.columns[colKey];
-                const elements = document.querySelectorAll(`[data-col="${colKey}"]`);
-                elements.forEach(el => {
-                    el.style.display = isVisible ? '' : 'none';
-                });
-            });
+            // Sync hidden columns with Universal Excel Collapsible Columns system
+            const table = document.querySelector('.inventory-stock-table');
+            if (table) {
+                const tableId = table.id || 'inventory-stock-table';
+                const storageKey = 'radline_collapsed_cols_' + tableId;
+                const hiddenCols = Object.keys(config.columns).filter(k => !config.columns[k]);
+                localStorage.setItem(storageKey, JSON.stringify(hiddenCols));
+                if (typeof window.initExcelCollapsibleColumns === 'function') {
+                    window.initExcelCollapsibleColumns();
+                }
+            }
 
             Object.keys(config.filters).forEach(filterKey => {
                 const isVisible = config.filters[filterKey];
@@ -424,15 +359,27 @@
         }
     }
 
+    window.addEventListener('radline-excel-cols-updated', function (e) {
+        if (e.detail && (e.detail.tableId === 'inventory-stock-table' || (e.detail.tableId && e.detail.tableId.includes('inventory')))) {
+            const collapsedCols = e.detail.collapsedCols || [];
+            const config = getInventoryViewConfig();
+            Object.keys(config.columns).forEach(colKey => {
+                config.columns[colKey] = !collapsedCols.includes(colKey);
+            });
+            saveInventoryViewConfig(config);
+            document.querySelectorAll('#customize-inventory-view-popover [data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                cb.checked = !collapsedCols.includes(colKey);
+            });
+        }
+    });
+
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         if (typeof window.applyInventoryColumnWidths === 'function') {
             window.applyInventoryColumnWidths();
         }
         if (typeof window.applyInventoryViewSettings === 'function') {
             window.applyInventoryViewSettings();
-        }
-        if (typeof window.initInventoryColumnResizing === 'function') {
-            window.initInventoryColumnResizing();
         }
     });
 

@@ -3,13 +3,7 @@
 {{ end }}
 
 {{ define "content" }}
-<div class="header-bar mb-4">
-    <h2 style="font-size: 1.125rem; font-weight: 700; margin: 0;">Items</h2>
-    <button type="button" class="btn" onclick="toggleAddItemForm()"
-        style="cursor: pointer;">
-        + Add Item
-    </button>
-</div>
+
 
 <!-- Add Item Form Card (hidden by default, shown when + Add Item is clicked) -->
 <div class="card mb-4" id="add-item-card" style="display: none;">
@@ -191,8 +185,13 @@
 <!-- Non-collapsible Items List Card occupying the full width -->
 <div class="card" id="items-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
-        <h3 style="font-size: 0.875rem; font-weight: 600; margin: 0;">Items List</h3>
-        <div class="customize-view-container">
+        <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Items List</h3>
+        <div style="display: flex; gap: 0.35rem; align-items: center;">
+            <button type="button" class="btn" onclick="toggleAddItemForm()"
+                style="cursor: pointer; height: 1.75rem; font-size: 0.75rem; padding: 0 0.65rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                + Add Item
+            </button>
+            <div class="customize-view-container">
             <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
                 style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
                 title="Customize Visible Columns and Filters">
@@ -265,6 +264,7 @@
             </div>
         </div>
     </div>
+</div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#items-loading-indicator">
         <div class="search-filter-bar">
@@ -418,74 +418,7 @@
         };
 
         window.initItemsColumnResizing = function () {
-            const headers = document.querySelectorAll('.items-table .th[data-col]');
-            headers.forEach(th => {
-                if (th.querySelector('.table-col-resizer')) return;
-
-                const resizer = document.createElement('div');
-                resizer.className = 'table-col-resizer';
-                th.appendChild(resizer);
-
-                const colKey = th.getAttribute('data-col');
-
-                let startX = 0;
-                let startWidth = 0;
-
-                const onPointerDown = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    startX = clientX;
-                    startWidth = th.offsetWidth;
-
-                    resizer.classList.add('resizing');
-                    document.body.style.cursor = 'col-resize';
-                    document.body.style.userSelect = 'none';
-
-                    const onPointerMove = function (moveEvent) {
-                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
-                        const deltaX = currentX - startX;
-                        const newWidth = Math.max(40, startWidth + deltaX);
-
-                        currentItemsColumnWidths[colKey] = newWidth;
-                        window.applyItemsColumnWidths();
-                    };
-
-                    const onPointerUp = function () {
-                        resizer.classList.remove('resizing');
-                        document.body.style.cursor = '';
-                        document.body.style.userSelect = '';
-
-                        document.removeEventListener('mousemove', onPointerMove);
-                        document.removeEventListener('mouseup', onPointerUp);
-                        document.removeEventListener('touchmove', onPointerMove);
-                        document.removeEventListener('touchend', onPointerUp);
-
-                        saveItemsColumnWidths();
-                    };
-
-                    document.addEventListener('mousemove', onPointerMove);
-                    document.addEventListener('mouseup', onPointerUp);
-                    document.addEventListener('touchmove', onPointerMove, { passive: false });
-                    document.addEventListener('touchend', onPointerUp);
-                };
-
-                resizer.addEventListener('mousedown', onPointerDown);
-                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
-
-                resizer.addEventListener('dblclick', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (DEFAULT_ITEMS_COL_WIDTHS[colKey]) {
-                        currentItemsColumnWidths[colKey] = DEFAULT_ITEMS_COL_WIDTHS[colKey];
-                    } else {
-                        delete currentItemsColumnWidths[colKey];
-                    }
-                    saveItemsColumnWidths();
-                    window.applyItemsColumnWidths();
-                });
-            });
+            // Disabled in favor of authentic Excel double-line collapsible columns
         };
 
         function getItemsViewConfig() {
@@ -520,13 +453,17 @@
                 cb.checked = !!config.filters[filterKey];
             });
 
-            Object.keys(config.columns).forEach(colKey => {
-                const isVisible = config.columns[colKey];
-                const elements = document.querySelectorAll(`[data-col="${colKey}"]`);
-                elements.forEach(el => {
-                    el.style.display = isVisible ? '' : 'none';
-                });
-            });
+            // Sync hidden columns with Universal Excel Collapsible Columns system
+            const table = document.querySelector('.items-table');
+            if (table) {
+                const tableId = table.id || 'items-table';
+                const storageKey = 'radline_collapsed_cols_' + tableId;
+                const hiddenCols = Object.keys(config.columns).filter(k => !config.columns[k]);
+                localStorage.setItem(storageKey, JSON.stringify(hiddenCols));
+                if (typeof window.initExcelCollapsibleColumns === 'function') {
+                    window.initExcelCollapsibleColumns();
+                }
+            }
 
             Object.keys(config.filters).forEach(filterKey => {
                 const isVisible = config.filters[filterKey];
@@ -536,6 +473,21 @@
                 });
             });
         };
+
+        window.addEventListener('radline-excel-cols-updated', function (e) {
+            if (e.detail && (e.detail.tableId === 'items-table' || (e.detail.tableId && e.detail.tableId.includes('items')))) {
+                const collapsedCols = e.detail.collapsedCols || [];
+                const config = getItemsViewConfig();
+                Object.keys(config.columns).forEach(colKey => {
+                    config.columns[colKey] = !collapsedCols.includes(colKey);
+                });
+                saveItemsViewConfig(config);
+                document.querySelectorAll('#customize-items-view-popover [data-target-col]').forEach(cb => {
+                    const colKey = cb.getAttribute('data-target-col');
+                    cb.checked = !collapsedCols.includes(colKey);
+                });
+            }
+        });
 
         window.onItemsViewSettingChange = function () {
             const config = { columns: {}, filters: {} };

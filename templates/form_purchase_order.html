@@ -550,14 +550,18 @@
 window._poSearchDebounceTimer = null;
 
 function onPOItemInput(inputEl) {
-    const val = inputEl.value.trim();
+    const rawVal = inputEl.value.trim();
+    const val = rawVal.toLowerCase();
     const row = inputEl.closest('tr');
     if (!row) return;
 
-    // Check immediate local datalist match
+    // Check immediate local datalist match by code or description
     const datalist = document.getElementById('po-catalog-items-list');
-    if (datalist) {
-        const opt = Array.from(datalist.options).find(o => o.value === val);
+    if (datalist && val) {
+        const opt = Array.from(datalist.options).find(o => 
+            (o.value && o.value.toLowerCase() === val) || 
+            (o.getAttribute('data-desc') && o.getAttribute('data-desc').toLowerCase() === val)
+        );
         if (opt) {
             const descInput = row.querySelector('.item-desc-input');
             const uomInput = row.querySelector('.item-uom-input');
@@ -568,38 +572,57 @@ function onPOItemInput(inputEl) {
         }
     }
 
-    // Delay 300ms before querying the server, capped at 20 results
-    clearTimeout(window._poSearchDebounceTimer);
-    window._poSearchDebounceTimer = setTimeout(() => {
-        fetch('/items/search?q=' + encodeURIComponent(val) + '&limit=20&format=json', {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(res => res.json())
-        .then(items => {
-            if (!Array.isArray(items) || !datalist) return;
-            datalist.innerHTML = '';
-            items.forEach(item => {
+    // Fast in-memory cache check
+    window._itemSearchJsonCache = window._itemSearchJsonCache || new Map();
+    const applyItemsToDatalist = (items) => {
+        if (!Array.isArray(items) || !datalist) return;
+        const existingCodes = new Set(Array.from(datalist.options).map(o => o.value));
+        items.forEach(item => {
+            if (!existingCodes.has(item.code)) {
                 const opt = document.createElement('option');
                 opt.value = item.code || item.description;
                 opt.setAttribute('data-desc', item.description);
                 opt.setAttribute('data-uom', item.default_uom || 'PCS');
                 opt.textContent = item.description;
                 datalist.appendChild(opt);
-            });
+            }
+        });
 
-            // If user's current input matches one of the newly returned options, auto-populate
-            const currentVal = inputEl.value.trim();
-            const matchedOpt = Array.from(datalist.options).find(o => o.value === currentVal);
-            if (matchedOpt) {
-                const descInput = row.querySelector('.item-desc-input');
-                const uomInput = row.querySelector('.item-uom-input');
-                if (descInput && !descInput.value) descInput.value = matchedOpt.getAttribute('data-desc') || '';
-                if (uomInput) uomInput.value = matchedOpt.getAttribute('data-uom') || 'PCS';
-                recalcPOSheet();
+        // Auto-populate if user input matches an option
+        const currentVal = inputEl.value.trim().toLowerCase();
+        const matchedOpt = Array.from(datalist.options).find(o => 
+            (o.value && o.value.toLowerCase() === currentVal) || 
+            (o.getAttribute('data-desc') && o.getAttribute('data-desc').toLowerCase() === currentVal)
+        );
+        if (matchedOpt) {
+            const descInput = row.querySelector('.item-desc-input');
+            const uomInput = row.querySelector('.item-uom-input');
+            if (descInput && !descInput.value) descInput.value = matchedOpt.getAttribute('data-desc') || '';
+            if (uomInput) uomInput.value = matchedOpt.getAttribute('data-uom') || 'PCS';
+            recalcPOSheet();
+        }
+    };
+
+    if (window._itemSearchJsonCache.has(rawVal)) {
+        applyItemsToDatalist(window._itemSearchJsonCache.get(rawVal));
+        return;
+    }
+
+    // Rapid 80ms debounce before querying server
+    clearTimeout(window._poSearchDebounceTimer);
+    window._poSearchDebounceTimer = setTimeout(() => {
+        fetch('/items/search?q=' + encodeURIComponent(rawVal) + '&limit=100&format=json', {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(items => {
+            if (Array.isArray(items)) {
+                window._itemSearchJsonCache.set(rawVal, items);
+                applyItemsToDatalist(items);
             }
         })
         .catch(err => console.error("Error fetching items:", err));
-    }, 300);
+    }, 80);
 }
 
 function recalcPOSheet() {

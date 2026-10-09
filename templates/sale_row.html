@@ -15,16 +15,16 @@
             </button>
             <div id="status-popover-{{ .ID }}" class="status-menu-popover" style="display: none;">
                 <button type="button" class="status-menu-item" hx-post="/sales/update-status/{{ .ID }}?doc_status=Active" hx-target="#sale-row-{{ .ID }}" hx-swap="outerHTML" onclick="closeRowStatusMenu({{ .ID }})">
-                    <span class="status-icon-btn status-icon-active" style="width: 16px; height: 16px; pointer-events: none;"><svg viewBox="0 0 24 24" width="8" height="8" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg></span>
+                    <span class="status-icon-btn status-icon-active" style="width: 18px; height: 18px; pointer-events: none;"><svg viewBox="0 0 24 24" width="8" height="8" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg></span>
                     Active
                 </button>
                 <button type="button" class="status-menu-item" hx-post="/sales/update-status/{{ .ID }}?doc_status=Posted" hx-target="#sale-row-{{ .ID }}" hx-swap="outerHTML" onclick="closeRowStatusMenu({{ .ID }})">
-                    <span class="status-icon-btn status-icon-posted" style="width: 16px; height: 16px; pointer-events: none;"><svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                    <span class="status-icon-btn status-icon-posted" style="width: 18px; height: 18px; pointer-events: none;"><svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
                     Posted
                 </button>
                 <button type="button" class="status-menu-item" hx-post="/sales/update-status/{{ .ID }}?doc_status=Cancelled/Return" hx-target="#sale-row-{{ .ID }}" hx-swap="outerHTML" onclick="closeRowStatusMenu({{ .ID }})">
-                    <span class="status-icon-btn status-icon-cancelled" style="width: 16px; height: 16px; pointer-events: none;"><svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
-                    Cancelled
+                    <span class="status-icon-btn status-icon-cancelled" style="width: 18px; height: 18px; pointer-events: none;"><svg viewBox="0 0 24 24" width="9" height="9" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
+                    Cancelled/Return
                 </button>
             </div>
         </div>
