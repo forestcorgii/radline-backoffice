@@ -93,6 +93,11 @@ When evolving the schema:
 - **Dual Migration Execution in `InitDB()`**: Always invoke `runPostgresMigrations()` in the `pgx` driver startup path using `ALTER TABLE <table> ADD COLUMN IF NOT EXISTS ...` statements.
 - **Defensive Query Projections**: In multi-column analytical views (e.g., `handlers/sales.go`), wrap nullable text and numeric projections in `COALESCE(col, '')` or `COALESCE(col, 0.0)` to ensure legacy or imported records scan cleanly into Go structs.
 
+### Context: Strict PostgreSQL GROUP BY Multi-Column Projection
+**Problem**: SQLite allows queries to `SELECT` unaggregated columns (e.g. `i.code`, `i.description`, `i.default_uom`) while only grouping by subset columns (e.g. `GROUP BY t.month, t.item_id`). PostgreSQL strictly rejects this with SQLSTATE 42803 (`column must appear in the GROUP BY clause or be used in an aggregate function`), causing HTTP 500 errors on production views like `/inventory/monthly`.
+**Enforced Solution**:
+- In all aggregated reporting queries across the repository, every non-aggregated column in the `SELECT` list must be explicitly enumerated in the `GROUP BY` clause (e.g., `GROUP BY t.month, t.item_id, i.code, i.description, i.default_uom`).
+
 ## Related
 - [[database-schema]] — Current table definitions
 - [[tech-stack]] — Why no migration framework

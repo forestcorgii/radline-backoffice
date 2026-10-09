@@ -6,6 +6,9 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
+
+	"radline/db"
 	"radline/models"
 )
 
@@ -115,13 +118,7 @@ func TestUserChipHandler(t *testing.T) {
 			}
 		})
 	}
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
-
-	"radline/db"
-)
+}
 
 func TestLogoutHandler(t *testing.T) {
 	// Initialize test db

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -586,7 +587,7 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
 
-	query += " GROUP BY t.month, t.item_id"
+	query += " GROUP BY t.month, t.item_id, i.code, i.description, i.default_uom"
 
 	limit := GetLimitParam(r)
 
@@ -608,13 +609,14 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 	var rows []MonthlyInventoryRow
 	err := db.DB.Select(&rows, query, selectArgs...)
 	if err != nil {
+		log.Printf("ERROR: MonthlyInventoryHandler query failed: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// Get list of unique months for the filter dropdown
 	var months []string
-	_ = db.DB.Select(&months, `
+	errMonths := db.DB.Select(&months, `
 		SELECT DISTINCT substr(date, 1, 7) as m FROM receiving_logs WHERE date IS NOT NULL
 		UNION
 		SELECT DISTINCT substr(doc_date, 1, 7) as m FROM sales_details WHERE doc_date IS NOT NULL
@@ -622,6 +624,9 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 		SELECT DISTINCT substr(date, 1, 7) as m FROM inventory_adjustments WHERE date IS NOT NULL
 		ORDER BY m DESC
 	`)
+	if errMonths != nil {
+		log.Printf("ERROR: MonthlyInventoryHandler months query failed: %v", errMonths)
+	}
 
 	// If HTMX request for content filter, only render the table rows fragment
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
