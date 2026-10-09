@@ -30,7 +30,7 @@
             <div class="form-group">
                 <label for="date">Delivery Date</label>
                 <input type="date" id="date" name="date" class="form-input" required>
-                <script>document.currentScript.previousElementSibling.valueAsDate = new Date();</script>
+                <script>const rcvDate = document.getElementById('date'); if (rcvDate) rcvDate.valueAsDate = new Date();</script>
             </div>
         </div>
 

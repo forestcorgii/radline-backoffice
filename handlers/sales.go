@@ -97,7 +97,8 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
-	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
+	target := r.Header.Get("HX-Target")
+	if r.Header.Get("HX-Request") == "true" && target != "main-content" && target != "#main-content" && target != "" {
 		data := struct {
 			Sales      []models.SalesDetailWithItem
 			IsEdit     bool

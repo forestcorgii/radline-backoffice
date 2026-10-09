@@ -16,7 +16,7 @@
             <div class="form-group">
                 <label for="doc_date">Document Date</label>
                 <input type="date" id="doc_date" name="doc_date" required>
-                <script>document.currentScript.previousElementSibling.valueAsDate = new Date();</script>
+                <script>const dNew = document.getElementById('doc_date'); if (dNew) dNew.valueAsDate = new Date();</script>
             </div>
             <div class="form-group">
                 <label for="doc_type">Doc Type</label>
