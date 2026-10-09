@@ -3,13 +3,7 @@
 {{ end }}
 
 {{ define "content" }}
-<div class="header-bar">
-    <h2 style="margin: 0;">Sales Logs</h2>
-    <button type="button" class="btn" onclick="toggleEncodeSalesForm()"
-        style="padding: 0.5rem 1rem; text-decoration: none; font-size: 0.8125rem; cursor: pointer;">
-        + Encode Sales
-    </button>
-</div>
+
 
 <!-- Encode Sales Form Card (hidden by default, shown when + Encode Sales is clicked) -->
 <div class="card mb-4" id="encode-sales-card" style="display: none;">
@@ -116,10 +110,14 @@
     </form>
 </div>
 
-<div class="card">
+<div class="card" id="sales-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
-        <h3 style="font-size: 0.875rem; font-weight: 600; margin: 0;">Sales Logs</h3>
+        <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Sales Logs</h3>
         <div style="display: flex; gap: 0.35rem; align-items: center;">
+            <button type="button" class="btn" onclick="toggleEncodeSalesForm()"
+                style="height: 1.75rem; font-size: 0.75rem; padding: 0 0.65rem; display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+                + Encode Sales
+            </button>
             <button type="button" id="edit-mode-btn" class="btn btn-secondary" onclick="toggleSalesEditMode()"
                 style="height: 1.75rem; font-size: 0.75rem; padding: 0 0.55rem; display: inline-flex; align-items: center; gap: 0.25rem;"
                 title="Toggle Edit Mode for Sales Rows">
@@ -349,7 +347,7 @@
 
     <div id="sales-results">
         <div class="table-container">
-            <div class="table table-scroll-lg sales-log-table">
+            <div class="table table-scroll-lg sales-log-table" id="sales-log-table">
                 <div class="thead">
                     <div class="tr">
                         <div class="th" data-col="doc_status">Status</div>
@@ -495,12 +493,24 @@
         window.toggleRowStatusMenu = function (event, id) {
             if (event) {
                 event.stopPropagation();
+                event.preventDefault();
             }
             const popover = document.getElementById('status-popover-' + id);
             if (!popover) return;
             const isShown = popover.style.display === 'flex';
             document.querySelectorAll('.status-menu-popover').forEach(el => el.style.display = 'none');
-            popover.style.display = isShown ? 'none' : 'flex';
+
+            if (!isShown) {
+                const btn = (event.currentTarget || event.target).closest('.status-icon-btn');
+                if (btn) {
+                    const rect = btn.getBoundingClientRect();
+                    popover.style.position = 'fixed';
+                    popover.style.top = (rect.bottom + 4) + 'px';
+                    popover.style.left = Math.max(8, rect.left) + 'px';
+                    popover.style.zIndex = '999999';
+                }
+                popover.style.display = 'flex';
+            }
         };
 
         window.closeRowStatusMenu = function (id) {
@@ -509,10 +519,14 @@
         };
 
         document.addEventListener('click', function (e) {
-            if (!e.target.closest('.status-icon-dropdown')) {
+            if (!e.target.closest('.status-icon-dropdown') && !e.target.closest('.status-menu-popover')) {
                 document.querySelectorAll('.status-menu-popover').forEach(el => el.style.display = 'none');
             }
         });
+
+        window.addEventListener('scroll', function () {
+            document.querySelectorAll('.status-menu-popover').forEach(el => el.style.display = 'none');
+        }, true);
 
         function getSalesColumnWidths() {
             try {
@@ -561,79 +575,9 @@
             });
 
             styleEl.textContent = cssRules.join('\n');
-        };
-
-        window.initSalesColumnResizing = function () {
-            const headers = document.querySelectorAll('.sales-log-table .th[data-col]');
-            headers.forEach(th => {
-                if (th.querySelector('.sales-log-col-resizer')) return;
-
-                const resizer = document.createElement('div');
-                resizer.className = 'sales-log-col-resizer';
-                th.appendChild(resizer);
-
-                const colKey = th.getAttribute('data-col');
-
-                let startX = 0;
-                let startWidth = 0;
-
-                const onPointerDown = function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    startX = clientX;
-                    startWidth = th.offsetWidth;
-
-                    resizer.classList.add('resizing');
-                    document.body.style.cursor = 'col-resize';
-                    document.body.style.userSelect = 'none';
-
-                    const onPointerMove = function (moveEvent) {
-                        const currentX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
-                        const deltaX = currentX - startX;
-                        const newWidth = Math.max(40, startWidth + deltaX);
-
-                        currentSalesColumnWidths[colKey] = newWidth;
-                        window.applySalesColumnWidths();
-                    };
-
-                    const onPointerUp = function () {
-                        resizer.classList.remove('resizing');
-                        document.body.style.cursor = '';
-                        document.body.style.userSelect = '';
-
-                        document.removeEventListener('mousemove', onPointerMove);
-                        document.removeEventListener('mouseup', onPointerUp);
-                        document.removeEventListener('touchmove', onPointerMove);
-                        document.removeEventListener('touchend', onPointerUp);
-
-                        saveSalesColumnWidths();
-                    };
-
-                    document.addEventListener('mousemove', onPointerMove);
-                    document.addEventListener('mouseup', onPointerUp);
-                    document.addEventListener('touchmove', onPointerMove, { passive: false });
-                    document.addEventListener('touchend', onPointerUp);
-                };
-
-                resizer.addEventListener('mousedown', onPointerDown);
-                resizer.addEventListener('touchstart', onPointerDown, { passive: false });
-
-                // Double-click to reset column width back to default
-                resizer.addEventListener('dblclick', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (DEFAULT_SALES_COL_WIDTHS[colKey]) {
-                        currentSalesColumnWidths[colKey] = DEFAULT_SALES_COL_WIDTHS[colKey];
-                    } else {
-                        delete currentSalesColumnWidths[colKey];
-                    }
-                    saveSalesColumnWidths();
-                    window.applySalesColumnWidths();
-                });
-            });
-        };
+          window.initSalesColumnResizing = function () {
+            // Disabled in favor of authentic Excel double-line collapsible columns
+        };        };
 
         function getSalesViewConfig() {
             try {
@@ -671,14 +615,17 @@
                 cb.checked = !!config.filters[filterKey];
             });
 
-            // 2. Toggle column visibility in table (th & td)
-            Object.keys(config.columns).forEach(colKey => {
-                const isVisible = config.columns[colKey];
-                const elements = document.querySelectorAll(`[data-col="${colKey}"]`);
-                elements.forEach(el => {
-                    el.style.display = isVisible ? '' : 'none';
-                });
-            });
+            // 2. Sync with Universal Excel Collapsible Columns system
+            const table = document.querySelector('.sales-log-table');
+            if (table) {
+                const tableId = table.id || 'sales-log-table';
+                const storageKey = 'radline_collapsed_cols_' + tableId;
+                const hiddenCols = Object.keys(config.columns).filter(k => !config.columns[k]);
+                localStorage.setItem(storageKey, JSON.stringify(hiddenCols));
+                if (typeof window.initExcelCollapsibleColumns === 'function') {
+                    window.initExcelCollapsibleColumns();
+                }
+            }
 
             // 3. Toggle filter visibility in search bar
             Object.keys(config.filters).forEach(filterKey => {
@@ -689,6 +636,21 @@
                 });
             });
         };
+
+        window.addEventListener('radline-excel-cols-updated', function (e) {
+            if (e.detail && (e.detail.tableId === 'sales-log-table' || (e.detail.tableId && e.detail.tableId.includes('sales')))) {
+                const collapsedCols = e.detail.collapsedCols || [];
+                const config = getSalesViewConfig();
+                Object.keys(config.columns).forEach(colKey => {
+                    config.columns[colKey] = !collapsedCols.includes(colKey);
+                });
+                saveSalesViewConfig(config);
+                document.querySelectorAll('#customize-view-popover input[data-target-col]').forEach(cb => {
+                    const colKey = cb.getAttribute('data-target-col');
+                    cb.checked = !collapsedCols.includes(colKey);
+                });
+            }
+        });
 
         window.onSalesViewSettingChange = function () {
             const config = { columns: {}, filters: {} };

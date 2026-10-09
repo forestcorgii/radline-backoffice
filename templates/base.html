@@ -11,7 +11,7 @@
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/index.css?v=5.2">
+    <link rel="stylesheet" href="/static/index.css?v=6.0">
     <!-- PWA & Mobile Web App Meta -->
     <meta name="theme-color" content="#1c1917">
     <meta name="mobile-web-app-capable" content="yes">
@@ -66,14 +66,14 @@
 
             <!-- QuickBooks Signature "+ New" Quick Action Button -->
             <div class="quick-create-section">
-                <button id="quick-create-btn" class="quick-create-btn" onclick="toggleQuickCreateMenu(event)" aria-haspopup="true" aria-expanded="false" title="Quick Create (+ New)">
+                <button id="quick-create-btn" class="quick-create-btn" onclick="toggleQuickCreateMenu(event)" aria-haspopup="true" aria-expanded="false" title="Quick Create">
                     <span class="quick-create-icon">
                         <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
                     </span>
-                    <span class="quick-create-label">+ New</span>
+                    <span class="quick-create-label">New</span>
                     <svg class="quick-create-caret" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
@@ -951,6 +951,7 @@
             }, 200);
         }
 
+        const _itemSearchHtmlCache = new Map();
         let _dropdownSearchTimer = null;
         function filterDropdown(input) {
             const container = input.closest('.searchable-dropdown');
@@ -958,34 +959,15 @@
             const hidden = container.querySelector('input[type="hidden"]');
             const isItemDropdown = hidden && (hidden.name === 'item_id' || hidden.id === 'item_id');
 
-            clearTimeout(_dropdownSearchTimer);
-
-            if (isItemDropdown) {
-                // Delay 300ms before querying the server
-                _dropdownSearchTimer = setTimeout(() => {
-                    const filter = input.value.trim();
-                    fetch('/items/search?q=' + encodeURIComponent(filter) + '&limit=20')
-                        .then(res => res.text())
-                        .then(html => {
-                            const list = container.querySelector('.dropdown-list');
-                            if (!list) return;
-                            list.innerHTML = html;
-                            const first = list.querySelector('.dropdown-item');
-                            if (first) first.classList.add('active');
-                            updateDropdownPosition(input);
-                        })
-                        .catch(err => console.error("Error querying items:", err));
-                }, 300);
-                return;
-            }
-
+            // 1. Instant client-side filtering on items currently in DOM (0ms response)
             const filter = input.value.trim().toLowerCase();
             const items = container.querySelectorAll('.dropdown-item');
             let firstVisible = null;
             let visibleCount = 0;
             items.forEach(item => {
-                const text = (item.getAttribute('data-description') || '').toLowerCase();
-                if (visibleCount < 20 && (filter === '' || text.includes(filter))) {
+                const text = (item.getAttribute('data-description') || item.textContent || '').toLowerCase();
+                const code = (item.getAttribute('data-code') || '').toLowerCase();
+                if (filter === '' || text.includes(filter) || code.includes(filter)) {
                     item.style.display = 'block';
                     visibleCount++;
                     if (!firstVisible) firstVisible = item;
@@ -998,6 +980,43 @@
                 firstVisible.classList.add('active');
             }
             updateDropdownPosition(input);
+
+            // 2. Supplement with full catalog fetch for item dropdowns
+            if (isItemDropdown) {
+                clearTimeout(_dropdownSearchTimer);
+                const queryStr = input.value.trim();
+
+                // If cached in memory, apply immediately with 0 network latency!
+                if (_itemSearchHtmlCache.has(queryStr)) {
+                    const list = container.querySelector('.dropdown-list');
+                    if (list) {
+                        list.innerHTML = _itemSearchHtmlCache.get(queryStr);
+                        const first = list.querySelector('.dropdown-item');
+                        if (first) first.classList.add('active');
+                        updateDropdownPosition(input);
+                    }
+                    return;
+                }
+
+                // Rapid debounce (80ms) for background server fetch
+                _dropdownSearchTimer = setTimeout(() => {
+                    fetch('/items/search?q=' + encodeURIComponent(queryStr) + '&limit=100')
+                        .then(res => res.text())
+                        .then(html => {
+                            if (!html) return;
+                            _itemSearchHtmlCache.set(queryStr, html);
+                            if (input.value.trim() === queryStr) {
+                                const list = container.querySelector('.dropdown-list');
+                                if (!list) return;
+                                list.innerHTML = html;
+                                const first = list.querySelector('.dropdown-item');
+                                if (first) first.classList.add('active');
+                                updateDropdownPosition(input);
+                            }
+                        })
+                        .catch(err => console.error("Error querying items:", err));
+                }, 80);
+            }
         }
 
         function selectDropdownItem(item) {
@@ -1493,6 +1512,240 @@
             if (e.key === 'Escape' && document.getElementById('uom-setting-modal').style.display === 'flex') {
                 closeUomSettingModal();
             }
+        });
+        // =========================================================================
+        // Universal Excel-like Collapsible Columns for all Listviews
+        // =========================================================================
+        window.initExcelCollapsibleColumns = function () {
+            const tables = document.querySelectorAll('.table, .resizable-table, .sales-log-table, table.table-scroll-md, table.table-scroll-lg, .excel-table');
+            tables.forEach((table, tableIdx) => {
+                const tableId = table.id || table.getAttribute('data-table-id') || 
+                    (table.classList.contains('inventory-stock-table') ? 'inventory-stock-table' : 
+                    (table.classList.contains('sales-log-table') ? 'sales-log-table' : 
+                    (table.classList.contains('items-table') ? 'items-table' : 
+                    (table.classList.contains('monthly-inventory-table') ? 'monthly-inventory-table' : 
+                    (table.classList.contains('receiving-logs-table') ? 'receiving-logs-table' : 
+                    (table.classList.contains('adjustment-logs-table') ? 'adjustment-logs-table' : 
+                    ('radline_table_' + tableIdx)))))));
+                if (!table.id) table.id = tableId;
+
+                const storageKey = 'radline_collapsed_cols_' + tableId;
+                let collapsedCols = [];
+                try {
+                    collapsedCols = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                } catch (e) {
+                    collapsedCols = [];
+                }
+
+                let styleEl = document.getElementById('excel-collapsed-style-' + tableId);
+                if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'excel-collapsed-style-' + tableId;
+                    document.head.appendChild(styleEl);
+                }
+
+                const updateTableCollapsedStyles = () => {
+                    const rules = [];
+                    collapsedCols.forEach(colKey => {
+                        rules.push(`
+                            #${tableId} .th[data-col="${colKey}"],
+                            #${tableId} .td[data-col="${colKey}"],
+                            #${tableId} th[data-col="${colKey}"],
+                            #${tableId} td[data-col="${colKey}"] {
+                                display: none !important;
+                            }
+                        `);
+                    });
+                    styleEl.textContent = rules.join('\n');
+                    try {
+                        localStorage.setItem(storageKey, JSON.stringify(collapsedCols));
+                        window.dispatchEvent(new CustomEvent('radline-excel-cols-updated', { detail: { tableId, collapsedCols } }));
+                    } catch (e) {}
+
+                    // Remove existing double-line divider handles and classes
+                    table.querySelectorAll('.has-hidden-next, .has-hidden-prev').forEach(el => {
+                        el.classList.remove('has-hidden-next', 'has-hidden-prev');
+                        const h = el.querySelector('.excel-divider-handle');
+                        if (h) h.remove();
+                    });
+
+                    // Calculate adjacent hidden columns and render Excel double-line dividers (||)
+                    const allHeaders = Array.from(table.querySelectorAll('.thead .th[data-col], thead th[data-col]'));
+                    const allColKeys = allHeaders.map(h => h.getAttribute('data-col'));
+                    const visibleHeaders = allHeaders.filter(h => !collapsedCols.includes(h.getAttribute('data-col')));
+
+                    if (visibleHeaders.length > 0) {
+                        // Check if hidden columns precede the first visible column
+                        const firstKey = visibleHeaders[0].getAttribute('data-col');
+                        const firstIdx = allColKeys.indexOf(firstKey);
+                        if (firstIdx > 0) {
+                            const hiddenPreceding = allColKeys.slice(0, firstIdx).filter(k => collapsedCols.includes(k));
+                            if (hiddenPreceding.length > 0) {
+                                visibleHeaders[0].classList.add('has-hidden-prev');
+                                table.querySelectorAll(`.td[data-col="${firstKey}"], td[data-col="${firstKey}"]`).forEach(td => td.classList.add('has-hidden-prev'));
+
+                                const handle = document.createElement('div');
+                                handle.className = 'excel-divider-handle left-handle';
+                                handle.title = `Double line (||): Click to unhide ${hiddenPreceding.length} hidden column(s)`;
+                                const doUnhide = (ev) => {
+                                    ev.stopPropagation();
+                                    ev.preventDefault();
+                                    collapsedCols = collapsedCols.filter(k => !hiddenPreceding.includes(k));
+                                    updateTableCollapsedStyles();
+                                };
+                                handle.addEventListener('click', doUnhide);
+                                handle.addEventListener('dblclick', doUnhide);
+                                visibleHeaders[0].appendChild(handle);
+                            }
+                        }
+
+                        // Check hidden columns between visible columns
+                        visibleHeaders.forEach((vh, i) => {
+                            const curKey = vh.getAttribute('data-col');
+                            const curIdx = allColKeys.indexOf(curKey);
+                            const nextIdx = (i + 1 < visibleHeaders.length) ? allColKeys.indexOf(visibleHeaders[i + 1].getAttribute('data-col')) : allColKeys.length;
+
+                            if (nextIdx > curIdx + 1) {
+                                const hiddenBetween = allColKeys.slice(curIdx + 1, nextIdx).filter(k => collapsedCols.includes(k));
+                                if (hiddenBetween.length > 0) {
+                                    vh.classList.add('has-hidden-next');
+                                    table.querySelectorAll(`.td[data-col="${curKey}"], td[data-col="${curKey}"]`).forEach(td => td.classList.add('has-hidden-next'));
+
+                                    const handle = document.createElement('div');
+                                    handle.className = 'excel-divider-handle right-handle';
+                                    handle.title = `Double line (||): Click to unhide ${hiddenBetween.length} hidden column(s)`;
+                                    const doUnhide = (ev) => {
+                                        ev.stopPropagation();
+                                        ev.preventDefault();
+                                        collapsedCols = collapsedCols.filter(k => !hiddenBetween.includes(k));
+                                        updateTableCollapsedStyles();
+                                    };
+                                    handle.addEventListener('click', doUnhide);
+                                    handle.addEventListener('dblclick', doUnhide);
+                                    vh.appendChild(handle);
+                                }
+                            }
+                        });
+                    }
+                };
+
+                const headers = table.querySelectorAll('.thead .th[data-col], thead th[data-col], thead th');
+                headers.forEach((th, idx) => {
+                    let colKey = th.getAttribute('data-col');
+                    if (!colKey) {
+                        colKey = 'col_' + idx;
+                        th.setAttribute('data-col', colKey);
+                        table.querySelectorAll('tbody tr').forEach(row => {
+                            if (row.children[idx]) row.children[idx].setAttribute('data-col', colKey);
+                        });
+                    }
+                    if (colKey === 'actions') return;
+
+                    const titleText = th.getAttribute('data-original-title') || th.textContent.trim();
+                    th.setAttribute('data-original-title', titleText);
+
+                    if (!th.querySelector('.th-content')) {
+                        th.innerHTML = `
+                            <div class="th-content">
+                                <span class="th-title" title="${titleText}">${titleText}</span>
+                            </div>
+                        `;
+                    }
+
+                    // Right-click context menu to hide column (pure Excel pattern, no ugly header buttons)
+                    th.oncontextmenu = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showColumnContextMenu(e, colKey, titleText, collapsedCols, (newCols) => {
+                            collapsedCols = newCols;
+                            updateTableCollapsedStyles();
+                        });
+                    };
+                });
+
+                updateTableCollapsedStyles();
+            });
+        };
+
+        // Context menu for Excel column hiding / unhiding
+        function showColumnContextMenu(e, colKey, titleText, collapsedCols, onUpdate) {
+            let menu = document.getElementById('table-col-context-menu');
+            if (!menu) {
+                menu = document.createElement('div');
+                menu.id = 'table-col-context-menu';
+                menu.className = 'table-col-context-menu';
+                document.body.appendChild(menu);
+            }
+
+            const hasHidden = collapsedCols && collapsedCols.length > 0;
+            menu.innerHTML = `
+                <button type="button" class="col-menu-item" id="col-menu-hide">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                    <span>Hide column "${titleText}"</span>
+                </button>
+                ${hasHidden ? `
+                <div style="height: 1px; background: #e2e8f0; margin: 0.25rem 0;"></div>
+                <button type="button" class="col-menu-item" id="col-menu-unhide-all">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <span>Unhide all columns (${collapsedCols.length})</span>
+                </button>
+                ` : ''}
+            `;
+
+            menu.style.display = 'block';
+            const menuWidth = 220;
+            const menuHeight = hasHidden ? 80 : 45;
+            let left = e.clientX;
+            let top = e.clientY;
+            if (left + menuWidth > window.innerWidth) left = window.innerWidth - menuWidth - 8;
+            if (top + menuHeight > window.innerHeight) top = window.innerHeight - menuHeight - 8;
+            menu.style.left = left + 'px';
+            menu.style.top = top + 'px';
+
+            const hideBtn = menu.querySelector('#col-menu-hide');
+            if (hideBtn) {
+                hideBtn.onclick = () => {
+                    menu.style.display = 'none';
+                    if (!collapsedCols.includes(colKey)) {
+                        onUpdate([...collapsedCols, colKey]);
+                    }
+                };
+            }
+
+            const unhideAllBtn = menu.querySelector('#col-menu-unhide-all');
+            if (unhideAllBtn) {
+                unhideAllBtn.onclick = () => {
+                    menu.style.display = 'none';
+                    onUpdate([]);
+                };
+            }
+
+            const closeMenu = (ev) => {
+                if (!menu.contains(ev.target)) {
+                    menu.style.display = 'none';
+                    document.removeEventListener('click', closeMenu);
+                    document.removeEventListener('contextmenu', closeMenu);
+                }
+            };
+            setTimeout(() => {
+                document.addEventListener('click', closeMenu);
+                document.addEventListener('contextmenu', closeMenu);
+            }, 0);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', window.initExcelCollapsibleColumns);
+        } else {
+            window.initExcelCollapsibleColumns();
+        }
+        document.body.addEventListener('htmx:afterSwap', function () {
+            window.initExcelCollapsibleColumns();
         });
 
         // PWA Service Worker Registration

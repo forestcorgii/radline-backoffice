@@ -413,6 +413,10 @@ func createSchemaSQLite() error {
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_items_code ON items(code);
+	CREATE INDEX IF NOT EXISTS idx_items_description ON items(description);
+	CREATE INDEX IF NOT EXISTS idx_items_model ON items(model);
+	CREATE INDEX IF NOT EXISTS idx_items_brand_id ON items(brand_id);
+	CREATE INDEX IF NOT EXISTS idx_items_category_id ON items(category_id);
 	CREATE INDEX IF NOT EXISTS idx_uom_settings_item_id ON uom_settings(item_id);
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_item_id ON receiving_logs(item_id);
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_date ON receiving_logs(date);
@@ -649,6 +653,10 @@ func createSchemaPostgres() error {
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_items_code ON items(code);
+	CREATE INDEX IF NOT EXISTS idx_items_description ON items(description);
+	CREATE INDEX IF NOT EXISTS idx_items_model ON items(model);
+	CREATE INDEX IF NOT EXISTS idx_items_brand_id ON items(brand_id);
+	CREATE INDEX IF NOT EXISTS idx_items_category_id ON items(category_id);
 	CREATE INDEX IF NOT EXISTS idx_uom_settings_item_id ON uom_settings(item_id);
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_item_id ON receiving_logs(item_id);
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_date ON receiving_logs(date);
@@ -885,6 +893,10 @@ func EnsureRemindersTable() error {
 	}
 
 	_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_reminders_assigned_to ON reminders(assigned_to_user_id);")
+	_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_items_description ON items(description);")
+	_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_items_model ON items(model);")
+	_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_items_brand_id ON items(brand_id);")
+	_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_items_category_id ON items(category_id);")
 
 	return nil
 }

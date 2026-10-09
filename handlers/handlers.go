@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ func (app *App) Render(w http.ResponseWriter, name string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	err := t.ExecuteTemplate(w, name, data)
 	if err != nil {
+		log.Printf("ExecuteTemplate error in %s: %v", name, err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

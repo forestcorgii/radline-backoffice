@@ -16,7 +16,7 @@ import (
 // QuotationFormHandler renders the printable Quotation Form page
 func (app *App) QuotationFormHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 20")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
 
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
@@ -42,7 +42,7 @@ func (app *App) QuotationFormHandler(w http.ResponseWriter, r *http.Request) {
 // PurchaseOrderFormHandler renders the Purchase Order Form page
 func (app *App) PurchaseOrderFormHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 20")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
 
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
