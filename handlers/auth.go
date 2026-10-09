@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -162,6 +163,7 @@ func (app *App) LoginSubmitHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		Expires:  expiresAt,
 		HttpOnly: true,
+		Secure:   os.Getenv("APP_ENV") == "production" || r.TLS != nil,
 		SameSite: http.SameSiteLaxMode,
 	})
 
@@ -191,6 +193,7 @@ func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Unix(0, 0),
 		MaxAge:   -1,
 		HttpOnly: true,
+		Secure:   os.Getenv("APP_ENV") == "production" || r.TLS != nil,
 	})
 
 	if r.Header.Get("HX-Request") == "true" {
