@@ -222,3 +222,18 @@ Enabling standalone installability and offline fallback for Radline BackOffice w
   - Added `POST /reminders/edit/{id}` and `POST /calendar/edit/{id}` mapped to `EditReminderHandler`.
   - Added client-side data binding with HTML5 dataset attributes (`handleEditReminderClick(el)`) to avoid quote injection/escaping issues, opening `#edit-reminder-modal` from both calendar day chips and agenda edit buttons.
 
+---
+
+### Context: Printable Form Views SPA Swapping & Reminder Modal HTMX Targets
+
+**Problem:**
+1. Document generator views (`form_quotation.html` and `form_purchase_order.html`) called `app.Render` instead of `app.RenderPage(w, r, ...)`. When navigating via sidebar HTMX links (`hx-target="#main-content"`), this returned the complete `base.html` shell inside `#main-content`, producing duplicate nested sidebars and corrupting subsequent SPA navigation to other modules like Sales.
+2. The Add Reminder form lacked `hx-target="#main-content"`, and backend handlers strictly tested `HX-Target == "#main-content"` (which fails when browsers strip `#` to send `main-content`), causing unexpected full-page redirects and broken modal refresh behavior.
+3. Quick actions "+ New" -> "Add Reminder" navigated to `/calendar` without activating the creation modal.
+
+**Enforced Solution:**
+- **`RenderPage` for All Navigable Views (`handlers/forms.go`):** All full page templates extending `base.html` must invoke `app.RenderPage(w, r, ...)` so HTMX requests only swap the `content` block without nesting the document shell.
+- **Flexible HTMX Target Verification (`handlers/reminders.go`):** Verify `target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true"`, emitting `HX-Location: {"path": returnUrl, "target": "#main-content"}` for partial updates with toast preservation.
+- **Explicit Modal Targets & Query Trigger (`templates/reminders.html`, `templates/base.html`):** Add `hx-target="#main-content"` to forms, and check `?action=new` to automatically trigger the Add Reminder modal when launched from Quick Create.
+
+

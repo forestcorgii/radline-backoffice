@@ -188,7 +188,7 @@
             <button onclick="document.getElementById('add-reminder-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
         </div>
 
-        <form hx-post="/reminders/add">
+        <form hx-post="/reminders/add" hx-target="#main-content">
             <div class="form-group mb-4">
                 <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Title</label>
                 <input type="text" name="title" required placeholder="e.g. Check monthly stock reconciliation" class="form-input" style="width: 100%;">
@@ -410,6 +410,7 @@
         const modal = document.getElementById('edit-reminder-modal');
         const form = document.getElementById('edit-reminder-form');
         form.setAttribute('hx-post', '/reminders/edit/' + ds.id);
+        form.setAttribute('hx-target', '#main-content');
         htmx.process(form);
 
         document.getElementById('edit-reminder-title').value = ds.title || '';
@@ -424,5 +425,13 @@
         }
         modal.style.display = 'flex';
     }
+
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('action') === 'new') {
+            const modal = document.getElementById('add-reminder-modal');
+            if (modal) modal.style.display = 'flex';
+        }
+    })();
 </script>
 {{ end }}

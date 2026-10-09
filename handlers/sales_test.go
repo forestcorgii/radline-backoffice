@@ -198,3 +198,33 @@ func TestSaleRowDeductionsDisplay(t *testing.T) {
 	}
 }
 
+func TestSalesPageNavigation(t *testing.T) {
+	err := db.InitDB("../backoffice.db")
+	if err != nil {
+		t.Fatalf("Failed to init db: %v", err)
+	}
+
+	app := &App{
+		Templates: parseSalesTemplatesForTest(),
+	}
+
+	// 1. Full page GET /sales
+	req := httptest.NewRequest("GET", "/sales", nil)
+	w := httptest.NewRecorder()
+	app.SalesHandler(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for full page GET /sales, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	// 2. HTMX SPA navigation GET /sales with HX-Target: main-content
+	reqSPA := httptest.NewRequest("GET", "/sales", nil)
+	reqSPA.Header.Set("HX-Request", "true")
+	reqSPA.Header.Set("HX-Target", "main-content")
+	wSPA := httptest.NewRecorder()
+	app.SalesHandler(wSPA, reqSPA)
+	if wSPA.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for SPA navigation GET /sales, got %d. Body: %s", wSPA.Code, wSPA.Body.String())
+	}
+}
+
+
