@@ -340,35 +340,35 @@
 </style>
 
 <script>
-    let _calendarDragActive = false;
-    let _draggedReminderId = null;
-    let _draggedOriginDate = null;
+    window._calendarDragActive = false;
+    window._draggedReminderId = null;
+    window._draggedOriginDate = null;
 
-    function handleChipDragStart(e) {
-        _calendarDragActive = true;
+    window.handleChipDragStart = function (e) {
+        window._calendarDragActive = true;
         const target = e.currentTarget;
-        _draggedReminderId = target.dataset.id;
-        _draggedOriginDate = target.dataset.duedate;
+        window._draggedReminderId = target.dataset.id;
+        window._draggedOriginDate = target.dataset.duedate;
         target.classList.add('is-dragging');
         if (e.dataTransfer) {
             e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', _draggedReminderId);
+            e.dataTransfer.setData('text/plain', window._draggedReminderId);
         }
-    }
+    };
 
-    function handleChipDragEnd(e) {
+    window.handleChipDragEnd = function (e) {
         e.currentTarget.classList.remove('is-dragging');
         document.querySelectorAll('.calendar-day-cell.calendar-day-drop-target').forEach(el => {
             el.classList.remove('calendar-day-drop-target');
         });
         setTimeout(() => {
-            _calendarDragActive = false;
-            _draggedReminderId = null;
-            _draggedOriginDate = null;
+            window._calendarDragActive = false;
+            window._draggedReminderId = null;
+            window._draggedOriginDate = null;
         }, 120);
-    }
+    };
 
-    function handleDayDragOver(e) {
+    window.handleDayDragOver = function (e) {
         e.preventDefault();
         if (e.dataTransfer) {
             e.dataTransfer.dropEffect = 'move';
@@ -377,35 +377,35 @@
         if (!cell.classList.contains('calendar-day-drop-target')) {
             cell.classList.add('calendar-day-drop-target');
         }
-    }
+    };
 
-    function handleDayDragLeave(e) {
+    window.handleDayDragLeave = function (e) {
         const cell = e.currentTarget;
         const rect = cell.getBoundingClientRect();
         if (e.clientX <= rect.left || e.clientX >= rect.right || e.clientY <= rect.top || e.clientY >= rect.bottom) {
             cell.classList.remove('calendar-day-drop-target');
         }
-    }
+    };
 
-    function handleDayDrop(e) {
+    window.handleDayDrop = function (e) {
         e.preventDefault();
         const cell = e.currentTarget;
         cell.classList.remove('calendar-day-drop-target');
 
-        const reminderId = _draggedReminderId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
+        const reminderId = window._draggedReminderId || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
         const targetDate = cell.dataset.date;
 
         if (!reminderId || !targetDate) return;
-        if (_draggedOriginDate === targetDate) return; // Dropped on same date, no update needed
+        if (window._draggedOriginDate === targetDate) return; // Dropped on same date, no update needed
 
         htmx.ajax('POST', '/reminders/reschedule/' + reminderId, {
             target: '#main-content',
             values: { due_date: targetDate }
         });
-    }
+    };
 
-    function handleEditReminderClick(el) {
-        if (_calendarDragActive) return;
+    window.handleEditReminderClick = function (el) {
+        if (window._calendarDragActive) return;
         const ds = el.dataset;
         const modal = document.getElementById('edit-reminder-modal');
         const form = document.getElementById('edit-reminder-form');
@@ -424,7 +424,7 @@
             statusSelect.value = ds.status || 'Pending';
         }
         modal.style.display = 'flex';
-    }
+    };
 
     (function () {
         const params = new URLSearchParams(window.location.search);

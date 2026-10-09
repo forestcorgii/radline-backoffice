@@ -274,11 +274,18 @@ This triggers HTMX to navigate to the logs page, similar to `hx-push-url` but tr
 - **Programmatic HTMX Dispatch**: On drop, check if `_draggedOriginDate === targetDate`. If changed, call `htmx.ajax('POST', '/reminders/reschedule/' + reminderId, { target: '#main-content', values: { due_date: targetDate } })`.
 - **Dual HX-Target Inspection**: Handlers accept both `HX-Target: #main-content` and `HX-Target: main-content`, emitting `HX-Location: {"path": returnUrl, "target": "#main-content"}` and `HX-Trigger: {"show-toast": ...}` for instantaneous toast notification and partial SPA refresh.
 
+### Context: Avoiding Top-Level `let` / `const` in HTMX Partial Scripts
+**Problem**: When template partials containing top-level `let` or `const` declarations (e.g., `let _calendarDragActive = false;`) are swapped by HTMX more than once, the browser executes the script in the same global execution context (VM). JavaScript strictness prohibits re-declaring lexical bindings in the same scope, throwing `Uncaught SyntaxError: Failed to execute 'insertBefore' on 'Node': Identifier '...' has already been declared`. This unhandled error crashes HTMX's DOM insertion routine and blocks all subsequent SPA navigations.
+**Enforced Solution**:
+- **Attach State Directly to `window`**: In template `<script>` blocks evaluated during HTMX swaps, attach mutable state and top-level helper functions directly to `window` (e.g., `window._calendarDragActive = false; window.handleChipDragStart = function(e) { ... };`), or wrap isolated code in an IIFE `(function () { ... })();`.
+- **Never Declare Bare `let` / `const` at Template Script Root**: Property assignments on `window` are idempotent and can be safely re-evaluated indefinitely across page navigations without throwing syntax errors.
+
 ## Related
 - [[handlers-overview]] — `Render` and `RenderPage` methods
 - [[templates-overview]] — Template structure
 - [[sidebar-navigation]] — Navigation setup
 - [[ui-design-tokens]] — CSS classes referenced in templates
+
 
 
 
