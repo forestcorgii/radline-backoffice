@@ -289,6 +289,8 @@ func runPostgresMigrations() {
 		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS selling_price DOUBLE PRECISION;",
 		"ALTER TABLE inventory_adjustments ADD COLUMN IF NOT EXISTS adjustment_id INTEGER REFERENCES stock_adjustments(id);",
 		"ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id);",
+		"CREATE TABLE IF NOT EXISTS purchase_orders (id SERIAL PRIMARY KEY, po_no TEXT NOT NULL UNIQUE, date TIMESTAMPTZ NOT NULL, due_date TIMESTAMPTZ, vendor_name TEXT NOT NULL, vendor_tin TEXT DEFAULT '', vendor_address TEXT DEFAULT '', vendor_contact TEXT DEFAULT '', ship_to TEXT DEFAULT '', payment_terms TEXT DEFAULT '', shipping_method TEXT DEFAULT '', prepared_by TEXT DEFAULT '', freight DOUBLE PRECISION NOT NULL DEFAULT 0.0, apply_vat INTEGER NOT NULL DEFAULT 0, vat_amt DOUBLE PRECISION NOT NULL DEFAULT 0.0, subtotal DOUBLE PRECISION NOT NULL DEFAULT 0.0, grand_total DOUBLE PRECISION NOT NULL DEFAULT 0.0, notes TEXT DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP);",
+		"CREATE TABLE IF NOT EXISTS purchase_order_items (id SERIAL PRIMARY KEY, po_id INTEGER NOT NULL REFERENCES purchase_orders(id) ON DELETE CASCADE, item_code TEXT DEFAULT '', description TEXT NOT NULL, uom TEXT DEFAULT '', qty DOUBLE PRECISION NOT NULL DEFAULT 0.0, unit_cost DOUBLE PRECISION NOT NULL DEFAULT 0.0, total_amount DOUBLE PRECISION NOT NULL DEFAULT 0.0);",
 	}
 
 	for _, stmt := range migrations {
@@ -495,6 +497,44 @@ func createSchemaSQLite() error {
 	CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
 	CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
 	CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
+
+	CREATE TABLE IF NOT EXISTS purchase_orders (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		po_no TEXT NOT NULL UNIQUE,
+		date DATETIME NOT NULL,
+		due_date DATETIME,
+		vendor_name TEXT NOT NULL,
+		vendor_tin TEXT DEFAULT '',
+		vendor_address TEXT DEFAULT '',
+		vendor_contact TEXT DEFAULT '',
+		ship_to TEXT DEFAULT '',
+		payment_terms TEXT DEFAULT '',
+		shipping_method TEXT DEFAULT '',
+		prepared_by TEXT DEFAULT '',
+		freight REAL NOT NULL DEFAULT 0.0,
+		apply_vat INTEGER NOT NULL DEFAULT 0,
+		vat_amt REAL NOT NULL DEFAULT 0.0,
+		subtotal REAL NOT NULL DEFAULT 0.0,
+		grand_total REAL NOT NULL DEFAULT 0.0,
+		notes TEXT DEFAULT '',
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS purchase_order_items (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		po_id INTEGER NOT NULL,
+		item_code TEXT DEFAULT '',
+		description TEXT NOT NULL,
+		uom TEXT DEFAULT '',
+		qty REAL NOT NULL DEFAULT 0.0,
+		unit_cost REAL NOT NULL DEFAULT 0.0,
+		total_amount REAL NOT NULL DEFAULT 0.0,
+		FOREIGN KEY(po_id) REFERENCES purchase_orders(id) ON DELETE CASCADE
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_purchase_orders_po_no ON purchase_orders(po_no);
+	CREATE INDEX IF NOT EXISTS idx_purchase_orders_date ON purchase_orders(date);
+	CREATE INDEX IF NOT EXISTS idx_purchase_order_items_po_id ON purchase_order_items(po_id);
 	`
 	_, err := DB.DB.Exec(schema)
 	if err != nil {
@@ -690,6 +730,43 @@ func createSchemaPostgres() error {
 	CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
 	CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);
 	CREATE INDEX IF NOT EXISTS idx_reminders_status ON reminders(status);
+
+	CREATE TABLE IF NOT EXISTS purchase_orders (
+		id SERIAL PRIMARY KEY,
+		po_no TEXT NOT NULL UNIQUE,
+		date TIMESTAMPTZ NOT NULL,
+		due_date TIMESTAMPTZ,
+		vendor_name TEXT NOT NULL,
+		vendor_tin TEXT DEFAULT '',
+		vendor_address TEXT DEFAULT '',
+		vendor_contact TEXT DEFAULT '',
+		ship_to TEXT DEFAULT '',
+		payment_terms TEXT DEFAULT '',
+		shipping_method TEXT DEFAULT '',
+		prepared_by TEXT DEFAULT '',
+		freight DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		apply_vat INTEGER NOT NULL DEFAULT 0,
+		vat_amt DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		subtotal DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		grand_total DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		notes TEXT DEFAULT '',
+		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE TABLE IF NOT EXISTS purchase_order_items (
+		id SERIAL PRIMARY KEY,
+		po_id INTEGER NOT NULL REFERENCES purchase_orders(id) ON DELETE CASCADE,
+		item_code TEXT DEFAULT '',
+		description TEXT NOT NULL,
+		uom TEXT DEFAULT '',
+		qty DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		unit_cost DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+		total_amount DOUBLE PRECISION NOT NULL DEFAULT 0.0
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_purchase_orders_po_no ON purchase_orders(po_no);
+	CREATE INDEX IF NOT EXISTS idx_purchase_orders_date ON purchase_orders(date);
+	CREATE INDEX IF NOT EXISTS idx_purchase_order_items_po_id ON purchase_order_items(po_id);
 
 	CREATE OR REPLACE FUNCTION substr(val timestamptz, s int, l int) RETURNS text AS $$
 	SELECT substr(to_char(val, 'YYYY-MM-DD HH24:MI:SS'), s, l);

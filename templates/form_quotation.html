@@ -556,22 +556,59 @@
 </style>
 
 <script>
+window._quoteSearchDebounceTimer = null;
+
 function onQuoteItemSelect(inputEl) {
-    const val = inputEl.value;
+    const val = inputEl.value.trim();
     const row = inputEl.closest('tr');
     if (!row) return;
 
+    // Check immediate local datalist match
     const datalist = document.getElementById('catalog-items-list');
-    if (!datalist) return;
-
-    const opt = Array.from(datalist.options).find(o => o.value === val);
-    if (opt) {
-        const descInput = row.querySelector('.item-desc-input');
-        const uomInput = row.querySelector('.item-uom-input');
-        if (descInput) descInput.value = opt.getAttribute('data-desc') || '';
-        if (uomInput) uomInput.value = opt.getAttribute('data-uom') || 'PCS';
+    if (datalist) {
+        const opt = Array.from(datalist.options).find(o => o.value === val);
+        if (opt) {
+            const descInput = row.querySelector('.item-desc-input');
+            const uomInput = row.querySelector('.item-uom-input');
+            if (descInput) descInput.value = opt.getAttribute('data-desc') || '';
+            if (uomInput) uomInput.value = opt.getAttribute('data-uom') || 'PCS';
+            recalcQuoteSheet();
+            return;
+        }
     }
-    recalcQuoteSheet();
+
+    // Delay 300ms before querying the server, capped at 20 results
+    clearTimeout(window._quoteSearchDebounceTimer);
+    window._quoteSearchDebounceTimer = setTimeout(() => {
+        fetch('/items/search?q=' + encodeURIComponent(val) + '&limit=20&format=json', {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(items => {
+            if (!Array.isArray(items) || !datalist) return;
+            datalist.innerHTML = '';
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.code || item.description;
+                opt.setAttribute('data-desc', item.description);
+                opt.setAttribute('data-uom', item.default_uom || 'PCS');
+                opt.textContent = item.description;
+                datalist.appendChild(opt);
+            });
+
+            // If user's current input matches one of the newly returned options, auto-populate
+            const currentVal = inputEl.value.trim();
+            const matchedOpt = Array.from(datalist.options).find(o => o.value === currentVal);
+            if (matchedOpt) {
+                const descInput = row.querySelector('.item-desc-input');
+                const uomInput = row.querySelector('.item-uom-input');
+                if (descInput && !descInput.value) descInput.value = matchedOpt.getAttribute('data-desc') || '';
+                if (uomInput) uomInput.value = matchedOpt.getAttribute('data-uom') || 'PCS';
+                recalcQuoteSheet();
+            }
+        })
+        .catch(err => console.error("Error fetching items for quotation:", err));
+    }, 300);
 }
 
 function recalcQuoteSheet() {

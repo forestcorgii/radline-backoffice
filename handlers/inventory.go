@@ -303,7 +303,7 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 // NewReceivingRowHandler renders a single empty receiving item row template
 func (app *App) NewReceivingRowHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 20")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -322,7 +322,12 @@ func (app *App) ReceivingItemRowDetailsHandler(w http.ResponseWriter, r *http.Re
 	itemID, _ := strconv.Atoi(itemIDStr)
 
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	var err error
+	if itemID > 0 {
+		err = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY (id = ?) DESC, description ASC LIMIT 20", itemID)
+	} else {
+		err = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 20")
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -494,7 +499,7 @@ func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
 // NewAdjustmentRowHandler renders a single empty adjustment item row template
 func (app *App) NewAdjustmentRowHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 20")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -513,7 +518,12 @@ func (app *App) AdjustmentItemRowDetailsHandler(w http.ResponseWriter, r *http.R
 	itemID, _ := strconv.Atoi(itemIDStr)
 
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	var err error
+	if itemID > 0 {
+		err = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY (id = ?) DESC, description ASC LIMIT 20", itemID)
+	} else {
+		err = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 20")
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

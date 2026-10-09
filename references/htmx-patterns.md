@@ -286,6 +286,16 @@ This triggers HTMX to navigate to the logs page, similar to `hx-push-url` but tr
 - [[sidebar-navigation]] — Navigation setup
 - [[ui-design-tokens]] — CSS classes referenced in templates
 
+### Context: Debounced Server-Side Item Search (Forms & Item Dropdowns)
+**Problem**: Item pickers rendered the entire `items` catalog into each row/datalist and filtered client-side, making item selection slow on large catalogs.
+**Enforced Solution**:
+| Layer | Rule |
+|---|---|
+| **Endpoint** | `GET /items/search?q=&limit=` (`SearchItemsHandler`) — `LIKE` on code/description/model, default **20**, hard cap **50**. Returns `.dropdown-item` HTML; `format=json` returns lowercase keys (`id, code, description, default_uom`). |
+| **Initial render** | Row/form handlers load only `LIMIT 20` items; `*RowDetailsHandler` uses `ORDER BY (id = ?) DESC, description ASC LIMIT 20` so the selected item is always present (a `UNION ALL ... ORDER BY ... LIMIT` does **not** guarantee this). |
+| **Client** | `filterDropdown()` in `base.html` debounces **300ms** for dropdowns whose hidden input is `item_id`, then swaps `.dropdown-list` innerHTML. Datalist forms (PO/Quotation) debounce 300ms and rebuild the `<datalist>`. |
+| **Scope** | Timers in page partials live on `window.*` (never top-level `let`). |
+
 
 
 

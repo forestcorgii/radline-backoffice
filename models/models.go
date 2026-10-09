@@ -195,3 +195,36 @@ type Uom struct {
 	ID   int    `db:"id"`
 	Code string `db:"code"`
 }
+
+type PurchaseOrder struct {
+	ID             int        `db:"id"`
+	PONo           string     `db:"po_no"`
+	Date           time.Time  `db:"date"`
+	DueDate        *time.Time `db:"due_date"`
+	VendorName     string     `db:"vendor_name"`
+	VendorTIN      string     `db:"vendor_tin"`
+	VendorAddress  string     `db:"vendor_address"`
+	VendorContact  string     `db:"vendor_contact"`
+	ShipTo         string     `db:"ship_to"`
+	PaymentTerms   string     `db:"payment_terms"`
+	ShippingMethod string     `db:"shipping_method"`
+	PreparedBy     string     `db:"prepared_by"`
+	Freight        float64    `db:"freight"`
+	ApplyVAT       bool       `db:"apply_vat"`
+	VATAmt         float64    `db:"vat_amt"`
+	Subtotal       float64    `db:"subtotal"`
+	GrandTotal     float64    `db:"grand_total"`
+	Notes          string     `db:"notes"`
+	CreatedAt      time.Time  `db:"created_at"`
+}
+
+type PurchaseOrderItem struct {
+	ID          int     `db:"id"`
+	POID        int     `db:"po_id"`
+	ItemCode    string  `db:"item_code"`
+	Description string  `db:"description"`
+	UOM         string  `db:"uom"`
+	Qty         float64 `db:"qty"`
+	UnitCost    float64 `db:"unit_cost"`
+	TotalAmount float64 `db:"total_amount"`
+}
