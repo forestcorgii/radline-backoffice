@@ -17,7 +17,7 @@
             <div class="form-group">
                 <label for="adj_date">Adjustment Date</label>
                 <input type="date" id="adj_date" name="date" class="form-input" required>
-                <script>const adjDateEl = document.getElementById('adj_date'); if (adjDateEl) adjDateEl.valueAsDate = new Date();</script>
+                <script>(function () { const adjDateEl = document.getElementById('adj_date'); if (adjDateEl) adjDateEl.valueAsDate = new Date(); })();</script>
             </div>
             <div class="form-group">
                 <label for="adj_remarks">Remarks / Reason</label>

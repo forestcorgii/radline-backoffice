@@ -27,7 +27,7 @@
             <div class="form-group">
                 <label for="doc_date">Document Date</label>
                 <input type="date" id="doc_date" name="doc_date" required class="form-input">
-                <script>const d = document.getElementById('doc_date'); if (d) d.valueAsDate = new Date();</script>
+                <script>(function () { const d = document.getElementById('doc_date'); if (d) d.valueAsDate = new Date(); })();</script>
             </div>
             <div class="form-group">
                 <label for="doc_type">Doc Type</label>

@@ -847,8 +847,8 @@
 
     // --- Add Item Auto-Suggest Logic ---
     // Track whether the user has manually edited code/description
-    let addItemCodeManual = false;
-    let addItemDescManual = false;
+    window.addItemCodeManual = false;
+    window.addItemDescManual = false;
 
     window.updateAddItemSuggestions = function () {
         const brandHidden = document.getElementById('brand_id');

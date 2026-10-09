@@ -28,7 +28,7 @@
             <div class="form-group">
                 <label for="date">Delivery Date</label>
                 <input type="date" id="date" name="date" class="form-input" required>
-                <script>const dt = document.getElementById('date'); if (dt) dt.valueAsDate = new Date();</script>
+                <script>(function () { const dt = document.getElementById('date'); if (dt) dt.valueAsDate = new Date(); })();</script>
             </div>
         </div>
 
