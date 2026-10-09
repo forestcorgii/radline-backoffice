@@ -243,7 +243,8 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 	if returnUrl == "" {
 		returnUrl = "/calendar"
 	}
-	if r.Header.Get("HX-Target") == "#main-content" {
+	target := r.Header.Get("HX-Target")
+	if target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true" {
 		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)
@@ -329,7 +330,8 @@ func (app *App) EditReminderHandler(w http.ResponseWriter, r *http.Request) {
 	if returnUrl == "" {
 		returnUrl = "/calendar"
 	}
-	if r.Header.Get("HX-Target") == "#main-content" {
+	target := r.Header.Get("HX-Target")
+	if target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true" {
 		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)
@@ -370,7 +372,8 @@ func (app *App) ToggleReminderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "success", "message": "Reminder marked as %s"}}`, newStatus))
-	if r.Header.Get("HX-Target") == "#main-content" {
+	target := r.Header.Get("HX-Target")
+	if target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true" {
 		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)
@@ -399,7 +402,8 @@ func (app *App) DeleteReminderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder deleted"}}`)
-	if r.Header.Get("HX-Target") == "#main-content" {
+	target := r.Header.Get("HX-Target")
+	if target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true" {
 		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)

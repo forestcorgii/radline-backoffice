@@ -26,7 +26,7 @@ func (app *App) QuotationFormHandler(w http.ResponseWriter, r *http.Request) {
 		preparedBy = user.User.FullName
 	}
 
-	app.Render(w, "form_quotation.html", map[string]interface{}{
+	app.RenderPage(w, r, "form_quotation.html", map[string]interface{}{
 		"Items":          items,
 		"Uoms":           uoms,
 		"DefaultQuoteNo": defaultQuoteNo,
@@ -52,7 +52,7 @@ func (app *App) PurchaseOrderFormHandler(w http.ResponseWriter, r *http.Request)
 		preparedBy = user.User.FullName
 	}
 
-	app.Render(w, "form_purchase_order.html", map[string]interface{}{
+	app.RenderPage(w, r, "form_purchase_order.html", map[string]interface{}{
 		"Items":       items,
 		"Uoms":        uoms,
 		"DefaultPONo": defaultPONo,
