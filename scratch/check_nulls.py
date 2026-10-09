@@ -3,8 +3,10 @@ import sqlite3
 conn = sqlite3.connect('backoffice.db')
 cursor = conn.cursor()
 
-cursor.execute("SELECT id, supplier, date, pl_no, unit_price, selling_price FROM receiving_logs WHERE pl_no IS NULL OR unit_price IS NULL OR selling_price IS NULL LIMIT 5")
-null_rows = cursor.fetchall()
-print("Null rows count/sample:", len(null_rows), null_rows)
+cols = [c[1] for c in cursor.execute("PRAGMA table_info(sales_details)").fetchall()]
+for col in cols:
+    cnt = cursor.execute(f"SELECT COUNT(*) FROM sales_details WHERE [{col}] IS NULL").fetchone()[0]
+    if cnt > 0:
+        print(f"Column '{col}' has {cnt} NULL rows")
 
 conn.close()
