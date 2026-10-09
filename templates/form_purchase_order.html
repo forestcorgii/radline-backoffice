@@ -15,9 +15,9 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
                 Reset
             </button>
-            <button type="button" class="btn btn-success" onclick="window.print()" style="background: #10b981; color: #fff;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                Print / Save PDF
+            <button type="button" class="btn btn-success" id="btn-save-po" onclick="savePOForm()" style="background: #10b981; color: #fff;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Purchase Order
             </button>
         </div>
     </div>
@@ -121,7 +121,7 @@
                     <tr class="po-item-row">
                         <td class="row-index" style="text-align: center; color: var(--text-muted);">1</td>
                         <td>
-                            <input type="text" class="sheet-input-table item-code-input" list="po-catalog-items-list" placeholder="Select or type" oninput="onPOItemSelect(this)">
+                            <input type="text" class="sheet-input-table item-code-input" list="po-catalog-items-list" placeholder="Select or type" oninput="onPOItemInput(this)">
                         </td>
                         <td>
                             <input type="text" class="sheet-input-table item-desc-input" placeholder="Item description & specification">
@@ -160,7 +160,7 @@
         <div class="sheet-summary-grid">
             <div class="sheet-notes-box">
                 <div class="sheet-party-heading" style="color: #047857;">PURCHASE CONDITIONS & INSTRUCTIONS</div>
-                <textarea class="sheet-textarea-clean" rows="4" placeholder="1. Please send two (2) copies of your invoice with the goods.&#10;2. Goods must be delivered in pristine condition and accompanied by Packing List.&#10;3. Purchase Order Number must appear on all correspondence, delivery receipts and invoices."></textarea>
+                <textarea id="po_notes" class="sheet-textarea-clean" rows="4" placeholder="1. Please send two (2) copies of your invoice with the goods.&#10;2. Goods must be delivered in pristine condition and accompanied by Packing List.&#10;3. Purchase Order Number must appear on all correspondence, delivery receipts and invoices."></textarea>
             </div>
 
             <div class="sheet-totals-box">
@@ -547,22 +547,59 @@
 </style>
 
 <script>
-function onPOItemSelect(inputEl) {
-    const val = inputEl.value;
+window._poSearchDebounceTimer = null;
+
+function onPOItemInput(inputEl) {
+    const val = inputEl.value.trim();
     const row = inputEl.closest('tr');
     if (!row) return;
 
+    // Check immediate local datalist match
     const datalist = document.getElementById('po-catalog-items-list');
-    if (!datalist) return;
-
-    const opt = Array.from(datalist.options).find(o => o.value === val);
-    if (opt) {
-        const descInput = row.querySelector('.item-desc-input');
-        const uomInput = row.querySelector('.item-uom-input');
-        if (descInput) descInput.value = opt.getAttribute('data-desc') || '';
-        if (uomInput) uomInput.value = opt.getAttribute('data-uom') || 'PCS';
+    if (datalist) {
+        const opt = Array.from(datalist.options).find(o => o.value === val);
+        if (opt) {
+            const descInput = row.querySelector('.item-desc-input');
+            const uomInput = row.querySelector('.item-uom-input');
+            if (descInput) descInput.value = opt.getAttribute('data-desc') || '';
+            if (uomInput) uomInput.value = opt.getAttribute('data-uom') || 'PCS';
+            recalcPOSheet();
+            return;
+        }
     }
-    recalcPOSheet();
+
+    // Delay 300ms before querying the server, capped at 20 results
+    clearTimeout(window._poSearchDebounceTimer);
+    window._poSearchDebounceTimer = setTimeout(() => {
+        fetch('/items/search?q=' + encodeURIComponent(val) + '&limit=20&format=json', {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(items => {
+            if (!Array.isArray(items) || !datalist) return;
+            datalist.innerHTML = '';
+            items.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.code || item.description;
+                opt.setAttribute('data-desc', item.description);
+                opt.setAttribute('data-uom', item.default_uom || 'PCS');
+                opt.textContent = item.description;
+                datalist.appendChild(opt);
+            });
+
+            // If user's current input matches one of the newly returned options, auto-populate
+            const currentVal = inputEl.value.trim();
+            const matchedOpt = Array.from(datalist.options).find(o => o.value === currentVal);
+            if (matchedOpt) {
+                const descInput = row.querySelector('.item-desc-input');
+                const uomInput = row.querySelector('.item-uom-input');
+                if (descInput && !descInput.value) descInput.value = matchedOpt.getAttribute('data-desc') || '';
+                if (uomInput) uomInput.value = matchedOpt.getAttribute('data-uom') || 'PCS';
+                recalcPOSheet();
+            }
+        })
+        .catch(err => console.error("Error fetching items:", err));
+    }, 300);
 }
 
 function recalcPOSheet() {
@@ -605,7 +642,7 @@ function addPORow() {
     newRow.innerHTML = `
         <td class="row-index" style="text-align: center; color: var(--text-muted);"></td>
         <td>
-            <input type="text" class="sheet-input-table item-code-input" list="po-catalog-items-list" placeholder="Select or type" oninput="onPOItemSelect(this)">
+            <input type="text" class="sheet-input-table item-code-input" list="po-catalog-items-list" placeholder="Select or type" oninput="onPOItemInput(this)">
         </td>
         <td>
             <input type="text" class="sheet-input-table item-desc-input" placeholder="Item description & specification">
@@ -644,6 +681,7 @@ function resetPOForm() {
         document.getElementById('vendor_contact').value = '';
         document.getElementById('po_freight').value = '0.00';
         document.getElementById('po_apply_vat').checked = false;
+        if (document.getElementById('po_notes')) document.getElementById('po_notes').value = '';
         const tbody = document.getElementById('po-items-tbody');
         if (tbody) {
             while (tbody.children.length > 1) {
@@ -657,6 +695,148 @@ function resetPOForm() {
             firstRow.querySelector('.item-cost-input').value = '0.00';
         }
         recalcPOSheet();
+    }
+}
+
+async function savePOForm() {
+    const poNo = document.getElementById('po_no')?.value.trim();
+    const date = document.getElementById('po_date')?.value.trim();
+    const dueDate = document.getElementById('po_due_date')?.value.trim();
+    const vendorName = document.getElementById('vendor_name')?.value.trim();
+    const vendorTin = document.getElementById('vendor_tin')?.value.trim();
+    const vendorAddress = document.getElementById('vendor_address')?.value.trim();
+    const vendorContact = document.getElementById('vendor_contact')?.value.trim();
+    const shipTo = document.getElementById('po_ship_to')?.value.trim();
+    const terms = document.getElementById('po_terms')?.value.trim();
+    const shippingMethod = document.getElementById('po_shipping_method')?.value.trim();
+    const preparedBy = document.getElementById('po_prepared_by')?.value.trim();
+    const freight = document.getElementById('po_freight')?.value.trim() || '0.00';
+    const applyVat = document.getElementById('po_apply_vat')?.checked ? 'true' : 'false';
+    const notes = document.getElementById('po_notes')?.value.trim() || '';
+
+    if (!poNo) {
+        alert("Please enter a Purchase Order Number.");
+        document.getElementById('po_no')?.focus();
+        return;
+    }
+    if (!vendorName) {
+        alert("Please enter Vendor / Supplier Name.");
+        document.getElementById('vendor_name')?.focus();
+        return;
+    }
+
+    const rows = document.querySelectorAll('#po-items-tbody .po-item-row');
+    const formParams = new URLSearchParams();
+    formParams.append('po_no', poNo);
+    formParams.append('date', date);
+    if (dueDate) formParams.append('due_date', dueDate);
+    formParams.append('vendor_name', vendorName);
+    formParams.append('vendor_tin', vendorTin);
+    formParams.append('vendor_address', vendorAddress);
+    formParams.append('vendor_contact', vendorContact);
+    formParams.append('ship_to', shipTo);
+    formParams.append('payment_terms', terms);
+    formParams.append('shipping_method', shippingMethod);
+    formParams.append('prepared_by', preparedBy);
+    formParams.append('freight', freight);
+    formParams.append('apply_vat', applyVat);
+    formParams.append('notes', notes);
+
+    let validItemCount = 0;
+    rows.forEach(row => {
+        const code = row.querySelector('.item-code-input')?.value.trim() || '';
+        const desc = row.querySelector('.item-desc-input')?.value.trim() || '';
+        const uom = row.querySelector('.item-uom-input')?.value.trim() || 'PCS';
+        const qty = parseFloat(row.querySelector('.item-qty-input')?.value) || 0;
+        const cost = parseFloat(row.querySelector('.item-cost-input')?.value) || 0;
+
+        if (desc || code) {
+            formParams.append('item_code', code);
+            formParams.append('description', desc);
+            formParams.append('uom', uom);
+            formParams.append('qty', qty.toString());
+            formParams.append('unit_cost', cost.toString());
+            if (qty > 0) validItemCount++;
+        }
+    });
+
+    if (validItemCount === 0) {
+        alert("Please add at least one line item with a valid quantity (> 0).");
+        return;
+    }
+
+    const saveBtn = document.getElementById('btn-save-po');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `
+            <svg class="spinner-sm" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>
+            Saving...
+        `;
+    }
+
+    try {
+        const response = await fetch('/forms/purchase-order/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'HX-Request': 'true'
+            },
+            body: formParams.toString()
+        });
+
+        const triggerHdr = response.headers.get('HX-Trigger');
+        if (triggerHdr) {
+            try {
+                const triggerObj = JSON.parse(triggerHdr);
+                for (const evtName in triggerObj) {
+                    document.body.dispatchEvent(new CustomEvent(evtName, { detail: triggerObj[evtName] }));
+                }
+            } catch (e) {}
+        }
+
+        if (response.ok) {
+            const data = await response.json();
+            // Reset items table to single empty row
+            const tbody = document.getElementById('po-items-tbody');
+            if (tbody) {
+                while (tbody.children.length > 1) {
+                    tbody.removeChild(tbody.lastChild);
+                }
+                const firstRow = tbody.children[0];
+                firstRow.querySelector('.item-code-input').value = '';
+                firstRow.querySelector('.item-desc-input').value = '';
+                firstRow.querySelector('.item-uom-input').value = '';
+                firstRow.querySelector('.item-qty-input').value = '1';
+                firstRow.querySelector('.item-cost-input').value = '0.00';
+            }
+            // Clear vendor inputs
+            document.getElementById('vendor_name').value = '';
+            document.getElementById('vendor_tin').value = '';
+            document.getElementById('vendor_address').value = '';
+            document.getElementById('vendor_contact').value = '';
+            document.getElementById('po_freight').value = '0.00';
+            document.getElementById('po_apply_vat').checked = false;
+            if (document.getElementById('po_notes')) document.getElementById('po_notes').value = '';
+
+            // Update to next default PO number
+            if (data.next_po_no) {
+                document.getElementById('po_no').value = data.next_po_no;
+            }
+            recalcPOSheet();
+        } else {
+            const errText = await response.text();
+            alert("Failed to save purchase order: " + errText);
+        }
+    } catch (err) {
+        alert("Network error while saving purchase order: " + err.message);
+    } finally {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = `
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Purchase Order
+            `;
+        }
     }
 }
 

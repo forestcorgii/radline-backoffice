@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -750,10 +753,59 @@ func (app *App) SelectCategoriesHandler(w http.ResponseWriter, r *http.Request) 
 // SelectItemsHandler renders the updated item select fragment
 func (app *App) SelectItemsHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 20")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	app.Render(w, "item_select.html", items)
+}
+
+// SearchItemsHandler handles debounced item searching with result limits
+func (app *App) SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	limitStr := r.URL.Query().Get("limit")
+	limit := 20
+	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+		limit = l
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	var items []models.Item
+	var err error
+	if q != "" {
+		term := "%" + q + "%"
+		err = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items WHERE code LIKE ? OR description LIKE ? OR model LIKE ? ORDER BY description ASC LIMIT ?", term, term, term, limit)
+	} else {
+		err = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT ?", limit)
+	}
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if strings.Contains(r.Header.Get("Accept"), "application/json") || r.URL.Query().Get("format") == "json" {
+		type itemJSON struct {
+			ID          int    `json:"id"`
+			Code        string `json:"code"`
+			Description string `json:"description"`
+			DefaultUOM  string `json:"default_uom"`
+		}
+		out := make([]itemJSON, 0, len(items))
+		for _, it := range items {
+			out = append(out, itemJSON{it.ID, it.Code, it.Description, it.DefaultUOM})
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(out)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	for _, item := range items {
+		fmt.Fprintf(w, `<div class="dropdown-item" data-id="%d" data-code="%s" data-description="%s" data-uom="%s" onmousedown="selectDropdownItem(this)">%s</div>`,
+			item.ID, template.HTMLEscapeString(item.Code), template.HTMLEscapeString(item.Description), template.HTMLEscapeString(item.DefaultUOM), template.HTMLEscapeString(item.Description))
+	}
 }

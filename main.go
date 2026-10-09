@@ -111,6 +111,7 @@ func main() {
 	mux.HandleFunc("GET /items", app.RequirePermission(domain.PermItemsView, app.ItemsHandler))
 	mux.HandleFunc("GET /items/new", app.RequirePermission(domain.PermItemsEdit, app.NewItemPageHandler))
 	mux.HandleFunc("GET /items/select", app.RequirePermission(domain.PermItemsView, app.SelectItemsHandler))
+	mux.HandleFunc("GET /items/search", app.RequirePermission(domain.PermItemsView, app.SearchItemsHandler))
 	mux.HandleFunc("POST /items/add", app.RequirePermission(domain.PermItemsEdit, app.AddItemHandler))
 	mux.HandleFunc("GET /items/edit/{id}", app.RequirePermission(domain.PermItemsEdit, app.EditItemFormHandler))
 	mux.HandleFunc("POST /items/edit/{id}", app.RequirePermission(domain.PermItemsEdit, app.UpdateItemHandler))
@@ -192,6 +193,7 @@ func main() {
 	// Forms Routing (Quotation & Purchase Order)
 	mux.HandleFunc("GET /forms/quotation", app.RequirePermission(domain.PermSalesView, app.QuotationFormHandler))
 	mux.HandleFunc("GET /forms/purchase-order", app.RequirePermission(domain.PermInventoryView, app.PurchaseOrderFormHandler))
+	mux.HandleFunc("POST /forms/purchase-order/save", app.RequirePermission(domain.PermInventoryView, app.SavePurchaseOrderHandler))
 
 	// Wrap entire router with AuthMiddleware
 	handler := app.AuthMiddleware(mux)

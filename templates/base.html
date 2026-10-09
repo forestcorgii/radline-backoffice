@@ -951,16 +951,41 @@
             }, 200);
         }
 
+        let _dropdownSearchTimer = null;
         function filterDropdown(input) {
-            const filter = input.value.trim().toLowerCase();
             const container = input.closest('.searchable-dropdown');
             if (!container) return;
+            const hidden = container.querySelector('input[type="hidden"]');
+            const isItemDropdown = hidden && (hidden.name === 'item_id' || hidden.id === 'item_id');
+
+            clearTimeout(_dropdownSearchTimer);
+
+            if (isItemDropdown) {
+                // Delay 300ms before querying the server
+                _dropdownSearchTimer = setTimeout(() => {
+                    const filter = input.value.trim();
+                    fetch('/items/search?q=' + encodeURIComponent(filter) + '&limit=20')
+                        .then(res => res.text())
+                        .then(html => {
+                            const list = container.querySelector('.dropdown-list');
+                            if (!list) return;
+                            list.innerHTML = html;
+                            const first = list.querySelector('.dropdown-item');
+                            if (first) first.classList.add('active');
+                            updateDropdownPosition(input);
+                        })
+                        .catch(err => console.error("Error querying items:", err));
+                }, 300);
+                return;
+            }
+
+            const filter = input.value.trim().toLowerCase();
             const items = container.querySelectorAll('.dropdown-item');
             let firstVisible = null;
             let visibleCount = 0;
             items.forEach(item => {
                 const text = (item.getAttribute('data-description') || '').toLowerCase();
-                if (visibleCount < 50 && (filter === '' || text.includes(filter))) {
+                if (visibleCount < 20 && (filter === '' || text.includes(filter))) {
                     item.style.display = 'block';
                     visibleCount++;
                     if (!firstVisible) firstVisible = item;
