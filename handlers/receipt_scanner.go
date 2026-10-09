@@ -497,7 +497,7 @@ func findMatchingItem(description string) (int, string) {
 func callOCRSpaceAPI(imageBytes []byte, filename string) (string, error) {
 	apiKey := os.Getenv("OCR_SPACE_API_KEY")
 	if apiKey == "" {
-		apiKey = "helloworld"
+		return "", fmt.Errorf("OCR_SPACE_API_KEY environment variable is not set")
 	}
 
 	body := &bytes.Buffer{}
