@@ -76,8 +76,6 @@ if err != nil {
 When evolving the schema:
 1. Add a new check-and-fix block in `InitDB()` **after** existing migrations
 2. Update `createSchema()` to include the new column in the `CREATE TABLE` statement
-3. The migration block handles existing databases; the schema handles new databases
-
 ## Learnings
 
 ### Context: Safe Dynamic SQLite Column Renaming in Go Startups
@@ -89,7 +87,14 @@ When evolving the schema:
   3. If the old column exists, execute `ALTER TABLE ... RENAME COLUMN old_col TO new_col;`.
   4. This handles both new database schema generation (which directly uses the new column name) and existing database schemas dynamically on server startup.
 
+### Context: PostgreSQL Production Table Migrations and COALESCE Column Scanning
+**Problem**: In production, the backend connects to PostgreSQL (`pgx`) rather than SQLite. `createSchemaPostgres()` runs `CREATE TABLE IF NOT EXISTS`, which skips altering existing tables when new columns (`tin_no`, `address`, deductions) are added to code models. If migrations are only hooked into SQLite startup routines, Postgres fails with `column s.tin_no does not exist` on queries, triggering HTTP 500 errors that HTMX suppresses without visible page updates ("no change on screen"). Furthermore, any rows with `NULL` in non-pointer struct fields crash `sqlx.Select`.
+**Enforced Solution**:
+- **Dual Migration Execution in `InitDB()`**: Always invoke `runPostgresMigrations()` in the `pgx` driver startup path using `ALTER TABLE <table> ADD COLUMN IF NOT EXISTS ...` statements.
+- **Defensive Query Projections**: In multi-column analytical views (e.g., `handlers/sales.go`), wrap nullable text and numeric projections in `COALESCE(col, '')` or `COALESCE(col, 0.0)` to ensure legacy or imported records scan cleanly into Go structs.
+
 ## Related
 - [[database-schema]] — Current table definitions
 - [[tech-stack]] — Why no migration framework
 - [[architecture]] — System initialization flow
+
