@@ -23,9 +23,20 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	isEdit := r.FormValue("is_edit") == "1" || r.URL.Query().Get("is_edit") == "1"
 
 	baseQuery := `
-		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number, s.customer_name, s.tin_no, s.address, s.supplier,
-		       s.item_id, s.qty, s.uom, s.price, s.total_sales, s.cost, s.total_cost,
-		       s.patong, s.pos_charge, s.wt_2307, s.total_remit, s.profit, s.profit_margin, s.remarks,
+		SELECT s.id, s.doc_type, s.doc_status, s.doc_date, s.doc_number,
+		       COALESCE(s.customer_name, '') as customer_name,
+		       COALESCE(s.tin_no, '') as tin_no,
+		       COALESCE(s.address, '') as address,
+		       s.supplier, s.item_id, s.qty,
+		       COALESCE(s.uom, '') as uom,
+		       s.price, s.total_sales, s.cost, s.total_cost,
+		       COALESCE(s.patong, 0.0) as patong,
+		       COALESCE(s.pos_charge, 0.0) as pos_charge,
+		       COALESCE(s.wt_2307, 0.0) as wt_2307,
+		       COALESCE(s.total_remit, 0.0) as total_remit,
+		       COALESCE(s.profit, 0.0) as profit,
+		       COALESCE(s.profit_margin, 0.0) as profit_margin,
+		       COALESCE(s.remarks, '') as remarks,
 		       i.code as item_code, i.description as item_description
 		FROM sales_details s
 		JOIN items i ON s.item_id = i.id

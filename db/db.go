@@ -138,6 +138,7 @@ func InitDB(datasource string) error {
 		if err := createSchemaPostgres(); err != nil {
 			return err
 		}
+		runPostgresMigrations()
 	} else {
 		// Enable foreign key constraints in SQLite
 		if _, err := DB.Exec("PRAGMA foreign_keys = ON;"); err != nil {
@@ -260,6 +261,38 @@ func runSQLiteMigrations() {
 		} else {
 			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN tin_no TEXT DEFAULT '';")
 			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN address TEXT DEFAULT '';")
+		}
+	}
+}
+
+func runPostgresMigrations() {
+	migrations := []string{
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS doc_type TEXT NOT NULL DEFAULT 'SI';",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS doc_status TEXT NOT NULL DEFAULT 'POSTED';",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS customer_name TEXT DEFAULT '';",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS tin_no TEXT DEFAULT '';",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS supplier TEXT NOT NULL DEFAULT 'OTHER';",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS patong DOUBLE PRECISION NOT NULL DEFAULT 0.0;",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS pos_charge DOUBLE PRECISION NOT NULL DEFAULT 0.0;",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS wt_2307 DOUBLE PRECISION NOT NULL DEFAULT 0.0;",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS total_remit DOUBLE PRECISION NOT NULL DEFAULT 0.0;",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS profit_margin DOUBLE PRECISION NOT NULL DEFAULT 0.0;",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS remarks TEXT NOT NULL DEFAULT '';",
+		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS ref_pl TEXT;",
+		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS supplier TEXT NOT NULL DEFAULT 'OTHER';",
+		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS less1 DOUBLE PRECISION NOT NULL DEFAULT 0;",
+		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS less2 DOUBLE PRECISION NOT NULL DEFAULT 0;",
+		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS markup DOUBLE PRECISION NOT NULL DEFAULT 130;",
+		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS remarks TEXT NOT NULL DEFAULT '';",
+		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS total_cost DOUBLE PRECISION NOT NULL DEFAULT 0.0;",
+		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS selling_price DOUBLE PRECISION;",
+		"ALTER TABLE inventory_adjustments ADD COLUMN IF NOT EXISTS adjustment_id INTEGER REFERENCES stock_adjustments(id);",
+	}
+
+	for _, stmt := range migrations {
+		if _, err := DB.Exec(stmt); err != nil {
+			log.Printf("PostgreSQL migration notice (%s): %v", stmt, err)
 		}
 	}
 }
