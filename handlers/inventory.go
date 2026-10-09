@@ -267,11 +267,20 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	logs := stockReceive.ToReceivingLogs()
+
+	stmt, err := tx.Prepare(tx.Rebind(`
+		INSERT INTO receiving_logs (supplier, date, pl_no, item_id, qty, uom, unit_price, less1, less2, cost, total_cost, markup, selling_price, remarks)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`))
+	if err != nil {
+		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to prepare receiving log statement."}}`)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer stmt.Close()
+
 	for _, rl := range logs {
-		_, err = tx.Exec(`
-			INSERT INTO receiving_logs (supplier, date, pl_no, item_id, qty, uom, unit_price, less1, less2, cost, total_cost, markup, selling_price, remarks)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-		`, rl.Supplier, rl.Date, rl.PLNo, rl.ItemID, rl.Qty, rl.UOM, rl.UnitPrice, rl.Less1, rl.Less2, rl.Cost, rl.TotalCost, rl.Markup, rl.SellingPrice, rl.Remarks)
+		_, err = stmt.Exec(rl.Supplier, rl.Date, rl.PLNo, rl.ItemID, rl.Qty, rl.UOM, rl.UnitPrice, rl.Less1, rl.Less2, rl.Cost, rl.TotalCost, rl.Markup, rl.SellingPrice, rl.Remarks)
 		if err != nil {
 			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save receiving log."}}`)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
