@@ -446,13 +446,25 @@ func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Insert all item rows
 	adjustments := stockAdj.ToInventoryAdjustments()
-	for _, adj := range adjustments {
-		_, err = tx.Exec(`
+	if len(adjustments) > 0 {
+		query := `
 			INSERT INTO inventory_adjustments (adjustment_id, date, item_id, uom, adjustment_qty, cost, remarks)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
-		`, adjustmentID, adj.Date, adj.ItemID, adj.UOM, adj.AdjustmentQty, adj.Cost, adj.Remarks)
+			VALUES
+		`
+		var args []interface{}
+		var placeholders []string
+
+		for _, adj := range adjustments {
+			placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?, ?)")
+			args = append(args, adjustmentID, adj.Date, adj.ItemID, adj.UOM, adj.AdjustmentQty, adj.Cost, adj.Remarks)
+		}
+
+		query += strings.Join(placeholders, ", ")
+
+		query = tx.Rebind(query)
+		_, err = tx.Exec(query, args...)
 		if err != nil {
-			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save adjustment item."}}`)
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save adjustment items."}}`)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
