@@ -250,10 +250,12 @@
             }
             return DEFAULT_INVENTORY_VIEW_CONFIG;
         }
+        window.getInventoryViewConfig = getInventoryViewConfig;
 
         function saveInventoryViewConfig(config) {
             localStorage.setItem('radline_inventory_view_config', JSON.stringify(config));
         }
+        window.saveInventoryViewConfig = saveInventoryViewConfig;
 
         window.applyInventoryViewSettings = function () {
             const config = getInventoryViewConfig();
@@ -361,12 +363,15 @@
 
     window.addEventListener('radline-excel-cols-updated', function (e) {
         if (e.detail && (e.detail.tableId === 'inventory-stock-table' || (e.detail.tableId && e.detail.tableId.includes('inventory')))) {
+            if (typeof window.getInventoryViewConfig !== 'function') return;
             const collapsedCols = e.detail.collapsedCols || [];
-            const config = getInventoryViewConfig();
+            const config = window.getInventoryViewConfig();
             Object.keys(config.columns).forEach(colKey => {
                 config.columns[colKey] = !collapsedCols.includes(colKey);
             });
-            saveInventoryViewConfig(config);
+            if (typeof window.saveInventoryViewConfig === 'function') {
+                window.saveInventoryViewConfig(config);
+            }
             document.querySelectorAll('#customize-inventory-view-popover [data-target-col]').forEach(cb => {
                 const colKey = cb.getAttribute('data-target-col');
                 cb.checked = !collapsedCols.includes(colKey);

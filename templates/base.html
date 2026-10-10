@@ -11,7 +11,7 @@
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/index.css?v=6.0">
+    <link rel="stylesheet" href="/static/index.css?v=6.1">
     <!-- PWA & Mobile Web App Meta -->
     <meta name="theme-color" content="#1c1917">
     <meta name="mobile-web-app-capable" content="yes">
@@ -1544,6 +1544,19 @@
                     document.head.appendChild(styleEl);
                 }
 
+                const allHeaders = Array.from(table.querySelectorAll('.thead .th[data-col], thead th[data-col], thead th'));
+                allHeaders.forEach((th, idx) => {
+                    let colKey = th.getAttribute('data-col');
+                    if (!colKey) {
+                        colKey = 'col_' + idx;
+                        th.setAttribute('data-col', colKey);
+                        table.querySelectorAll('tbody tr, .tbody .tr').forEach(row => {
+                            if (row.children[idx]) row.children[idx].setAttribute('data-col', colKey);
+                        });
+                    }
+                });
+                const allColKeys = allHeaders.map(h => h.getAttribute('data-col'));
+
                 const updateTableCollapsedStyles = () => {
                     const rules = [];
                     collapsedCols.forEach(colKey => {
@@ -1562,16 +1575,77 @@
                         window.dispatchEvent(new CustomEvent('radline-excel-cols-updated', { detail: { tableId, collapsedCols } }));
                     } catch (e) {}
 
-                    // Remove existing double-line divider handles and classes
+                    // 1. Render sleek unhide chip bar above the table container
+                    const targetContainer = table.closest('.table-container') || table;
+                    const parentCard = targetContainer.parentElement;
+                    let bar = parentCard ? parentCard.querySelector(`.collapsed-cols-bar[data-for="${tableId}"]`) : null;
+
+                    if (collapsedCols.length > 0) {
+                        if (!bar && parentCard) {
+                            bar = document.createElement('div');
+                            bar.className = 'collapsed-cols-bar';
+                            bar.setAttribute('data-for', tableId);
+                            parentCard.insertBefore(bar, targetContainer);
+                        }
+                        if (bar) {
+                            const chipsHtml = collapsedCols.map(k => {
+                                const h = allHeaders.find(hdr => hdr.getAttribute('data-col') === k);
+                                const name = h ? (h.getAttribute('data-original-title') || h.textContent.trim()) : k;
+                                return `
+                                    <button type="button" class="collapsed-col-chip" data-col="${k}" title="Click to unhide column '${name}'">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        <span>${name}</span>
+                                    </button>
+                                `;
+                            }).join('');
+
+                            bar.innerHTML = `
+                                <div class="collapsed-cols-inner">
+                                    <div class="collapsed-cols-label">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                                        </svg>
+                                        <span>Hidden columns (${collapsedCols.length}):</span>
+                                    </div>
+                                    <div class="collapsed-cols-chips">${chipsHtml}</div>
+                                    <button type="button" class="collapsed-cols-unhide-all" title="Unhide all columns">Unhide all</button>
+                                </div>
+                            `;
+
+                            bar.querySelectorAll('.collapsed-col-chip').forEach(chip => {
+                                chip.onclick = (e) => {
+                                    e.stopPropagation();
+                                    const col = chip.getAttribute('data-col');
+                                    collapsedCols = collapsedCols.filter(c => c !== col);
+                                    updateTableCollapsedStyles();
+                                };
+                            });
+
+                            const unhideAllBtn = bar.querySelector('.collapsed-cols-unhide-all');
+                            if (unhideAllBtn) {
+                                unhideAllBtn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    collapsedCols = [];
+                                    updateTableCollapsedStyles();
+                                };
+                            }
+                        }
+                    } else if (bar) {
+                        bar.remove();
+                    }
+
+                    // 2. Remove existing divider handles and classes
                     table.querySelectorAll('.has-hidden-next, .has-hidden-prev').forEach(el => {
                         el.classList.remove('has-hidden-next', 'has-hidden-prev');
                         const h = el.querySelector('.excel-divider-handle');
                         if (h) h.remove();
                     });
 
-                    // Calculate adjacent hidden columns and render Excel double-line dividers (||)
-                    const allHeaders = Array.from(table.querySelectorAll('.thead .th[data-col], thead th[data-col]'));
-                    const allColKeys = allHeaders.map(h => h.getAttribute('data-col'));
+                    // 3. Render visible expand [+] buttons on header divider borders
                     const visibleHeaders = allHeaders.filter(h => !collapsedCols.includes(h.getAttribute('data-col')));
 
                     if (visibleHeaders.length > 0) {
@@ -1584,9 +1658,22 @@
                                 visibleHeaders[0].classList.add('has-hidden-prev');
                                 table.querySelectorAll(`.td[data-col="${firstKey}"], td[data-col="${firstKey}"]`).forEach(td => td.classList.add('has-hidden-prev'));
 
+                                const hiddenNames = hiddenPreceding.map(k => {
+                                    const h = allHeaders.find(hdr => hdr.getAttribute('data-col') === k);
+                                    return h ? (h.getAttribute('data-original-title') || k) : k;
+                                }).join(', ');
+
                                 const handle = document.createElement('div');
                                 handle.className = 'excel-divider-handle left-handle';
-                                handle.title = `Double line (||): Click to unhide ${hiddenPreceding.length} hidden column(s)`;
+                                handle.title = `Click to unhide: ${hiddenNames}`;
+                                handle.innerHTML = `
+                                    <button type="button" class="excel-unhide-btn" title="Click to unhide: ${hiddenNames}" aria-label="Unhide columns">
+                                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                    </button>
+                                `;
                                 const doUnhide = (ev) => {
                                     ev.stopPropagation();
                                     ev.preventDefault();
@@ -1594,12 +1681,11 @@
                                     updateTableCollapsedStyles();
                                 };
                                 handle.addEventListener('click', doUnhide);
-                                handle.addEventListener('dblclick', doUnhide);
                                 visibleHeaders[0].appendChild(handle);
                             }
                         }
 
-                        // Check hidden columns between visible columns
+                        // Check hidden columns between visible columns and trailing hidden columns
                         visibleHeaders.forEach((vh, i) => {
                             const curKey = vh.getAttribute('data-col');
                             const curIdx = allColKeys.indexOf(curKey);
@@ -1611,9 +1697,22 @@
                                     vh.classList.add('has-hidden-next');
                                     table.querySelectorAll(`.td[data-col="${curKey}"], td[data-col="${curKey}"]`).forEach(td => td.classList.add('has-hidden-next'));
 
+                                    const hiddenNames = hiddenBetween.map(k => {
+                                        const h = allHeaders.find(hdr => hdr.getAttribute('data-col') === k);
+                                        return h ? (h.getAttribute('data-original-title') || k) : k;
+                                    }).join(', ');
+
                                     const handle = document.createElement('div');
                                     handle.className = 'excel-divider-handle right-handle';
-                                    handle.title = `Double line (||): Click to unhide ${hiddenBetween.length} hidden column(s)`;
+                                    handle.title = `Click to unhide: ${hiddenNames}`;
+                                    handle.innerHTML = `
+                                        <button type="button" class="excel-unhide-btn" title="Click to unhide: ${hiddenNames}" aria-label="Unhide columns">
+                                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                        </button>
+                                    `;
                                     const doUnhide = (ev) => {
                                         ev.stopPropagation();
                                         ev.preventDefault();
@@ -1621,7 +1720,6 @@
                                         updateTableCollapsedStyles();
                                     };
                                     handle.addEventListener('click', doUnhide);
-                                    handle.addEventListener('dblclick', doUnhide);
                                     vh.appendChild(handle);
                                 }
                             }
@@ -1629,30 +1727,53 @@
                     }
                 };
 
-                const headers = table.querySelectorAll('.thead .th[data-col], thead th[data-col], thead th');
-                headers.forEach((th, idx) => {
-                    let colKey = th.getAttribute('data-col');
-                    if (!colKey) {
-                        colKey = 'col_' + idx;
-                        th.setAttribute('data-col', colKey);
-                        table.querySelectorAll('tbody tr').forEach(row => {
-                            if (row.children[idx]) row.children[idx].setAttribute('data-col', colKey);
-                        });
-                    }
-                    if (colKey === 'actions') return;
+                // Setup header title and collapse hover button
+                allHeaders.forEach((th) => {
+                    const colKey = th.getAttribute('data-col');
+                    if (colKey === 'actions' || colKey === 'select' || colKey === 'row_select') return;
 
                     const titleText = th.getAttribute('data-original-title') || th.textContent.trim();
                     th.setAttribute('data-original-title', titleText);
 
-                    if (!th.querySelector('.th-content')) {
+                    let thContent = th.querySelector('.th-content');
+                    if (!thContent) {
                         th.innerHTML = `
                             <div class="th-content">
                                 <span class="th-title" title="${titleText}">${titleText}</span>
+                                <button type="button" class="btn-th-collapse" title="Collapse column '${titleText}'" aria-label="Collapse column">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    </svg>
+                                </button>
                             </div>
                         `;
+                    } else if (!thContent.querySelector('.btn-th-collapse')) {
+                        const collapseBtn = document.createElement('button');
+                        collapseBtn.type = 'button';
+                        collapseBtn.className = 'btn-th-collapse';
+                        collapseBtn.title = `Collapse column '${titleText}'`;
+                        collapseBtn.setAttribute('aria-label', 'Collapse column');
+                        collapseBtn.innerHTML = `
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        `;
+                        thContent.appendChild(collapseBtn);
                     }
 
-                    // Right-click context menu to hide column (pure Excel pattern, no ugly header buttons)
+                    const collapseBtn = th.querySelector('.btn-th-collapse');
+                    if (collapseBtn) {
+                        collapseBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            if (!collapsedCols.includes(colKey)) {
+                                collapsedCols.push(colKey);
+                                updateTableCollapsedStyles();
+                            }
+                        };
+                    }
+
+                    // Right-click context menu shortcut
                     th.oncontextmenu = (e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1681,10 +1802,9 @@
             menu.innerHTML = `
                 <button type="button" class="col-menu-item" id="col-menu-hide">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    <span>Hide column "${titleText}"</span>
+                    <span>Collapse column "${titleText}"</span>
                 </button>
                 ${hasHidden ? `
                 <div style="height: 1px; background: #e2e8f0; margin: 0.25rem 0;"></div>
