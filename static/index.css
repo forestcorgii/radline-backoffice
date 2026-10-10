@@ -2566,6 +2566,125 @@ tbody tr.edit-row td {
 	flex: 1;
 }
 
+.btn-th-collapse {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.125rem;
+	height: 1.125rem;
+	min-width: 1.125rem;
+	padding: 0;
+	margin-left: 0.25rem;
+	border-radius: 0.25rem;
+	border: 1px solid transparent;
+	background: transparent;
+	color: hsl(var(--muted-foreground));
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+	flex-shrink: 0;
+}
+
+.th:hover .btn-th-collapse,
+th:hover .btn-th-collapse {
+	opacity: 0.65;
+}
+
+.btn-th-collapse:hover {
+	opacity: 1 !important;
+	background-color: hsl(var(--secondary));
+	color: hsl(var(--primary));
+	border-color: hsl(var(--border));
+}
+
+/* Collapsed Columns Bar (Sleek chip list above table) */
+.collapsed-cols-bar {
+	display: flex;
+	align-items: center;
+	margin-bottom: 0.5rem;
+	padding: 0.35rem 0.65rem;
+	background: #ffffff;
+	border: 1px solid hsl(var(--border));
+	border-left: 3px solid #6366f1;
+	border-radius: 0.5rem;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+	animation: fadeIn 0.18s ease-out;
+}
+
+.collapsed-cols-inner {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	width: 100%;
+}
+
+.collapsed-cols-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: hsl(var(--muted-foreground));
+	text-transform: uppercase;
+	letter-spacing: 0.025em;
+	white-space: nowrap;
+}
+
+.collapsed-cols-chips {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	flex: 1;
+}
+
+.collapsed-col-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.15rem 0.5rem;
+	background: hsl(var(--secondary) / 0.85);
+	border: 1px solid hsl(var(--border));
+	border-radius: 9999px;
+	font-size: 0.72rem;
+	font-weight: 500;
+	color: hsl(var(--foreground));
+	cursor: pointer;
+	transition: all 0.12s ease;
+	white-space: nowrap;
+}
+
+.collapsed-col-chip:hover {
+	background: #eef2ff;
+	border-color: #818cf8;
+	color: #4338ca;
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(99, 102, 241, 0.12);
+}
+
+.collapsed-cols-unhide-all {
+	display: inline-flex;
+	align-items: center;
+	background: transparent;
+	border: none;
+	color: #4f46e5;
+	font-size: 0.72rem;
+	font-weight: 600;
+	cursor: pointer;
+	padding: 0.15rem 0.35rem;
+	border-radius: 0.25rem;
+	transition: background-color 0.12s ease, color 0.12s ease;
+	margin-left: auto;
+	white-space: nowrap;
+}
+
+.collapsed-cols-unhide-all:hover {
+	background: #eef2ff;
+	color: #3730a3;
+	text-decoration: underline;
+}
+
 /* Excel Double-Line Divider (||) for Hidden Columns */
 .th.has-hidden-next,
 th.has-hidden-next {
@@ -2649,28 +2768,54 @@ td.has-hidden-prev::before {
 	background: transparent;
 }
 
-/* Excel Split/Divider Hit-Area Handle (No button, authentic Excel col-resize indicator) */
+/* Excel Split/Divider Hit-Area Handle & Expand [+] Button */
 .excel-divider-handle {
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	width: 16px;
-	cursor: col-resize;
+	width: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
 	z-index: 30;
 	background: transparent;
 	transition: background-color 0.15s ease;
 }
 
 .excel-divider-handle.right-handle {
-	right: -8px;
+	right: -10px;
 }
 
 .excel-divider-handle.left-handle {
-	left: -8px;
+	left: -10px;
 }
 
 .excel-divider-handle:hover {
-	background-color: rgba(79, 70, 229, 0.18);
+	background-color: rgba(79, 70, 229, 0.12);
+}
+
+.excel-unhide-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 15px;
+	height: 15px;
+	padding: 0;
+	background: #4f46e5;
+	color: #ffffff;
+	border: 1.5px solid #ffffff;
+	border-radius: 50%;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(79, 70, 229, 0.2);
+	transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease;
+	flex-shrink: 0;
+}
+
+.excel-divider-handle:hover .excel-unhide-btn,
+.excel-unhide-btn:hover {
+	transform: scale(1.22);
+	background: #4338ca;
 }
 
 /* Header Right-Click Column Context Menu */

@@ -344,4 +344,10 @@ See [[htmx-patterns]] for the toast protocol.
 - **Unhide on Click & View Sync**: A transparent split handle (`.excel-divider-handle`) sits directly over the double line with `cursor: col-resize;`. Clicking or double-clicking the divider immediately restores adjacent hidden column(s). Any hidden column changes instantly synchronize with the view popovers via the `radline-excel-cols-updated` event.
 - **Header Right-Click Context Menu**: Right-clicking any column header displays a sleek context menu (`showColumnContextMenu`) with options to "Hide column '<title>'" and "Unhide all columns (<count>)".
 
-
+### Context: Direct Column Header Collapse & De-Collapse (Hover Collapse Button, Header [+] Expand Button, & Chip Bar)
+**Problem**: Users could not collapse and de-collapse columns directly from table headers without navigating to the "Customize Visible Columns" popover.
+**Enforced Solution**:
+- **Column Header Hover Collapse Button**: On hovering any collapsible table header cell (`.th`, `th`), a subtle, compact collapse button (`.btn-th-collapse`) appears with a minus icon (`—`) and tooltip. Clicking it immediately collapses that column.
+- **Header Border Expand `[+]` Button**: When columns are collapsed, a circular badge button (`.excel-unhide-btn`) with a `+` icon is mounted directly on the divider boundary (`.excel-divider-handle`) between adjacent visible headers, listing hidden column names on tooltip. Clicking it immediately restores the hidden column(s).
+- **Sleek Unhide Chip Bar**: Directly above `.table-container`, a compact banner (`.collapsed-cols-bar`) lists hidden columns as rounded pill chips (`.collapsed-col-chip`) alongside an "Unhide all" button, allowing instant de-collapse without touching view customization popovers.
+- **State Synchronization**: Fully synchronizes with `localStorage` (`radline_collapsed_cols_<tableId>`) and fires `radline-excel-cols-updated` so that view popovers and table states remain in 100% agreement.
