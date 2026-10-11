@@ -5,9 +5,6 @@
 {{ define "content" }}
 <div class="header-bar">
     <h2 style="margin: 0;">UOM Settings</h2>
-    <button type="button" class="btn" onclick="toggleAddUomSettingForm()" style="padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer;">
-        + Add UOM Setting
-    </button>
 </div>
 
 <!-- Add UOM Setting Form Card (hidden by default, shown when + Add UOM Setting is clicked) -->
@@ -228,6 +225,7 @@
             card.style.display = 'none';
         }
     }
+    window.toggleAddUomSettingForm = toggleAddUomSettingForm;
 
     document.body.addEventListener('uom-setting-added', function () {
         const searchInput = document.querySelector('input[name="search"]');

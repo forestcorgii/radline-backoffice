@@ -5,9 +5,6 @@
 {{ define "content" }}
 <div class="header-bar">
     <h2 style="margin: 0;">Brands</h2>
-    <button type="button" class="btn" onclick="toggleAddBrandForm()" style="padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer;">
-        + Add Brand
-    </button>
 </div>
 
 <!-- Add Brand Form Card (hidden by default, shown when + Add Brand is clicked) -->
@@ -132,6 +129,7 @@
             card.style.display = 'none';
         }
     }
+    window.toggleAddBrandForm = toggleAddBrandForm;
 
     function autoGenerateBrandCodeInBrands() {
         const nameInput = document.getElementById('brand_name');

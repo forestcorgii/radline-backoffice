@@ -261,6 +261,17 @@ body {
 	display: block;
 }
 
+.quick-create-menu.dynamic-mode {
+	width: 260px;
+	max-width: calc(100vw - 2rem);
+}
+
+.quick-create-dynamic-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
 .quick-create-header {
 	display: flex;
 	justify-content: space-between;
@@ -645,6 +656,10 @@ body {
 	.sidebar.collapsed .quick-create-label,
 	.sidebar.collapsed .quick-create-caret {
 		display: none !important;
+	}
+
+	.sidebar.collapsed .quick-create-menu {
+		left: 4.5rem;
 	}
 
 	.sidebar.collapsed .nav-text-group,

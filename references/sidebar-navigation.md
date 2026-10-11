@@ -229,6 +229,21 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
 - **Quick Create Integration**: Added quick create links in `#quick-create-menu` under Sales & Billing and Stock & Warehousing columns.
 - **Printable Document Sheets**: Dedicated printable sheet templates (`form_quotation.html`, `form_purchase_order.html`) equipped with client-side calculations, catalog item auto-fill, and `@media print` CSS.
 
+### Context: Dynamic Context-Aware Quick Create Menu & Header Button Removal
+**Problem**: Cluttered top-right corner "+ Add" / creation action buttons across page card headers created inconsistent UX and visual noise. Furthermore, the Quick Create popover always rendered a heavy 4-column matrix even when an operator was working inside specialized modules (Inventory, Masterlist, Sales).
+**Enforced Solution**:
+- **Purge of Header Buttons**: Removed all top-right "+ Add" buttons across all pages (`items`, `sales`, `inventory`, `receiving_logs`, `adjustment_logs`, `brands`, `categories`, `uom_settings`, `goals`, `reminders`, `users`, `roles`).
+- **Dynamic Quick Create Menu**: Refactored `#quick-create-menu` in `templates/base.html` to toggle between default 4-column matrix and context-tailored single-column action lists based on active route:
+  - **Default (e.g. Dashboard `/`)**: Full 4-column matrix (Sales, Inventory, Masterlist, Tools).
+  - **Inventory (`/inventory*`)**: Only `+ Receive Stock` and `+ Adjust Log`.
+  - **Masterlist (`/items`, `/brands`, `/categories`, `/uom-settings`, `/settings`)**: Only `+ Add Item`, `+ Add Brand`, `+ Add Category`, and `+ Add UOM Setting`.
+  - **Sales (`/sales*`)**: Only `+ Record Sale`.
+  - **Goals (`/goals*`)**: Only `+ Set Earning Goal`.
+  - **Calendar (`/calendar*`)**: Only `+ Add Reminder`.
+  - **Admin / Settings (`/users*`, `/roles*`)**: Only `+ Add User` and `+ Create Role`.
+- **Intelligent Dispatch (`handleQuickAction`)**: If the current page already contains the target modal/card (e.g., `#receive-stock-card`, `#add-item-card`), it triggers the form toggle directly in-DOM with 0ms latency; otherwise, it navigates via `htmx.ajax`.
+- **Lifecycle Integration**: `updateDynamicQuickMenu()` hooks into `updateActiveNavLink()`, ensuring instantaneous adjustment across initial load, `htmx:afterOnLoad`, and `htmx:historyRestore`.
+
 ## Related
 - [[ui-design-tokens]] — CSS classes and variables
 - [[responsive-design]] — Mobile breakpoints
