@@ -79,6 +79,8 @@
 | Method | Path | Handler | HTMX Response / Notes |
 |---|---|---|---|
 | GET | `/settings` | `SettingsHandler` | Config page with list of UOM settings and predefined UOMs |
+| GET | `/settings/system` | `SystemSettingsHandler` | System & DeepSeek Vision AI configuration page |
+| POST | `/settings/deepseek` | `SaveDeepSeekConfigHandler` | Updates DeepSeek Vision API configuration |
 | GET | `/uom-settings/new` | `NewUomSettingPageHandler` | Add UOM conversion form page |
 | POST | `/uom-settings/add` | `AddUomSettingHandler` | Rows fragment + toast |
 | GET | `/uom-settings/edit/{id}` | `EditUomSettingFormHandler` | Inline edit row |

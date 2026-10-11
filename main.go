@@ -148,6 +148,7 @@ func main() {
 
 	// Settings CRUD
 	mux.HandleFunc("GET /settings", app.RequirePermission(domain.PermSettingsView, app.SettingsHandler))
+	mux.HandleFunc("GET /settings/system", app.RequirePermission(domain.PermSettingsView, app.SystemSettingsHandler))
 	mux.HandleFunc("POST /settings/deepseek", app.RequirePermission(domain.PermSettingsEdit, app.SaveDeepSeekConfigHandler))
 	mux.HandleFunc("GET /uom-settings/new", app.RequirePermission(domain.PermSettingsEdit, app.NewUomSettingPageHandler))
 	mux.HandleFunc("POST /uom-settings/add", app.RequirePermission(domain.PermSettingsEdit, app.AddUomSettingHandler))
@@ -246,7 +247,7 @@ func parseTemplates() map[string]*template.Template {
 		"sales.html", "monthly_inventory.html", "receiving_logs.html", "adjustment_logs.html",
 		"brand_new.html", "category_new.html", "item_new.html", "sales_new.html",
 		"import.html", "settings.html", "settings_new.html", "uom_settings_new.html",
-		"receipt_scanner.html", "roles.html", "users.html", "activity_logs.html",
+		"receipt_scanner.html", "roles.html", "users.html", "activity_logs.html", "system_settings.html",
 		"goals.html", "reminders.html",
 		"form_quotation.html", "form_purchase_order.html",
 	}

@@ -3,6 +3,8 @@ package handlers
 import (
 	"os"
 	"testing"
+
+	"radline/db"
 )
 
 func TestParseDeepSeekJSON_ValidJSON(t *testing.T) {
@@ -111,10 +113,26 @@ func TestGetDeepSeekConfig(t *testing.T) {
 	origKey := os.Getenv("DEEPSEEK_API_KEY")
 	origBase := os.Getenv("DEEPSEEK_API_BASE")
 	origModel := os.Getenv("DEEPSEEK_MODEL")
+
+	var origDbKey, origDbBase, origDbModel string
+	if db.DB != nil {
+		origDbKey = db.GetSystemSetting("deepseek_api_key")
+		origDbBase = db.GetSystemSetting("deepseek_api_base")
+		origDbModel = db.GetSystemSetting("deepseek_model")
+		_ = db.SetSystemSetting("deepseek_api_key", "")
+		_ = db.SetSystemSetting("deepseek_api_base", "")
+		_ = db.SetSystemSetting("deepseek_model", "")
+	}
+
 	defer func() {
 		os.Setenv("DEEPSEEK_API_KEY", origKey)
 		os.Setenv("DEEPSEEK_API_BASE", origBase)
 		os.Setenv("DEEPSEEK_MODEL", origModel)
+		if db.DB != nil {
+			_ = db.SetSystemSetting("deepseek_api_key", origDbKey)
+			_ = db.SetSystemSetting("deepseek_api_base", origDbBase)
+			_ = db.SetSystemSetting("deepseek_model", origDbModel)
+		}
 	}()
 
 	os.Setenv("DEEPSEEK_API_KEY", "test-key-123")
