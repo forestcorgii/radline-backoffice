@@ -187,10 +187,6 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
         <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Items List</h3>
         <div style="display: flex; gap: 0.35rem; align-items: center;">
-            <button type="button" class="btn" onclick="toggleAddItemForm()"
-                style="cursor: pointer; height: 1.75rem; font-size: 0.75rem; padding: 0 0.65rem; display: inline-flex; align-items: center; gap: 0.25rem;">
-                + Add Item
-            </button>
             <div class="customize-view-container">
             <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
                 style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
@@ -880,6 +876,7 @@
             card.style.display = 'none';
         }
     }
+    window.toggleAddItemForm = toggleAddItemForm;
 
     initAddItemAutoSuggest();
 

@@ -5,9 +5,6 @@
 {{ define "content" }}
 <div class="header-bar">
     <h2 style="margin: 0;">Categories</h2>
-    <button type="button" class="btn" onclick="toggleAddCategoryForm()" style="padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer;">
-        + Add Category
-    </button>
 </div>
 
 <!-- Add Category Form Card (hidden by default, shown when + Add Category is clicked) -->
@@ -134,6 +131,7 @@
             card.style.display = 'none';
         }
     }
+    window.toggleAddCategoryForm = toggleAddCategoryForm;
 
     function autoGenerateCategoryCodeInCategories() {
         const nameInput = document.getElementById('cat_name');

@@ -79,20 +79,22 @@
                     </svg>
                 </button>
 
-                <!-- Quick Create Popover Menu (Categorized 4-Column Panel) -->
+                <!-- Quick Create Popover Menu (Dynamic / Categorized Panel) -->
                 <div id="quick-create-menu" class="quick-create-menu" hx-target="#main-content" hx-push-url="true">
                     <div class="quick-create-header">
-                        <span class="quick-create-header-title">
+                        <span class="quick-create-header-title" id="quick-create-header-title">
                             <svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             Quick Actions
                         </span>
-                        <span class="quick-create-header-sub">Create transactions & records</span>
+                        <span class="quick-create-header-sub" id="quick-create-header-sub">Create transactions & records</span>
                     </div>
-                    <div class="quick-create-grid">
+
+                    <!-- Default 4-Column Grid (Shown by Default on Dashboard / Other Pages) -->
+                    <div id="quick-create-default-grid" class="quick-create-grid">
                         <!-- Column 1: Sales -->
                         <div class="quick-create-col">
                             <div class="quick-create-col-title">Sales & Billing</div>
-                            <a href="/sales" hx-get="/sales" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/sales" onclick="handleQuickAction('record-sale', '/sales', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon sales-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                                 </div>
@@ -101,7 +103,7 @@
                                     <span class="quick-create-item-desc">Customer invoice / receipt</span>
                                 </div>
                             </a>
-                            <a href="/goals" hx-get="/goals" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/goals" onclick="handleQuickAction('add-goal', '/goals', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon sales-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
                                 </div>
@@ -110,7 +112,7 @@
                                     <span class="quick-create-item-desc">Set revenue target</span>
                                 </div>
                             </a>
-                            <a href="/forms/quotation" hx-get="/forms/quotation" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/forms/quotation" onclick="handleQuickAction('quotation', '/forms/quotation', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon sales-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                                 </div>
@@ -124,7 +126,7 @@
                         <!-- Column 2: Inventory -->
                         <div class="quick-create-col">
                             <div class="quick-create-col-title">Stock & Warehousing</div>
-                            <a href="/forms/purchase-order" hx-get="/forms/purchase-order" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/forms/purchase-order" onclick="handleQuickAction('po', '/forms/purchase-order', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon receiving-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                                 </div>
@@ -133,25 +135,25 @@
                                     <span class="quick-create-item-desc">Vendor procurement</span>
                                 </div>
                             </a>
-                            <a href="/inventory/receiving" hx-get="/inventory/receiving" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/inventory/receiving" onclick="handleQuickAction('receive-stock', '/inventory/receiving', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon receiving-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                 </div>
                                 <div class="quick-create-item-text">
-                                    <span class="quick-create-item-name">Receive Stock</span>
+                                    <span class="quick-create-item-name">+ Receive Stock</span>
                                     <span class="quick-create-item-desc">Log vendor delivery</span>
                                 </div>
                             </a>
-                            <a href="/inventory/adjustments" hx-get="/inventory/adjustments" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/inventory/adjustments" onclick="handleQuickAction('adjust-stock', '/inventory/adjustments', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon adj-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="20" y1="21" x2="20" y2="16"></line></svg>
                                 </div>
                                 <div class="quick-create-item-text">
-                                    <span class="quick-create-item-name">Adjust Stock</span>
+                                    <span class="quick-create-item-name">+ Adjust Log</span>
                                     <span class="quick-create-item-desc">Audit & correct count</span>
                                 </div>
                             </a>
-                            <a href="/inventory" hx-get="/inventory" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/inventory" onclick="handleQuickAction('inventory', '/inventory', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon receiving-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                                 </div>
@@ -165,22 +167,40 @@
                         <!-- Column 3: Masterlist -->
                         <div class="quick-create-col">
                             <div class="quick-create-col-title">Masterlist & Items</div>
-                            <a href="/items" hx-get="/items" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/items" onclick="handleQuickAction('add-item', '/items', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon item-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                                 </div>
                                 <div class="quick-create-item-text">
-                                    <span class="quick-create-item-name">New Product</span>
+                                    <span class="quick-create-item-name">+ Add Item</span>
                                     <span class="quick-create-item-desc">Catalog item & barcode</span>
                                 </div>
                             </a>
-                            <a href="/settings" hx-get="/settings" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/brands" onclick="handleQuickAction('add-brand', '/brands', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon settings-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                                 </div>
                                 <div class="quick-create-item-text">
-                                    <span class="quick-create-item-name">Brands & Categories</span>
-                                    <span class="quick-create-item-desc">Master classifications</span>
+                                    <span class="quick-create-item-name">+ Add Brand</span>
+                                    <span class="quick-create-item-desc">Brand classification</span>
+                                </div>
+                            </a>
+                            <a href="/categories" onclick="handleQuickAction('add-category', '/categories', event)" class="quick-create-item">
+                                <div class="quick-create-item-icon settings-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">+ Add Category</span>
+                                    <span class="quick-create-item-desc">Product category</span>
+                                </div>
+                            </a>
+                            <a href="/uom-settings" onclick="handleQuickAction('add-uom-setting', '/uom-settings', event)" class="quick-create-item">
+                                <div class="quick-create-item-icon settings-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">+ Add UOM Setting</span>
+                                    <span class="quick-create-item-desc">Unit conversion</span>
                                 </div>
                             </a>
                         </div>
@@ -188,7 +208,7 @@
                         <!-- Column 4: Tools -->
                         <div class="quick-create-col">
                             <div class="quick-create-col-title">Operations & Tools</div>
-                            <a href="/import" hx-get="/import" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/import" onclick="handleQuickAction('import', '/import', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon import-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                                 </div>
@@ -197,7 +217,7 @@
                                     <span class="quick-create-item-desc">Batch Excel & CSV upload</span>
                                 </div>
                             </a>
-                            <a href="/calendar?action=new" hx-get="/calendar?action=new" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/calendar?action=new" onclick="handleQuickAction('add-reminder', '/calendar?action=new', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon reminder-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                 </div>
@@ -206,7 +226,7 @@
                                     <span class="quick-create-item-desc">Task deadline & alert</span>
                                 </div>
                             </a>
-                            <a href="/tools/receipt-scanner" hx-get="/tools/receipt-scanner" onclick="closeQuickCreateMenu()" class="quick-create-item">
+                            <a href="/tools/receipt-scanner" onclick="handleQuickAction('scanner', '/tools/receipt-scanner', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon scanner-color">
                                     <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>
                                 </div>
@@ -217,6 +237,9 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- Dynamic Filtered View Container (Shown when on Specific Menu) -->
+                    <div id="quick-create-dynamic-list" class="quick-create-dynamic-list" style="display: none;"></div>
                 </div>
             </div>
 
@@ -653,6 +676,10 @@
                     profileBtn.classList.remove("active");
                 }
             }
+
+            if (typeof updateDynamicQuickMenu === "function") {
+                updateDynamicQuickMenu();
+            }
         }
 
         // Toggle Profile Popover Sub-Menu
@@ -752,6 +779,298 @@
                 backdrop.classList.remove("show");
             }
         }
+
+        // Quick Actions dynamic handler
+        function handleQuickAction(action, url, event) {
+            if (event) event.preventDefault();
+            closeQuickCreateMenu();
+
+            if (action === 'receive-stock') {
+                if (typeof window.toggleReceiveStockForm === 'function' && document.getElementById('receive-stock-card')) {
+                    window.toggleReceiveStockForm();
+                    return;
+                }
+                htmx.ajax('GET', url || '/inventory/receiving', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'adjust-stock') {
+                if (typeof window.toggleAdjustStockForm === 'function' && document.getElementById('adjust-stock-card')) {
+                    window.toggleAdjustStockForm();
+                    return;
+                }
+                htmx.ajax('GET', url || '/inventory/adjustments', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'add-item') {
+                if (typeof window.toggleAddItemForm === 'function' && document.getElementById('add-item-card')) {
+                    window.toggleAddItemForm();
+                    return;
+                }
+                htmx.ajax('GET', '/items', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'add-brand') {
+                if (typeof window.toggleAddBrandForm === 'function' && document.getElementById('add-brand-card')) {
+                    window.toggleAddBrandForm();
+                    return;
+                }
+                htmx.ajax('GET', '/brands', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'add-category') {
+                if (typeof window.toggleAddCategoryForm === 'function' && document.getElementById('add-category-card')) {
+                    window.toggleAddCategoryForm();
+                    return;
+                }
+                htmx.ajax('GET', '/categories', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'add-uom-setting') {
+                if (typeof window.toggleAddUomSettingForm === 'function' && document.getElementById('add-uom-setting-card')) {
+                    window.toggleAddUomSettingForm();
+                    return;
+                }
+                htmx.ajax('GET', '/uom-settings', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'record-sale') {
+                if (typeof window.toggleEncodeSalesForm === 'function' && document.getElementById('encode-sales-card')) {
+                    window.toggleEncodeSalesForm();
+                    return;
+                }
+                htmx.ajax('GET', '/sales', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'add-goal') {
+                const modal = document.getElementById('add-goal-modal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    return;
+                }
+                htmx.ajax('GET', '/goals', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'add-reminder') {
+                const modal = document.getElementById('add-reminder-modal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    return;
+                }
+                htmx.ajax('GET', '/calendar?action=new', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'add-user') {
+                const modal = document.getElementById('add-user-modal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    return;
+                }
+                htmx.ajax('GET', '/settings/users', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (action === 'add-role') {
+                const modal = document.getElementById('add-role-modal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    return;
+                }
+                htmx.ajax('GET', '/settings/roles', { target: '#main-content', pushUrl: true });
+                return;
+            }
+            if (url) {
+                htmx.ajax('GET', url, { target: '#main-content', pushUrl: true });
+            }
+        }
+        window.handleQuickAction = handleQuickAction;
+
+        function updateDynamicQuickMenu() {
+            const path = window.location.pathname;
+            const menu = document.getElementById("quick-create-menu");
+            const defaultGrid = document.getElementById("quick-create-default-grid");
+            const dynamicList = document.getElementById("quick-create-dynamic-list");
+            const titleEl = document.getElementById("quick-create-header-title");
+            const subEl = document.getElementById("quick-create-header-sub");
+            if (!menu || !defaultGrid || !dynamicList) return;
+
+            const isInventory = path === "/inventory" || path.startsWith("/inventory/");
+            const isMasterlist = path === "/items" || path.startsWith("/items/") ||
+                                 path === "/brands" || path.startsWith("/brands/") ||
+                                 path === "/categories" || path.startsWith("/categories/") ||
+                                 path === "/uom-settings" || path.startsWith("/uom-settings/") ||
+                                 path === "/settings";
+            const isUsers = path.startsWith("/settings/users");
+            const isRoles = path.startsWith("/settings/roles");
+            const isSales = path === "/sales" || path.startsWith("/sales/");
+            const isGoals = path === "/goals" || path.startsWith("/goals/");
+            const isCalendar = path === "/calendar" || path.startsWith("/calendar/") ||
+                               path === "/reminders" || path.startsWith("/reminders/");
+
+            const mobileBtn = document.querySelector(".quick-create-btn-mobile");
+
+            if (isInventory) {
+                menu.classList.add("dynamic-mode");
+                defaultGrid.style.display = "none";
+                dynamicList.style.display = "flex";
+                if (mobileBtn) mobileBtn.textContent = "+ Stock";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Stock Actions`;
+                if (subEl) subEl.textContent = "Receive or adjust inventory";
+                dynamicList.innerHTML = `
+                    <a href="/inventory/receiving" onclick="handleQuickAction('receive-stock', '/inventory/receiving', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon receiving-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Receive Stock</span>
+                            <span class="quick-create-item-desc">Log vendor delivery</span>
+                        </div>
+                    </a>
+                    <a href="/inventory/adjustments" onclick="handleQuickAction('adjust-stock', '/inventory/adjustments', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon adj-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="20" y1="21" x2="20" y2="16"></line></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Adjust Log</span>
+                            <span class="quick-create-item-desc">Audit & correct count</span>
+                        </div>
+                    </a>
+                `;
+            } else if (isMasterlist && !isUsers && !isRoles) {
+                menu.classList.add("dynamic-mode");
+                defaultGrid.style.display = "none";
+                dynamicList.style.display = "flex";
+                if (mobileBtn) mobileBtn.textContent = "+ Masterlist";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Masterlist Actions`;
+                if (subEl) subEl.textContent = "Products & classifications";
+                dynamicList.innerHTML = `
+                    <a href="/items" onclick="handleQuickAction('add-item', '/items', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon item-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Add Item</span>
+                            <span class="quick-create-item-desc">Catalog item & barcode</span>
+                        </div>
+                    </a>
+                    <a href="/brands" onclick="handleQuickAction('add-brand', '/brands', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon settings-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Add Brand</span>
+                            <span class="quick-create-item-desc">Brand classification</span>
+                        </div>
+                    </a>
+                    <a href="/categories" onclick="handleQuickAction('add-category', '/categories', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon settings-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Add Category</span>
+                            <span class="quick-create-item-desc">Product category</span>
+                        </div>
+                    </a>
+                    <a href="/uom-settings" onclick="handleQuickAction('add-uom-setting', '/uom-settings', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon settings-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Add UOM Setting</span>
+                            <span class="quick-create-item-desc">Unit conversion</span>
+                        </div>
+                    </a>
+                `;
+            } else if (isSales) {
+                menu.classList.add("dynamic-mode");
+                defaultGrid.style.display = "none";
+                dynamicList.style.display = "flex";
+                if (mobileBtn) mobileBtn.textContent = "+ Sale";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Sales Action`;
+                if (subEl) subEl.textContent = "Customer invoice / receipt";
+                dynamicList.innerHTML = `
+                    <a href="/sales" onclick="handleQuickAction('record-sale', '/sales', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon sales-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Record Sale</span>
+                            <span class="quick-create-item-desc">Customer invoice / receipt</span>
+                        </div>
+                    </a>
+                `;
+            } else if (isGoals) {
+                menu.classList.add("dynamic-mode");
+                defaultGrid.style.display = "none";
+                dynamicList.style.display = "flex";
+                if (mobileBtn) mobileBtn.textContent = "+ Goal";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Earning Goals`;
+                if (subEl) subEl.textContent = "Revenue & target tracking";
+                dynamicList.innerHTML = `
+                    <a href="/goals" onclick="handleQuickAction('add-goal', '/goals', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon sales-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Set Earning Goal</span>
+                            <span class="quick-create-item-desc">Set revenue target</span>
+                        </div>
+                    </a>
+                `;
+            } else if (isCalendar) {
+                menu.classList.add("dynamic-mode");
+                defaultGrid.style.display = "none";
+                dynamicList.style.display = "flex";
+                if (mobileBtn) mobileBtn.textContent = "+ Reminder";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Calendar Actions`;
+                if (subEl) subEl.textContent = "Operational deadlines";
+                dynamicList.innerHTML = `
+                    <a href="/calendar?action=new" onclick="handleQuickAction('add-reminder', '/calendar?action=new', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon reminder-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Add Reminder</span>
+                            <span class="quick-create-item-desc">Task deadline & alert</span>
+                        </div>
+                    </a>
+                `;
+            } else if (isUsers || isRoles) {
+                menu.classList.add("dynamic-mode");
+                defaultGrid.style.display = "none";
+                dynamicList.style.display = "flex";
+                if (mobileBtn) mobileBtn.textContent = "+ Admin";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Admin Actions`;
+                if (subEl) subEl.textContent = "Accounts & roles";
+                dynamicList.innerHTML = `
+                    <a href="/settings/users" onclick="handleQuickAction('add-user', '/settings/users', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon settings-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Add User</span>
+                            <span class="quick-create-item-desc">Create operator account</span>
+                        </div>
+                    </a>
+                    <a href="/settings/roles" onclick="handleQuickAction('add-role', '/settings/roles', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon settings-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Create Role</span>
+                            <span class="quick-create-item-desc">Role & permissions</span>
+                        </div>
+                    </a>
+                `;
+            } else {
+                // Default: Show all buttons!
+                menu.classList.remove("dynamic-mode");
+                defaultGrid.style.display = "grid";
+                dynamicList.style.display = "none";
+                if (mobileBtn) mobileBtn.textContent = "+ New";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Quick Actions`;
+                if (subEl) subEl.textContent = "Create transactions & records";
+            }
+        }
+        window.updateDynamicQuickMenu = updateDynamicQuickMenu;
 
         // Toggle QuickBooks "+ New" Quick Create Menu
         function toggleQuickCreateMenu(event) {
