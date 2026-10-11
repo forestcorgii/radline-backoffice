@@ -243,6 +243,10 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
   - **Admin / Settings (`/users*`, `/roles*`)**: Only `+ Add User` and `+ Create Role`.
 - **Intelligent Dispatch (`handleQuickAction`)**: If the current page already contains the target modal/card (e.g., `#receive-stock-card`, `#add-item-card`), it triggers the form toggle directly in-DOM with 0ms latency; otherwise, it navigates via `htmx.ajax`.
 - **Lifecycle Integration**: `updateDynamicQuickMenu()` hooks into `updateActiveNavLink()`, ensuring instantaneous adjustment across initial load, `htmx:afterOnLoad`, and `htmx:historyRestore`.
+- **Positioning & Compact Header Refinement**:
+  - Anchored `#quick-create-menu` directly below `.quick-create-btn` (`top: calc(100% + 4px); left: 0.75rem;`) within `.quick-create-section { position: relative; }`.
+  - Replaced bulky header subtitle block with a slim uppercase header bar (`.quick-create-header`) and an interactive `×` close button (`.quick-create-close-btn`).
+  - Sleek button appearance: refined `.quick-create-btn` with semi-translucent icon container, inset highlight, 36px height (`2.25rem`), and 180° caret toggle animation.
 
 ## Related
 - [[ui-design-tokens]] — CSS classes and variables

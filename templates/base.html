@@ -66,27 +66,34 @@
 
             <!-- QuickBooks Signature "+ New" Quick Action Button -->
             <div class="quick-create-section">
-                <button id="quick-create-btn" class="quick-create-btn" onclick="toggleQuickCreateMenu(event)" aria-haspopup="true" aria-expanded="false" title="Quick Create">
-                    <span class="quick-create-icon">
-                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    </span>
-                    <span class="quick-create-label">New</span>
-                    <svg class="quick-create-caret" viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                <button id="quick-create-btn" class="quick-create-btn" onclick="toggleQuickCreateMenu(event)" aria-haspopup="true" aria-expanded="false" title="Quick Actions">
+                    <div class="quick-create-btn-left">
+                        <span class="quick-create-icon">
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </span>
+                        <span class="quick-create-label">New</span>
+                    </div>
+                    <svg class="quick-create-caret" viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
                 </button>
 
-                <!-- Quick Create Popover Menu (Dynamic / Categorized Panel) -->
+                <!-- Quick Create Popover Menu (Positioned Below Quick Button) -->
                 <div id="quick-create-menu" class="quick-create-menu" hx-target="#main-content" hx-push-url="true">
                     <div class="quick-create-header">
                         <span class="quick-create-header-title" id="quick-create-header-title">
-                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             Quick Actions
                         </span>
-                        <span class="quick-create-header-sub" id="quick-create-header-sub">Create transactions & records</span>
+                        <button type="button" class="quick-create-close-btn" onclick="closeQuickCreateMenu()" aria-label="Close menu" title="Close">
+                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
                     </div>
 
                     <!-- Default 4-Column Grid (Shown by Default on Dashboard / Other Pages) -->
@@ -889,7 +896,6 @@
             const defaultGrid = document.getElementById("quick-create-default-grid");
             const dynamicList = document.getElementById("quick-create-dynamic-list");
             const titleEl = document.getElementById("quick-create-header-title");
-            const subEl = document.getElementById("quick-create-header-sub");
             if (!menu || !defaultGrid || !dynamicList) return;
 
             const isInventory = path === "/inventory" || path.startsWith("/inventory/");
@@ -912,8 +918,7 @@
                 defaultGrid.style.display = "none";
                 dynamicList.style.display = "flex";
                 if (mobileBtn) mobileBtn.textContent = "+ Stock";
-                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Stock Actions`;
-                if (subEl) subEl.textContent = "Receive or adjust inventory";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Stock Actions`;
                 dynamicList.innerHTML = `
                     <a href="/inventory/receiving" onclick="handleQuickAction('receive-stock', '/inventory/receiving', event)" class="quick-create-item">
                         <div class="quick-create-item-icon receiving-color">
@@ -939,8 +944,7 @@
                 defaultGrid.style.display = "none";
                 dynamicList.style.display = "flex";
                 if (mobileBtn) mobileBtn.textContent = "+ Masterlist";
-                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Masterlist Actions`;
-                if (subEl) subEl.textContent = "Products & classifications";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Masterlist Actions`;
                 dynamicList.innerHTML = `
                     <a href="/items" onclick="handleQuickAction('add-item', '/items', event)" class="quick-create-item">
                         <div class="quick-create-item-icon item-color">
@@ -984,8 +988,7 @@
                 defaultGrid.style.display = "none";
                 dynamicList.style.display = "flex";
                 if (mobileBtn) mobileBtn.textContent = "+ Sale";
-                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Sales Action`;
-                if (subEl) subEl.textContent = "Customer invoice / receipt";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Sales Actions`;
                 dynamicList.innerHTML = `
                     <a href="/sales" onclick="handleQuickAction('record-sale', '/sales', event)" class="quick-create-item">
                         <div class="quick-create-item-icon sales-color">
@@ -1002,8 +1005,7 @@
                 defaultGrid.style.display = "none";
                 dynamicList.style.display = "flex";
                 if (mobileBtn) mobileBtn.textContent = "+ Goal";
-                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Earning Goals`;
-                if (subEl) subEl.textContent = "Revenue & target tracking";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Earning Goals`;
                 dynamicList.innerHTML = `
                     <a href="/goals" onclick="handleQuickAction('add-goal', '/goals', event)" class="quick-create-item">
                         <div class="quick-create-item-icon sales-color">
@@ -1020,8 +1022,7 @@
                 defaultGrid.style.display = "none";
                 dynamicList.style.display = "flex";
                 if (mobileBtn) mobileBtn.textContent = "+ Reminder";
-                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Calendar Actions`;
-                if (subEl) subEl.textContent = "Operational deadlines";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Calendar Actions`;
                 dynamicList.innerHTML = `
                     <a href="/calendar?action=new" onclick="handleQuickAction('add-reminder', '/calendar?action=new', event)" class="quick-create-item">
                         <div class="quick-create-item-icon reminder-color">
@@ -1038,8 +1039,7 @@
                 defaultGrid.style.display = "none";
                 dynamicList.style.display = "flex";
                 if (mobileBtn) mobileBtn.textContent = "+ Admin";
-                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Admin Actions`;
-                if (subEl) subEl.textContent = "Accounts & roles";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Admin Actions`;
                 dynamicList.innerHTML = `
                     <a href="/settings/users" onclick="handleQuickAction('add-user', '/settings/users', event)" class="quick-create-item">
                         <div class="quick-create-item-icon settings-color">
@@ -1066,8 +1066,7 @@
                 defaultGrid.style.display = "grid";
                 dynamicList.style.display = "none";
                 if (mobileBtn) mobileBtn.textContent = "+ New";
-                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Quick Actions`;
-                if (subEl) subEl.textContent = "Create transactions & records";
+                if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Quick Actions`;
             }
         }
         window.updateDynamicQuickMenu = updateDynamicQuickMenu;
@@ -1092,24 +1091,6 @@
             if (btn) btn.setAttribute("aria-expanded", "false");
             closeMobileSidebarOnNav();
         }
-
-        // Outside click and ESC handler for Quick Create Menu
-        document.addEventListener("click", function (evt) {
-            const menu = document.getElementById("quick-create-menu");
-            const btn = document.getElementById("quick-create-btn");
-            const mobileBtn = evt.target.closest(".quick-create-btn-mobile");
-            if (menu && menu.classList.contains("show")) {
-                if (!menu.contains(evt.target) && !btn?.contains(evt.target) && !mobileBtn) {
-                    closeQuickCreateMenu();
-                }
-            }
-        });
-
-        document.addEventListener("keydown", function (evt) {
-            if (evt.key === "Escape") {
-                closeQuickCreateMenu();
-            }
-        });
 
         document.addEventListener("DOMContentLoaded", updateActiveNavLink);
         document.body.addEventListener("htmx:afterOnLoad", updateActiveNavLink);
