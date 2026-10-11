@@ -58,23 +58,18 @@ func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC LIMIT ?", DefaultPageSize)
 
-	// 6. Fetch DeepSeek Vision Configuration
-	dsConfig := getDeepSeekConfig()
-
 	data := struct {
 		UomSettings    []models.UomSettingWithItem
 		Brands         []models.Brand
 		Categories     []models.Category
 		Items          []models.Item
 		Uoms           []models.Uom
-		DeepSeekConfig DeepSeekConfig
 	}{
 		UomSettings:    uomSettings,
 		Brands:         brands,
 		Categories:     categories,
 		Items:          items,
 		Uoms:           uoms,
-		DeepSeekConfig: dsConfig,
 	}
 
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
@@ -82,6 +77,17 @@ func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		app.RenderPage(w, r, "settings.html", data)
 	}
+}
+
+// SystemSettingsHandler renders system and AI vision configurations
+func (app *App) SystemSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	dsConfig := getDeepSeekConfig()
+	data := struct {
+		DeepSeekConfig DeepSeekConfig
+	}{
+		DeepSeekConfig: dsConfig,
+	}
+	app.RenderPage(w, r, "system_settings.html", data)
 }
 
 // SaveDeepSeekConfigHandler updates DeepSeek Vision API configuration in system_settings

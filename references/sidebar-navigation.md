@@ -248,6 +248,14 @@ See [[ui-design-tokens]] for full CSS. Key sidebar styles:
   - Replaced bulky header subtitle block with a slim uppercase header bar (`.quick-create-header`) and an interactive `×` close button (`.quick-create-close-btn`).
   - Sleek button appearance: refined `.quick-create-btn` with semi-translucent icon container, inset highlight, 36px height (`2.25rem`), and 180° caret toggle animation.
 
+### Context: DeepSeek Vision AI Settings Relocation to Profile Submenu
+**Problem**: The DeepSeek Vision AI configuration card was residing inside `templates/settings.html` under Masterlist, conflating administrative system/API key configuration with catalog master data (Brands, Categories, Units of Measure).
+**Enforced Solution**:
+- **Profile Sub-Menu Integration**: Added **Settings** (`/settings/system`) to `#profile-menu` under the Administration section rendered by `UserChipHandler` in `handlers/auth.go`.
+- **Dedicated System Settings View**: Created `templates/system_settings.html` with route `GET /settings/system` rendered by `SystemSettingsHandler`. Hosts the DeepSeek Vision AI Settings form (preset selector, API key input with show/hide toggle, base URL, and model), saving to `POST /settings/deepseek`.
+- **Sub-Tabs & Navigation Alignment**: Added a `Settings` tab (`/settings/system`) alongside `Roles & Permissions`, `User Accounts`, and `Activity Logs` across all administration views.
+- **Masterlist Cleanup**: Removed the DeepSeek card from `templates/settings.html`, keeping `/settings` focused on product catalog configuration.
+
 ## Related
 - [[ui-design-tokens]] — CSS classes and variables
 - [[responsive-design]] — Mobile breakpoints

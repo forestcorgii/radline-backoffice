@@ -676,6 +676,7 @@
             if (profileBtn) {
                 const isAdminPath = currentPath.startsWith("/settings/users") ||
                     currentPath.startsWith("/settings/roles") ||
+                    currentPath.startsWith("/settings/system") ||
                     currentPath.startsWith("/activity-logs");
                 if (isAdminPath) {
                     profileBtn.classList.add("active");

@@ -9,11 +9,12 @@
         <span style="font-size: 0.75rem; color: var(--text-muted);">Manage operator logins, assigned roles, and credentials</span>
     </div>
     <div style="display: flex; gap: 0.5rem;">
-        <a href="/settings" hx-get="/settings" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="font-size: 0.75rem;">← Back to Settings</a>
+        <a href="/settings/system" hx-get="/settings/system" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary" style="font-size: 0.75rem;">← Back to Settings</a>
     </div>
 </div>
 
 <div class="sub-tabs mb-4" hx-target="#main-content" hx-push-url="true">
+    <a href="/settings/system" hx-get="/settings/system" class="sub-tab-item">Settings</a>
     <a href="/settings/roles" hx-get="/settings/roles" class="sub-tab-item">Roles & Permissions</a>
     <a href="/settings/users" class="sub-tab-item active">User Accounts</a>
     <a href="/activity-logs" hx-get="/activity-logs" class="sub-tab-item">Activity Logs</a>
