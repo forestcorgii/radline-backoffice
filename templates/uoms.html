@@ -1,0 +1,424 @@
+{{ define "uoms.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="header-bar">
+    <h2 style="margin: 0;">Units of Measure (UOMs)</h2>
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="btn" onclick="toggleAddUomForm()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8125rem;">
+            + Add UOM
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="toggleAddConversionForm()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8125rem;">
+            + Add Conversion
+        </button>
+    </div>
+</div>
+
+<!-- 1. Add UOM Form Card (hidden by default) -->
+<div class="card mb-4" id="add-uom-card" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add New Unit of Measure</h3>
+        <button type="button" class="btn btn-secondary" onclick="toggleAddUomForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+            ✕ Close
+        </button>
+    </div>
+    <form hx-post="/uoms/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddUomForm(); }">
+        <div style="max-width: 400px;">
+            <div class="form-group">
+                <label for="uom_code">UOM Code</label>
+                <input type="text" id="uom_code" name="code" placeholder="e.g. BOX, PC/S, KG, ROLL" required class="form-input" style="text-transform: uppercase;">
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;" class="mt-4">
+            <button type="submit" class="btn">Save UOM</button>
+            <button type="button" onclick="toggleAddUomForm()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<!-- 2. Add Conversion Form Card (hidden by default) -->
+<div class="card mb-4" id="add-conversion-card" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add Item Conversion Setting</h3>
+        <button type="button" class="btn btn-secondary" onclick="toggleAddConversionForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+            ✕ Close
+        </button>
+    </div>
+    <form hx-post="/uom-settings/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddConversionForm(); }">
+        <div class="grid grid-cols-4">
+            <div class="form-group">
+                <label>Select Item</label>
+                <div class="searchable-dropdown" style="position: relative; width: 100%;">
+                    <input type="text" class="form-input dropdown-search" placeholder="Search Item..."
+                           style="width: 100%; padding: 0.5rem 0.75rem; height: auto;"
+                           onfocus="showUomDropdown(this)" onblur="hideUomDropdown(this)"
+                           oninput="filterUomDropdown(this)" onkeydown="handleUomDropdownKeydown(event, this)">
+                    <input type="hidden" name="item_id" value="">
+                    <div class="dropdown-list">
+                        {{ range .Items }}
+                        <div class="dropdown-item" data-id="{{ .ID }}" data-description="{{ .Code }} - {{ .Description }}"
+                             data-uom="{{ .DefaultUOM }}" onmousedown="selectUomDropdownItem(this)">
+                            {{ .Code }} - {{ .Description }}
+                        </div>
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="uom_base_val">Base UOM</label>
+                <input type="text" id="uom_base_val" name="uom" class="form-input" readonly placeholder="Auto (from item)"
+                       style="width: 100%; background-color: rgba(0,0,0,0.03); color: var(--text-muted); cursor: not-allowed; padding: 0.5rem 0.75rem;">
+            </div>
+            <div class="form-group">
+                <label for="uom_muom">Multiple UOM (MUOM)</label>
+                <select id="uom_muom" name="muom" required class="form-input" style="width: 100%; padding: 0.5rem 0.75rem; height: auto;">
+                    <option value="">-- Select MUOM --</option>
+                    {{ range .Uoms }}
+                    <option value="{{ .Code }}">{{ .Code }}</option>
+                    {{ end }}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="uom_conv_factor">Conversion Rate</label>
+                <input type="number" step="any" id="uom_conv_factor" name="conversion_factor" placeholder="e.g. 10.0" required class="form-input" style="width: 100%; padding: 0.5rem 0.75rem;">
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;" class="mt-4">
+            <button type="submit" class="btn">Save Setting</button>
+            <button type="button" onclick="toggleAddConversionForm()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<!-- 3. Predefined UOM List Card -->
+<div class="card mb-4" id="uoms-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <div>
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Predefined Units of Measure</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Standard measurement units used across catalog items and packaging</p>
+        </div>
+    </div>
+
+    <form style="display: contents;" onsubmit="return false;" hx-indicator="#uoms-loading-indicator">
+        <div class="search-filter-bar">
+            <div class="flex-grow">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+                <input type="text" name="search" placeholder="Search UOMs by code..."
+                       hx-get="/uoms"
+                       hx-trigger="keyup changed delay:300ms, search"
+                       hx-target="#uoms-results"
+                       hx-include="closest form"
+                       hx-indicator="#uoms-loading-indicator"
+                       class="form-input">
+            </div>
+            <div class="filter-item">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Usage Status</label>
+                <select name="filter" class="form-input"
+                        hx-get="/uoms"
+                        hx-target="#uoms-results"
+                        hx-include="closest form"
+                        hx-trigger="change"
+                        hx-indicator="#uoms-loading-indicator">
+                    <option value="all">All Usage Statuses</option>
+                    <option value="in_use">In Use</option>
+                    <option value="unused">Unused</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
+                <select name="sort" class="form-input"
+                        hx-get="/uoms"
+                        hx-target="#uoms-results"
+                        hx-include="closest form"
+                        hx-trigger="change"
+                        hx-indicator="#uoms-loading-indicator">
+                    <option value="code_asc">Code (A-Z)</option>
+                    <option value="code_desc">Code (Z-A)</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show Rows</label>
+                <select name="limit" class="form-input"
+                        hx-get="/uoms"
+                        hx-target="#uoms-results"
+                        hx-include="closest form"
+                        hx-trigger="change"
+                        hx-indicator="#uoms-loading-indicator">
+                    <option value="25" selected>Top 25</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                    <option value="200">Top 200</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="uoms-loading-indicator" class="htmx-indicator">
+            <div class="spinner-sm"></div>
+            <span>Searching & filtering UOMs...</span>
+        </div>
+
+        <div id="uoms-results">
+            {{ template "uoms_results.html" . }}
+        </div>
+    </form>
+</div>
+
+<!-- 4. Item Conversion Rules Card -->
+<div class="card mb-4" id="uom-settings-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <div>
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Item Conversion Rules</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Configured conversion factors between base units and bulk units per product</p>
+        </div>
+    </div>
+    <div id="uom-settings-results">
+        {{ template "uom_settings_results.html" . }}
+    </div>
+</div>
+
+<!-- 5. UOM Calculator Card (Collapsible) -->
+<div class="card mb-4" id="uom-calculator-card">
+    <div class="card-header"
+         style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;"
+         onclick="toggleCardCollapse('uom-calculator-card')">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <svg class="chevron-icon" id="uom-calculator-card-chevron"
+                 style="width: 18px; height: 18px; transition: transform 0.2s;" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clip-rule="evenodd" />
+            </svg>
+            UOM Calculator
+        </h3>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Click to toggle</span>
+    </div>
+    <div class="card-body" id="uom-calculator-card-body">
+        <div class="grid grid-cols-5" style="align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="calc-select"
+                       style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">
+                    Select UOM Item
+                </label>
+                <select id="calc-select" class="form-input" onchange="initCalculator()"
+                        style="width: 100%; height: auto; padding: 0.45rem 0.75rem;">
+                    <option value="">-- Select Rule --</option>
+                    {{ range .UomSettings }}
+                    <option value="{{ .ID }}" data-uom="{{ .UOM }}" data-muom="{{ .MUOM }}"
+                            data-factor="{{ .ConversionFactor }}">{{ .ItemCode }} (1 {{ .MUOM }} = {{ printf "%.4f" .ConversionFactor }} {{ .UOM }})</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div style="grid-column: span 2;">
+                <div id="calc-formula"
+                     style="font-size: 0.8125rem; color: var(--primary-color); font-weight: 500; min-height: 1.25rem; padding: 0.45rem 0.75rem; background: rgba(37, 99, 235, 0.05); border-radius: 4px; border-left: 3px solid var(--primary-color); line-height: 1.2; overflow-wrap: break-word;">
+                    Select a UOM Item to enable calculations.
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label id="calc-uom-label" for="calc-uom-val"
+                       style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">
+                    UOM Value (Base)
+                </label>
+                <input type="number" step="any" id="calc-uom-val" class="form-input" placeholder="Enter base units..."
+                       disabled oninput="calculateMUOM()" style="width: 100%;">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+                <label id="calc-muom-label" for="calc-muom-val"
+                       style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">
+                    MUOM Value
+                </label>
+                <input type="number" step="any" id="calc-muom-val" class="form-input"
+                       placeholder="Enter multiple units..." disabled oninput="calculateUOM()" style="width: 100%;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleAddUomForm() {
+        const card = document.getElementById('add-uom-card');
+        if (!card) return;
+        if (card.style.display === 'none' || card.style.display === '') {
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const input = document.getElementById('uom_code');
+            if (input) input.focus();
+        } else {
+            card.style.display = 'none';
+        }
+    }
+    window.toggleAddUomForm = toggleAddUomForm;
+
+    function toggleAddConversionForm() {
+        const card = document.getElementById('add-conversion-card');
+        if (!card) return;
+        if (card.style.display === 'none' || card.style.display === '') {
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            card.style.display = 'none';
+        }
+    }
+    window.toggleAddConversionForm = toggleAddConversionForm;
+
+    function toggleCardCollapse(cardId) {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+        const body = document.getElementById(cardId + '-body');
+        const chevron = document.getElementById(cardId + '-chevron');
+        if (!body) return;
+
+        if (body.style.display === 'none') {
+            body.style.display = 'block';
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        } else {
+            body.style.display = 'none';
+            if (chevron) chevron.style.transform = 'rotate(-90deg)';
+        }
+    }
+
+    // Dropdown helpers for Item selection in conversion form
+    function showUomDropdown(input) {
+        const parent = input.closest('.searchable-dropdown');
+        if (parent) {
+            const list = parent.querySelector('.dropdown-list');
+            if (list) list.style.display = 'block';
+        }
+    }
+    function hideUomDropdown(input) {
+        setTimeout(function() {
+            const parent = input.closest('.searchable-dropdown');
+            if (parent) {
+                const list = parent.querySelector('.dropdown-list');
+                if (list) list.style.display = 'none';
+            }
+        }, 200);
+    }
+    function filterUomDropdown(input) {
+        const filter = input.value.toLowerCase();
+        const parent = input.closest('.searchable-dropdown');
+        if (!parent) return;
+        const items = parent.querySelectorAll('.dropdown-item');
+        items.forEach(function(item) {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.indexOf(filter) > -1 ? '' : 'none';
+        });
+    }
+    function selectUomDropdownItem(item) {
+        const parent = item.closest('.searchable-dropdown');
+        if (!parent) return;
+        const input = parent.querySelector('.dropdown-search');
+        const hidden = parent.querySelector('input[type="hidden"]');
+        const baseUom = document.getElementById('uom_base_val');
+
+        if (input) input.value = item.getAttribute('data-description') || item.textContent.trim();
+        if (hidden) hidden.value = item.getAttribute('data-id');
+        if (baseUom) baseUom.value = item.getAttribute('data-uom') || '';
+
+        const list = parent.querySelector('.dropdown-list');
+        if (list) list.style.display = 'none';
+    }
+    function handleUomDropdownKeydown(event, input) {
+        if (event.key === 'Escape') {
+            const parent = input.closest('.searchable-dropdown');
+            if (parent) {
+                const list = parent.querySelector('.dropdown-list');
+                if (list) list.style.display = 'none';
+            }
+        }
+    }
+
+    // UOM Calculator
+    function initCalculator() {
+        const select = document.getElementById('calc-select');
+        if (!select) return;
+        const option = select.options[select.selectedIndex];
+
+        const formulaDiv = document.getElementById('calc-formula');
+        const uomValInput = document.getElementById('calc-uom-val');
+        const muomValInput = document.getElementById('calc-muom-val');
+        const uomLabel = document.getElementById('calc-uom-label');
+        const muomLabel = document.getElementById('calc-muom-label');
+
+        if (!option || option.value === '') {
+            formulaDiv.textContent = 'Select a UOM Item to enable calculations.';
+            uomValInput.disabled = true;
+            muomValInput.disabled = true;
+            uomValInput.value = '';
+            muomValInput.value = '';
+            uomLabel.textContent = 'UOM Value (Base)';
+            muomLabel.textContent = 'MUOM Value';
+            return;
+        }
+
+        const uom = option.getAttribute('data-uom');
+        const muom = option.getAttribute('data-muom');
+        const factor = parseFloat(option.getAttribute('data-factor'));
+
+        formulaDiv.innerHTML = `Conversion Rate: <strong>1 ${muom} = ${factor} ${uom}</strong>`;
+        uomValInput.disabled = false;
+        muomValInput.disabled = false;
+        uomLabel.textContent = `${uom} Quantity (Base)`;
+        muomLabel.textContent = `${muom} Quantity`;
+
+        if (uomValInput.value !== '') {
+            calculateMUOM();
+        } else if (muomValInput.value !== '') {
+            calculateUOM();
+        } else {
+            uomValInput.value = 1;
+            calculateMUOM();
+        }
+    }
+
+    function calculateMUOM() {
+        const select = document.getElementById('calc-select');
+        const option = select ? select.options[select.selectedIndex] : null;
+        if (!option || option.value === '') return;
+
+        const factor = parseFloat(option.getAttribute('data-factor'));
+        const uomVal = parseFloat(document.getElementById('calc-uom-val').value);
+        const muomValInput = document.getElementById('calc-muom-val');
+
+        if (isNaN(uomVal) || uomVal < 0) {
+            muomValInput.value = '';
+            return;
+        }
+        muomValInput.value = Number((uomVal / factor).toFixed(4));
+    }
+
+    function calculateUOM() {
+        const select = document.getElementById('calc-select');
+        const option = select ? select.options[select.selectedIndex] : null;
+        if (!option || option.value === '') return;
+
+        const factor = parseFloat(option.getAttribute('data-factor'));
+        const muomVal = parseFloat(document.getElementById('calc-muom-val').value);
+        const uomValInput = document.getElementById('calc-uom-val');
+
+        if (isNaN(muomVal) || muomVal < 0) {
+            uomValInput.value = '';
+            return;
+        }
+        uomValInput.value = Number((muomVal * factor).toFixed(4));
+    }
+
+    // Refresh on add
+    document.body.addEventListener('uom-added', function () {
+        const searchInput = document.querySelector('#uoms-card input[name="search"]');
+        if (searchInput) {
+            htmx.trigger(searchInput, 'search');
+        } else {
+            htmx.ajax('GET', '/uoms', { target: '#uoms-results' });
+        }
+    });
+
+    document.body.addEventListener('uom-setting-added', function () {
+        htmx.ajax('GET', '/uom-settings', { target: '#uom-settings-results' });
+    });
+</script>
+{{ end }}

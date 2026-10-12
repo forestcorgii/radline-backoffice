@@ -9,74 +9,9 @@ import (
 	"radline/models"
 )
 
-// SettingsHandler lists Brands, Categories, and UOM settings
+// SettingsHandler redirects to /brands now that brands, categories, and UOMs have separate pages
 func (app *App) SettingsHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. Fetch UOM settings
-	uomQuery := `
-		SELECT u.id, u.item_id, u.muom, u.conversion_factor,
-		       i.code as item_code, i.description as item_description, i.default_uom as uom
-		FROM uom_settings u
-		JOIN items i ON u.item_id = i.id
-		ORDER BY i.code ASC, u.muom ASC
-	`
-	var uomSettings []models.UomSettingWithItem
-	err := db.DB.Select(&uomSettings, uomQuery)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// 2. Fetch Brands (initial paginated view)
-	brandQuery := `
-		SELECT b.id, b.code, b.name, COUNT(i.id) as item_count
-		FROM brands b
-		LEFT JOIN items i ON b.id = i.brand_id
-		GROUP BY b.id, b.code, b.name
-		ORDER BY b.code ASC
-		LIMIT ?
-	`
-	var brands []models.Brand
-	_ = db.DB.Select(&brands, brandQuery, DefaultPageSize)
-
-	// 3. Fetch Categories (initial limited view)
-	categoryQuery := `
-		SELECT c.id, c.code, c.name, COUNT(i.id) as item_count
-		FROM categories c
-		LEFT JOIN items i ON c.id = i.category_id
-		GROUP BY c.id, c.code, c.name
-		ORDER BY c.code ASC
-		LIMIT ?
-	`
-	var categories []models.Category
-	_ = db.DB.Select(&categories, categoryQuery, DefaultPageSize)
-
-	// 4. Fetch Items (for inline UOM form dropdown in settings page)
-	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
-
-	// 5. Fetch Predefined Uoms (initial limited view)
-	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC LIMIT ?", DefaultPageSize)
-
-	data := struct {
-		UomSettings    []models.UomSettingWithItem
-		Brands         []models.Brand
-		Categories     []models.Category
-		Items          []models.Item
-		Uoms           []models.Uom
-	}{
-		UomSettings:    uomSettings,
-		Brands:         brands,
-		Categories:     categories,
-		Items:          items,
-		Uoms:           uoms,
-	}
-
-	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
-		app.Render(w, "uom_settings_results.html", data)
-	} else {
-		app.RenderPage(w, r, "settings.html", data)
-	}
+	http.Redirect(w, r, "/brands", http.StatusSeeOther)
 }
 
 // SystemSettingsHandler renders system and AI vision configurations

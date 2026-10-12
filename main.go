@@ -150,6 +150,7 @@ func main() {
 	mux.HandleFunc("GET /settings", app.RequirePermission(domain.PermSettingsView, app.SettingsHandler))
 	mux.HandleFunc("GET /settings/system", app.RequirePermission(domain.PermSettingsView, app.SystemSettingsHandler))
 	mux.HandleFunc("POST /settings/deepseek", app.RequirePermission(domain.PermSettingsEdit, app.SaveDeepSeekConfigHandler))
+	mux.HandleFunc("GET /uom-settings", app.RequirePermission(domain.PermSettingsView, app.UomSettingsHandler))
 	mux.HandleFunc("GET /uom-settings/new", app.RequirePermission(domain.PermSettingsEdit, app.NewUomSettingPageHandler))
 	mux.HandleFunc("POST /uom-settings/add", app.RequirePermission(domain.PermSettingsEdit, app.AddUomSettingHandler))
 	mux.HandleFunc("GET /uom-settings/edit/{id}", app.RequirePermission(domain.PermSettingsEdit, app.EditUomSettingFormHandler))
@@ -242,7 +243,7 @@ func parseTemplates() map[string]*template.Template {
 
 	// Pages that use base.html
 	pages := []string{
-		"dashboard.html", "brands.html", "categories.html", "items.html", "uom_settings.html",
+		"dashboard.html", "brands.html", "categories.html", "items.html", "uom_settings.html", "uoms.html",
 		"inventory.html", "stock_receiving.html", "stock_adjustments.html",
 		"sales.html", "monthly_inventory.html", "receiving_logs.html", "adjustment_logs.html",
 		"brand_new.html", "category_new.html", "item_new.html", "sales_new.html",
@@ -265,6 +266,11 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/item_row.html", "templates/item_rows.html", "templates/item_edit_row.html", "templates/brand_select.html", "templates/category_select.html", "templates/uom_select.html", "templates/items_results.html")
 		} else if page == "uom_settings.html" {
 			files = append(files, "templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html")
+		} else if page == "uoms.html" {
+			files = append(files,
+				"templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html",
+				"templates/uom_row.html", "templates/uom_rows.html", "templates/uoms_results.html", "templates/uom_select.html",
+			)
 		} else if page == "inventory.html" {
 			files = append(files, "templates/inventory_stock_rows.html", "templates/receiving_item_row.html", "templates/adjustment_item_row.html", "templates/receive_stock_form.html", "templates/adjust_stock_form.html")
 		} else if page == "stock_receiving.html" {

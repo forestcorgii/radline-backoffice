@@ -64,7 +64,60 @@ func (app *App) UomsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		app.Render(w, "uoms_results.html", data)
 	} else {
-		http.Redirect(w, r, "/settings", http.StatusMovedPermanently)
+		// Fetch UOM Conversion Settings
+		uomQuery := `
+			SELECT u.id, u.item_id, u.muom, u.conversion_factor,
+			       i.code as item_code, i.description as item_description, i.default_uom as uom
+			FROM uom_settings u
+			JOIN items i ON u.item_id = i.id
+			ORDER BY i.code ASC, u.muom ASC
+		`
+		var uomSettings []models.UomSettingWithItem
+		_ = db.DB.Select(&uomSettings, uomQuery)
+
+		// Fetch Items for conversion form dropdown
+		var items []models.Item
+		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+
+		data := struct {
+			Uoms        []models.Uom
+			UomSettings []models.UomSettingWithItem
+			Items       []models.Item
+		}{
+			Uoms:        uoms,
+			UomSettings: uomSettings,
+			Items:       items,
+		}
+		app.RenderPage(w, r, "uoms.html", data)
+	}
+}
+
+// UomSettingsHandler handles /uom-settings requests
+func (app *App) UomSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	uomQuery := `
+		SELECT u.id, u.item_id, u.muom, u.conversion_factor,
+		       i.code as item_code, i.description as item_description, i.default_uom as uom
+		FROM uom_settings u
+		JOIN items i ON u.item_id = i.id
+		ORDER BY i.code ASC, u.muom ASC
+	`
+	var uomSettings []models.UomSettingWithItem
+	err := db.DB.Select(&uomSettings, uomQuery)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := struct {
+		UomSettings []models.UomSettingWithItem
+	}{
+		UomSettings: uomSettings,
+	}
+
+	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
+		app.Render(w, "uom_settings_results.html", data)
+	} else {
+		http.Redirect(w, r, "/uoms", http.StatusSeeOther)
 	}
 }
 

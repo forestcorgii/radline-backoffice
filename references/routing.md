@@ -75,27 +75,28 @@
 | DELETE | `/sales/delete/{id}` | `DeleteSalesHandler` | Empty + toast |
 | GET | `/sales/item-row-details` | `SaleItemRowDetailsHandler` | Pre-filled sale row |
 
-### Settings & UOM Settings CRUD → [[handlers-overview]]
+### Settings & System Config CRUD → [[handlers-overview]]
 | Method | Path | Handler | HTMX Response / Notes |
 |---|---|---|---|
-| GET | `/settings` | `SettingsHandler` | Config page with list of UOM settings and predefined UOMs |
+| GET | `/settings` | `SettingsHandler` | Redirects to `/brands` |
 | GET | `/settings/system` | `SystemSettingsHandler` | System & DeepSeek Vision AI configuration page |
 | POST | `/settings/deepseek` | `SaveDeepSeekConfigHandler` | Updates DeepSeek Vision API configuration |
+
+### Units of Measure (UOMs) & Conversions CRUD
+| Method | Path | Handler | HTMX Response / Notes |
+|---|---|---|---|
+| GET | `/uoms` | `UomsHandler` | Page (`uoms.html`) or predefined UOMs rows fragment |
+| POST | `/uoms/add` | `AddUomHandler` | Rows fragment + toast |
+| GET | `/uoms/row/{id}` | `UomRowHandler` | Single row |
+| DELETE | `/uoms/delete/{id}` | `DeleteUomHandler` | Empty + toast |
+| GET | `/uoms/select` | `SelectUomsHandler` | Predefined UOM select option list |
+| GET | `/uom-settings` | `UomSettingsHandler` | Conversion rules rows fragment or redirect to `/uoms` |
 | GET | `/uom-settings/new` | `NewUomSettingPageHandler` | Add UOM conversion form page |
 | POST | `/uom-settings/add` | `AddUomSettingHandler` | Rows fragment + toast |
 | GET | `/uom-settings/edit/{id}` | `EditUomSettingFormHandler` | Inline edit row |
 | POST | `/uom-settings/edit/{id}` | `UpdateUomSettingHandler` | Updated row + toast |
 | GET | `/uom-settings/row/{id}` | `UomSettingRowHandler` | Single row |
 | DELETE | `/uom-settings/delete/{id}` | `DeleteUomSettingHandler` | Empty + toast |
-
-### Predefined UOM List CRUD
-| Method | Path | Handler | HTMX Response / Notes |
-|---|---|---|---|
-| GET | `/uoms` | `UomsHandler` | Renders UOM predefined list rows |
-| POST | `/uoms/add` | `AddUomHandler` | Rows fragment + toast |
-| GET | `/uoms/row/{id}` | `UomRowHandler` | Single row |
-| DELETE | `/uoms/delete/{id}` | `DeleteUomHandler` | Empty + toast |
-| GET | `/uoms/select` | `SelectUomsHandler` | Predefined UOM select option list |
 
 ### Import Routing
 | Method | Path | Handler | Notes |

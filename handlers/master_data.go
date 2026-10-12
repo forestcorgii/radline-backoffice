@@ -78,7 +78,12 @@ func (app *App) BrandsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		app.Render(w, "brands_results.html", data)
 	} else {
-		http.Redirect(w, r, "/settings", http.StatusMovedPermanently)
+		data := struct {
+			Brands []models.Brand
+		}{
+			Brands: brands,
+		}
+		app.RenderPage(w, r, "brands.html", data)
 	}
 }
 
@@ -282,7 +287,12 @@ func (app *App) CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		app.Render(w, "categories_results.html", data)
 	} else {
-		http.Redirect(w, r, "/settings", http.StatusMovedPermanently)
+		data := struct {
+			Categories []models.Category
+		}{
+			Categories: categories,
+		}
+		app.RenderPage(w, r, "categories.html", data)
 	}
 }
 
