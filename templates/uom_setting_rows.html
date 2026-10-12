@@ -1,5 +1,9 @@
 {{ define "uom_setting_rows.html" }}
   {{ range . }}
     {{ template "uom_setting_row.html" . }}
+  {{ else }}
+    <tr>
+        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No conversion rules found.</td>
+    </tr>
   {{ end }}
 {{ end }}

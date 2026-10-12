@@ -90,7 +90,7 @@
 | GET | `/uoms/row/{id}` | `UomRowHandler` | Single row |
 | DELETE | `/uoms/delete/{id}` | `DeleteUomHandler` | Empty + toast |
 | GET | `/uoms/select` | `SelectUomsHandler` | Predefined UOM select option list |
-| GET | `/uom-settings` | `UomSettingsHandler` | Conversion rules rows fragment or redirect to `/uoms` |
+| GET | `/uom-settings` | `UomSettingsHandler` | Conversion rules rows fragment (supports `search`, `muom`, `sort`, `limit`) or redirect to `/uoms` |
 | GET | `/uom-settings/new` | `NewUomSettingPageHandler` | Add UOM conversion form page |
 | POST | `/uom-settings/add` | `AddUomSettingHandler` | Rows fragment + toast |
 | GET | `/uom-settings/edit/{id}` | `EditUomSettingFormHandler` | Inline edit row |
