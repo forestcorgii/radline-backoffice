@@ -43,7 +43,9 @@
                 </button>
                 <div class="sidebar-dropdown-menu">
                     <a href="/items">Items</a>
-                    <a href="/settings">Settings</a>
+                    <a href="/brands">Brands</a>
+                    <a href="/categories">Categories</a>
+                    <a href="/uoms">Units of Measure</a>
                 </div>
             </div>
 

@@ -201,13 +201,13 @@
                                     <span class="quick-create-item-desc">Product category</span>
                                 </div>
                             </a>
-                            <a href="/uom-settings" onclick="handleQuickAction('add-uom-setting', '/uom-settings', event)" class="quick-create-item">
+                            <a href="/uoms" onclick="handleQuickAction('add-uom-setting', '/uoms', event)" class="quick-create-item">
                                 <div class="quick-create-item-icon settings-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>
                                 </div>
                                 <div class="quick-create-item-text">
-                                    <span class="quick-create-item-name">+ Add UOM Setting</span>
-                                    <span class="quick-create-item-desc">Unit conversion</span>
+                                    <span class="quick-create-item-name">+ Add UOM</span>
+                                    <span class="quick-create-item-desc">Units & conversions</span>
                                 </div>
                             </a>
                         </div>
@@ -482,7 +482,7 @@
                             </div>
                             <div class="nav-text-group">
                                 <span class="nav-title">Masterlist</span>
-                                <span class="nav-subtitle">Catalog & settings</span>
+                                <span class="nav-subtitle">Products & master data</span>
                             </div>
                         </div>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -499,21 +499,54 @@
                                 </div>
                                 <div class="nav-text-group">
                                     <span class="nav-title">Product Items</span>
-                                    <span class="nav-subtitle">Catalog codes, prices & UOM</span>
+                                    <span class="nav-subtitle">Catalog codes, prices & details</span>
                                 </div>
                             </div>
                         </a>
-                        <a href="/settings" hx-get="/settings" onclick="closeMobileSidebarOnNav()" title="Settings: Brands, categories & units">
+                        <a href="/brands" hx-get="/brands" onclick="closeMobileSidebarOnNav()" title="Brands: Brand classification & items">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
                                     <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
                                     </svg>
                                 </div>
                                 <div class="nav-text-group">
-                                    <span class="nav-title">Settings & Config</span>
-                                    <span class="nav-subtitle">Brands, categories & UOMs</span>
+                                    <span class="nav-title">Brands</span>
+                                    <span class="nav-subtitle">Brand names & item counts</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="/categories" hx-get="/categories" onclick="closeMobileSidebarOnNav()" title="Categories: Product categories & groups">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <rect x="3" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="14" width="7" height="7"></rect>
+                                        <rect x="3" y="14" width="7" height="7"></rect>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Categories</span>
+                                    <span class="nav-subtitle">Category codes & grouping</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="/uoms" hx-get="/uoms" onclick="closeMobileSidebarOnNav()" title="Units of Measure: UOM list, rules & calculator">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path d="M4 7V4h3"></path>
+                                        <path d="M20 7V4h-3"></path>
+                                        <path d="M4 17v3h3"></path>
+                                        <path d="M20 17v3h-3"></path>
+                                        <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Units of Measure</span>
+                                    <span class="nav-subtitle">UOM list, rules & calculator</span>
                                 </div>
                             </div>
                         </a>
@@ -834,11 +867,19 @@
                 return;
             }
             if (action === 'add-uom-setting') {
+                if (typeof window.toggleAddConversionForm === 'function' && document.getElementById('add-conversion-card')) {
+                    window.toggleAddConversionForm();
+                    return;
+                }
+                if (typeof window.toggleAddUomForm === 'function' && document.getElementById('add-uom-card')) {
+                    window.toggleAddUomForm();
+                    return;
+                }
                 if (typeof window.toggleAddUomSettingForm === 'function' && document.getElementById('add-uom-setting-card')) {
                     window.toggleAddUomSettingForm();
                     return;
                 }
-                htmx.ajax('GET', '/uom-settings', { target: '#main-content', pushUrl: true });
+                htmx.ajax('GET', '/uoms', { target: '#main-content', pushUrl: true });
                 return;
             }
             if (action === 'record-sale') {
@@ -903,8 +944,8 @@
             const isMasterlist = path === "/items" || path.startsWith("/items/") ||
                                  path === "/brands" || path.startsWith("/brands/") ||
                                  path === "/categories" || path.startsWith("/categories/") ||
-                                 path === "/uom-settings" || path.startsWith("/uom-settings/") ||
-                                 path === "/settings";
+                                 path === "/uoms" || path.startsWith("/uoms/") ||
+                                 path === "/uom-settings" || path.startsWith("/uom-settings/");
             const isUsers = path.startsWith("/settings/users");
             const isRoles = path.startsWith("/settings/roles");
             const isSales = path === "/sales" || path.startsWith("/sales/");
@@ -974,13 +1015,13 @@
                             <span class="quick-create-item-desc">Product category</span>
                         </div>
                     </a>
-                    <a href="/uom-settings" onclick="handleQuickAction('add-uom-setting', '/uom-settings', event)" class="quick-create-item">
+                    <a href="/uoms" onclick="handleQuickAction('add-uom-setting', '/uoms', event)" class="quick-create-item">
                         <div class="quick-create-item-icon settings-color">
-                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path></svg>
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>
                         </div>
                         <div class="quick-create-item-text">
-                            <span class="quick-create-item-name">+ Add UOM Setting</span>
-                            <span class="quick-create-item-desc">Unit conversion</span>
+                            <span class="quick-create-item-name">+ Add UOM</span>
+                            <span class="quick-create-item-desc">Units & conversion</span>
                         </div>
                     </a>
                 `;
