@@ -9,48 +9,10 @@ import (
 	"radline/models"
 )
 
-// UomsHandler lists all UOMs with optional search, sorting, and limit parameters.
+// UomsHandler lists all UOMs and renders the UOM management page.
 func (app *App) UomsHandler(w http.ResponseWriter, r *http.Request) {
-	search := r.URL.Query().Get("search")
-	filter := r.URL.Query().Get("filter") // all, in_use, unused
-	sort := r.URL.Query().Get("sort")     // code_asc, code_desc
-
-	query := `
-		SELECT u.id, u.code
-		FROM uoms u
-	`
-	var args []interface{}
-	var whereClauses []string
-
-	if search != "" {
-		whereClauses = append(whereClauses, "u.code LIKE ?")
-		args = append(args, "%"+search+"%")
-	}
-
-	if filter == "in_use" {
-		whereClauses = append(whereClauses, "u.code IN (SELECT DISTINCT default_uom FROM items UNION SELECT DISTINCT muom FROM uom_settings)")
-	} else if filter == "unused" {
-		whereClauses = append(whereClauses, "u.code NOT IN (SELECT DISTINCT default_uom FROM items UNION SELECT DISTINCT muom FROM uom_settings)")
-	}
-
-	if len(whereClauses) > 0 {
-		query += " WHERE " + strings.Join(whereClauses, " AND ")
-	}
-
-	limit := GetLimitParam(r)
-
-	switch sort {
-	case "code_desc":
-		query += " ORDER BY u.code DESC"
-	default: // code_asc or empty
-		query += " ORDER BY u.code ASC"
-	}
-
-	query += " LIMIT ?"
-	selectArgs := append(args, limit)
-
 	var uoms []models.Uom
-	err := db.DB.Select(&uoms, query, selectArgs...)
+	err := db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -63,46 +25,102 @@ func (app *App) UomsHandler(w http.ResponseWriter, r *http.Request) {
 			Uoms: uoms,
 		}
 		app.Render(w, "uoms_results.html", data)
-	} else {
-		// Fetch UOM Conversion Settings
-		uomQuery := `
-			SELECT u.id, u.item_id, u.muom, u.conversion_factor,
-			       i.code as item_code, i.description as item_description, i.default_uom as uom
-			FROM uom_settings u
-			JOIN items i ON u.item_id = i.id
-			ORDER BY i.code ASC, u.muom ASC
-		`
-		var uomSettings []models.UomSettingWithItem
-		_ = db.DB.Select(&uomSettings, uomQuery)
-
-		// Fetch Items for conversion form dropdown
-		var items []models.Item
-		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
-
-		data := struct {
-			Uoms        []models.Uom
-			UomSettings []models.UomSettingWithItem
-			Items       []models.Item
-		}{
-			Uoms:        uoms,
-			UomSettings: uomSettings,
-			Items:       items,
-		}
-		app.RenderPage(w, r, "uoms.html", data)
+		return
 	}
-}
 
-// UomSettingsHandler handles /uom-settings requests
-func (app *App) UomSettingsHandler(w http.ResponseWriter, r *http.Request) {
-	uomQuery := `
+	// Fetch initial UOM Conversion Settings (default limit 25, ordered by code ASC)
+	uomSettings, _ := app.queryUomSettings("", "", "code_asc", 25)
+
+	// Fetch all conversion settings for UOM Calculator dropdown so none are excluded
+	var allUomSettings []models.UomSettingWithItem
+	_ = db.DB.Select(&allUomSettings, `
 		SELECT u.id, u.item_id, u.muom, u.conversion_factor,
 		       i.code as item_code, i.description as item_description, i.default_uom as uom
 		FROM uom_settings u
 		JOIN items i ON u.item_id = i.id
 		ORDER BY i.code ASC, u.muom ASC
+	`)
+
+	// Fetch Items for conversion form dropdown
+	var items []models.Item
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+
+	data := struct {
+		Uoms           []models.Uom
+		UomSettings    []models.UomSettingWithItem
+		AllUomSettings []models.UomSettingWithItem
+		Items          []models.Item
+	}{
+		Uoms:           uoms,
+		UomSettings:    uomSettings,
+		AllUomSettings: allUomSettings,
+		Items:          items,
+	}
+	app.RenderPage(w, r, "uoms.html", data)
+}
+
+func (app *App) queryUomSettings(search, muomFilter, sort string, limit int) ([]models.UomSettingWithItem, error) {
+	query := `
+		SELECT u.id, u.item_id, u.muom, u.conversion_factor,
+		       i.code as item_code, i.description as item_description, i.default_uom as uom
+		FROM uom_settings u
+		JOIN items i ON u.item_id = i.id
 	`
+	var args []interface{}
+	var whereClauses []string
+
+	if search != "" {
+		whereClauses = append(whereClauses, "(i.code LIKE ? OR i.description LIKE ? OR u.muom LIKE ? OR i.default_uom LIKE ?)")
+		searchTerm := "%" + search + "%"
+		args = append(args, searchTerm, searchTerm, searchTerm, searchTerm)
+	}
+
+	if muomFilter != "" && muomFilter != "all" {
+		whereClauses = append(whereClauses, "u.muom = ?")
+		args = append(args, muomFilter)
+	}
+
+	if len(whereClauses) > 0 {
+		query += " WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	switch sort {
+	case "code_desc":
+		query += " ORDER BY i.code DESC, u.muom ASC"
+	case "name_asc":
+		query += " ORDER BY i.description ASC, i.code ASC"
+	case "name_desc":
+		query += " ORDER BY i.description DESC, i.code ASC"
+	case "muom_asc":
+		query += " ORDER BY u.muom ASC, i.code ASC"
+	case "muom_desc":
+		query += " ORDER BY u.muom DESC, i.code ASC"
+	case "factor_desc":
+		query += " ORDER BY u.conversion_factor DESC, i.code ASC"
+	case "factor_asc":
+		query += " ORDER BY u.conversion_factor ASC, i.code ASC"
+	default: // code_asc or empty
+		query += " ORDER BY i.code ASC, u.muom ASC"
+	}
+
+	if limit > 0 {
+		query += " LIMIT ?"
+		args = append(args, limit)
+	}
+
 	var uomSettings []models.UomSettingWithItem
-	err := db.DB.Select(&uomSettings, uomQuery)
+	err := db.DB.Select(&uomSettings, query, args...)
+	return uomSettings, err
+}
+
+// UomSettingsHandler handles /uom-settings requests with search, filter, and sorting
+func (app *App) UomSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	search := r.URL.Query().Get("search")
+	muom := r.URL.Query().Get("muom")
+	sort := r.URL.Query().Get("sort")
+	limit := GetLimitParam(r)
+
+	uomSettings, err := app.queryUomSettings(search, muom, sort, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

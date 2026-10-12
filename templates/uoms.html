@@ -6,38 +6,16 @@
 <div class="header-bar">
     <h2 style="margin: 0;">Units of Measure (UOMs)</h2>
     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-        <button type="button" class="btn" onclick="toggleAddUomForm()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8125rem;">
-            + Add UOM
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="toggleAddConversionForm()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8125rem;">
+        <button type="button" class="btn" onclick="toggleAddConversionForm()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8125rem;">
             + Add Conversion
         </button>
-    </div>
-</div>
-
-<!-- 1. Add UOM Form Card (hidden by default) -->
-<div class="card mb-4" id="add-uom-card" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add New Unit of Measure</h3>
-        <button type="button" class="btn btn-secondary" onclick="toggleAddUomForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
-            ✕ Close
+        <button type="button" class="btn btn-secondary" onclick="toggleAddUomForm()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8125rem;">
+            + Add UOM
         </button>
     </div>
-    <form hx-post="/uoms/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddUomForm(); }">
-        <div style="max-width: 400px;">
-            <div class="form-group">
-                <label for="uom_code">UOM Code</label>
-                <input type="text" id="uom_code" name="code" placeholder="e.g. BOX, PC/S, KG, ROLL" required class="form-input" style="text-transform: uppercase;">
-            </div>
-        </div>
-        <div style="display: flex; gap: 0.5rem;" class="mt-4">
-            <button type="submit" class="btn">Save UOM</button>
-            <button type="button" onclick="toggleAddUomForm()" class="btn btn-secondary">Cancel</button>
-        </div>
-    </form>
 </div>
 
-<!-- 2. Add Conversion Form Card (hidden by default) -->
+<!-- 1. Add Conversion Form Card (hidden by default) -->
 <div class="card mb-4" id="add-conversion-card" style="display: none;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
         <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add Item Conversion Setting</h3>
@@ -91,60 +69,88 @@
     </form>
 </div>
 
-<!-- 3. Predefined UOM List Card -->
-<div class="card mb-4" id="uoms-card">
+<!-- 2. Add UOM Form Card (hidden by default) -->
+<div class="card mb-4" id="add-uom-card" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add New Unit of Measure</h3>
+        <button type="button" class="btn btn-secondary" onclick="toggleAddUomForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+            ✕ Close
+        </button>
+    </div>
+    <form hx-post="/uoms/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddUomForm(); }">
+        <div style="max-width: 400px;">
+            <div class="form-group">
+                <label for="uom_code">UOM Code</label>
+                <input type="text" id="uom_code" name="code" placeholder="e.g. BOX, PC/S, KG, ROLL" required class="form-input" style="text-transform: uppercase;">
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;" class="mt-4">
+            <button type="submit" class="btn">Save UOM</button>
+            <button type="button" onclick="toggleAddUomForm()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<!-- 3. Item Conversion Rules Card (Moved to Top with Filters) -->
+<div class="card mb-4" id="uom-settings-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
         <div>
-            <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Predefined Units of Measure</h3>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Standard measurement units used across catalog items and packaging</p>
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Item Conversion Rules</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Configured conversion factors between base units and bulk units per product</p>
         </div>
     </div>
 
-    <form style="display: contents;" onsubmit="return false;" hx-indicator="#uoms-loading-indicator">
+    <form style="display: contents;" onsubmit="return false;" hx-indicator="#uom-settings-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow">
                 <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
-                <input type="text" name="search" placeholder="Search UOMs by code..."
-                       hx-get="/uoms"
+                <input type="text" name="search" placeholder="Search rules by item or UOM..."
+                       hx-get="/uom-settings"
                        hx-trigger="keyup changed delay:300ms, search"
-                       hx-target="#uoms-results"
+                       hx-target="#uom-settings-results"
                        hx-include="closest form"
-                       hx-indicator="#uoms-loading-indicator"
+                       hx-indicator="#uom-settings-loading-indicator"
                        class="form-input">
             </div>
             <div class="filter-item">
-                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Usage Status</label>
-                <select name="filter" class="form-input"
-                        hx-get="/uoms"
-                        hx-target="#uoms-results"
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Multiple UOM</label>
+                <select name="muom" class="form-input"
+                        hx-get="/uom-settings"
+                        hx-target="#uom-settings-results"
                         hx-include="closest form"
                         hx-trigger="change"
-                        hx-indicator="#uoms-loading-indicator">
-                    <option value="all">All Usage Statuses</option>
-                    <option value="in_use">In Use</option>
-                    <option value="unused">Unused</option>
+                        hx-indicator="#uom-settings-loading-indicator">
+                    <option value="all">All Multiple UOMs</option>
+                    {{ range .Uoms }}
+                    <option value="{{ .Code }}">{{ .Code }}</option>
+                    {{ end }}
                 </select>
             </div>
             <div class="filter-item">
                 <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
                 <select name="sort" class="form-input"
-                        hx-get="/uoms"
-                        hx-target="#uoms-results"
+                        hx-get="/uom-settings"
+                        hx-target="#uom-settings-results"
                         hx-include="closest form"
                         hx-trigger="change"
-                        hx-indicator="#uoms-loading-indicator">
-                    <option value="code_asc">Code (A-Z)</option>
-                    <option value="code_desc">Code (Z-A)</option>
+                        hx-indicator="#uom-settings-loading-indicator">
+                    <option value="code_asc">Item Code (A-Z)</option>
+                    <option value="code_desc">Item Code (Z-A)</option>
+                    <option value="name_asc">Description (A-Z)</option>
+                    <option value="name_desc">Description (Z-A)</option>
+                    <option value="muom_asc">MUOM (A-Z)</option>
+                    <option value="factor_desc">Rate (Highest First)</option>
+                    <option value="factor_asc">Rate (Lowest First)</option>
                 </select>
             </div>
             <div class="filter-item">
                 <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show Rows</label>
                 <select name="limit" class="form-input"
-                        hx-get="/uoms"
-                        hx-target="#uoms-results"
+                        hx-get="/uom-settings"
+                        hx-target="#uom-settings-results"
                         hx-include="closest form"
                         hx-trigger="change"
-                        hx-indicator="#uoms-loading-indicator">
+                        hx-indicator="#uom-settings-loading-indicator">
                     <option value="25" selected>Top 25</option>
                     <option value="50">Top 50</option>
                     <option value="100">Top 100</option>
@@ -153,27 +159,28 @@
             </div>
         </div>
 
-        <div id="uoms-loading-indicator" class="htmx-indicator">
+        <div id="uom-settings-loading-indicator" class="htmx-indicator">
             <div class="spinner-sm"></div>
-            <span>Searching & filtering UOMs...</span>
+            <span>Searching & filtering conversion rules...</span>
         </div>
 
-        <div id="uoms-results">
-            {{ template "uoms_results.html" . }}
+        <div id="uom-settings-results">
+            {{ template "uom_settings_results.html" . }}
         </div>
     </form>
 </div>
 
-<!-- 4. Item Conversion Rules Card -->
-<div class="card mb-4" id="uom-settings-card">
+<!-- 4. Predefined UOM List Card (Simplified, Filters Removed) -->
+<div class="card mb-4" id="uoms-card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
         <div>
-            <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Item Conversion Rules</h3>
-            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Configured conversion factors between base units and bulk units per product</p>
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Predefined Units of Measure</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">Standard measurement units used across catalog items and packaging</p>
         </div>
     </div>
-    <div id="uom-settings-results">
-        {{ template "uom_settings_results.html" . }}
+
+    <div id="uoms-results">
+        {{ template "uoms_results.html" . }}
     </div>
 </div>
 
@@ -203,9 +210,16 @@
                 <select id="calc-select" class="form-input" onchange="initCalculator()"
                         style="width: 100%; height: auto; padding: 0.45rem 0.75rem;">
                     <option value="">-- Select Rule --</option>
+                    {{ if .AllUomSettings }}
+                    {{ range .AllUomSettings }}
+                    <option value="{{ .ID }}" data-uom="{{ .UOM }}" data-muom="{{ .MUOM }}"
+                            data-factor="{{ .ConversionFactor }}">{{ .ItemCode }} (1 {{ .MUOM }} = {{ printf "%.4f" .ConversionFactor }} {{ .UOM }})</option>
+                    {{ end }}
+                    {{ else }}
                     {{ range .UomSettings }}
                     <option value="{{ .ID }}" data-uom="{{ .UOM }}" data-muom="{{ .MUOM }}"
                             data-factor="{{ .ConversionFactor }}">{{ .ItemCode }} (1 {{ .MUOM }} = {{ printf "%.4f" .ConversionFactor }} {{ .UOM }})</option>
+                    {{ end }}
                     {{ end }}
                 </select>
             </div>
@@ -409,16 +423,16 @@
 
     // Refresh on add
     document.body.addEventListener('uom-added', function () {
-        const searchInput = document.querySelector('#uoms-card input[name="search"]');
-        if (searchInput) {
-            htmx.trigger(searchInput, 'search');
-        } else {
-            htmx.ajax('GET', '/uoms', { target: '#uoms-results' });
-        }
+        htmx.ajax('GET', '/uoms', { target: '#uoms-results' });
     });
 
     document.body.addEventListener('uom-setting-added', function () {
-        htmx.ajax('GET', '/uom-settings', { target: '#uom-settings-results' });
+        const searchInput = document.querySelector('#uom-settings-card input[name="search"]');
+        if (searchInput) {
+            htmx.trigger(searchInput, 'search');
+        } else {
+            htmx.ajax('GET', '/uom-settings', { target: '#uom-settings-results' });
+        }
     });
 </script>
 {{ end }}

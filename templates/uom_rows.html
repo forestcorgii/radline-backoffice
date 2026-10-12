@@ -1,5 +1,9 @@
 {{ define "uom_rows.html" }}
 {{ range . }}
     {{ template "uom_row.html" . }}
+{{ else }}
+    <tr>
+        <td colspan="2" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No units of measure defined yet.</td>
+    </tr>
 {{ end }}
 {{ end }}
