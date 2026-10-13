@@ -2,6 +2,10 @@ goos: linux
 goarch: amd64
 pkg: radline/handlers
 cpu: Intel(R) Xeon(R) Processor @ 2.30GHz
-BenchmarkAdjustStockHandler-4   	     360	  16758194 ns/op
+BenchmarkClearExisting-4   	     385	   3330134 ns/op	  273286 B/op	    3710 allocs/op
+BenchmarkClearExisting-4   	     382	   3189321 ns/op	  276151 B/op	    3711 allocs/op
+BenchmarkClearExisting-4   	     372	   3127523 ns/op	  273116 B/op	    3711 allocs/op
+BenchmarkClearExisting-4   	     384	   3173505 ns/op	  272046 B/op	    3711 allocs/op
+BenchmarkClearExisting-4   	     361	   3228071 ns/op	  274332 B/op	    3711 allocs/op
 PASS
-ok  	radline/handlers	8.097s
+ok  	radline/handlers	104.048s
