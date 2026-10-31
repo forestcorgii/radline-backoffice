@@ -1,184 +1,45 @@
-# Database Schema
+# Database Schema & Dual-Engine Architecture
 
-> Back to [[00-index]] · Related: [[architecture]], [[database-migrations]]
+> Back to [[00-index]] · Related: [[database-migrations]], [[models-layer]], [[domain-overview]]
 
 ## File
 [db/db.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/db/db.go)
 
-## Connection
+## Dual-Engine Connection (`DBConn` & `TxConn`)
+- **Driver Detection**: `InitDB(datasource)` connects via `pgx` (`github.com/jackc/pgx/v5/stdlib`) when `datasource` starts with `postgres://` or `postgresql://` (required when `APP_ENV=production`), otherwise uses pure-Go SQLite (`modernc.org/sqlite`, driver name `"sqlite"`, file `backoffice.db`) with `PRAGMA foreign_keys = ON;`.
+- **Automatic Placeholder Rebinding**: `db.DB` (`*DBConn`) and `TxConn` wrap `*sqlx.DB` / `*sqlx.Tx` and automatically call `Rebind(query)` on every `Get`, `Select`, `Exec`, `Query`, and `QueryRow`, translating `?` into `$1, $2, ...` on PostgreSQL.
 
-```go
-var DB *sqlx.DB  // Global singleton
+## Complete Table Catalog (17 Tables)
 
-func InitDB(datasource string) error {
-    DB, err = sqlx.Connect("sqlite", datasource)  // "sqlite" not "sqlite3"!
-    // Enable FK constraints
-    DB.Exec("PRAGMA foreign_keys = ON;")
-    // Run inline migrations
-    // Create schema
-}
-```
-
-**Driver:** `modernc.org/sqlite` (pure Go). See [[tech-stack]] for rationale.
-
-## Tables
-
-### `brands`
-| Column | Type | Constraints |
+| Domain Area | Table | Key Columns & FKs |
 |---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `code` | TEXT | UNIQUE NOT NULL |
-| `name` | TEXT | NOT NULL |
+| **Catalog Masterlist** | `brands` | `id`, `code` (UNIQUE), `name` |
+| | `categories` | `id`, `code` (UNIQUE), `name` |
+| | `uoms` | `id`, `code` (UNIQUE) |
+| | `items` | `id`, `code` (UNIQUE), `description`, `default_uom`, `model`, `brand_id` (FK `brands`), `category_id` (FK `categories`), `variation`, `remarks` |
+| | `uom_settings` | `id`, `item_id` (FK `items`), `muom`, `conversion_factor` |
+| | `customers` | `id`, `code` (UNIQUE), `name`, `tin_no`, `address`, `contact_person`, `phone`, `email`, `payment_terms`, `notes`, `created_at` |
+| **Inventory & Procurement** | `receiving_logs` | `id`, `supplier`, `date`, `pl_no`, `item_id` (FK `items`), `qty`, `uom`, `unit_price`, `less1`, `less2`, `cost`, `total_cost`, `markup`, `selling_price`, `remarks` |
+| | `stock_adjustments` | `id`, `date`, `remarks` (Header table) |
+| | `inventory_adjustments` | `id`, `adjustment_id` (FK `stock_adjustments`), `date`, `item_id` (FK `items`), `uom`, `adjustment_qty`, `cost`, `remarks` |
+| | `purchase_orders` | `id`, `po_no` (UNIQUE), `date`, `due_date`, `vendor_name`, `vendor_tin`, `vendor_address`, `vendor_contact`, `ship_to`, `payment_terms`, `shipping_method`, `prepared_by`, `freight`, `apply_vat`, `vat_amt`, `subtotal`, `grand_total`, `notes`, `created_at` |
+| | `purchase_order_items` | `id`, `po_id` (FK `purchase_orders` CASCADE), `item_code`, `description`, `uom`, `qty`, `unit_cost`, `total_amount` |
+| **Sales & Targets** | `sales_details` | `id`, `doc_type`, `doc_status` (`'POSTED'`), `doc_date`, `doc_number`, `customer_name`, `tin_no`, `address`, `supplier`, `item_id` (FK `items`), `qty`, `uom`, `price`, `total_sales`, `cost`, `total_cost`, `patong`, `pos_charge`, `wt_2307`, `total_remit`, `profit`, `profit_margin`, `remarks`, `ref_pl` |
+| | `earning_goals` | `id`, `title`, `period_type`, `target_period` (`YYYY-MM` or `YYYY`), `target_revenue`, `target_profit`, `created_at` |
+| | `reminders` | `id`, `title`, `details`, `due_date`, `priority`, `category`, `status`, `assigned_to_user_id` (FK `users`), `created_at` |
+| **Security, Config & Audit** | `roles` | `id`, `name` (UNIQUE), `description`, `created_at` |
+| | `role_permissions` | `role_id` (FK `roles` CASCADE), `permission_key` — PK `(role_id, permission_key)` |
+| | `users` | `id`, `username` (UNIQUE), `password_hash`, `full_name`, `role_id` (FK `roles`), `is_active`, `created_at` |
+| | `user_sessions` | `id` (PK token), `user_id` (FK `users` CASCADE), `expires_at` |
+| | `activity_logs` | `id`, `user_id`, `username`, `action`, `entity_type`, `entity_id`, `details`, `ip_address`, `created_at` |
+| | `system_settings` | `key` (PK), `value` |
 
-### `categories`
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `code` | TEXT | UNIQUE NOT NULL |
-| `name` | TEXT | NOT NULL |
+---
 
-### `items`
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `code` | TEXT | UNIQUE NOT NULL |
-| `description` | TEXT | NOT NULL |
-| `default_uom` | TEXT | NOT NULL |
-| `model` | TEXT | — |
-| `brand_id` | INTEGER | FK → `brands(id)` |
-| `category_id` | INTEGER | FK → `categories(id)` |
-| `variation` | TEXT | — |
-| `remarks` | TEXT | — |
+## Learnings & Enforced SQL Portability Rules
 
-### `uom_settings`
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `item_id` | INTEGER | NOT NULL, FK → `items(id)` |
-| `muom` | TEXT | NOT NULL |
-| `conversion_factor` | REAL | NOT NULL |
-
-### `receiving_logs`
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `supplier` | TEXT | NOT NULL |
-| `date` | DATETIME | NOT NULL |
-| `pl_no` | TEXT | — |
-| `item_id` | INTEGER | NOT NULL, FK → `items(id)` |
-| `qty` | REAL | NOT NULL |
-| `uom` | TEXT | NOT NULL |
-| `unit_price` | REAL | — |
-| `cost` | REAL | NOT NULL |
-| `total_cost` | REAL | NOT NULL |
-| `selling_price` | REAL | — |
-
-### `sales_details`
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `doc_type` | TEXT | NOT NULL |
-| `doc_status` | TEXT | NOT NULL DEFAULT 'POSTED' |
-| `doc_date` | DATETIME | NOT NULL |
-| `doc_number` | TEXT | NOT NULL |
-| `customer_name` | TEXT | — |
-| `supplier` | TEXT | NOT NULL |
-| `item_id` | INTEGER | NOT NULL, FK → `items(id)` |
-| `qty` | REAL | NOT NULL |
-| `uom` | TEXT | NOT NULL |
-| `price` | REAL | NOT NULL |
-| `total_sales` | REAL | NOT NULL |
-| `cost` | REAL | NOT NULL |
-| `total_cost` | REAL | NOT NULL |
-| `patong` | REAL | NOT NULL DEFAULT 0.0 |
-| `pos_charge` | REAL | NOT NULL DEFAULT 0.0 |
-| `wt_2307` | REAL | NOT NULL DEFAULT 0.0 |
-| `total_remit` | REAL | NOT NULL DEFAULT 0.0 |
-| `profit` | REAL | NOT NULL |
-| `profit_margin` | REAL | NOT NULL DEFAULT 0.0 |
-| `remarks` | TEXT | NOT NULL DEFAULT '' |
-| `ref_pl` | TEXT | — |
-
-### `stock_adjustments` (Header)
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `date` | DATETIME | NOT NULL |
-| `remarks` | TEXT | — |
-
-### `inventory_adjustments` (Detail)
-| Column | Type | Constraints |
-|---|---|---|
-| `id` | INTEGER | PRIMARY KEY AUTOINCREMENT |
-| `adjustment_id` | INTEGER | FK → `stock_adjustments(id)` |
-| `date` | DATETIME | NOT NULL |
-| `item_id` | INTEGER | NOT NULL, FK → `items(id)` |
-| `uom` | TEXT | NOT NULL |
-| `adjustment_qty` | REAL | NOT NULL |
-| `cost` | REAL | NOT NULL |
-| `remarks` | TEXT | — |
-
-## Entity Relationship Diagram
-
-```
-brands ──────┐
-             │ 1:N
-categories ──┤
-             │ 1:N
-items ───────┤──→ uom_settings (1:N)
-             │
-             ├──→ receiving_logs (1:N)
-             │
-             ├──→ sales_details (1:N)
-             │
-             └──→ inventory_adjustments (1:N) ──→ stock_adjustments (N:1 header)
-```
-
-## Foreign Key Enforcement
-
-SQLite does **not** enforce foreign keys by default. The `PRAGMA foreign_keys = ON` executed on startup enables cascade enforcement. This prevents:
-- Deleting a brand/category that has items
-- Deleting an item that has receiving logs, sales, or adjustments
-
-## Learnings
-
-### Context: Timezone-Safe SQLite Date Extraction
-**Problem**: In SQLite, using `strftime('%Y-%m', date)` on ISO-8601 strings containing timezone offsets (e.g. `+08:00` or `Z`) can return `NULL` or empty, causing database scan errors in Go (e.g. `converting NULL to string is unsupported`).
-**Enforced Solution**:
-- Replace `strftime('%Y-%m', date_column)` with `substr(date_column, 1, 7)` in SQLite queries where YYYY-MM extraction is required. Since ISO-8601 datetimes consistently begin with `YYYY-MM-DD`, substring extraction is timezone-safe, parsing-independent, and extremely robust.
-
-### Context: Batch Querying and Database Indexing for Page Performance
-**Problem**: Fetching domain models individually inside page rendering loops creates an N+1 query pattern, which results in significant page load latency when handling larger datasets.
-**Enforced Solution**:
-- **Batch Querying**: Implement batch loader functions (e.g. `FetchItemsStockBatch(db, itemIDs)`) that execute single SQL `IN (?)` queries across all needed tables rather than executing separate queries per row loop.
-- **Database Indexing**: Add standard indices on search text fields (e.g., `code`) and foreign key columns (`item_id`, `adjustment_id`) in SQLite schema definition to prevent full table scans on group by / filter queries.
-
-### Context: Sales Financial Field Calculations & Auto-Remittance Schema
-**Problem**: Managing comprehensive sales accounting requires tracking custom charges (`patong`, `pos_charge`, `wt_2307`), net remit, profit margin percentages, and remarks across encoding, batch edit, customize column views, and Excel import.
-**Enforced Solution**:
-- **Database Schema**: `sales_details` includes `patong`, `pos_charge`, `wt_2307`, `total_remit`, `profit_margin`, and `remarks` with default safe values.
-- **Invariants & Formulas**:
-  - `Total Sales (Total Price)` = `Qty * Price`
-  - `Total Cost` = `Qty * Cost`
-  - `Total Remit` = `Total Sales - (Patong + POS Charge + WT 2307)`
-  - `Profit` = `Total Sales - Total Cost`
-  - `Profit Margin (%)` = `(Profit / Total Sales) * 100` if `Total Sales > 0` else `0%`
-- **UI & Import Alignment**: All fields are supported across list view columns, customize view popovers, real-time JS client-side encoding, and Excel sheet import.
-
-### Context: Dual-Engine SQLite & PostgreSQL Production Architecture
-**Problem**: The application needs to run lightweight pure-Go SQLite locally during development, but seamlessly switch to high-concurrency PostgreSQL in production without breaking SQL dialect syntax (parameter placeholders `?` vs `$1`, generated keys `LastInsertId` vs `RETURNING id`, conflict resolution `INSERT OR IGNORE` vs `ON CONFLICT DO NOTHING`, and date functions).
-**Enforced Solution**:
-- **Automatic Driver & URL Detection**: `db.InitDB` parses connection string. When starting with `postgres://` or `postgresql://` (or `DATABASE_URL` env in production), connects via `pgx` (`github.com/jackc/pgx/v5/stdlib`), otherwise defaults to SQLite (`backoffice.db`).
-- **Dynamic Rebinding Wrapper (`DBConn` & `TxConn`)**: `db.DB` and transactions wrap `*sqlx.DB` and `*sqlx.Tx` to intercept all `Get`, `Select`, `Exec`, `Query`, and `QueryRow` calls, running `Rebind(query)` automatically to map `?` to `$1, $2, ...` in Postgres while preserving `?` for SQLite.
-- **Universal `RETURNING id`**: Insert queries that require generated primary keys use `RETURNING id` with `QueryRow().Scan(&id)` instead of driver-dependent `result.LastInsertId()` (unsupported in PostgreSQL drivers). Both modernc SQLite and PostgreSQL support `RETURNING id`.
-- **Universal `ON CONFLICT DO NOTHING`**: Replaced non-standard `INSERT OR IGNORE` with ANSI `ON CONFLICT DO NOTHING`.
-- **Postgres Date Substring Polyfills**: Defined immutable PostgreSQL functions `substr(timestamptz, int, int)`, `substr(timestamp, int, int)`, and `substr(date, int, int)` so existing `substr(date, 1, 7)` reporting queries work identically without syntax errors.
-
-## Related
-- [[00-index]]
-- [[database-migrations]]
-- [[domain-sales]]
-- [[database-migrations]] — How schema evolves at startup
-- [[models-layer]] — DTO structs mapping these tables
-- [[domain-overview]] — Domain entities these tables represent
-
+### Context: Universal SQLite + PostgreSQL Query Rules
+- **`RETURNING id`**: Always use `INSERT INTO ... RETURNING id` with `QueryRow(...).Scan(&id)` instead of `result.LastInsertId()` (which fails on PostgreSQL `pgx`).
+- **`ON CONFLICT DO NOTHING`**: Use ANSI `ON CONFLICT DO NOTHING` instead of SQLite-only `INSERT OR IGNORE`.
+- **Timezone-Safe Month Extraction (`substr`)**: Use `substr(date_col, 1, 7)` instead of `strftime('%Y-%m', date_col)`. `db/db.go` defines immutable PostgreSQL `substr(timestamptz|timestamp|date, int, int)` polyfill functions so `substr(date_col, 1, 7)` works identically on both engines.
+- **Batch Loading**: Use `FetchItemsStockBatch(db, itemIDs)` (`IN (?)`) rather than N+1 queries inside loops.

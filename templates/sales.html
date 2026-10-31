@@ -44,9 +44,9 @@
                     <option value="OTHER">OTHER</option>
                 </select>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="position: relative;">
                 <label for="customer_name">Customer Name</label>
-                <input type="text" id="customer_name" name="customer_name" class="form-input" placeholder="Client / Company">
+                <input type="text" id="customer_name" name="customer_name" class="form-input" placeholder="Client / Company" autocomplete="off" oninput="handleCustomerAutocomplete(this, 'tin_no', 'address')" onkeydown="handleCustomerKeydown(event, this, 'tin_no', 'address')">
             </div>
             <div class="form-group">
                 <label for="tin_no">TIN No.</label>

@@ -1,0 +1,195 @@
+{{ define "customers.html" }}
+{{ template "base.html" . }}
+{{ end }}
+
+{{ define "content" }}
+<div class="header-bar">
+    <div>
+        <h2 style="margin: 0;">Customers Directory</h2>
+        <div style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.25rem;">
+            Manage customer master data, billing details, TIN numbers, and payment terms
+        </div>
+    </div>
+    <button type="button" class="btn" onclick="toggleAddCustomerForm()" style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8125rem;">
+        + Add Customer
+    </button>
+</div>
+
+<!-- Add Customer Form Card (hidden by default) -->
+<div class="card mb-4" id="add-customer-card" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Add New Customer</h3>
+        <button type="button" class="btn btn-secondary" onclick="toggleAddCustomerForm()" style="padding: 0.35rem 0.75rem; font-size: 0.8125rem;">
+            ✕ Close
+        </button>
+    </div>
+    <form hx-post="/customers/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); toggleAddCustomerForm(); }">
+        <div class="grid grid-cols-2" style="gap: 1rem;">
+            <div class="form-group">
+                <label for="cust_form_name">Customer / Company Name <span style="color: var(--danger-color, #ef4444); font-weight: bold;">*</span></label>
+                <input type="text" id="cust_form_name" name="name" required class="form-input" placeholder="e.g. Acme Industrial Corp" oninput="autoGenerateCustomerCode()">
+            </div>
+            <div class="form-group">
+                <label for="cust_form_code">Customer Code <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Auto-generated if blank)</span></label>
+                <input type="text" id="cust_form_code" name="code" class="form-input" placeholder="e.g. CUST-0001" style="font-family: monospace;">
+            </div>
+            <div class="form-group">
+                <label for="cust_form_tin">TIN No.</label>
+                <input type="text" id="cust_form_tin" name="tin_no" class="form-input" placeholder="000-000-000-000">
+            </div>
+            <div class="form-group">
+                <label for="cust_form_terms">Default Payment Terms</label>
+                <select id="cust_form_terms" name="payment_terms" class="form-input" style="padding: 0.75rem 1rem; height: auto;">
+                    <option value="Net 30 Days" selected>Net 30 Days</option>
+                    <option value="Net 15 Days">Net 15 Days</option>
+                    <option value="Net 7 Days">Net 7 Days</option>
+                    <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
+                    <option value="50% Downpayment, 50% Delivery">50% Downpayment, 50% Delivery</option>
+                </select>
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+                <label for="cust_form_address">Complete Billing / Delivery Address</label>
+                <input type="text" id="cust_form_address" name="address" class="form-input" placeholder="Unit, Street, Barangay, City, Province">
+            </div>
+            <div class="form-group">
+                <label for="cust_form_contact">Contact Person</label>
+                <input type="text" id="cust_form_contact" name="contact_person" class="form-input" placeholder="Purchasing Officer / Manager">
+            </div>
+            <div class="form-group">
+                <label for="cust_form_phone">Phone / Mobile</label>
+                <input type="text" id="cust_form_phone" name="phone" class="form-input" placeholder="0917-000-0000 or landline">
+            </div>
+            <div class="form-group">
+                <label for="cust_form_email">Email Address</label>
+                <input type="email" id="cust_form_email" name="email" class="form-input" placeholder="accounting@client.com">
+            </div>
+            <div class="form-group">
+                <label for="cust_form_notes">Notes / Remarks</label>
+                <input type="text" id="cust_form_notes" name="notes" class="form-input" placeholder="Special delivery instructions, discount rates, etc.">
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;" class="mt-4">
+            <button type="submit" class="btn">Save Customer</button>
+            <button type="button" onclick="toggleAddCustomerForm()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<!-- Customer List Card -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1.125rem; font-weight: 600; margin: 0;">Directory Listing</h3>
+    </div>
+
+    <form style="display: contents;" onsubmit="return false;" hx-indicator="#customers-loading-indicator">
+        <div class="search-filter-bar">
+            <div class="flex-grow">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
+                <input type="text" name="search" placeholder="Search by name, code, TIN, address, or contact..." 
+                       hx-get="/customers" 
+                       hx-trigger="keyup changed delay:300ms, search" 
+                       hx-target="#customers-results" 
+                       hx-include="closest form"
+                       hx-indicator="#customers-loading-indicator"
+                       class="form-input">
+            </div>
+            <div class="filter-item">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sales Activity</label>
+                <select name="filter" class="form-input"
+                        hx-get="/customers" 
+                        hx-target="#customers-results" 
+                        hx-include="closest form"
+                        hx-trigger="change"
+                        hx-indicator="#customers-loading-indicator">
+                    <option value="all">All Customers</option>
+                    <option value="with_sales">With Sales Records</option>
+                    <option value="no_sales">No Sales Yet</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
+                <select name="sort" class="form-input"
+                        hx-get="/customers" 
+                        hx-target="#customers-results" 
+                        hx-include="closest form"
+                        hx-trigger="change"
+                        hx-indicator="#customers-loading-indicator">
+                    <option value="name_asc">Name (A-Z)</option>
+                    <option value="name_desc">Name (Z-A)</option>
+                    <option value="code_asc">Code (A-Z)</option>
+                    <option value="code_desc">Code (Z-A)</option>
+                    <option value="sales_desc">Most Sales First</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show Rows</label>
+                <select name="limit" class="form-input"
+                        hx-get="/customers" 
+                        hx-target="#customers-results" 
+                        hx-include="closest form"
+                        hx-trigger="change"
+                        hx-indicator="#customers-loading-indicator">
+                    <option value="25" selected>Top 25</option>
+                    <option value="50">Top 50</option>
+                    <option value="100">Top 100</option>
+                    <option value="200">Top 200</option>
+                    <option value="500">Top 500</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="customers-loading-indicator" class="htmx-indicator">
+            <div class="spinner-sm"></div>
+            <span>Searching & filtering customers...</span>
+        </div>
+
+        <div id="customers-results">
+            {{ template "customers_results.html" . }}
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleAddCustomerForm() {
+        const card = document.getElementById('add-customer-card');
+        if (!card) return;
+        if (card.style.display === 'none' || card.style.display === '') {
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const nameInput = document.getElementById('cust_form_name');
+            if (nameInput) setTimeout(() => nameInput.focus(), 100);
+        } else {
+            card.style.display = 'none';
+        }
+    }
+    window.toggleAddCustomerForm = toggleAddCustomerForm;
+
+    function autoGenerateCustomerCode() {
+        const nameInput = document.getElementById('cust_form_name');
+        const codeInput = document.getElementById('cust_form_code');
+        if (!nameInput || !codeInput) return;
+        const name = nameInput.value.trim();
+        if (!name) return;
+        const isAutoGen = codeInput.dataset.autogenerated === 'true' || codeInput.value === '';
+        if (codeInput.value && !isAutoGen) return;
+
+        // Generate acronym or clean prefix
+        const words = name.split(/\s+/).filter(Boolean);
+        let prefix = 'CUST';
+        if (words.length >= 2) {
+            prefix = words.map(w => w[0].toUpperCase()).slice(0, 4).join('');
+        } else if (words.length === 1 && words[0].length >= 3) {
+            prefix = words[0].slice(0, 4).toUpperCase();
+        }
+        codeInput.value = prefix;
+        codeInput.dataset.autogenerated = 'true';
+    }
+
+    document.body.addEventListener('customer-added', function () {
+        const searchInput = document.querySelector('input[name="search"]');
+        if (searchInput) {
+            htmx.trigger(searchInput, 'search');
+        }
+    });
+</script>
+{{ end }}

@@ -1,159 +1,41 @@
 # Templates Overview
 
-> Back to [[00-index]] · Related: [[handlers-overview]], [[htmx-patterns]]
+> Back to [[00-index]] · Related: [[handlers-overview]], [[htmx-patterns]], [[ui-design-tokens]]
 
 ## File
-[main.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/main.go) — `parseTemplates()` function, lines 91–167
+[main.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/main.go) — `parseTemplates()` (lines 221–389)
 
-## Template Hierarchy
+## Template Registration Architecture (`parseTemplates()`)
+Templates are pre-compiled at startup into `map[string]*template.Template` with helper functions `add`, `mul`, `derefInt`, and `dict`:
 
-```
-templates/
-├── base.html              ← Layout shell (sidebar, nav, toast, scripts)
-│
-├── PAGES (rendered with base.html)
-│   ├── dashboard.html
-│   ├── brands.html          + brand_row, brand_rows, brand_edit_row
-│   ├── categories.html      + category_row, category_rows, category_edit_row
-│   ├── items.html           + item_row, item_rows, item_edit_row
-│   ├── inventory.html       + inventory_stock_rows
-│   ├── stock_receiving.html + receiving_rows, item_select, receiving_item_row
-│   ├── stock_adjustments.html + adjustment_rows, item_select, adjustment_item_row
-│   ├── sales.html           + sales_rows
-│   ├── entry.html           + brand_select, category_select, item_select, sale_item_row
-│   ├── monthly_inventory.html + monthly_inventory_rows
-│   ├── receiving_logs.html  + receiving_rows
-│   └── adjustment_logs.html + adjustment_rows
-│
-├── FRAGMENTS (rendered standalone, no base.html)
-│   ├── brand_row.html / brand_rows.html / brand_edit_row.html
-│   ├── category_row.html / category_rows.html / category_edit_row.html
-│   ├── item_row.html / item_rows.html / item_edit_row.html
-│   ├── receiving_rows.html / adjustment_rows.html / sales_rows.html
-│   ├── inventory_stock_rows.html / monthly_inventory_rows.html
-│   ├── brand_select.html / category_select.html / item_select.html
-│   └── sale_item_row.html / receiving_item_row.html / adjustment_item_row.html
-```
+1. **`pages` (rendered with `templates/base.html` via `app.RenderPage`)**:
+   - **Analytics & Ops**: `dashboard.html` (+ `dashboard_trends.html`), `goals.html`, `reminders.html`
+   - **Masterlist**: `items.html`, `item_new.html`, `customers.html`, `brands.html`, `brand_new.html`, `categories.html`, `category_new.html`, `uoms.html`, `uom_settings.html`, `uom_settings_new.html`
+   - **Inventory**: `inventory.html`, `monthly_inventory.html`, `stock_receiving.html`, `receiving_logs.html`, `stock_adjustments.html`, `adjustment_logs.html`
+   - **Sales & Forms**: `sales.html`, `sales_new.html`, `form_quotation.html`, `form_purchase_order.html`
+   - **Tools & Admin**: `import.html`, `receipt_scanner.html`, `roles.html`, `users.html`, `activity_logs.html`, `settings.html`, `settings_new.html`, `system_settings.html`
+2. **`fragments` (rendered standalone without `base.html` via `app.Render`)**:
+   - Every partial rendered directly by an HTMX handler (`*_row.html`, `*_rows.html`, `*_edit_row.html`, `*_results.html`, `*_select.html`, `*_item_row.html`, `dashboard_trends.html`, `login.html`) is registered in the `fragments` map.
 
-## How Template Parsing Works
+## Terminology Mapping: "List Views"
+When the user refers to **"list views"**, map to these templates:
+- **Sales Logs**: [templates/sales.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/sales.html) (`sales_results.html`, `sales_rows.html`, `sale_row.html`, `sale_edit_row.html`)
+- **Current Stock Levels**: [templates/inventory.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/inventory.html) (`inventory_stock_rows.html`)
+- **Monthly Inventory**: [templates/monthly_inventory.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/monthly_inventory.html) (`monthly_inventory_rows.html`)
+- **Receiving Logs**: [templates/receiving_logs.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/receiving_logs.html) (`receiving_logs_results.html`, `receiving_rows.html`, `receiving_log_row.html`, `receiving_log_edit_row.html`)
+- **Adjustment Logs**: [templates/adjustment_logs.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/adjustment_logs.html) (`adjustment_logs_results.html`, `adjustment_rows.html`)
+- **Items / Customers / Brands / Categories / UOMs**: `items.html`, `customers.html`, `brands.html`, `categories.html`, `uoms.html`
 
-### Pages (with base layout)
-Each page is parsed with `base.html` + the page template + associated sub-templates:
+---
 
-```go
-t := template.New(page).Funcs(funcMap)
-files := []string{"templates/base.html", "templates/" + page}
-// Add associated fragments
-if page == "brands.html" {
-    files = append(files, "templates/brand_row.html", ...)
-}
-t = template.Must(t.ParseFiles(files...))
-templates[page] = t
-```
+## Learnings & Enforced Template Rules
 
-### Fragments (standalone)
-Fragment templates are parsed independently (no base.html):
+### Context: Transitive Child Templates in `parseTemplates()`
+- **Problem**: Calling `{{ template "child.html" . }}` inside a page or fragment throws `no such template` at runtime (HTTP 500) if `child.html` was not included in that template's `ParseFiles(files...)` slice in `main.go`.
+- **Enforced Solution**: Whenever a template calls `{{ template "x.html" }}`, add `"templates/x.html"` to the `files` slice of **both** the parent page (`pages` loop) and any parent fragment (`fragments` loop) in `main.go`.
 
-```go
-t := template.New(frag).Funcs(funcMap)
-files := []string{"templates/" + frag}
-// Some fragments compose others
-if frag == "brand_rows.html" {
-    files = append(files, "templates/brand_row.html")
-}
-```
+### Context: Reusable Action Form Partials (`receive_stock_form.html`, `adjust_stock_form.html`)
+- Extracted into standalone partials included across `inventory.html`, `receiving_logs.html`, and `adjustment_logs.html`. Any handler rendering those pages must provide `ReceivingRowData` / `AdjustmentRowData` (items + UOMs) and include `receiving_item_row.html` / `adjustment_item_row.html` in `parseTemplates()`.
 
-## Template Functions
-
-```go
-funcMap := template.FuncMap{
-    "derefInt": func(p *int) int {
-        if p == nil { return 0 }
-        return *p
-    },
-}
-```
-
-Used in templates to safely dereference nullable `*int` fields (e.g., `BrandID`, `CategoryID`).
-
-## Base Layout (`base.html`)
-
-**Structure:**
-```html
-<body>
-  <div class="app-layout">
-    <div id="sidebar-backdrop">        <!-- Mobile overlay -->
-    <aside id="sidebar">               <!-- Sidebar nav -->
-    <div class="main-layout-container">
-      <header class="top-header">      <!-- Mobile top bar -->
-      <main id="main-content">
-        {{ block "content" . }}{{ end }}  <!-- Page content injected here -->
-      </main>
-    </div>
-  </div>
-  <div id="toast-container">           <!-- Toast notifications -->
-  <script>                             <!-- Nav highlighting, sidebar toggle, toast listener -->
-</body>
-```
-
-**Key JavaScript (inline):**
-- `updateActiveNavLink()` — Highlights sidebar link matching current URL
-- `toggleSidebarDropdown()` — Opens/closes Inventory submenu
-- `toggleMobileSidebar()` / `closeMobileSidebarOnNav()` — Mobile sidebar control
-- Toast listener — Listens for `show-toast` custom events from HTMX
-
-See [[sidebar-navigation]] and [[htmx-patterns]] for details.
-
-## Template Naming Convention
-
-| Pattern | Purpose | Example |
-|---|---|---|
-| `{entity}.html` | Full page | `brands.html`, `sales.html` |
-| `{entity}_row.html` | Single table row | `brand_row.html` |
-| `{entity}_rows.html` | Table body (loops over _row) | `brand_rows.html` |
-| `{entity}_edit_row.html` | Inline edit form row | `brand_edit_row.html` |
-| `{entity}_select.html` | `<select>` options fragment | `brand_select.html` |
-| `{entity}_item_row.html` | Multi-item form row | `receiving_item_row.html` |
-
-## Related
-- [[handlers-overview]] — How `Render` and `RenderPage` use templates
-- [[htmx-patterns]] — How HTMX triggers fragment rendering
-- [[ui-design-tokens]] — CSS classes used in templates
-- [[sidebar-navigation]] — Base template navigation structure
-
-## Learnings
-
-### Context: Correct Template Context Mapping and Matching Database Fields
-**Problem**: After copy-pasting code or templates from another page (e.g., `receiving_logs.html` copied from `adjustment_logs.html`), the rendered table did not load because:
-- The template referenced incorrect context fields (`.AdjustmentLogs` instead of `.ReceivingLogs`).
-- The query in `inventory.go` did not select all required columns (`i.description as item_description`), causing the fields to be empty.
-- The template `receiving_rows.html` referenced a non-existent struct field `.ItemDescription` instead of `.Description`.
-**Enforced Solution**:
-- **Strict Context Mapping**: Ensure all templates match the exact data structure returned by the Go HTTP handler.
-- **Select All Required Columns**: Keep SQL queries aligned with destination DTO/Model structs by selecting all fields explicitly (e.g., `i.description as item_description` to map to `db:"item_description"` tag).
-- **Correct Go Struct Field Reference**: Access fields in html templates using the exact case-sensitive Go struct field name (e.g., `.Description`), not the database tag name or a mismatched name.
-
-### Context: Missing Child Templates in Fragment Parsing Causing HTMX 500 Errors
-**Problem**: When fetching a sub-fragment or container result template via HTMX (e.g., `sales_results.html` or `sales_rows.html`), Go's `html/template` threw an execution error (`no such template "sale_edit_row.html"`) because child templates referenced inside `{{ template ... }}` calls were omitted from the `files` slice in `parseTemplates()`.
-**Enforced Solution**:
-- **Include All Transitive Dependencies**: When declaring fragment file lists in `main.go` `parseTemplates()`, always include all leaf row and edit templates (e.g., `sale_row.html`, `sale_edit_row.html`) that any parent container template calls via `{{ template }}`.
-- **Register All Standalone Fragments**: Ensure all individual editable or toggleable row templates are registered in the `fragments` slice so `app.Templates["<frag_name>.html"]` exists for standalone handler responses.
-
-### Context: Reusable Action Form Templates Across Pages
-**Problem**: Action forms like Receive Stock and Adjust Stock were embedded inline inside `inventory.html`, making them unavailable when navigating to dedicated log pages (`receiving_logs.html` and `adjustment_logs.html`).
-**Enforced Solution**:
-- **Extract Reusable Partial Templates**: Move multi-page action forms into dedicated template files (`receive_stock_form.html`, `adjust_stock_form.html`) with self-contained JS toggle helpers (`toggleReceiveStockForm()`, `toggleAdjustStockForm()`).
-- **Register Form Partial Dependencies**: Register the reusable form templates and their nested row dependencies (`receiving_item_row.html`, `item_select.html`) in `main.go` `parseTemplates()` for every page and test harness where the form is included (`inventory.html`, `receiving_logs.html`, `adjustment_logs.html`).
-- **Provide Context Data in Log Handlers**: Ensure handlers for log pages (`ReceivingLogsHandler`, `AdjustmentLogsHandler`) fetch and pass `ReceivingRowData` / `AdjustmentRowData` (items and UOMs) so form dropdowns render correctly.
-- **Listen for HTMX Triggers**: Add event listeners (e.g. `stock-received`, `stock-adjusted`) on log pages to trigger dynamic search/filter refreshes upon form submission.
-
-### Context: Terminology Mapping for "List Views"
-**Problem**: The user frequently uses the term "list views" to refer to various log views, tabular pages, or list layouts in the application.
-**Enforced Solution**:
-- When the user mentions "list views", understand and map them to the corresponding log or table pages and templates in the application:
-  - **Sales Logs**: [sales.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/sales.html)
-  - **Current Stock Levels**: [inventory.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/inventory.html)
-  - **Inventory Movements by Month**: [monthly_inventory.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/monthly_inventory.html)
-  - **Receiving Logs**: [receiving_logs.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/receiving_logs.html)
-  - **Adjustment Logs**: [adjustment_logs.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/adjustment_logs.html)
-  - **Item List**: [items.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/items.html)
+### Context: Strict Struct Field & SQL Projection Alignment
+- Templates access **Go struct field names** (case-sensitive, e.g., `.Description`), never raw `db:` tag names. Always verify that the handler's SQL query selects every column required by the target DTO struct.

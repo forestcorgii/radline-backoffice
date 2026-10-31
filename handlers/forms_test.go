@@ -81,6 +81,18 @@ func TestForms_PurchaseOrderAndSearch(t *testing.T) {
 		if strings.Contains(body, "Print / Save PDF") {
 			t.Errorf("Print / Save PDF button should have been removed")
 		}
+		if !strings.Contains(body, "<th>Item Description</th>") {
+			t.Errorf("expected Item Description header in PO form")
+		}
+		if !strings.Contains(body, ">Total</th>") {
+			t.Errorf("expected Total header in PO form")
+		}
+		if strings.Contains(body, "Description / Specifications") {
+			t.Errorf("Description / Specifications header should be replaced")
+		}
+		if strings.Contains(body, "Total Amount") {
+			t.Errorf("Total Amount header should be replaced")
+		}
 	})
 
 	// 2. Test GET /forms/quotation
@@ -91,6 +103,19 @@ func TestForms_PurchaseOrderAndSearch(t *testing.T) {
 
 		if w.Code != http.StatusOK {
 			t.Fatalf("expected status 200, got %d", w.Code)
+		}
+		body := w.Body.String()
+		if !strings.Contains(body, "<th>Item Description</th>") {
+			t.Errorf("expected Item Description header in Quotation form")
+		}
+		if !strings.Contains(body, ">Total</th>") {
+			t.Errorf("expected Total header in Quotation form")
+		}
+		if strings.Contains(body, "Description / Specification") {
+			t.Errorf("Description / Specification header should be replaced")
+		}
+		if strings.Contains(body, "Line Total") {
+			t.Errorf("Line Total header should be replaced")
 		}
 	})
 

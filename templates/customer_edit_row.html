@@ -1,0 +1,51 @@
+<tr id="customer-row-{{ .ID }}" class="edit-row" style="background: hsl(var(--primary-h, 243) 75% 59% / 0.04);">
+    <td>
+        <input type="text" name="code" value="{{ .Code }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; font-family: monospace; width: 100%;" required>
+    </td>
+    <td>
+        <input type="text" name="name" value="{{ .Name }}" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; font-weight: 600; width: 100%;" required>
+    </td>
+    <td>
+        <input type="text" name="tin_no" value="{{ .TINNo }}" class="form-input" placeholder="000-000-000-000" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%;">
+    </td>
+    <td>
+        <input type="text" name="address" value="{{ .Address }}" class="form-input" placeholder="Address" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%;">
+    </td>
+    <td>
+        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+            <input type="text" name="contact_person" value="{{ .ContactPerson }}" class="form-input" placeholder="Contact person" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: 100%;">
+            <input type="text" name="phone" value="{{ .Phone }}" class="form-input" placeholder="Phone" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; width: 100%;">
+        </div>
+    </td>
+    <td>
+        <select name="payment_terms" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.75rem; width: 100%;">
+            <option value="Net 30 Days" {{ if eq .PaymentTerms "Net 30 Days" }}selected{{ end }}>Net 30 Days</option>
+            <option value="Net 15 Days" {{ if eq .PaymentTerms "Net 15 Days" }}selected{{ end }}>Net 15 Days</option>
+            <option value="Net 7 Days" {{ if eq .PaymentTerms "Net 7 Days" }}selected{{ end }}>Net 7 Days</option>
+            <option value="Cash on Delivery (COD)" {{ if eq .PaymentTerms "Cash on Delivery (COD)" }}selected{{ end }}>COD</option>
+            <option value="50% Downpayment, 50% Delivery" {{ if eq .PaymentTerms "50% Downpayment, 50% Delivery" }}selected{{ end }}>50% DP / 50% Del</option>
+        </select>
+    </td>
+    <td style="text-align: right; color: var(--text-muted); font-size: 0.8125rem;">
+        —
+    </td>
+    <td style="text-align: center; white-space: nowrap;">
+        <div style="display: inline-flex; gap: 0.25rem;">
+            <button class="btn btn-primary btn-sm" 
+                    hx-post="/customers/edit/{{ .ID }}" 
+                    hx-include="closest tr" 
+                    hx-target="closest tr" 
+                    hx-swap="outerHTML"
+                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                💾 Save
+            </button>
+            <button class="btn btn-secondary btn-sm" 
+                    hx-get="/customers/row/{{ .ID }}" 
+                    hx-target="closest tr" 
+                    hx-swap="outerHTML"
+                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                ✕
+            </button>
+        </div>
+    </td>
+</tr>

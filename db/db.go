@@ -151,6 +151,7 @@ func InitDB(datasource string) error {
 	}
 
 	_ = EnsureRemindersTable()
+	_ = EnsureCustomersTable()
 	seedDefaults()
 	return nil
 }
@@ -539,6 +540,23 @@ func createSchemaSQLite() error {
 	CREATE INDEX IF NOT EXISTS idx_purchase_orders_po_no ON purchase_orders(po_no);
 	CREATE INDEX IF NOT EXISTS idx_purchase_orders_date ON purchase_orders(date);
 	CREATE INDEX IF NOT EXISTS idx_purchase_order_items_po_id ON purchase_order_items(po_id);
+
+	CREATE TABLE IF NOT EXISTS customers (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		code TEXT UNIQUE NOT NULL,
+		name TEXT NOT NULL,
+		tin_no TEXT NOT NULL DEFAULT '',
+		address TEXT NOT NULL DEFAULT '',
+		contact_person TEXT NOT NULL DEFAULT '',
+		phone TEXT NOT NULL DEFAULT '',
+		email TEXT NOT NULL DEFAULT '',
+		payment_terms TEXT NOT NULL DEFAULT 'Net 30 Days',
+		notes TEXT NOT NULL DEFAULT '',
+		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_customers_code ON customers(code);
+	CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
 	`
 	_, err := DB.DB.Exec(schema)
 	if err != nil {
@@ -776,6 +794,23 @@ func createSchemaPostgres() error {
 	CREATE INDEX IF NOT EXISTS idx_purchase_orders_date ON purchase_orders(date);
 	CREATE INDEX IF NOT EXISTS idx_purchase_order_items_po_id ON purchase_order_items(po_id);
 
+	CREATE TABLE IF NOT EXISTS customers (
+		id SERIAL PRIMARY KEY,
+		code TEXT UNIQUE NOT NULL,
+		name TEXT NOT NULL,
+		tin_no TEXT NOT NULL DEFAULT '',
+		address TEXT NOT NULL DEFAULT '',
+		contact_person TEXT NOT NULL DEFAULT '',
+		phone TEXT NOT NULL DEFAULT '',
+		email TEXT NOT NULL DEFAULT '',
+		payment_terms TEXT NOT NULL DEFAULT 'Net 30 Days',
+		notes TEXT NOT NULL DEFAULT '',
+		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_customers_code ON customers(code);
+	CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
+
 	CREATE OR REPLACE FUNCTION substr(val timestamptz, s int, l int) RETURNS text AS $$
 	SELECT substr(to_char(val, 'YYYY-MM-DD HH24:MI:SS'), s, l);
 	$$ LANGUAGE SQL IMMUTABLE;
@@ -899,6 +934,51 @@ func EnsureRemindersTable() error {
 	_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_items_category_id ON items(category_id);")
 
 	return nil
+}
+
+// EnsureCustomersTable guarantees the customers table and indexes exist
+func EnsureCustomersTable() error {
+	if DB == nil {
+		return nil
+	}
+	if DB.IsPostgres() {
+		_, err := DB.Exec(`
+			CREATE TABLE IF NOT EXISTS customers (
+				id SERIAL PRIMARY KEY,
+				code TEXT UNIQUE NOT NULL,
+				name TEXT NOT NULL,
+				tin_no TEXT NOT NULL DEFAULT '',
+				address TEXT NOT NULL DEFAULT '',
+				contact_person TEXT NOT NULL DEFAULT '',
+				phone TEXT NOT NULL DEFAULT '',
+				email TEXT NOT NULL DEFAULT '',
+				payment_terms TEXT NOT NULL DEFAULT 'Net 30 Days',
+				notes TEXT NOT NULL DEFAULT '',
+				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			CREATE INDEX IF NOT EXISTS idx_customers_code ON customers(code);
+			CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
+		`)
+		return err
+	}
+	_, err := DB.Exec(`
+		CREATE TABLE IF NOT EXISTS customers (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			code TEXT UNIQUE NOT NULL,
+			name TEXT NOT NULL,
+			tin_no TEXT NOT NULL DEFAULT '',
+			address TEXT NOT NULL DEFAULT '',
+			contact_person TEXT NOT NULL DEFAULT '',
+			phone TEXT NOT NULL DEFAULT '',
+			email TEXT NOT NULL DEFAULT '',
+			payment_terms TEXT NOT NULL DEFAULT 'Net 30 Days',
+			notes TEXT NOT NULL DEFAULT '',
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX IF NOT EXISTS idx_customers_code ON customers(code);
+		CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
+	`)
+	return err
 }
 
 func seedGoalsAndRemindersDefaults() {

@@ -228,3 +228,35 @@ type PurchaseOrderItem struct {
 	UnitCost    float64 `db:"unit_cost"`
 	TotalAmount float64 `db:"total_amount"`
 }
+
+type Customer struct {
+	ID            int       `db:"id" json:"id"`
+	Code          string    `db:"code" json:"code"`
+	Name          string    `db:"name" json:"name"`
+	TINNo         string    `db:"tin_no" json:"tin_no"`
+	Address       string    `db:"address" json:"address"`
+	ContactPerson string    `db:"contact_person" json:"contact_person"`
+	Phone         string    `db:"phone" json:"phone"`
+	Email         string    `db:"email" json:"email"`
+	PaymentTerms  string    `db:"payment_terms" json:"payment_terms"`
+	Notes         string    `db:"notes" json:"notes"`
+	CreatedAt     time.Time `db:"created_at" json:"created_at"`
+}
+
+type CustomerWithStats struct {
+	ID            int       `db:"id" json:"id"`
+	Code          string    `db:"code" json:"code"`
+	Name          string    `db:"name" json:"name"`
+	TINNo         string    `db:"tin_no" json:"tin_no"`
+	Address       string    `db:"address" json:"address"`
+	ContactPerson string    `db:"contact_person" json:"contact_person"`
+	Phone         string    `db:"phone" json:"phone"`
+	Email         string    `db:"email" json:"email"`
+	PaymentTerms  string    `db:"payment_terms" json:"payment_terms"`
+	Notes         string    `db:"notes" json:"notes"`
+	CreatedAt     time.Time `db:"created_at" json:"created_at"`
+	TotalSales    float64   `db:"total_sales" json:"total_sales"`
+	SalesCount    int       `db:"sales_count" json:"sales_count"`
+}
+
+

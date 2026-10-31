@@ -1,0 +1,19 @@
+<div class="table-container">
+    <table class="table-scroll-md">
+        <thead>
+            <tr>
+                <th style="width: 120px;">Code</th>
+                <th style="min-width: 200px;">Customer Name</th>
+                <th style="width: 140px;">TIN No.</th>
+                <th style="min-width: 220px;">Address</th>
+                <th style="min-width: 160px;">Contact & Phone</th>
+                <th style="width: 130px;">Payment Terms</th>
+                <th style="width: 140px; text-align: right;">Total Sales</th>
+                <th style="width: 110px; text-align: center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="customers-tbody">
+            {{ template "customer_rows.html" .Customers }}
+        </tbody>
+    </table>
+</div>

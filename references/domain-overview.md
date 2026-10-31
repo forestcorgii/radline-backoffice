@@ -1,64 +1,25 @@
 # Domain Overview
 
-> Back to [[00-index]] · Related: [[architecture]]
+> Back to [[00-index]] · Related: [[architecture]], [[domain-testing]]
 
 ## Philosophy
+The `domain/` package implements **Domain-Driven Design (DDD)**:
+- **Pure Go** — No SQL drivers, no HTTP, no template imports (only `stdlib` + `golang.org/x/crypto/bcrypt` in `auth.go`).
+- **Validation at construction** — All `New*()` / `Validate*()` functions enforce invariants before persistence.
+- **Aggregates** — Multi-item transactions (`ItemStock`, `StockReceive`, `Sale`, `StockAdjustment`, `PurchaseOrder`) validate and compute totals in memory.
 
-The `domain/` package implements **Domain-Driven Design (DDD)** principles:
-- **Pure Go** — No database tags, no HTTP, no template imports.
-- **Validation at construction** — All `New*()` constructors enforce invariants. Invalid data never enters the domain.
-- **Aggregates** — Complex multi-entity transactions are modeled as aggregates (`StockReceive`, `Sale`, `StockAdjustment`) that validate the whole before allowing persistence.
+## Complete Entity & Aggregate Map (`domain/`)
 
-## Entity & Aggregate Map
-
-```
-domain/
-├── brand.go         → Brand entity           → [[domain-item]]
-├── category.go      → Category entity         → [[domain-item]]
-├── item.go          → Item entity (core)      → [[domain-item]]
-├── uom_setting.go   → UomSetting value object → [[domain-item]]
-├── receiving.go     → ReceivingLog entity     → [[domain-receiving]]
-│                      StockReceive aggregate  → [[domain-receiving]]
-├── sales.go         → SalesDetail entity      → [[domain-sales]]
-│                      Sale aggregate          → [[domain-sales]]
-├── adjustment.go    → InventoryAdjustment     → [[domain-adjustment]]
-│                      StockAdjustment agg.    → [[domain-adjustment]]
-├── stock.go         → ItemStock aggregate     → [[domain-stock]]
-│
-├── stock_test.go       → [[domain-testing]]
-├── receiving_test.go   → [[domain-testing]]
-├── sales_test.go       → [[domain-testing]]
-└── adjustment_test.go  → [[domain-testing]]
-```
-
-## DDD Glossary (Project-Specific)
-
-| Concept | Domain Term | Example |
+| File | Entities / Aggregates | Reference Doc |
 |---|---|---|
-| Entity | `Brand`, `Category`, `Item` | Has ID, mutable name/code |
-| Value Object | `UomSetting` | Immutable conversion factor |
-| Aggregate Root | `ItemStock`, `Sale`, `StockReceive`, `StockAdjustment` | Validates entire transaction graph |
-| Factory Method | `New*()` constructors | `NewItem()`, `NewSale()` |
-| Computed Field | `TotalCost`, `Profit`, `TotalSales` | Auto-calculated, never stored directly in domain |
-
-## How Data Flows Through the Domain
-
-```
-HTTP Form → Handler parses fields
-         → Handler constructs domain aggregate via New*()
-         → Domain validates constraints (returns error on failure)
-         → Handler calls To*() to flatten aggregate into DB records
-         → Handler inserts records via sqlx transaction
-         → Handler renders HTML response
-```
-
-See [[handlers-overview]] for how handlers use the domain layer.
-
-## Related
-- [[domain-item]] — Master data entities
-- [[domain-stock]] — Stock calculation aggregate
-- [[domain-receiving]] — Receiving aggregate
-- [[domain-sales]] — Sales aggregate
-- [[domain-adjustment]] — Adjustment aggregate
-- [[domain-testing]] — Test coverage and strategy
-- [[models-layer]] — How domain maps to DB DTOs
+| [brand.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/brand.go), [category.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/category.go), [item.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/item.go), [uom_setting.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/uom_setting.go) | `Brand`, `Category`, `Item` entities; `UomSetting` value object | [[domain-item]] |
+| [customer.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/customer.go) | `Customer` entity (`NewCustomer`) | [[domain-customer]] |
+| [stock.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/stock.go) | `ItemStock` aggregate root (`CalculateOnHand`, `CalculateGlobalOnHand`, `GetOldestPLWithStock` FIFO) | [[domain-stock]] |
+| [receiving.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/receiving.go) | `ReceivingLog` entity, `StockReceive` aggregate (`ToReceivingLogs`) | [[domain-receiving]] |
+| [sales.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/sales.go) | `SalesDetail` entity, `Sale` aggregate (`ToSalesDetails`) | [[domain-sales]] |
+| [adjustment.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/adjustment.go) | `InventoryAdjustment` entity, `StockAdjustment` aggregate (`ToInventoryAdjustments`) | [[domain-adjustment]] |
+| [purchase_order.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/purchase_order.go) | `PurchaseOrder` aggregate (`CalculateTotals`, `Validate`), `PurchaseOrderItem` | [[domain-customer]] |
+| [goal.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/goal.go) | `EarningGoal` entity (`CalculateProgress`, `ValidateEarningGoal`), `GoalProgress` | [[domain-customer]] |
+| [reminder.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/reminder.go) | `Reminder` entity (`IsOverdue`, `AssignTo`, `ValidateReminder`) | [[domain-customer]] |
+| [auth.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/auth.go) | `User`, `Role` (`HasPermission`), `ActivityLog`, `PermissionDef`, `HashPassword` | [[domain-customer]] |
+| `*_test.go` | `stock_test.go`, `uom_setting_test.go`, `receiving_test.go`, `sales_test.go`, `adjustment_test.go`, `customer_test.go`, `goal_test.go`, `reminder_test.go`, `purchase_order_test.go`, `auth_test.go` | [[domain-testing]] |

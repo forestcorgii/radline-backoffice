@@ -1,105 +1,31 @@
 # Database Migrations
 
-> Back to [[00-index]] · Related: [[database-schema]]
+> Back to [[00-index]] · Related: [[database-schema]], [[architecture]]
 
 ## File
-[db/db.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/db/db.go) — `InitDB()` function, lines 12–91
+[db/db.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/db/db.go) — `InitDB()`, `runSQLiteMigrations()`, `runPostgresMigrations()`, `EnsureRemindersTable()`, `EnsureCustomersTable()`
 
-## Strategy
+## Startup Migration Strategy
+Radline uses **idempotent inline startup migrations** (no external CLI tool). On startup:
+- **SQLite path**: `runSQLiteMigrations()` → `createSchemaSQLite()`
+- **PostgreSQL path**: `createSchemaPostgres()` → `runPostgresMigrations()`
+- **Both paths**: `EnsureRemindersTable()` → `EnsureCustomersTable()` → `seedDefaults()`
 
-The project uses **inline startup migrations** instead of a migration framework. On every application start, `InitDB()` runs a series of "check-and-fix" queries before calling `createSchema()`.
+### Adding a New Column or Table
+1. Add the column/table to **both** `createSchemaSQLite()` and `createSchemaPostgres()`.
+2. Add a check-and-alter block in `runSQLiteMigrations()` (`SELECT new_col FROM table LIMIT 0` → `ALTER TABLE ... ADD COLUMN`).
+3. Add `ALTER TABLE <table> ADD COLUMN IF NOT EXISTS ...` to the `migrations` slice in `runPostgresMigrations()`.
 
-### Pattern
+---
 
-```go
-// 1. Try selecting the NEW column
-_, err = DB.Exec("SELECT new_column FROM table LIMIT 0")
-if err != nil {
-    // Column doesn't exist yet
-    // 2. Check if there's data to preserve
-    var rowCount int
-    errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM table")
-    if errCount == nil {
-        if rowCount == 0 {
-            // No data → safe to DROP and recreate
-            DB.Exec("DROP TABLE IF EXISTS table;")
-        } else {
-            // Has data → ALTER TABLE to add column
-            DB.Exec("ALTER TABLE table ADD COLUMN new_column TYPE DEFAULT value;")
-        }
-    }
-}
-```
+## Learnings & Enforced Migration Invariants
 
-## Active Migrations (in order)
+### Context: PostgreSQL Production Table Migrations & `COALESCE` Scanning
+- **Problem**: `CREATE TABLE IF NOT EXISTS` in `createSchemaPostgres()` does not add new columns to existing production tables, causing `column does not exist` HTTP 500s. Additionally, `NULL` values in legacy rows crash `sqlx.Select` when scanning into non-pointer Go struct fields.
+- **Enforced Solution**:
+  - Always maintain 1:1 parity between `runSQLiteMigrations()` and `runPostgresMigrations()`.
+  - Wrap nullable columns in `COALESCE(col, '')` or `COALESCE(col, 0.0)` in analytical/list `SELECT` queries, or use pointer fields (`*int`, `*int64`) in `models/` DTOs.
 
-### 1. `receiving_logs` — Add `total_cost` and `selling_price`
-- Checks if `total_cost` column exists
-- If missing and table is empty → DROP and recreate
-- If missing and table has data → `ALTER TABLE ... ADD COLUMN`
-
-### 2. `sales_details` — Major schema evolution
-- Checks if `doc_type` column exists
-- If missing and table has data, applies a sequence of:
-  - Add `doc_type TEXT NOT NULL DEFAULT 'SI'`
-  - Add `doc_status TEXT NOT NULL DEFAULT 'POSTED'`
-  - Rename `invoice_no` → `doc_number`
-  - Add `customer_name TEXT`
-  - Rename `unit_price` → `price`
-  - Rename `margin_amount` → `profit`
-  - Rename `date` → `doc_date`
-
-### 3. `receiving_logs` — Rename `channel` → `supplier`
-- Checks if `supplier` column exists
-- If missing, checks if `channel` column exists → rename
-
-### 4. `sales_details` — Rename `channel` → `supplier`
-- Same pattern as above
-
-### 5. `inventory_adjustments` — Add `adjustment_id`
-- Checks if `adjustment_id` column exists
-- If missing → `ALTER TABLE ... ADD COLUMN adjustment_id INTEGER`
-
-### 6. `sales_details` — Add `ref_pl`
-- Checks if `ref_pl` column exists
-- If missing → `ALTER TABLE ... ADD COLUMN ref_pl TEXT`
-
-## Ordering Rules
-
-1. Migrations run **before** `createSchema()` — so they fix existing tables first
-2. `createSchema()` uses `CREATE TABLE IF NOT EXISTS` — safe for new databases
-3. Each migration is **idempotent** — runs safely even if already applied
-4. Migrations use `LIMIT 0` queries as existence checks (cheaper than schema introspection)
-
-## Adding New Migrations
-
-When evolving the schema:
-1. Add a new check-and-fix block in `InitDB()` **after** existing migrations
-2. Update `createSchema()` to include the new column in the `CREATE TABLE` statement
-## Learnings
-
-### Context: Safe Dynamic SQLite Column Renaming in Go Startups
-**Problem**: Renaming a table column requires schema updates. Doing so without migration frameworks (like golang-migrate) or manual CLI scripts can cause existing deployments to fail or crash if the column name doesn't exist yet, or cause data loss if handled incorrectly.
-**Enforced Solution**:
-- Implement inline dynamic check-and-run queries inside database startup initialization:
-  1. Try querying the new column with a `LIMIT 0` query.
-  2. If it errors (indicating the column does not exist), check if the old column exists.
-  3. If the old column exists, execute `ALTER TABLE ... RENAME COLUMN old_col TO new_col;`.
-  4. This handles both new database schema generation (which directly uses the new column name) and existing database schemas dynamically on server startup.
-
-### Context: PostgreSQL Production Table Migrations and COALESCE Column Scanning
-**Problem**: In production, the backend connects to PostgreSQL (`pgx`) rather than SQLite. `createSchemaPostgres()` runs `CREATE TABLE IF NOT EXISTS`, which skips altering existing tables when new columns (`tin_no`, `address`, deductions) are added to code models. If migrations are only hooked into SQLite startup routines, Postgres fails with `column s.tin_no does not exist` on queries, triggering HTTP 500 errors that HTMX suppresses without visible page updates ("no change on screen"). Furthermore, any rows with `NULL` in non-pointer struct fields crash `sqlx.Select`.
-**Enforced Solution**:
-- **Dual Migration Execution in `InitDB()`**: Always invoke `runPostgresMigrations()` in the `pgx` driver startup path using `ALTER TABLE <table> ADD COLUMN IF NOT EXISTS ...` statements.
-- **Defensive Query Projections**: In multi-column analytical views (e.g., `handlers/sales.go`), wrap nullable text and numeric projections in `COALESCE(col, '')` or `COALESCE(col, 0.0)` to ensure legacy or imported records scan cleanly into Go structs.
-
-### Context: Strict PostgreSQL GROUP BY Multi-Column Projection
-**Problem**: SQLite allows queries to `SELECT` unaggregated columns (e.g. `i.code`, `i.description`, `i.default_uom`) while only grouping by subset columns (e.g. `GROUP BY t.month, t.item_id`). PostgreSQL strictly rejects this with SQLSTATE 42803 (`column must appear in the GROUP BY clause or be used in an aggregate function`), causing HTTP 500 errors on production views like `/inventory/monthly`.
-**Enforced Solution**:
-- In all aggregated reporting queries across the repository, every non-aggregated column in the `SELECT` list must be explicitly enumerated in the `GROUP BY` clause (e.g., `GROUP BY t.month, t.item_id, i.code, i.description, i.default_uom`).
-
-## Related
-- [[database-schema]] — Current table definitions
-- [[tech-stack]] — Why no migration framework
-- [[architecture]] — System initialization flow
-
+### Context: Strict PostgreSQL `GROUP BY` Multi-Column Projection
+- **Problem**: SQLite permits `SELECT i.code, i.description ... GROUP BY t.month, t.item_id`, whereas PostgreSQL rejects any non-aggregated column missing from `GROUP BY` (`SQLSTATE 42803`).
+- **Enforced Solution**: Every non-aggregated column in a `SELECT` projection must be explicitly listed in the `GROUP BY` clause (e.g., `GROUP BY t.month, t.item_id, i.code, i.description, i.default_uom`).
