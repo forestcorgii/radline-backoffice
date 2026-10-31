@@ -235,8 +235,8 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	maxSalesVal = maxSalesVal * 1.15
 
 	chartHeight := 170.0
-	chartWidth := 480.0
-	barWidth := 16.0
+	chartWidth := 860.0
+	barWidth := 20.0
 	spacing := (chartWidth - 40.0) / float64(len(trend))
 
 	type ChartBar struct {
@@ -257,7 +257,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		pHeight := (t.Profit / maxSalesVal) * chartHeight
 		sY := chartHeight - sHeight + 10
 		pY := chartHeight - pHeight + 10
-		x := 30.0 + float64(i)*spacing
+		x := 30.0 + float64(i)*spacing + 20.0
 
 		monthLabel := t.Month
 		if parsedT, err := time.Parse("2006-01", t.Month); err == nil {
@@ -273,8 +273,8 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			SalesY:       sY,
 			ProfitY:      pY,
 			SalesX:       x,
-			ProfitX:      x + barWidth + 3,
-			LabelX:       x + barWidth,
+			ProfitX:      x + barWidth + 4,
+			LabelX:       x + barWidth + 2,
 		})
 	}
 
@@ -308,7 +308,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		iH := (it.InventoryValue / maxInvVal) * chartHeight
 		sY := chartHeight - sH + 10
 		iY := chartHeight - iH + 10
-		x := 30.0 + float64(i)*spacing
+		x := 30.0 + float64(i)*spacing + 20.0
 
 		monthLabel := it.Month
 		if parsedT, err := time.Parse("2006-01", it.Month); err == nil {
@@ -324,8 +324,8 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			SalesY:    sY,
 			InvY:      iY,
 			SalesX:    x,
-			InvX:      x + barWidth + 3,
-			LabelX:    x + barWidth,
+			InvX:      x + barWidth + 4,
+			LabelX:    x + barWidth + 2,
 		})
 	}
 

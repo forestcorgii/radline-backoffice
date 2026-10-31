@@ -4,36 +4,22 @@
 
 {{ define "content" }}
 <!-- QuickBooks Welcome & Live Status Header -->
-<div class="header-bar mb-4" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.875rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.75rem;">
+<div class="header-bar mb-4"
+    style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.875rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.75rem;">
     <div>
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-            <h2 style="font-size: 1.35rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: -0.02em;">{{ .Greeting }}</h2>
-            <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.15rem 0.5rem; border-radius: 9999px; background: hsl(152 80% 94%); color: hsl(152 76% 32%); font-size: 0.65625rem; font-weight: 700;">
-                <span style="width: 6px; height: 6px; border-radius: 50%; background: hsl(152 76% 36%); animation: pulse 2s infinite;"></span>
+            <h2
+                style="font-size: 1.35rem; font-weight: 800; margin: 0; color: var(--text-main); letter-spacing: -0.02em;">
+                {{ .Greeting }}</h2>
+            <span
+                style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.15rem 0.5rem; border-radius: 9999px; background: hsl(152 80% 94%); color: hsl(152 76% 32%); font-size: 0.65625rem; font-weight: 700;">
+                <span
+                    style="width: 6px; height: 6px; border-radius: 50%; background: hsl(152 76% 36%); animation: pulse 2s infinite;"></span>
                 Live System
             </span>
         </div>
-        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">{{ .TodayFormatted }} &bull; Radline Business Suite &bull; Financial Intelligence</span>
-    </div>
-    
-    <!-- Quick Actions Buttons -->
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="/sales" hx-get="/sales" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; gap: 0.35rem;">
-            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Record Sale
-        </a>
-        <a href="/inventory/receiving" hx-get="/inventory/receiving" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; gap: 0.35rem;">
-            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Receive Stock
-        </a>
-        <a href="/goals" hx-get="/goals" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; gap: 0.35rem;">
-            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
-            Earning Goals
-        </a>
-        <a href="/reminders" hx-get="/reminders" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; gap: 0.35rem;">
-            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
-            Reminders
-        </a>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">{{ .TodayFormatted }} &bull;
+            Radline Business Suite &bull; Financial Intelligence</span>
     </div>
 </div>
 
@@ -41,16 +27,24 @@
 <div class="qb-workflow-ribbon">
     <div class="qb-workflow-header">
         <div class="qb-workflow-title">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
             Business Workflow Hub
         </div>
-        <div class="qb-workflow-sub">Interactive lifecycle: Inbound stock &rarr; Inventory tracking &rarr; Sales billing &rarr; Analytics</div>
+        <div class="qb-workflow-sub">Interactive lifecycle: Inbound stock &rarr; Inventory tracking &rarr; Sales billing
+            &rarr; Analytics</div>
     </div>
     <div class="qb-workflow-steps">
         <!-- Step 1: Receiving -->
-        <a href="/inventory/receiving" hx-get="/inventory/receiving" hx-target="#main-content" hx-push-url="true" class="qb-workflow-card">
+        <a href="/inventory/receiving" hx-get="/inventory/receiving" hx-target="#main-content" hx-push-url="true"
+            class="qb-workflow-card">
             <div class="qb-workflow-icon step-1">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
             </div>
             <div class="qb-workflow-info">
                 <span class="qb-workflow-step-num">Step 1 &bull; Inbound</span>
@@ -62,7 +56,12 @@
         <!-- Step 2: Inventory -->
         <a href="/inventory" hx-get="/inventory" hx-target="#main-content" hx-push-url="true" class="qb-workflow-card">
             <div class="qb-workflow-icon step-2">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon><polygon points="12 22.08 12 12 21 6.92 21 17.08 12 22.08"></polygon><polygon points="12 2 21 6.92 12 12 3 6.92 12 2"></polygon></svg>
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                    <polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon>
+                    <polygon points="12 22.08 12 12 21 6.92 21 17.08 12 22.08"></polygon>
+                    <polygon points="12 2 21 6.92 12 12 3 6.92 12 2"></polygon>
+                </svg>
             </div>
             <div class="qb-workflow-info">
                 <span class="qb-workflow-step-num">Step 2 &bull; Warehousing</span>
@@ -74,7 +73,10 @@
         <!-- Step 3: Sales -->
         <a href="/sales" hx-get="/sales" hx-target="#main-content" hx-push-url="true" class="qb-workflow-card">
             <div class="qb-workflow-icon step-3">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
             </div>
             <div class="qb-workflow-info">
                 <span class="qb-workflow-step-num">Step 3 &bull; Revenue</span>
@@ -86,7 +88,11 @@
         <!-- Step 4: Analytics -->
         <a href="#dashboard-trends-container" class="qb-workflow-card">
             <div class="qb-workflow-icon step-4">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
             </div>
             <div class="qb-workflow-info">
                 <span class="qb-workflow-step-num">Step 4 &bull; Intelligence</span>
@@ -107,7 +113,10 @@
                     <span class="qb-kpi-category">Money In &bull; Revenue</span>
                 </div>
                 <div class="qb-kpi-icon money-in">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
                 </div>
             </div>
             <div class="qb-kpi-value">₱{{ printf "%.2f" .TotalSales }}</div>
@@ -120,7 +129,7 @@
             <span class="badge badge-secondary" style="font-size: 0.625rem;">Actual Revenue</span>
         </div>
     </div>
-    
+
     <!-- 2. Cost of Goods (Money Out) -->
     <div class="qb-kpi-card">
         <div>
@@ -129,7 +138,11 @@
                     <span class="qb-kpi-category">Money Out &bull; COGS</span>
                 </div>
                 <div class="qb-kpi-icon money-out">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                        </path>
+                    </svg>
                 </div>
             </div>
             <div class="qb-kpi-value">₱{{ printf "%.2f" .TotalCosts }}</div>
@@ -151,7 +164,10 @@
                     <span class="qb-kpi-category">Net Earnings &bull; Profit</span>
                 </div>
                 <div class="qb-kpi-icon gross-profit">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
                 </div>
             </div>
             <div class="qb-kpi-value profit-green">₱{{ printf "%.2f" .GrossProfit }}</div>
@@ -171,7 +187,10 @@
                     <span class="qb-kpi-category">Profitability &bull; Margin</span>
                 </div>
                 <div class="qb-kpi-icon margin">
-                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
                 </div>
             </div>
             <div style="display: flex; align-items: baseline; gap: 0.5rem;">
@@ -193,76 +212,63 @@
     </div>
 </div>
 
-<!-- Dynamic Trends Filter Bar -->
-<div class="card mb-4" style="padding: 0.75rem 1rem; background: #ffffff; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-main);">Trend Timeframe:</span>
-        <span style="font-size: 0.6875rem; color: var(--text-muted);">Filter dynamic charts by custom date interval</span>
-    </div>
-    
-    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-        <input type="date" name="start_date" value="{{ .StartDateStr }}"
-               class="form-input" style="font-size: 0.75rem; padding: 0.35rem 0.5rem;"
-               hx-get="/?fragment=trends"
-               hx-trigger="change"
-               hx-target="#dashboard-trends-container"
-               hx-include="[name='end_date']">
-        <span style="font-size: 0.75rem; color: var(--text-muted);">to</span>
-        <input type="date" name="end_date" value="{{ .EndDateStr }}"
-               class="form-input" style="font-size: 0.75rem; padding: 0.35rem 0.5rem;"
-               hx-get="/?fragment=trends"
-               hx-trigger="change"
-               hx-target="#dashboard-trends-container"
-               hx-include="[name='start_date']">
-        
-        <button hx-get="/?fragment=trends&start_date={{ .StartDateStr }}&end_date={{ .EndDateStr }}"
-                hx-target="#dashboard-trends-container"
-                class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">
-            Apply Filter
-        </button>
-    </div>
-</div>
-
 <!-- Dynamic Charts Container -->
 <div id="dashboard-trends-container" class="mb-4">
     {{ template "dashboard_trends.html" . }}
 </div>
 
-<!-- Row 2: Top Products, Earning Goals & Reminders Widgets -->
+<!-- Row 2: Best Selling Items, Earning Goals & Reminders Widgets -->
 <div class="grid grid-cols-3" style="gap: 1.25rem;">
-    <!-- Top Most Purchased Products Card -->
+    <!-- Best Selling Items Card -->
     <div class="card" style="padding: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <div style="width: 28px; height: 28px; border-radius: 6px; background: hsl(243 100% 95%); color: hsl(243 75% 55%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                <div
+                    style="width: 28px; height: 28px; border-radius: 6px; background: hsl(243 100% 95%); color: hsl(243 75% 55%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                        </path>
+                    </svg>
                 </div>
                 <div>
-                    <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Top Purchased Products</div>
-                    <div style="font-size: 0.6875rem; color: var(--text-muted);">Best performing items by volume sold</div>
+                    <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Best Selling Items
+                    </div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted);">Best performing items by volume sold
+                    </div>
                 </div>
             </div>
-            <a href="/items" hx-get="/items" hx-target="#main-content" hx-push-url="true" style="font-size: 0.6875rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">View Catalog →</a>
+            <a href="/items" hx-get="/items" hx-target="#main-content" hx-push-url="true"
+                style="font-size: 0.6875rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">View
+                Catalog →</a>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.625rem;">
             {{ if eq (len .TopProducts) 0 }}
-            <div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; padding: 2rem 0;">No sales records available yet</div>
+            <div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; padding: 2rem 0;">No sales
+                records available yet</div>
             {{ else }}
             {{ range $index, $prod := .TopProducts }}
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
                 <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden;">
-                    <div style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div
+                        style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                         {{ add $index 1 }}
                     </div>
                     <div style="min-width: 0;">
-                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $prod.Description }}">{{ $prod.Description }}</div>
-                        <div style="font-size: 0.65625rem; color: var(--text-muted);">{{ $prod.BrandName }} &bull; {{ $prod.ItemCode }}</div>
+                        <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                            title="{{ $prod.Description }}">{{ $prod.Description }}</div>
+                        <div style="font-size: 0.65625rem; color: var(--text-muted);">{{ $prod.BrandName }} &bull; {{
+                            $prod.ItemCode }}</div>
                     </div>
                 </div>
                 <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
-                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">{{ printf "%.0f" $prod.TotalQty }} {{ $prod.UOM }}</div>
-                    <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱{{ printf "%.2f" $prod.TotalSales }}</div>
+                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">{{ printf "%.0f"
+                        $prod.TotalQty }} {{ $prod.UOM }}</div>
+                    <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱{{ printf "%.2f"
+                        $prod.TotalSales }}</div>
                 </div>
             </div>
             {{ end }}
@@ -272,17 +278,24 @@
 
     <!-- Earning Goals Card -->
     <div class="card" style="padding: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <div style="width: 28px; height: 28px; border-radius: 6px; background: hsl(152 80% 94%); color: hsl(152 76% 34%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
+                <div
+                    style="width: 28px; height: 28px; border-radius: 6px; background: hsl(152 80% 94%); color: hsl(152 76% 34%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="6"></circle>
+                    </svg>
                 </div>
                 <div>
                     <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Earning Goals</div>
                     <div style="font-size: 0.6875rem; color: var(--text-muted);">Target revenue & profit tracking</div>
                 </div>
             </div>
-            <a href="/goals" hx-get="/goals" hx-target="#main-content" hx-push-url="true" style="font-size: 0.6875rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">Manage Goals →</a>
+            <a href="/goals" hx-get="/goals" hx-target="#main-content" hx-push-url="true"
+                style="font-size: 0.6875rem; color: var(--primary-color); font-weight: 600; text-decoration: none;">Manage
+                Goals →</a>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -290,7 +303,8 @@
             <div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; padding: 2rem 0;">
                 No earning targets defined yet.
                 <div style="margin-top: 0.5rem;">
-                    <a href="/goals" hx-get="/goals" hx-target="#main-content" hx-push-url="true" class="btn btn-secondary btn-sm" style="font-size: 0.6875rem;">Set a Goal</a>
+                    <a href="/goals" hx-get="/goals" hx-target="#main-content" hx-push-url="true"
+                        class="btn btn-secondary btn-sm" style="font-size: 0.6875rem;">Set a Goal</a>
                 </div>
             </div>
             {{ else }}
@@ -305,7 +319,7 @@
                         {{ .Status }}
                     </span>
                 </div>
-                
+
                 <div>
                     <div style="font-size: 0.6875rem; color: var(--text-muted); margin-bottom: 0.25rem; display: flex; justify-content: space-between;">
                         <span>Revenue Target</span>
@@ -336,7 +350,11 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <div style="width: 28px; height: 28px; border-radius: 6px; background: hsl(340 85% 95%); color: hsl(340 75% 50%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
+                    <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                    </svg>
                 </div>
                 <div>
                     <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Upcoming Reminders</div>
