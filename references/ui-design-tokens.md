@@ -1,353 +1,82 @@
-# UI Design Tokens
+# UI Design Tokens & Component Patterns
 
-> Back to [[00-index]] · Related: [[templates-overview]], [[responsive-design]]
+> Back to [[00-index]] · Related: [[htmx-patterns]], [[sidebar-navigation]], [[responsive-design]], [[templates-overview]]
 
-## File
-[static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css)
+## Canonical Stylesheet
+[static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css) (linked in [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) as `/static/index.css?v=6.1` — always increment `?v=` when changing CSS).
 
-## CSS Custom Properties (Design Tokens)
-
+## Current Theme & Base Typography (QuickBooks / shadcn Royal Indigo)
 ```css
 :root {
-    --bg-color: #faf9f6;           /* Page background (warm off-white) */
-    --surface-color: #ffffff;      /* Card/panel backgrounds */
-    --primary-color: #2563eb;      /* Blue — buttons, active states */
-    --primary-hover: #1d4ed8;      /* Darker blue — button hover */
-    --text-main: #1c1917;          /* Primary text (near-black warm) */
-    --text-muted: #78716c;         /* Secondary text, labels */
-    --border-color: #e7e5e4;       /* Borders, dividers */
-    --glass-bg: rgba(255,255,255,0.8);     /* Glassmorphism background */
-    --glass-border: rgba(28,25,23,0.08);   /* Glassmorphism border */
-    --shadow: 0 4px 6px -1px rgba(0,0,0,0.03), 0 2px 4px -2px rgba(0,0,0,0.03);
+    --background: 0 0% 100%;             /* #ffffff */
+    --foreground: 232 38% 15%;           /* #191c2b */
+    --card: 0 0% 100%;
+    --primary: 243 75% 59%;              /* Royal Indigo #4f46e5 */
+    --primary-dark: 244 75% 48%;         /* #3730a3 */
+    --primary-tint: 243 100% 96%;        /* #eef2ff */
+    --secondary: 235 48% 96%;            /* #eef1fa */
+    --muted: 235 32% 96%;
+    --muted-foreground: 230 14% 48%;     /* #6c7285 */
+    --accent: 235 60% 97%;               /* #f0f3ff */
+    --destructive: 0 84.2% 60.2%;
+    --border: 232 20% 90%;               /* #e0e3ed */
+    --input: 232 20% 88%;
+    --ring: 243 75% 59%;
+    --radius: 0.5rem;
+
+    /* Mapped Application Aliases */
+    --bg-color: hsl(232 30% 98%);        /* #f8f9fd */
+    --surface-color: hsl(var(--card));
+    --primary-color: hsl(var(--primary));
+    --primary-hover: hsl(var(--primary-dark));
+    --text-main: hsl(var(--foreground));
+    --text-muted: hsl(var(--muted-foreground));
+    --border-color: hsl(var(--border));
 }
 ```
+- **High-Density Base Scale**: `body` uses `font-size: 0.75rem` (12px), `line-height: 1.35`, `font-variant-numeric: tabular-nums`, and `'Inter', system-ui, sans-serif`.
+- **Never hardcode HEX/RGB** in templates when a CSS variable or semantic class exists.
 
-**Typography:** `'Inter', system-ui, -apple-system, sans-serif` (Google Fonts CDN in `base.html`)
+## Core Component Classes
 
-## Component Classes
+| Category | Classes | Current Spec |
+|---|---|---|
+| **Cards & Layout** | `.card`, `main#main-content` | White surface, `1px solid var(--border-color)`, compact padding (`0.75rem 1rem`), max-width `1440px` |
+| **Buttons** | `.btn`, `.btn-secondary`, `.btn-outline`, `.btn-ghost`, `.btn-success`, `.btn-danger` | Compact height `1.75rem`–`1.875rem`, radius `0.375rem`–`0.5rem` |
+| **Icon Actions** | `.btn-icon`, `.actions-cell`, `.btn-table-action.btn-delete` | `1.75rem × 1.75rem` inline-flex with Lucide SVGs (`stroke="currentColor"`) and `title` tooltip. Row delete stays neutral gray until hover |
+| **Inputs & Filters** | `.form-input`, `.form-group`, `.search-filter-bar`, `.date-filters-row`, `.filter-item` | Compact height `1.75rem`–`1.875rem`, single-line filter toolbars without stacked labels |
+| **Tables / Listviews** | `.table-container`, `.th`/`th`, `.td`/`td`, `.edit-row` | Form-sheet aesthetic: `#f8fafc` headers (`2px solid #cbd5e1` bottom border), `white-space: nowrap`, zebra striping on `:nth-child(even)`, `#f1f5f9` hover |
+| **Item Entry Grids** | `.item-grid-header`, `.item-grid-row`, `.item-grid-cell` | `display: flex; flex-direction: row; flex-wrap: nowrap` with `:nth-child(n)` flex ratios (cross-browser Edge/Chrome safe) |
+| **Badges & Statuses** | `.badge`, `.badge-active`, `.badge-inactive`, `.status-icon-btn` (`.status-icon-active`, `-posted`, `-cancelled`), `.supplier-select-*` | Subtle pastel pills; Sales Log uses 24px circular `.status-icon-btn` triggering fixed `.status-menu-popover` |
+| **Dialogs & Toasts** | `#shadcn-alert-dialog` (`.alert-dialog-*`), `.toast` (`.toast-success`, `-error`, `-warning`, `-info`) | Intercepts `htmx:confirm`, `window.alert`, and `window.confirm` via `window.showShadcnAlertDialog()` |
+| **Dashboard KPIs** | `.qb-workflow-ribbon`, `.qb-kpi-card`, `.sub-tabs`, `.sub-tab-item.active` | QuickBooks 4-step workflow hub and KPI metric cards |
 
-### Cards
-```css
-.card                    /* Glassmorphism container — blur, border, shadow, hover lift */
-```
+---
 
-### Buttons
-```css
-.btn                     /* Primary blue button */
-.btn-secondary           /* Gray (#78716c) */
-.btn-success             /* Green (#10b981) */
-.btn-danger              /* Red (#ef4444) */
-```
-
-### Forms
-```css
-.form-group              /* Wrapper with margin-bottom */
-.form-input              /* Compact input for inline editing (0.5rem padding) */
-input[type="text/number/date"]  /* Full-width inputs (0.75rem padding) */
-```
-
-### Tables
-```css
-.table-container         /* Overflow-x: auto wrapper for mobile */
-.table-scroll-md         /* min-width: 800px on the table */
-.table-scroll-lg         /* min-width: 1000px on the table */
-.edit-row td             /* Reduced padding for inline edit rows */
-```
-
-### Search & Filters
-```css
-.search-filter-bar       /* Flex container — column on mobile, row on desktop */
-.filter-item             /* Individual filter wrapper */
-select.form-input        /* Custom arrow dropdown styling */
-```
-
-### Badges
-```css
-.badge                   /* Pill-shaped inline label */
-.badge-active            /* Green — in use */
-.badge-inactive          /* Red — unused */
-```
-
-### Sub-tabs
-```css
-.sub-tabs                /* Horizontal tab bar with bottom border */
-.sub-tab-item            /* Individual tab */
-.sub-tab-item.active     /* Active tab — blue accent */
-```
-
-### Grid Utilities
-```css
-.grid                    /* CSS Grid with 1.5rem gap */
-.grid-cols-2             /* 1 col → 2 col @ 640px */
-.grid-cols-3             /* 1 → 2 @ 640px → 3 @ 1024px */
-.grid-cols-4             /* 1 → 2 @ 640px → 4 @ 1024px */
-.grid-cols-5             /* 1 → 2 @ 640px → 3 @ 768px → 5 @ 1024px */
-.grid-adj-header         /* 1 col → 1fr 2fr @ 640px */
-```
-
-### Spacing
-```css
-.mt-4                    /* margin-top: 1rem */
-.mb-4                    /* margin-bottom: 1rem */
-```
-
-### Animations
-```css
-#main-content > *        /* fadeIn 0.22s — smooth page transition */
-.toast                   /* slideIn 0.3s — toast entry */
-@keyframes fadeOut       /* toast exit animation */
-```
-
-## Toast Styling
-
-```css
-.toast                   /* Glassmorphic notification */
-.toast-success           /* Left border: green #10b981 */
-.toast-error             /* Left border: red #ef4444 */
-.toast-warning           /* Left border: yellow #f59e0b */
-.toast-info              /* Left border: blue #3b82f6 */
-```
-
-See [[htmx-patterns]] for the toast protocol.
-
-## Design Principles
-
-1. **Glassmorphism** — Cards use `backdrop-filter: blur(12px)` with semi-transparent backgrounds
-2. **Warm neutrals** — `#faf9f6` background, `#1c1917` text (warm-toned, not pure black/white)
-3. **Subtle interactions** — Cards lift 2px on hover, buttons scale on click
-4. **Page transitions** — Content fades in with subtle translateY for HTMX swaps
-
-## Rules for Templates
-- **Never hardcode colors** — Always use `var(--variable-name)`
-- **Use existing classes** — Check this list before creating new CSS
-- **Font size convention** — Body text: 0.875rem, Labels: 0.875rem, Table headers: uppercase 0.875rem
-
-## Learnings
-
-### Context: Frontend UI/UX, CSS Design System, and HTMX Toast Notifications
-**Problem**: Modifying or creating new UI templates without violating the established visual aesthetics (glassmorphic styling, standard typography, color harmony) or breaking the toast feedback system.
-**Enforced Solution**:
-- **Design Token Invariance**: Do not hardcode HEX or RGB colors in HTML templates. Always reference the CSS variables defined in [index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css) (e.g. `--primary-color`, `--bg-color`, `--surface-color`, `--text-main`, `--text-muted`, `--border-color`, `--glass-bg`, `--glass-border`, `--shadow`).
-- **Standard Component Classes**: Leverage existing CSS classes:
-  - Containers: `.card` (for boxed content with blur/backdrop and shadows).
-  - Actions: `.btn` (primary blue), `.btn-secondary` (gray), `.btn-success` (green), and `.btn-danger` (red).
-  - Lists and Filters: `.search-filter-bar` (flex row layout), `.form-input` / `.form-group` for inputs.
-  - Status Indicators: `.badge .badge-active` (green badge) and `.badge .badge-inactive` (red badge).
-- **HTMX Toast Notifications Protocol**: Always use the custom `show-toast` event to report back status from server actions.
-  - In Go HTTP handlers, trigger toasts by adding the `HX-Trigger` header in the HTTP response:
-    ```go
-    w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Brand created successfully!"}}`)
-    ```
-  - Standard types are `"success"`, `"error"`, `"warning"`, and `"info"`.
-- **UI Verification Protocol**:
-  - Before declaring a UI task done, run the application (`go run main.go`) and use the `browser_subagent` to render the affected pages, verify layout alignment, check colors, and capture screenshots for visual validation.
-
-### Context: Scalable UI/UX, Large Datasets, and Autocomplete Search
-**Problem**: Rendering thousands of dynamic records (e.g. items, customers) in standard `<select>` elements causes performance degradation and poor user search experience.
-**Enforced Solution**:
-- **Avoid Plain Dropdowns for Large Datasets**: Do not use standard `<select>` dropdowns for data models that scale beyond a few dozen records (e.g., Items). Keep dropdowns reserved only for small, static enums (e.g. Doc Types, Suppliers).
-- **Use HTMX Searchable Inputs / Autocomplete**:
-  - Implement a text input with search behavior:
-    ```html
-    <input type="text" 
-           placeholder="Search items..." 
-           hx-get="/entry/search-items" 
-           hx-trigger="keyup changed delay:300ms" 
-           hx-target="#search-results" 
-           hx-indicator="#loading-spinner">
-    ```
-  - Alternatively, use HTML `<datalist>` populated dynamically by backend matching to leverage native autocomplete overlays.
-- **Enforce Backend Search Limits**: All backend endpoints rendering selection options or list fragments must enforce a strict pagination or limit constraint (e.g., `LIMIT 50`) to keep HTTP payload and database query times minimal.
-- **Keyboard Friendliness**: Ensure search suggestion overlays support keyboard navigation (e.g., Enter key to select the first match) or simple navigation cues where possible.
-
-### Context: UI Layout Compactness and Information Density Optimization
-**Problem**: The BackOffice UI spacing was too sparse, limiting the amount of details (table rows, form controls, and layout cards) visible on screen at once, requiring excessive scrolling.
-**Enforced Solution**:
-- **Global Sizing**: Enforce a global `font-size: 0.875rem` on the HTML `body` selector to scale all standard elements proportionally.
-- **Sidebar & Viewport**: Reduce the default sidebar width to `220px` (from `260px`) and expand `main#main-content` max-width to `1440px` (from `1200px`) to maximize screen estate utilization on wide monitors.
-- **Spacing Reduction**: Shrink card padding to `1rem`, table cell padding to `0.5rem 0.75rem`, form input paddings to `0.45rem 0.75rem`, button paddings to `0.45rem 1rem`, form group vertical spacing to `0.75rem`, grid gap to `1rem`, and sub-tab margin/paddings.
-
-### Context: Stitch AI Premium Design System Integration
-**Problem**: Modifying UI colors and themes in static CSS files without a unified, professional design scheme can lead to inconsistent accents, high-contrast borders, and off-brand visual layout fragments.
-**Enforced Solution**:
-- **Design System Generation**: Created a project in Stitch and generated a Material Design Fidelity theme seed using royal indigo (`#4f46e5`).
-- **Core Tokens**: Applied the generated color tokens to `:root` CSS custom properties:
-  - Background: Soft lavender warm off-white (`#fcf8ff`)
-  - Accent brand: Royal Indigo (`#3525cd` / `#4f46e5`)
-  - Card hover scale: Responsive transform lift with an indigo-tinted shadow glow.
-- **Badge and Semantic Utilities**: Standardized all status elements to use semantic utility classes (`.badge-primary`, `.badge-secondary`, `.text-success`, `.text-danger`) rather than hardcoded inline styles.
-- **Refactoring Chart Fills**: Chart colors (e.g. SVG rect elements) and financial summary card borders are dynamically styled using the new CSS variables to preserve uniform brand colors.
-
-### Context: Action Column Buttons to Icon-Based Buttons
-**Problem**: Textual buttons ("Edit", "Delete", "Save", "Cancel", "Remove") in table rows and Actions columns take up significant horizontal screen space, squishing inputs and tables on smaller viewports.
-**Enforced Solution**:
-- **CSS Utility Classes**: Added `.btn-icon` and `.actions-cell` helper classes in [index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css):
-  ```css
-  .btn-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      width: 1.85rem;
-      height: 1.85rem;
-      min-width: 1.85rem;
-      border-radius: 0.375rem;
-  }
-  .btn-icon svg {
-      width: 0.9rem;
-      height: 0.9rem;
-  }
-  .actions-cell {
-      display: flex;
-      gap: 0.35rem;
-      align-items: center;
-  }
-  ```
-- **Lucide Inline SVGs**: Replaced text inside buttons with lightweight, inline SVG icons (using `stroke="currentColor"` to dynamically inherit parent text colors) in all row/edit templates:
-  - **Edit**: secondary pencil icon
-  - **Delete / Remove**: red trash icon
-  - **Save**: green checkmark icon
-  - **Cancel**: secondary X icon
-- **A11y Tooltips**: Provided `title` attributes on all icon buttons to guarantee hover clarity and accessibility.
-
-## Related
-- [[responsive-design]] — Breakpoints and mobile overrides
-- [[sidebar-navigation]] — Sidebar-specific CSS
-- [[htmx-patterns]] — Toast notification styling
-- [[templates-overview]] — HTML templates using these classes
-
-### Context: Sales Page Encode Button & Filter Bar Customize View Icon Button
-**Problem**: The Sales page had the "+ Encode Sales" button in a multi-button group next to the full-text "Customize View" button in the header bar, differing from the header layout in Brands/Categories and taking up extra header space.
-**Enforced Solution**:
-- **Header Alignment**: Placed `+ Encode Sales` directly in the header bar (matching Brands/Categories pages) which toggles an inline, collapsible form card (`#encode-sales-card`) directly above the filters.
-- **Filter-Bar Icon Buttons**: Removed textual label from the "Customize View" button, converting it into a compact icon-only button (`<svg>` polygon filter icon) situated at the far right end of `.search-filter-bar`.
-
-### Context: Universal Flexbox Cross-Browser Form Layout Compatibility (Edge & Chrome)
-**Problem**: Microsoft Edge (or Edge in IE compatibility mode) can fail to resolve CSS Grid `grid-template-columns` inside dynamic HTMX swapped wrappers, causing form items and buttons to collapse or stack vertically.
-**Enforced Solution**:
-- **Universal Flexbox Horizontal Rows**: Use `display: flex; flex-direction: row; flex-wrap: nowrap;` on `.item-grid-header` and `.item-grid-row` instead of CSS Grid.
-- **nth-child Flex Ratios**: Apply explicit `flex: ratio 1 0px; min-width: ...` to header labels and `.item-grid-cell:nth-child(n)` cells to guarantee 100% pixel-perfect column alignment across Edge, Chrome, Safari, and Firefox.
-- **Cache Busting & Meta Compatibility**: Include `<meta http-equiv="X-UA-Compatible" content="IE=edge">` in [base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) and increment `index.css?v=2.0` query version to force Edge to reload fresh stylesheets.
-
-### Context: Standardizing Radline BackOffice to shadcn/ui Design Tokens & Components
-**Problem**: Transforming existing custom styles in `static/index.css` to match the official **shadcn/ui** design language while preserving HTMX and Go HTML template compatibility.
-**Enforced Solution**:
-- **shadcn HSL Design System Tokens**: Configured standard HSL CSS variables (`--background`, `--foreground`, `--card`, `--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`) in `:root` and mapped legacy application CSS variables to them.
-- **shadcn Primitive Component Specifications**:
-  - **Cards (`.card`)**: High-contrast white/slate card with subtle border `1px solid hsl(var(--border))` and `shadow-sm`.
-  - **Inputs & Selects (`input`, `select`, `.form-input`)**: Height `2.25rem`, radius `0.5rem`, focus ring `ring-2 ring-ring`.
-  - **Buttons (`.btn`, `.btn-secondary`, `.btn-outline`, `.btn-ghost`, `.btn-danger`, `.btn-success`)**: Standard `2.25rem` height, rounded-md corners, high contrast slate dark primary button fill and clear focus rings.
-  - **Badges (`.badge`, `.badge-secondary`, `.badge-success`, `.badge-danger`, `.badge-warning`)**: Rounded pill style badges with soft tint background fills and crisp text contrast.
-  - **Tables**: Muted uppercase headers, subtle borders, row hover highlights.
+## Learnings & Enforced UI Patterns
 
 ### Context: Universal shadcn/ui Alert Dialog for HTMX Confirmations and JS Alerts
-**Problem**: Native browser `window.confirm()` popups and `window.alert()` dialogs broke the visual aesthetics of the application and provided inconsistent user experience across different browsers.
-**Enforced Solution**:
-- **shadcn Alert Dialog Markup & Styling**: Created `.alert-dialog-overlay`, `.alert-dialog-content`, `.alert-dialog-header`, `.alert-dialog-title`, `.alert-dialog-description`, `.alert-dialog-footer` in [static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css) and added `#shadcn-alert-dialog` modal markup to [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html).
-- **HTMX Event Interception (`htmx:confirm`)**: Attached a global listener for `htmx:confirm` that prevents the default browser popup and presents the shadcn Alert Dialog with smooth backdrop blur and scale-in animation. Clicking "Continue" calls `evt.detail.issueRequest(true)` to proceed.
-- **Window Alert & Confirm Override**: Overrode `window.alert` and `window.confirm` to route through `window.showShadcnAlertDialog()` for consistent UI across the entire application.
+- **Problem**: Native `window.confirm()` / `window.alert()` popups break visual consistency.
+- **Enforced Solution**: `#shadcn-alert-dialog` in `templates/base.html` intercepts `htmx:confirm` (calling `evt.detail.issueRequest(true)` on confirm) and overrides `window.alert` / `window.confirm` via `window.showShadcnAlertDialog()`.
 
-### Context: Compact UI Spacing and High Information Density Optimization
-**Problem**: UI spacing across form inputs, tables, cards, sidebar, buttons, and section wrappers was excessively tall and sparse, resulting in low information density and unnecessary vertical scrolling.
-**Enforced Solution**:
-- **Typography & Base Sizing**: Scaled body text to `0.8125rem` (13px) and `line-height: 1.4` for optimal text density.
-- **Card & Layout Padding**: Reduced `.card` and `main#main-content` padding to `0.75rem 1rem` (mobile `.card` `0.5rem 0.75rem`).
-- **Form Controls & Inputs**: Compacted `.form-group` vertical margin to `0.5rem`, `label` font-size to `0.75rem` with `0.2rem` margin-bottom, and input/select height to `1.875rem` (30px) with `0.25rem 0.5rem` padding.
-- **Buttons & Icons**: Reduced primary `.btn` height to `1.875rem` (30px) with `0 0.65rem` padding and `.btn-icon` dimensions to `1.75rem x 1.75rem`.
-- **Tables & Rows**: Reduced `th, td` cell padding to `0.3rem 0.5rem` with `font-size: 0.8125rem` (`0.75rem` uppercase headers) and table container top margin to `0.5rem`.
-- **Item Entry Grid Cards**: Compacted `.item-card-row` / `.item-grid-row` padding to `0.4rem 0.65rem` with `0.35rem` grid gaps and `0.6875rem` uppercase field labels.
+### Context: Listviews Form-Sheet Aesthetic & Direct Column Header Collapse / Expand
+- **Problem**: Wide tables need spreadsheet-like column hiding/unhiding and clean headers without outer redundant `.header-bar` blocks.
+- **Enforced Solution**:
+  - **Column Collapse**: `window.initExcelCollapsibleColumns()` in `templates/base.html` provides:
+    1. Hover collapse button (`.btn-th-collapse`) on collapsible headers and right-click context menu (`showColumnContextMenu`).
+    2. Fully hidden collapsed cells (`display: none !important` on matching `th`/`.th` and `td`/`.td`).
+    3. Excel double-line divider (`||`) with `.excel-unhide-btn` (`[+]`) on header borders and a `.collapsed-cols-bar` chip bar mounted **outside/above** `.table-container` (so it doesn't clip on horizontal scroll).
+    4. Persists in `localStorage` (`radline_collapsed_cols_<tableId>`) and syncs with view popovers via `radline-excel-cols-updated`.
+  - **Strict Card Header Div Matching**: Always close all nested `.customize-view-container` and header flex wrappers before `<form>` and `.table-container` begin.
 
-### Context: Stacking Deductions Columns in Sales Log View
-**Problem**: Patong, POS Charge, and WT 2307 occupied three separate columns in the sales log view, consuming excessive horizontal screen space.
-**Enforced Solution**:
-- **Consolidation**: Replaced the three separate columns in the list view with a single combined column.
-- **Naming**: The column header is named `Deductions` with a tooltip (`title`) set to `"Patong / POS / WT 2307"`.
-- **View Configuration & Customization**: The customize view popover contains a single `Deductions` checkbox mapped to the `patong` column visibility key, and the other two keys (`pos_charge`, `wt_2307`) are removed from customization.
-- **Stacked Layout**: 
-  - Read-only rows display a vertical stack containing only non-zero deductions (e.g. `P: ₱X.XX`, `C: ₱Y.YY`, `W: ₱Z.ZZ`), or a dash `—` if all deductions are zero.
-  - Batch edit rows display a vertical stack of three compact inputs with `name="patong"`, `name="pos_charge"`, and `name="wt_2307"`, maintaining separate field updates for form submission.
+### Context: Fixed Viewport Popovers & Sub-100ms Form Item Search
+- **Problem**: Table stacking contexts clip inline popovers (like Sales row status menus or item pickers), and unindexed `LEFT JOIN` item searches lag.
+- **Enforced Solution**:
+  - **Fixed Viewport Positioning**: Row popovers (`.status-menu-popover`, `.dropdown-list`) compute coordinates via `getBoundingClientRect()` and use `position: fixed; z-index: 999999;`.
+  - **Fast Item Search**: `db/db.go` indexes `items(code, description, model, brand_id, category_id)`. `SearchItemsHandler` (`GET /items/search`) uses subquery filters (`LIMIT 20`, max `50`), paired with client-side caching (`_itemSearchHtmlCache` / `_itemSearchJsonCache`).
 
-### Context: Filter Bar Clutter and Responsive Filter Widths
-**Problem**: Placing all search and dropdown filters (Period, Start Date, End Date, Doc Type, Supplier, Sort By, Limit) on a single horizontal row on desktop caused dropdown labels/options to truncate and squished the search input.
-**Enforced Solution**:
-- **Row Separation**: Split date-specific filters (Period, Start Date, End Date) into a separate row wrapper (`.date-filters-row`) positioned above the main Search and metadata filter bar (`.search-filter-bar`).
-- **Horizontal Date Row Constraint**: Defined `.date-filters-row` as `flex-direction: row; flex-wrap: wrap;` globally so that Period, Start Date, and End Date filters are always displayed side-by-side instead of stacking vertically.
-- **Custom CSS Specificity and Widths**: Used high specificity rules (`.date-filters-row .filter-item.filter-*`) to override the general `.filter-item { width: 100%; }` mobile style, setting the Period to `9.5rem` and Date inputs to `9rem` on all viewports.
-- **Custom Desktop Widths**: Under the `min-width: 768px` media query, configured specific widths for the remaining filters (Doc Type: `9rem`, Supplier: `9rem`, Sort: `11rem`, Limit: `7rem`) to preserve readability while maximizing space for the full-width search input.
-- **Style Cache Busting**: Incremented the version parameter on the stylesheet link in `templates/base.html` (e.g. `index.css?v=4.3`) to ensure browsers instantly load updated layout and width definitions.
-
-### Context: Dynamic Dropdown & Badge Color Coding for Document Metadata
-**Problem**: The Sales log required color-coded representation for suppliers and document statuses in list row views and form selects. Hardcoding HEX styles inline inside templates violates design tokens consistency and prevents uniform theme updates.
-**Enforced Solution**:
-- **Semantic Classes**: Created specific CSS classes (`.status-select-active`, `.status-select-posted`, `.status-select-cancelled`, and `.supplier-select-ascd` / `-renown` / `-other`) in `static/index.css` mapping to HSL system variables and soft transparent backgrounds.
-- **Dynamic CSS Classes on Load**: Used Go template logic to apply the matching status/supplier class on row select/badge element rendering.
-- **Client-Side Synchronization**: Implemented a lightweight `window.updateSelectColorClass(el)` helper function inside the template's scripts and attached it to `onchange` events of color-coded dropdowns, updating the select's stylesheet class dynamically in response to user inputs.
-
-### Context: Compact Decluttering, Unified Toolbars, and Subtle Status System
-**Problem**: The UI and UX felt cluttered and visually noisy due to stacked filter rows with duplicate vertical labels, loud colored stripes and emojis on metric cards, bright saturated badge pills across every table row, and bright red delete buttons creating a visual "wall" across large data grids.
-**Enforced Solution**:
-- **Compact Font & Spacing Scale**: Reduced base body font size to `0.75rem` (12px), `line-height: 1.35`, and applied `font-variant-numeric: tabular-nums` globally for number alignment. Compacted control heights to `1.75rem` (28px) and table cell padding to `0.22rem 0.45rem`.
-- **Unified Single-Line Filter Toolbars**: Consolidated stacked filter rows (e.g. date row + search row) into a cohesive single-line toolbar (`.search-filter-bar`) by removing tall `<label>` elements in favor of clean placeholders and inline `title` attributes. Moved view customize triggers and row edit toggles into the card header bar.
-- **Minimalist Metric Cards**: Replaced thick colored left border stripes and decorative emojis (`📈`, `📉`, `💰`) with clean Linear/shadcn-style cards: uppercase muted labels (`0.6875rem`), crisp stat numbers (`1.35rem`), and subtle status dots (`● On Target`).
-- **Subtle Status & Action Badges**: Standardized badges to muted pastel/neutral pills (`0.6875rem` font, `padding: 0.08rem 0.45rem`). Table row delete actions now use `.btn-table-action.btn-delete`, remaining subtle neutral gray until hovered to prevent visual noise across rows.
-
-### Context: QuickBooks Visual Makeover (Purple-ish Blue & White Theme, + New Action, Nav Icons & Subtitles, Workflow Hub)
-**Problem**: The system required a visual makeover adopting QuickBooks Online patterns, featuring a purple-ish blue and white color scheme, a signature "+ New" Quick Action button, and icons with descriptive helper text across navigation and dashboard.
-**Enforced Solution**:
-- **Color Palette & Theme Tokens**: Configured royal indigo / purple-ish blue (`--primary: 243 75% 59%` / `#4f46e5`, `--primary-hover: 244 75% 51%` / `#4338ca`, `--primary-tint: 243 100% 96%` / `#eef2ff`), crisp white surfaces (`#ffffff`), and a clean, cool-tinted background (`--bg-color: hsl(232 30% 98%)` / `#f8f9fd`).
-- **Signature "+ New" Quick Action Button**: Added a prominent pill button (`.quick-create-btn`) at the top of the sidebar and a compact mobile button in `.top-header`. Toggles a floating 4-column QuickBooks-style popover matrix (`#quick-create-menu`) with categorized shortcuts for Sales, Inventory, Masterlist, and Tools, each with color-accented icons and descriptions.
-- **Rich Sidebar Navigation with Icons & Subtitles**: Expanded sidebar width to 254px to accommodate two-line navigation items (`.nav-item-content` containing `.nav-icon-wrapper`, `.nav-title`, and `.nav-subtitle`). Collapses down cleanly to 68px icon-only mode when toggled.
-- **QuickBooks Business Flow Hub & KPI Cards**:
-  - Implemented `.qb-workflow-ribbon` with an interactive 4-step cycle: Inbound Receiving ➔ Track Inventory ➔ Record Sales ➔ Financial Analytics.
-  - Revamped Financial Overview into 4 QuickBooks KPI cards (`.qb-kpi-card`) highlighting Money In (Revenue), Money Out (COGS), Net Gross Profit, and Profit Margin with category labels, icon badges, formatted figures, and actionable footer links.
-
-### Context: Alternating Background (Zebra Striping) for Data List Views
-**Problem**: Scanning through dense tables and converted list views (Items, Sales, Inventory, Receiving Logs, Brands, Categories, Users, Activity Logs) with tens to hundreds of rows strained eye-tracking across wide screens.
-**Enforced Solution**:
-- **Universal Alternating Selector**: Styled both standard tables (`tbody tr:nth-child(even)`, `tbody tr:nth-child(even) td`) and div-based list views (`.tbody .tr:nth-child(even)`, `.tbody .tr:nth-child(even) .td`) with `background-color: hsl(var(--secondary) / 0.6)` for a subtle slate-indigo tint against white surface backgrounds.
-- **Interactive States**: Configured `tr:hover td` and `.tr:hover .td` with `background-color: hsl(var(--accent))` and smooth `transition: background-color 0.15s ease`. Active inline edit rows override zebra striping with high-priority `hsl(var(--primary-tint) / 0.6) !important`.
-
-### Context: Listviews Form Sheet Aesthetic, Excel Collapsible Columns, and Header Consolidation
-**Problem**: Listviews had redundant page headers taking up vertical space, the Sales Log status column lacked clear color coding and inline editability without turning on batch edit, items were difficult to search across forms due to low search limits and single-field LIKE queries, and wide tables cluttered screens without Excel-like column collapsing.
-**Enforced Solution**:
-- **Consolidated Listview Headers**: Removed outer redundant `header-bar` elements across Inventory, Monthly Inventory, Items, and Sales pages. Placed primary action buttons (`+ Receive Stock`, `+ Encode Sales`, `+ Add Item`) directly inside the top header of the listview cards next to view tools.
-- **Form-Sheet Aesthetic for Tables**: Standardized `.th` and `th` to crisp slate-white (`#f8fafc`), `2px solid #cbd5e1` bottom borders, and `1px solid #e2e8f0` vertical cell dividers. Standardized `.td` and `td` with clean padding `0.42rem 0.6rem`, font-size `0.785rem`, alternating `#fbfcfe` zebra striping, and `#f1f5f9` hover highlights.
-- **Excel-Style Collapsible Columns**: Integrated `window.initExcelCollapsibleColumns()` in [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html). Header cells feature a subtle collapse icon on hover. Collapsing completely hides the column (`display: none !important`) so no text or truncated characters remain partially visible, and renders an intuitive hidden columns chip bar (`.collapsed-cols-bar`) above the table with individual unhide chips and an "Unhide All" button, persisting in `localStorage`.
-- **Inline Readily Editable Color-Coded Statuses**: Configured `.status-icon-btn` without any dropdown indicators/carets in Sales Log row cells (`.status-icon-active` blue dot, `.status-icon-posted` green check, `.status-icon-cancelled` red X). Clicking the icon opens a `.status-menu-popover` selection menu allowing immediate status changes via HTMX without batch edit mode.
-
-### Context: Listview Layout Integrity and Fully Hidden Collapsed Columns
-**Problem**: A missing closing `</div>` in the Stock Overview card header caused the filter bar and table to become flex children placed side-by-side with the header. Additionally, setting collapsed columns to 32px slim columns left text nodes partially visible with ellipsis (`2B...`), and replacing status icons with native selects introduced unwanted dropdown indicators and gray styling.
-**Enforced Solution**:
-- **Strict Card Header Div Matching**: In [templates/inventory.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/inventory.html), ensure card headers with nested view popovers close all internal flex wrappers (`.customize-inventory-view-popover`, `.customize-view-container`, action buttons wrapper, and outer header flex container) before `<form>` and table containers begin.
-- **Fully Hidden Collapsed Columns**: Collapsed table columns must be set to `display: none !important;` on both header (`.th`, `th`) and body (`.td`, `td`) cells. Provide an unhide chip bar (`.collapsed-cols-bar`) directly above the table with badges (`[+ Column Name]`) and an "Unhide All" button.
-- **Color-Coded Status Icon with Popover**: The status column must use a color-coded icon button (`.status-icon-btn`) without select indicators/chevrons. Ensure `.sales-log-table .td[data-col="doc_status"]` has `overflow: visible !important;` so that `.status-menu-popover` displays cleanly above adjacent rows on click.
-
-### Context: Viewport Fixed Popover Stacking, Polished Hidden Columns Bar, and Sub-100ms Form Item Search
-**Problem**:
-1. In `table-row` / `table-cell` rendered tables, sibling rows paint on top of prior rows in natural DOM order, causing the status popover to appear behind the rows beneath it.
-2. The initial hidden columns banner with dashed gray borders looked unfinished, and being placed inside `.table-container` caused it to scroll horizontally with wide tables.
-3. Item search in forms suffered from 300ms debounce delays, lack of caching, and unindexed multi-table `LEFT JOIN` queries with 6 `LIKE` clauses per word in SQLite.
-**Enforced Solution**:
-- **Fixed Viewport Positioning for Table Row Popovers**: In [templates/sales.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/sales.html), `toggleRowStatusMenu` calculates button coordinates via `btn.getBoundingClientRect()` and assigns `position: fixed; z-index: 999999;` to `.status-menu-popover`. This escapes the `display: table` stacking context and container scroll clipping, guaranteeing the menu appears on top of all rows.
-- **Refined Hidden Columns Bar Outside Scroll Container**: In [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html), mount `.collapsed-cols-bar` before `targetContainer` (the `.table-container`), preventing horizontal scroll clipping. Styled with white card background, subtle indigo left border accent (`#6366f1`), and rounded pill chips (`.collapsed-col-chip`) with subtle hover elevation.
-- **High-Performance Form Item Search**:
-  - In [db/db.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/db/db.go), indexed `items(description)`, `items(model)`, `items(brand_id)`, and `items(category_id)`.
-  - In [handlers/master_data.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/master_data.go), replaced outer joins with single-table scans and subqueries (`i.brand_id IN (SELECT id FROM brands WHERE name LIKE ?)`), utilizing SQLite indexes.
-  - In [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html), [templates/form_purchase_order.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/form_purchase_order.html), and [templates/form_quotation.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/form_quotation.html), added instant client-side DOM filtering (0ms), in-memory query cache (`_itemSearchHtmlCache` / `_itemSearchJsonCache`), and lowered debounce latency from 300ms to 80ms.
-
-### Context: Authentic Excel Double-Line Divider (||) for Hidden Columns (No Header Buttons)
-**Problem**: In-header collapse buttons (such as gray minus buttons) and banner chip bars clutter table headers and feel inconsistent with spreadsheet workflows.
-**Enforced Solution**:
-- **Zero In-Header Buttons**: Table headers must contain only clean title text (`<span class="th-title">...</span>`). Never inject collapse/minus buttons or icon badges into header cells.
-- **Disabled Resizers for Clean Indicator Rendering**: The drag resizers (`.table-col-resizer`, `.sales-log-col-resizer`) were disabled (`display: none !important;`) because their absolute positioning covered the right cell borders and intercepted click/hover events intended for column unhiding.
-- **Excel Double-Line Divider (`||`)**: When columns are hidden, the boundary between adjacent visible columns is styled with dedicated `::after` / `::before` pseudo-elements creating two crisp 2px solid vertical bars (`border-left: 2px solid #4f46e5; border-right: 2px solid #4f46e5;`) that are always prominently visible across all DPIs and table cell borders.
-- **Unhide on Click & View Sync**: A transparent split handle (`.excel-divider-handle`) sits directly over the double line with `cursor: col-resize;`. Clicking or double-clicking the divider immediately restores adjacent hidden column(s). Any hidden column changes instantly synchronize with the view popovers via the `radline-excel-cols-updated` event.
-- **Header Right-Click Context Menu**: Right-clicking any column header displays a sleek context menu (`showColumnContextMenu`) with options to "Hide column '<title>'" and "Unhide all columns (<count>)".
-
-### Context: Direct Column Header Collapse & De-Collapse (Hover Collapse Button, Header [+] Expand Button, & Chip Bar)
-**Problem**: Users could not collapse and de-collapse columns directly from table headers without navigating to the "Customize Visible Columns" popover.
-**Enforced Solution**:
-- **Column Header Hover Collapse Button**: On hovering any collapsible table header cell (`.th`, `th`), a subtle, compact collapse button (`.btn-th-collapse`) appears with a minus icon (`—`) and tooltip. Clicking it immediately collapses that column.
-- **Header Border Expand `[+]` Button**: When columns are collapsed, a circular badge button (`.excel-unhide-btn`) with a `+` icon is mounted directly on the divider boundary (`.excel-divider-handle`) between adjacent visible headers, listing hidden column names on tooltip. Clicking it immediately restores the hidden column(s).
-- **Sleek Unhide Chip Bar**: Directly above `.table-container`, a compact banner (`.collapsed-cols-bar`) lists hidden columns as rounded pill chips (`.collapsed-col-chip`) alongside an "Unhide all" button, allowing instant de-collapse without touching view customization popovers.
-- **State Synchronization**: Fully synchronizes with `localStorage` (`radline_collapsed_cols_<tableId>`) and fires `radline-excel-cols-updated` so that view popovers and table states remain in 100% agreement.
+### Context: Sales Log Stacked Deductions & Dynamic Status/Supplier Color Coding
+- **Problem**: Separate columns for `Patong`, `POS Charge`, and `WT 2307` wasted horizontal space, and status/supplier selects needed theme-consistent color coding.
+- **Enforced Solution**:
+  - **Stacked Deductions Column**: Consolidated into a single `Deductions` column (`data-col="patong"`). Read-only rows stack non-zero values (`P:`, `C:`, `W:`) or `—`; edit rows stack three compact inputs (`name="patong"`, `pos_charge`, `wt_2307`).
+  - **Dynamic Select Color Sync**: Use `.status-select-*` and `.supplier-select-*` classes in `static/index.css` updated on change via `window.updateSelectColorClass(el)`.

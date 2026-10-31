@@ -1,268 +1,49 @@
-# Sidebar Navigation
+# Sidebar Navigation & Quick Actions
 
-> Back to [[00-index]] · Related: [[ui-design-tokens]], [[responsive-design]]
+> Back to [[00-index]] · Related: [[ui-design-tokens]], [[responsive-design]], [[htmx-patterns]], [[templates-overview]]
 
 ## File
-[templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) — lines 15–77 (structure), 82–191 (scripts)
+[templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) · Styles in [static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css)
 
-## Structure
-
-```html
-<div class="app-layout">
-    <div id="sidebar-backdrop" onclick="toggleMobileSidebar()"></div>
-    
-    <aside id="sidebar" class="sidebar">
-        <div class="sidebar-brand">
-            <h1 class="brand-full">Radline BackOffice</h1>    <!-- Gradient text -->
-            <h1 class="brand-mini">R</h1>
-            <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()">...</button>
-            <button class="sidebar-close-btn" onclick="toggleMobileSidebar()">...</button>     <!-- Mobile only -->
-        </div>
-        
-        <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
-            <a href="/">Dashboard</a>
-            <a href="/sales">Sales</a>
-            
-            <div class="sidebar-dropdown" id="inventory-dropdown">
-                <button class="sidebar-dropdown-trigger">
-                    Inventory ▼
-                </button>
-                <div class="sidebar-dropdown-menu">
-                    <a href="/inventory">Overview</a>
-                    <a href="/inventory/monthly">Monthly Inventory</a>
-                    <a href="/inventory/receiving">Stock Receiving</a>
-                    <a href="/inventory/adjustments">Stock Adjustment</a>
-                    <a href="/inventory/receiving/logs">Receiving Logs</a>
-                    <a href="/inventory/adjustments/logs">Adjustment Logs</a>
-                </div>
-            </div>
-
-            <div class="sidebar-dropdown" id="masterlist-dropdown">
-                <button class="sidebar-dropdown-trigger">
-                    Masterlist ▼
-                </button>
-                <div class="sidebar-dropdown-menu">
-                    <a href="/items">Items</a>
-                    <a href="/brands">Brands</a>
-                    <a href="/categories">Categories</a>
-                    <a href="/uoms">Units of Measure</a>
-                </div>
-            </div>
-
-            <a href="/import">Import</a>
-
-            <div class="sidebar-dropdown" id="tools-dropdown">
-                <button class="sidebar-dropdown-trigger">
-                    Tools ▼
-                </button>
-                <div class="sidebar-dropdown-menu">
-                    <a href="/tools/receipt-scanner">Receipt Scanner</a>
-                </div>
-            </div>
-        </nav>
-    </aside>
-
-    <div class="main-layout-container">
-        <header class="top-header">               <!-- Mobile only -->
-            <button id="sidebar-toggle">☰</button>
-            <div class="top-header-title">Radline BackOffice</div>
-        </header>
-        <main id="main-content">
-            {{ block "content" . }}{{ end }}
-        </main>
-    </div>
-</div>
-```
-
-## Desktop Behavior
-- Sidebar is a fixed 220px column, sticky to viewport
-- Can be collapsed to a 64px icon-only sidebar via the collapse button (stored in `localStorage`)
-- Glassmorphic background with `backdrop-filter: blur(16px)`
-- Active link gets blue/indigo background with shadow (active accent indicator bar on the left)
-- Sidebar dropdowns toggle open/closed via `toggleSidebarDropdown()`
-- Dropdown auto-opens when any sub-link URL is active
-
-## Mobile Behavior (≤ 768px)
-- Sidebar is hidden off-screen (`transform: translateX(-100%)`)
-- Hamburger button in top header triggers `toggleMobileSidebar()`
-- Backdrop overlay appears behind sidebar
-- Close button (X) appears in sidebar brand area
-- Navigation clicks auto-close sidebar via `closeMobileSidebarOnNav()`
-
-## JavaScript Functions
-
-### `updateActiveNavLink()`
-- Runs on: `DOMContentLoaded`, `htmx:afterOnLoad`, `htmx:historyRestore`
-- Highlights main links: exact match for `/`, `startsWith` for others
-- Highlights dropdown sub-links: exact match only
-- Auto-expands Inventory dropdown if any sub-link is active
-
-### `toggleSidebarDropdown(event)`
-- Toggles `.open` class on the parent `.sidebar-dropdown`
-- Chevron rotates 180° when open
-
-### `toggleMobileSidebar()`
-- Toggles `.open` on sidebar and `.show` on backdrop
-
-### `closeMobileSidebarOnNav()`
-- Removes `.open` and `.show` — called on every nav link click
-
-## CSS Details
-
-See [[ui-design-tokens]] for full CSS. Key sidebar styles:
-
-| Class | Desktop | Mobile |
-|---|---|---|
-| `.sidebar` | `position: sticky; width: 220px` | `position: fixed; transform: translateX(-100%)` |
-| `.sidebar.collapsed` | `width: 64px` | — |
-| `.sidebar.open` | — | `transform: translateX(0)` |
-| `.sidebar-close-btn` | `display: none` | `display: flex` |
-| `.top-header` | `display: none` | `display: flex` |
-| `.sidebar-backdrop.show` | — | `display: block; opacity: 1` |
-| `.sidebar-nav a.active` | Indigo text + light indigo bg + left accent | Same |
-| `.sidebar-dropdown-menu a.active` | Indigo text + light indigo bg | Same |
-
-## Learnings
-
-### Context: Collapsible Navigation Sidebar with Hover Dropdown Popovers
-**Problem**: Full-width sidebars take up significant horizontal viewport space on desktop, squishing complex grid modules, logs, and spreadsheet tables. Simply collapsing the sidebar off-screen makes navigation tedious.
-**Enforced Solution**:
-- **Icon-Only Collapse State**: Define a `.collapsed` CSS state that shrinks the sidebar from `220px` to `64px`, hides text labels (`.nav-text`), and centers the brand/links navigation icons.
-- **Immediate Inline State Restoring**: Embed an IIFE/synchronous script immediately following the `<aside>` tag:
-  ```javascript
-  if (localStorage.getItem("sidebar-collapsed") === "true") {
-      document.getElementById("sidebar").classList.add("collapsed");
-  }
-  ```
-  This guarantees the layout state is parsed and applied before the first page render, completely preventing Flash of Uncollapsed Layout (FOUT).
-- **Hover Dropdown Popovers**: When collapsed, override vertical inline menu lists to display absolutely as floating popover panels on the right:
-  ```css
-  .sidebar.collapsed .sidebar-dropdown:hover .sidebar-dropdown-menu {
-      display: flex !important;
-      position: absolute;
-      left: 100%;
-      top: 0;
-      background: var(--surface-color);
-      border: 1px solid var(--border-color);
-      box-shadow: var(--shadow-hover);
-      z-index: 1001;
-      margin-left: 0.5rem;
-      min-width: 180px;
-  }
-  ```
-- **Click Behavior Suppression**: Block inline dropdown expand/collapse click handlers while the sidebar is collapsed to prevent UI interaction bugs.
-
-### Context: Sidebar Active Link Contrast Fix
-**Problem**: Active links in the sidebar had poor contrast — blue text (`var(--primary-color)`) on a light blue tinted background (`rgba(53, 37, 205, 0.08)`), making the active state hard to distinguish.
-**Enforced Solution**:
-- Changed both `.sidebar-nav a.active` and `.sidebar-dropdown-menu a.active` to use `color: var(--primary-color)` (indigo) on `background-color: rgba(53, 37, 205, 0.08)` (light indigo) — the indigo text on a light tint provides good contrast while keeping the color family cohesive.
-- Added a left accent bar (`.active::before`) using `var(--primary-color)` as a 4px-wide pill indicator to visually anchor the active item.
-- This approach gives a **clean, modern active indicator** with the accent bar providing the visual weight instead of a heavy gradient fill.
-
-### Context: Sidebar Active Link Duplicate Highlighting
-**Problem**: The `updateActiveNavLink()` JavaScript used `currentPath.startsWith(href)` to match dropdown sub-links, causing `/inventory` (Overview) and `/inventory/monthly` (Monthly Inventory) to both be highlighted simultaneously when on `/inventory/monthly`.
-**Enforced Solution**:
-- Changed dropdown sub-link matching to a two-pass algorithm:
-  1. **First pass**: Mark all links that match via exact match OR `startsWith(href + "/")` (for child pages like `/items/new` matching `/items`).
-  2. **Second pass**: If multiple links in the same dropdown are active, keep only the one with the **longest href** (most specific match) and deactivate the rest.
-- This ensures only one sub-link is active at a time while still supporting parent-link highlighting for sub-pages (e.g., `/items/new` highlights `/items`).
-
-### Context: Displaying All Menu and Sub-menu Logo Icons Altogether when Sidebar is Minimized
-**Problem**: Previously, when the sidebar was collapsed (`.sidebar.collapsed`), sub-menu links were hidden inside popovers that relied on CSS hover, causing sub-menu icons to be hidden or hard to access when minimized.
-**Enforced Solution**:
-- **SVG Logos for Sub-menu Items**: Wrap all sub-menu links in `<span class="nav-icon-text">` containing distinct 18x18 SVG icons (`.nav-icon`) matching top-level menu icon style (2px stroke width, `currentColor`).
-- **Inline Collapsed Navigation**: When `.sidebar.collapsed`, hide non-link category headers (`.sidebar-dropdown-trigger`) and display all `.sidebar-dropdown-menu` containers inline as a continuous vertical column:
-  ```css
-  .sidebar.collapsed .sidebar-dropdown-trigger {
-      display: none !important;
-  }
-  .sidebar.collapsed .sidebar-dropdown-menu {
-      display: flex !important;
-      flex-direction: column;
-      gap: 0.125rem;
-      padding: 0 !important;
-      margin: 0 !important;
-      border: none !important;
-  }
-  .sidebar.collapsed .sidebar-nav a,
-  .sidebar.collapsed .sidebar-dropdown-menu a {
-      display: flex !important;
-      justify-content: center !important;
-      align-items: center;
-      padding: 0.5rem !important;
-  }
-  ```
-- All menu and sub-menu item icons (Dashboard, Sales, Overview, Monthly Inventory, Receiving Logs, Adjustment Logs, Items, Settings, Import, Receipt Scanner) now display centered altogether in the 64px minimized sidebar column with native tooltips (`title="..."`) on hover.
-
-
-### Context: Sidebar Navigation Z-Index and Dropdown Cleanup Fix
-**Problem**: Users could not click sidebar navigation links or the "+ Add Item Row" button. Page cards/forms containing `.searchable-dropdown` elements were applying `z-index: 9000 !important` and `z-index: 9500 !important` to parent `.card`, `form`, `.table-container`, and `tr` elements. This stacked page content 9x higher than `.sidebar` (`z-index: 1000`), causing content cards to intercept clicks intended for the sidebar. Additionally, selecting item dropdown options failed to clean up container `has-dropdown` states, leaving cards permanently elevated.
-**Enforced Solution**:
-- **Elevated Sidebar Z-Index**: Increased `.sidebar` `z-index` to `10000` on desktop and `100000` on mobile (and mobile backdrop to `99999`).
-- **Purged Card/Form Z-Index Overrides**: Removed destructive `z-index: 9000 !important` and `z-index: 9500 !important` rules from `.card`, `form`, `.table-container`, and `tr` rules. Since `.dropdown-list` is `position: fixed; z-index: 999999 !important;`, parent cards and forms do not require high z-indexes.
-- **Immediate Dropdown State Cleanup**: Added `cleanupDropdownState(container)` in `base.html` to instantly strip `active`, `has-dropdown`, `active-dropdown-row`, and `active-dropdown-cell` classes on item selection, blur, escape, or outside clicks.
-- **Grid Row Container Focus**: Updated Enter keydown listener to target `#sales-items-tbody`, `#receiving-items-tbody`, `#adjustment-items-tbody` grid containers when auto-focusing newly added item rows.
-
-### Context: Profile Sub-Menu Migration (User Accounts, Roles & Permissions, Activity Logs)
-**Problem**: The sidebar `Masterlist` dropdown was congested with administrative and security items (`/settings/roles`, `/settings/users`, `/activity-logs`), conflating product catalog configuration with operator security/audit controls and leaving the profile chip static.
-**Enforced Solution**:
-- **Masterlist Streamlining**: Removed User Accounts, Roles & Permissions, and Activity Logs from `#masterlist-dropdown` in `templates/base.html`, keeping it focused on catalog and business configurations (`/items` and `/settings`).
-- **Profile Popover Sub-Menu**: Converted the bottom profile chip (`#user-chip-container` rendered by `UserChipHandler` in `handlers/auth.go`) into an interactive flyout menu (`#profile-menu`).
-- **Sub-Menu Contents**:
-  1. Profile header with user avatar, full name, role badge pill, and `@username`.
-  2. Administration section containing:
+## Current Sidebar Architecture (`254px` Desktop / `64px–68px` Collapsed)
+1. **Brand Header (`.sidebar-brand`)**:
+   - `.brand-full` (`R` badge + "Radline Enterprise Suite") and `.brand-mini` (collapsed mode).
+   - `#sidebar-collapse-btn` (`toggleSidebarCollapse()`) and mobile `.sidebar-close-btn` (`toggleMobileSidebar()`).
+   - Immediate inline `<script>` after `<aside id="sidebar">` restores `localStorage.getItem("sidebar-collapsed") === "true"` before first paint (zero FOUT).
+2. **Signature `+ New` Quick Action Button (`.quick-create-section`)**:
+   - `#quick-create-btn` toggles `#quick-create-menu` anchored directly below (`top: calc(100% + 4px)`).
+   - **Context-Aware Menu (`updateDynamicQuickMenu()`)**:
+     - **Default (`/`)**: 4-column matrix (Sales & Billing, Stock & Warehousing, Masterlist & Items, Operations & Tools).
+     - **Module-Specific Routes**: Filtered single-column quick actions matching the active section (`/inventory*`, `/items|/brands|/categories|/uoms|/customers`, `/sales*`, `/goals*`, `/calendar*`, `/settings/users|/settings/roles`).
+   - **Zero-Latency Dispatch (`handleQuickAction`)**: Toggles target form cards/modals directly in-DOM if already on the page, or navigates via `htmx.ajax` (`?action=new` for `/calendar`).
+3. **Navigation Links (`nav.sidebar-nav` with `hx-target="#main-content" hx-push-url="true"`)**:
+   - **Direct Links**: Dashboard (`/`), Sales (`/sales`), Earning Goals (`/goals`), Calendar (`/calendar`), Import (`/import`).
+   - **`#forms-dropdown`**: Quotation Forms (`/forms/quotation`), Purchase Order Forms (`/forms/purchase-order`).
+   - **`#inventory-dropdown`**: Overview (`/inventory`), Monthly Inventory (`/inventory/monthly`), Stock Receiving (`/inventory/receiving`), Stock Adjustment (`/inventory/adjustments`), Receiving Logs (`/inventory/receiving/logs`), Adjustment Logs (`/inventory/adjustments/logs`).
+   - **`#masterlist-dropdown`**: Items (`/items`), Customers (`/customers`), Brands (`/brands`), Categories (`/categories`), Units of Measure (`/uoms`).
+   - **`#tools-dropdown`**: Receipt Scanner (`/tools/receipt-scanner`).
+4. **Bottom Profile Flyout (`#user-chip-container` → `#profile-menu`)**:
+   - Loaded via `GET /auth/user-chip` (`UserChipHandler` in `handlers/auth.go`).
+   - Contains user avatar/role badge and **Administration** links:
      - **User Accounts** (`/settings/users`)
      - **Roles & Permissions** (`/settings/roles`)
      - **Activity Logs** (`/activity-logs`)
-  3. Sign Out action with `hx-post="/logout"` and confirmation.
-- **Interactivity & SPA Navigation**:
-  - `toggleProfileMenu(event)` and `closeProfileMenu()` JavaScript helpers in `templates/base.html`.
-  - Outside click and `Escape` key handlers.
-  - All navigation links use `hx-target="#main-content" hx-push-url="true"` for seamless SPA transitions.
-  - Active page highlight dynamically applies to `.profile-menu-item` and marks `#profile-chip-btn` with an active accent.
-  - Responsive positioning: floats above profile chip on normal view (`bottom: calc(100% + 6px)`), flies out to the right (`left: calc(100% + 8px)`) when `.sidebar.collapsed`.
+     - **Settings (DeepSeek Vision AI)** (`/settings/system`)
+     - **Sign Out** (`hx-post="/logout"`)
 
-### Context: Forms Menu Navigation (Quotation Forms & Purchase Order Forms)
-**Problem**: Operators required dedicated access to printable document generators for Price Quotations and Purchase Orders both from the collapsible sidebar and the Quick Actions popover, distinct from transaction logging.
-**Enforced Solution**:
-- **Dedicated Forms Dropdown**: Added `#forms-dropdown` in `templates/base.html` containing:
-  - **Quotation Forms** (`/forms/quotation`)
-  - **Purchase Order Forms** (`/forms/purchase-order`)
-- **Quick Create Integration**: Added quick create links in `#quick-create-menu` under Sales & Billing and Stock & Warehousing columns.
-- **Printable Document Sheets**: Dedicated printable sheet templates (`form_quotation.html`, `form_purchase_order.html`) equipped with client-side calculations, catalog item auto-fill, and `@media print` CSS.
+---
 
-### Context: Dynamic Context-Aware Quick Create Menu & Header Button Removal
-**Problem**: Cluttered top-right corner "+ Add" / creation action buttons across page card headers created inconsistent UX and visual noise. Furthermore, the Quick Create popover always rendered a heavy 4-column matrix even when an operator was working inside specialized modules (Inventory, Masterlist, Sales).
-**Enforced Solution**:
-- **Purge of Header Buttons**: Removed all top-right "+ Add" buttons across all pages (`items`, `sales`, `inventory`, `receiving_logs`, `adjustment_logs`, `brands`, `categories`, `uom_settings`, `goals`, `reminders`, `users`, `roles`).
-- **Dynamic Quick Create Menu**: Refactored `#quick-create-menu` in `templates/base.html` to toggle between default 4-column matrix and context-tailored single-column action lists based on active route:
-  - **Default (e.g. Dashboard `/`)**: Full 4-column matrix (Sales, Inventory, Masterlist, Tools).
-  - **Inventory (`/inventory*`)**: Only `+ Receive Stock` and `+ Adjust Log`.
-  - **Masterlist (`/items`, `/brands`, `/categories`, `/uom-settings`, `/settings`)**: Only `+ Add Item`, `+ Add Brand`, `+ Add Category`, and `+ Add UOM Setting`.
-  - **Sales (`/sales*`)**: Only `+ Record Sale`.
-  - **Goals (`/goals*`)**: Only `+ Set Earning Goal`.
-  - **Calendar (`/calendar*`)**: Only `+ Add Reminder`.
-  - **Admin / Settings (`/users*`, `/roles*`)**: Only `+ Add User` and `+ Create Role`.
-- **Intelligent Dispatch (`handleQuickAction`)**: If the current page already contains the target modal/card (e.g., `#receive-stock-card`, `#add-item-card`), it triggers the form toggle directly in-DOM with 0ms latency; otherwise, it navigates via `htmx.ajax`.
-- **Lifecycle Integration**: `updateDynamicQuickMenu()` hooks into `updateActiveNavLink()`, ensuring instantaneous adjustment across initial load, `htmx:afterOnLoad`, and `htmx:historyRestore`.
-- **Positioning & Compact Header Refinement**:
-  - Anchored `#quick-create-menu` directly below `.quick-create-btn` (`top: calc(100% + 4px); left: 0.75rem;`) within `.quick-create-section { position: relative; }`.
-  - Replaced bulky header subtitle block with a slim uppercase header bar (`.quick-create-header`) and an interactive `×` close button (`.quick-create-close-btn`).
-  - Sleek button appearance: refined `.quick-create-btn` with semi-translucent icon container, inset highlight, 36px height (`2.25rem`), and 180° caret toggle animation.
+## Key Behaviors & Learnings
 
-### Context: DeepSeek Vision AI Settings Relocation to Profile Submenu
-**Problem**: The DeepSeek Vision AI configuration card was residing inside `templates/settings.html` under Masterlist, conflating administrative system/API key configuration with catalog master data (Brands, Categories, Units of Measure).
-**Enforced Solution**:
-- **Profile Sub-Menu Integration**: Added **Settings** (`/settings/system`) to `#profile-menu` under the Administration section rendered by `UserChipHandler` in `handlers/auth.go`.
-- **Dedicated System Settings View**: Created `templates/system_settings.html` with route `GET /settings/system` rendered by `SystemSettingsHandler`. Hosts the DeepSeek Vision AI Settings form (preset selector, API key input with show/hide toggle, base URL, and model), saving to `POST /settings/deepseek`.
-- **Sub-Tabs & Navigation Alignment**: Added a `Settings` tab (`/settings/system`) alongside `Roles & Permissions`, `User Accounts`, and `Activity Logs` across all administration views.
-- **Masterlist Cleanup**: Removed the DeepSeek card from `templates/settings.html`, keeping `/settings` focused on product catalog configuration.
+### Context: Collapsed Sidebar Mode (`.sidebar.collapsed`)
+- When collapsed, `.sidebar-dropdown-trigger` headers are hidden (`display: none !important`) and all `.sidebar-dropdown-menu` items display inline as a continuous vertical column of centered SVG icons with `title` tooltips.
+- `#profile-menu` flies out to the right (`left: calc(100% + 8px)`) when collapsed, and floats above the chip (`bottom: calc(100% + 6px)`) when expanded.
 
-## Related
-- [[ui-design-tokens]] — CSS classes and variables
-- [[responsive-design]] — Mobile breakpoints
-- [[htmx-patterns]] — SPA navigation via HTMX
-- [[templates-overview]] — Base template structure
+### Context: Two-Pass Active Link Highlighting (`updateActiveNavLink`)
+- Runs on `DOMContentLoaded`, `htmx:afterOnLoad`, and `htmx:historyRestore`.
+- Uses a two-pass longest-prefix match so `/inventory/monthly` activates only "Monthly Inventory" and not `/inventory` ("Overview") simultaneously.
+- Active items use indigo text (`var(--primary-color)`), light indigo tint background, and a 4px left accent pill (`.active::before`).
 
-
-
+### Context: Z-Index Hierarchy & Dropdown Cleanup
+- `.sidebar` uses `z-index: 10000` on desktop and `100000` on mobile (backdrop `99999`).
+- Never apply high `z-index` overrides (`9000+`) to `.card`, `form`, or `tr` elements; floating `.dropdown-list` popovers use `position: fixed; z-index: 999999` and `cleanupDropdownState(container)` strips active classes on selection/blur/escape.

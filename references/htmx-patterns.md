@@ -1,301 +1,81 @@
 # HTMX Patterns
 
-> Back to [[00-index]] · Related: [[handlers-overview]], [[templates-overview]]
+> Back to [[00-index]] · Related: [[handlers-overview]], [[templates-overview]], [[ui-design-tokens]]
 
 ## Core Architecture
-
-Radline uses **HTMX 1.9.10** (loaded via CDN in `base.html`) for all dynamic interactions. There is **no JavaScript framework** — all state lives on the server.
-
-## SPA-Style Navigation
-
-The sidebar navigation uses HTMX for partial page updates:
-
-```html
-<nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
-    <a href="/brands" hx-get="/brands">Brands</a>
-</nav>
-```
-
-- `hx-target="#main-content"` → Swap only the main content area
-- `hx-push-url="true"` → Update browser URL and history
-- [[handlers-overview|`RenderPage`]] checks `HX-Request` header and renders only the `{{block "content"}}` portion
-
-**Result:** Clicking sidebar links feels like an SPA without a full page reload.
+Radline uses **HTMX** (`/static/htmx.min.js` in `templates/base.html`) for all dynamic interactions. All application state is server-rendered hypermedia (HTML fragments), with JSON used only where explicitly needed by client-side helpers (`/items/search?format=json`, `/customers/search?format=json`).
 
 ---
 
-## Toast Notifications Protocol
-
-### Server Side (Go)
-```go
-w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Brand created!"}}`)
-```
-
-Types: `success`, `error`, `warning`, `info`
-
-### Client Side (base.html)
-```javascript
-document.body.addEventListener('show-toast', function(evt) {
-    // Creates toast DOM element with icon + message
-    // Auto-removes after 4 seconds with fadeOut animation
-});
-```
-
----
-
-## Search, Filter, Sort Pattern
-
-Used in Brands, Categories, Items, Sales, Logs pages:
-
-```html
-<input type="search" name="search"
-       hx-get="/brands"
-       hx-trigger="keyup changed delay:300ms, search"
-       hx-target="#brands-tbody"
-       hx-include="[name='filter'],[name='sort']">
-
-<select name="filter" class="form-input"
-        hx-get="/brands"
-        hx-trigger="change"
-        hx-target="#brands-tbody"
-        hx-include="[name='search'],[name='sort']">
-```
-
-**Key rules:**
-- `hx-target` points to `<tbody>` (not the whole page) → preserves filter inputs
-- `hx-include` gathers all other filter params → maintains state
-- `delay:300ms` throttles search input → prevents excessive requests
-- See [[handlers-overview]] for the three-way HTMX check in handlers
-
----
-
-## Inline Edit Pattern (CRUD Tables)
-
-```html
-<!-- Display row -->
-<tr id="brand-row-5">
-    <td>BRD5</td>
-    <td>Brand Five</td>
-    <td><button hx-get="/brands/edit/5" hx-target="#brand-row-5" hx-swap="outerHTML">Edit</button></td>
-</tr>
-
-<!-- Click Edit → swaps to: -->
-<tr id="brand-row-5" class="edit-row">
-    <td><input name="code" value="BRD5"></td>
-    <td><input name="name" value="Brand Five"></td>
-    <td>
-        <button hx-post="/brands/edit/5" hx-target="#brand-row-5" hx-swap="outerHTML">Save</button>
-        <button hx-get="/brands/row/5" hx-target="#brand-row-5" hx-swap="outerHTML">Cancel</button>
-    </td>
-</tr>
-```
-
----
-
-## Multi-Row Form Submission
-
-For receiving, adjustments, and sales with multiple items:
-
-```html
-<tr>
-    <td><select name="item_id">...</select></td>
-    <td><input name="qty" type="number"></td>
-    <td><input name="uom" type="text"></td>
-    <td><input name="cost" type="number"></td>
-</tr>
-<!-- More rows with identical name attributes -->
-```
-
-Go server reads as arrays:
-```go
-r.ParseForm()
-itemIDs := r.Form["item_id"]   // []string
-qtys := r.Form["qty"]          // []string
-```
-
-**Adding rows:** Button calls `hx-get="/inventory/receiving/new-row"` → appends new `<tr>` to the table body.
-
-**Removing rows:** Inline JS `onclick="this.closest('tr').remove()"` — no server roundtrip.
-
----
-
-## Out-of-Band (OOB) Swaps
-
-Used by `ItemDefaultsHandler` to auto-fill fields when an item is selected:
-
-```html
-<!-- Server returns: -->
-<input id="receiving_uom" name="uom" value="PCS" hx-swap-oob="true">
-<input id="receiving_cost" name="cost" value="80.00" hx-swap-oob="true">
-```
-
-These replace elements **anywhere on the page** matching the `id`, regardless of the main `hx-target`.
-
-**Critical:** When calling `htmx.ajax()` programmatically for OOB-only responses, always pass `swap: 'none'`:
-```javascript
-htmx.ajax('GET', '/endpoint', { values: { id: val }, swap: 'none' })
-```
-
----
-
-## Form Reset After Submission
-
-```html
-<form hx-on::after-request="if(event.detail.successful && event.detail.elt === this) this.reset()">
-```
-
-**Key guard:** `event.detail.elt === this` prevents the form from resetting when child elements (like "Add Row" buttons) trigger their own HTMX requests.
-
----
-
-## HX-Location Redirect
-
-After successful multi-item submissions (receiving/adjustments), the handler sends:
-```go
-w.Header().Set("HX-Location", "/inventory/receiving/logs")
-```
-
-This triggers HTMX to navigate to the logs page, similar to `hx-push-url` but triggered from the server.
-
-## Learnings
-
-### Context: Multi-Parameter Search, Filtering, and Sorting with HTMX
-**Problem**: Preserving user inputs (e.g. search query, current filter, current sort) across HTMX table refreshes without resetting focus, cursor position, or selection states.
-**Enforced Solution**:
-- Target only the table body (`<tbody>`) with HTMX updates, leaving search/filter inputs untouched.
-- On each search/filter/sort input, use `hx-include` to gather parameters from other input fields (e.g., `hx-include="[name='filter'],[name='sort']"`).
-- Use `hx-trigger="keyup changed delay:300ms, search"` on text inputs to throttle requests, and `hx-trigger="change"` on dropdowns to trigger updates instantly.
-
-### Context: Multi-Row / Tabular Form Submission in HTMX (No JSON)
-**Problem**: Encoding a master-detail structure (e.g., a transaction header with multiple line items) in HTML forms without using complex client-side JSON serialization, which violates standard hypermedia constraints.
-**Enforced Solution**:
-- Use identical `name` attributes for the fields across all dynamic rows (e.g. `name="item_id"`, `name="qty"`, `name="uom"`).
-- HTMX submits these as standard multi-value form parameters. In Go, call `r.ParseForm()` and access them as slices (`r.Form["item_id"]`, `r.Form["qty"]`).
-- Validate that all input slices have matching lengths before constructing domain models.
-- Implement inline browser-side JS like `onclick="this.closest('tr').remove()"` for row removal to avoid unnecessary server roundtrips.
-- Clean up extra rows on successful submission by listening to the `hx-on::after-request` event (e.g. trimming the items table back to a single default row).
-
-### Context: Programmatic HTMX AJAX & Out-of-Band (OOB) Swaps
-**Problem**: Invoking `htmx.ajax(method, path, context)` programmatically from a change or click handler without setting a `swap` style will target the `<body>` element by default, causing the entire page content to be replaced with empty space.
-**Enforced Solution**:
-- Always pass `swap: 'none'` in the context parameters of programmatic `htmx.ajax(...)` calls if they are solely intended to execute server logic or rely on Out-of-Band (OOB) swaps:
-  ```javascript
-  htmx.ajax('GET', '/endpoint', { values: { id: val }, swap: 'none' })
-  ```
-
-### Context: HTMX Event Bubbling and Form Resets
-**Problem**: Inline event handlers on forms like `hx-on::after-request="this.reset()"` will listen to all HTMX-related requests that bubble up from child elements, causing the form to reset unexpectedly when sub-actions (like dynamically adding table rows) are triggered.
-**Enforced Solution**:
-- Inside form `hx-on::after-request` or `htmx:afterRequest` listeners, validate that the target element is the form itself using `event.detail.elt === this` before performing a reset, ensuring sub-requests do not trigger form resets.
-
-### Context: Unified Form Entry and Log Views (HTMX Same-Page Updates)
-**Problem**: Consolidating a data entry form and its corresponding history log table onto a single page without full page reloads, while ensuring the table updates dynamically upon form submission.
-**Enforced Solution**:
-- Place the data entry `<form>` and historical logs `<table>` in the same tab/page container.
-- Configure the `<form>` to submit to the creation endpoint using `hx-target="#tbody-id"` and `hx-swap="innerHTML"`.
-- The creation handler should return the updated rows HTML fragment (`*_rows.html`) rather than a full page or redirects.
-- Chain a client-side cleanup/reset trigger using `hx-on::after-request="if(event.detail.successful && event.detail.elt === this) this.reset()"` to clear the form upon successful database insertion.
-
-### Context: HTMX Out-of-Band (OOB) Pagination and Implicit Template Registration
-**Problem**: Rendering list views with thousands of items (e.g. Sales, Items) causes UI sluggishness and N+1 query bottlenecks. Adding pagination while preserving user search/filter/sorting states requires updating both the table body and pagination controls without losing input focus.
-**Enforced Solution**:
-- **Implicit Template Fragment**: Define pagination markup in a separate template file (e.g. `pagination.html`) without `{{ define }}` wrappers. This allows the template to be compiled implicitly with its filename as the key.
-- **Fragment Registration**: Register `"pagination.html"` inside the `fragments` list in `main.go` so it is registered standalone in `app.Templates`.
-- **Double Template Rendering**: In handlers on HTMX requests, render the rows template (e.g. `item_rows.html`), and then call `app.Render(w, "pagination.html", paginationView)` to append it.
-- **HTMX OOB Swaps**: The pagination container uses `hx-swap-oob="true"` with a matching DOM ID (e.g. `id="items-pagination"`). HTMX automatically swaps the body rows into the target table body and swaps the pagination block into the footer out-of-band.
-- **Filter Retention**: Pagination buttons use `hx-include` to gather active filter inputs (e.g. search, sort), while filters omit the page parameter (defaulting to 1 on trigger) so that modifying search/sort automatically resets pagination.
-
-### Context: SPA Layout Viewport Scroll Reset on Transition
-**Problem**: When navigating between pages using HTMX swaps targeting a main layout container (e.g., `#main-content`), the page scroll position does not reset to the top, remaining at the scroll offset of the previous page.
-**Enforced Solution**:
-- Add a global HTMX swap listener:
-  ```javascript
-  document.body.addEventListener("htmx:afterSwap", function(evt) {
-      if (evt.detail.target.id === "main-content") {
-          window.scrollTo(0, 0);
-      }
-  });
-  ```
-- This resets scroll position back to top on layout transitions, but preserves scroll offsets when searching, paginating, or filtering.
-
-### Context: Conditional HTMX Out-of-Band (OOB) Swaps for SPA Page Transitions
-**Problem**: Marking elements (like a pagination block) with `hx-swap-oob="true"` globally causes HTMX to discard those elements when they are returned as part of a layout transition request targeting `#main-content`, because the target ID of the OOB element does not exist in the DOM before the swap.
-**Enforced Solution**:
-- **Conditional hx-swap-oob**: Use a boolean flag like `IsOOB` in the view data. Render `hx-swap-oob="true"` in the template conditionally:
-  ```html
-  <div id="{{ .TargetID }}-pagination" class="pagination-root"{{ if .IsOOB }} hx-swap-oob="true"{{ end }}>
-  ```
-- **Automatic Request Detection**: Set `IsOOB` dynamically in the view builder function (e.g. `BuildView` or handler mapping) by checking:
+## 1. SPA-Style Navigation & Explicit Targets
+- `<nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">` swaps page content into `#main-content`.
+- **Links/Buttons Inside `#main-content`**: Do **not** inherit the sidebar's `hx-target`. Every page navigation link or form inside `<main id="main-content">` **must** explicitly set `hx-target="#main-content" hx-push-url="true"`.
+- **Scroll Reset**: `base.html` listens to `htmx:afterSwap` and resets `window.scrollTo(0, 0)` only when `evt.detail.target.id === "main-content"`.
+- **Server-Driven Navigation (`HX-Location`)**: After form submissions that navigate or refresh `#main-content`, emit:
   ```go
-  isOOB := r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content"
+  w.Header().Set("HX-Location", `{"path": "/target-url", "target": "#main-content"}`)
   ```
-  This ensures the element renders as a standard inline component during full page loads and sidebar clicks (targeting `main-content`), while correctly acting as an OOB swap element during inline search, filtering, and page-change updates.
+  Avoid `HX-Redirect` for in-app transitions because it forces a full browser reload and drops pending `HX-Trigger` toasts.
 
-### Context: Ditching Pagination in favor of Limit Selector and Instant Auto-Submission Filtering
-**Problem**: Traditional pagination adds complexity (page counts, offsets, navigation buttons, out-of-band updates) and friction for user searches. Need a simpler way to view the top rows of filtered datasets and query/filter instantly without a manual submit button.
-**Enforced Solution**:
-- **Ditch Pagination**: Delete all page navigation elements and templates (such as `pagination.html`), and remove pagination-related parsing configurations from `main.go`.
-- **Add Limit Selector**: Introduce a dropdown in all filter bars named `limit` that lets users select how many top rows to display (e.g., options `25`, `50`, `100`, `200`, `500` rows, defaulting to `25`).
-- **Simplify Queries**: Replace `LIMIT ? OFFSET ?` in SQL statements with `LIMIT ?`, passing the parsed limit directly. Remove count queries (e.g. `SELECT COUNT(*)`) completely from the list handlers.
-- **Enable Auto-Submission**: Remove manual "Apply"/"Go" buttons from filter forms. Trigger filtering instantly using HTMX attributes on the inputs:
-  - Text search: `hx-trigger="keyup changed delay:300ms, search"` (includes debounce delay).
-  - Select filters (including the new limit dropdown): `hx-trigger="change"` (triggers immediately).
-  - Ensure all inputs target the table results container and specify `hx-include="closest form"` to preserve the values of other filter elements.
+---
 
-### Context: HTMX Search/Filter & Mode Toggle Loading Indicators
-**Problem**: When users search, filter, or toggle table display modes (e.g., Preview to Batch Edit mode in Sales), AJAX request latencies can cause the user to believe no action is occurring.
-**Enforced Solution**:
-- **Global Indicator Component & Styles**: Define `.htmx-indicator` in `index.css` with a smooth flex layout, `.spinner-sm` keyframe animation, background pill styling, and subtle `.htmx-request` opacity dimming for target tables.
-- **Form & Input Bindings**: Mark filter forms and input/select elements with `hx-indicator="#<page>-loading-indicator"` to automatically toggle visibility on HTMX requests.
-- **Dynamic Action Text**: On pages with mode toggling (such as Sales preview <-> batch edit mode), listen to `htmx:beforeRequest` or update text elements dynamically prior to triggering `htmx.ajax` to provide contextual feedback (e.g. "Loading batch edit mode...", "Searching & filtering sales logs...").
-### Context: HTMX Coordinated Date Range Presets
-**Problem**: In reporting and log screens, users want date presets (e.g., Today, Yesterday, This Week, Last Week, This Month, Last Month, This Year, Last Year) that automatically populate "Start Date" and "End Date" inputs and trigger filters. However, programmatic value updates via JavaScript do not naturally fire the `change` event required by HTMX, and adding listeners directly to inputs can create circular resets when updating values programmatically.
-**Enforced Solution**:
-- **Document-Level Delegation**: Register a single document-level `change` and `input` listener to handle interactions. This survives page navigation swaps and prevents double-binding issues.
-- **Trigger Flag Prevention**: Use a global boolean flag (`isSettingDatePreset`) to guard date inputs. When setting preset values programmatically, set this flag to `true`, update `start_date` and `end_date` input values, dispatch a single `change` event on the `end_date` input (which serializes the form and triggers HTMX once), then reset the flag to `false`.
-### Context: HTMX Navigation Targets Outside Sidebar Navigation
-**Problem**: In `base.html`, `hx-target="#main-content"` and `hx-push-url="true"` are defined on `<nav class="sidebar-nav">`. Elements rendered inside `<main id="main-content">` (such as dashboard cards, widgets, or back buttons) do **not** inherit this target. Without explicit attributes, clicking `hx-get` or `hx-post` links/buttons defaults the swap target to the element itself (`this`), dumping full sub-page HTML inside tiny card links or buttons. Additionally, using `HX-Redirect` forces full-page reloads and clears pending toasts.
-**Enforced Solution**:
-- **Explicit Content Targets**: Any link or button inside page templates navigating to another view must explicitly specify `hx-target="#main-content" hx-push-url="true"` (e.g., `Manage Goals →`, `Full Calendar →`, `← Dashboard`).
-- **Seamless Redirects with HX-Location**: Handlers performing redirects after form submissions (like `ToggleReminderHandler` or `DeleteGoalHandler`) should inspect `r.Header.Get("HX-Current-URL")` or target `#main-content`, and emit `HX-Location: {"path": returnUrl, "target": "#main-content"}` rather than hard `HX-Redirect`, preserving toast triggers and maintaining fluid SPA navigation.
+## 2. Toast Notifications Protocol (`HX-Trigger`)
+```go
+w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Saved successfully!"}}`)
+```
+- **Types**: `"success"`, `"error"`, `"warning"`, `"info"`.
+- Can be combined with custom domain events in the same JSON header, e.g.:
+  `{"show-toast": {"type": "success", "message": "Added!"}, "customer-added": {}}`
 
-### Context: Global Script Scope Pollution in HTMX SPAs and Hidden Input Event Dispatch
-**Problem**: In an HTMX SPA where pages swap partial content into `#main-content`, `<script>` tags inside swapped templates execute in the global `window` scope. Duplicate function definitions in sub-templates (such as `settings.html`) overwrite canonical functions in `base.html` (e.g. `selectDropdownItem`), breaking dynamic row swaps and auto-population across other views. In addition, updating `<input type="hidden">` programmatically requires explicit HTMX trigger execution to ensure hypermedia swaps fire consistently.
-**Enforced Solution**:
-- **Eliminate Sub-Template Script Duplication**: Maintain all global input and dropdown lifecycle functions centrally in `base.html`. Avoid re-declaring dropdown handlers inside page fragments or sub-views.
-- **Dual Triggering for Programmatic Hidden Inputs**: When updating hidden inputs carrying `hx-trigger="change"`, always execute `htmx.trigger(hidden, 'change')` when `window.htmx` is available alongside `hidden.dispatchEvent(new Event('change', { bubbles: true }))`.
-- **Flexible Attribute Selectors for Inline Forms**: In DOM helper scripts that update companion fields (e.g. default UOM fields), use broad query selectors like `querySelector('#uom, #uom-inline-uom, [name="uom"]')` to cover diverse sub-template DOM IDs.
+---
+
+## 3. Auto-Submitting Filter Bars & Limit Selector (No Pagination)
+- **No Page-Number Pagination**: Traditional pagination (`pagination.html`, `OFFSET`) was removed in favor of a **`limit` dropdown** (`25`, `50`, `100`, `200`, `500`, default `25`) parsed via `GetLimitParam(r)` in `handlers/pagination.go`.
+- **Instant Filtering Pattern**:
+  - Text search: `hx-trigger="keyup changed delay:300ms, search"`
+  - Select filters & `limit` dropdown: `hx-trigger="change"`
+  - Target the results container (`hx-target="#<entity>-results"` or `<tbody>`) with `hx-include="closest form"` and `hx-indicator="#<page>-loading-indicator"`.
+
+---
+
+## 4. Inline Row Editing & Multi-Row Form Submission
+- **Inline Edit**: Display row `#<entity>-row-{id}` swaps `outerHTML` with `GET /<entity>/edit/{id}` (`.edit-row`), saves via `POST /<entity>/edit/{id}`, or cancels via `GET /<entity>/row/{id}`.
+- **Multi-Row Forms (Receiving, Adjustments, Sales)**:
+  - Dynamic rows share identical `name` attributes (`item_id`, `qty`, `uom`, `cost`, `price`).
+  - Go handlers call `r.ParseForm()` and read slices (`r.Form["item_id"]`), validating equal slice lengths before constructing domain aggregates.
+  - Row removal is client-side (`this.closest('tr').remove()` or `.item-grid-row` removal).
+- **Safe Form Reset Guard**:
+  ```html
+  <form hx-on::after-request="if(event.detail.successful && event.detail.elt === this) this.reset()">
+  ```
+  Always check `event.detail.elt === this` so child HTMX requests (like "Add Row") bubbling up do not reset the form.
+
+---
+
+## 5. Out-of-Band (OOB) Swaps & Programmatic `htmx.ajax`
+- **Programmatic OOB Calls**: Calling `htmx.ajax()` without a `swap` option defaults to swapping `<body>`! Always pass `swap: 'none'` when relying on OOB swaps or side-effect endpoints:
+  ```javascript
+  htmx.ajax('GET', '/endpoint', { values: { id: val }, swap: 'none' });
+  ```
+- **Conditional `hx-swap-oob`**: If a template component is rendered both during full/SPA page loads and inline filter swaps, render `hx-swap-oob="true"` only when `r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content"`.
+
+---
+
+## 6. Critical Scripting Rules in HTMX Partials
+
+### Context: Never Use Top-Level `let` or `const` in Swapped Templates
+- **Problem**: HTMX executes `<script>` blocks in swapped partials within the global browser scope. Top-level `let` or `const` throws `Uncaught SyntaxError: Identifier '...' has already been declared` on the second navigation, crashing HTMX DOM insertion.
+- **Enforced Solution**: Attach all state, timers, and functions to `window.*` (e.g., `window._calendarDragActive = false;`) or wrap in an IIFE `(function(){ ... })()`. Keep shared dropdown/input helpers centrally in `templates/base.html`.
+
+### Context: Programmatic Hidden Input & Date Preset Events
+- **Hidden Inputs**: When updating `<input type="hidden">` carrying `hx-trigger="change"`, fire both `hidden.dispatchEvent(new Event('change', { bubbles: true }))` and `if (window.htmx) htmx.trigger(hidden, 'change')`.
+- **Coordinated Date Range Presets**: Use document-level delegation and a guard flag (`isSettingDatePreset = true`) when populating `start_date` and `end_date` programmatically, dispatching a single `change` event on `end_date` to avoid circular triggers.
+
+### Context: Debounced Server-Side Item & Customer Search
+- **Endpoints**:
+  - `GET /items/search?q=&limit=` (`SearchItemsHandler`): `LIKE` on code/description/model/brand/category, default `20`, cap `50`.
+  - `GET /customers/search?q=&limit=` (`SearchCustomersHandler`): `LIKE` on code/name/tin_no/contact_person, default `20`, cap `100`.
+- **Initial Row Render**: Row/form handlers load only `LIMIT 20` items; `*RowDetailsHandler` uses `ORDER BY (id = ?) DESC, description ASC LIMIT 20` so the selected item is guaranteed to be included.
 
 ### Context: Calendar Drag & Drop Rescheduling via HTMX
-**Problem**: In an operational calendar view, rescheduling items (reminders, milestones, tasks) by dragging and dropping between calendar days can inadvertently trigger modal click handlers upon mouse release. Furthermore, dropping on the same day should avoid redundant network round-trips, and backend responses must update `#main-content` seamlessly without full page refreshes.
-**Enforced Solution**:
-- **Drag-Active Click Guard**: Maintain a temporary `_calendarDragActive` boolean set to `true` on `dragstart`, and reset in `dragend` inside a `setTimeout(..., 120)` callback. In item click handlers (e.g. `handleEditReminderClick`), check `if (_calendarDragActive) return;` immediately.
-- **Visual Target Feedback**: Apply `.calendar-day-drop-target` on day cell `dragover` (with `e.preventDefault()` and `e.dataTransfer.dropEffect = 'move'`) and remove on `dragleave` and `drop`.
-- **Programmatic HTMX Dispatch**: On drop, check if `_draggedOriginDate === targetDate`. If changed, call `htmx.ajax('POST', '/reminders/reschedule/' + reminderId, { target: '#main-content', values: { due_date: targetDate } })`.
-- **Dual HX-Target Inspection**: Handlers accept both `HX-Target: #main-content` and `HX-Target: main-content`, emitting `HX-Location: {"path": returnUrl, "target": "#main-content"}` and `HX-Trigger: {"show-toast": ...}` for instantaneous toast notification and partial SPA refresh.
-
-### Context: Avoiding Top-Level `let` / `const` in HTMX Partial Scripts
-**Problem**: When template partials containing top-level `let` or `const` declarations (e.g., `let _calendarDragActive = false;`) are swapped by HTMX more than once, the browser executes the script in the same global execution context (VM). JavaScript strictness prohibits re-declaring lexical bindings in the same scope, throwing `Uncaught SyntaxError: Failed to execute 'insertBefore' on 'Node': Identifier '...' has already been declared`. This unhandled error crashes HTMX's DOM insertion routine and blocks all subsequent SPA navigations.
-**Enforced Solution**:
-- **Attach State Directly to `window`**: In template `<script>` blocks evaluated during HTMX swaps, attach mutable state and top-level helper functions directly to `window` (e.g., `window._calendarDragActive = false; window.handleChipDragStart = function(e) { ... };`), or wrap isolated code in an IIFE `(function () { ... })();`.
-- **Never Declare Bare `let` / `const` at Template Script Root**: Property assignments on `window` are idempotent and can be safely re-evaluated indefinitely across page navigations without throwing syntax errors.
-
-## Related
-- [[handlers-overview]] — `Render` and `RenderPage` methods
-- [[templates-overview]] — Template structure
-- [[sidebar-navigation]] — Navigation setup
-- [[ui-design-tokens]] — CSS classes referenced in templates
-
-### Context: Debounced Server-Side Item Search (Forms & Item Dropdowns)
-**Problem**: Item pickers rendered the entire `items` catalog into each row/datalist and filtered client-side, making item selection slow on large catalogs.
-**Enforced Solution**:
-| Layer | Rule |
-|---|---|
-| **Endpoint** | `GET /items/search?q=&limit=` (`SearchItemsHandler`) — `LIKE` on code/description/model, default **20**, hard cap **50**. Returns `.dropdown-item` HTML; `format=json` returns lowercase keys (`id, code, description, default_uom`). |
-| **Initial render** | Row/form handlers load only `LIMIT 20` items; `*RowDetailsHandler` uses `ORDER BY (id = ?) DESC, description ASC LIMIT 20` so the selected item is always present (a `UNION ALL ... ORDER BY ... LIMIT` does **not** guarantee this). |
-| **Client** | `filterDropdown()` in `base.html` debounces **300ms** for dropdowns whose hidden input is `item_id`, then swaps `.dropdown-list` innerHTML. Datalist forms (PO/Quotation) debounce 300ms and rebuild the `<datalist>`. |
-| **Scope** | Timers in page partials live on `window.*` (never top-level `let`). |
-
-
-
-
+- Guard click handlers with `_calendarDragActive` (cleared 120ms after `dragend`) so dropping a chip does not open the edit modal. On drop to a new date, call `htmx.ajax('POST', '/reminders/reschedule/' + id, { target: '#main-content', values: { due_date: targetDate } })`.

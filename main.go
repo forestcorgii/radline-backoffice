@@ -118,6 +118,15 @@ func main() {
 	mux.HandleFunc("GET /items/row/{id}", app.RequirePermission(domain.PermItemsView, app.ItemRowHandler))
 	mux.HandleFunc("DELETE /items/delete/{id}", app.RequirePermission(domain.PermItemsEdit, app.DeleteItemHandler))
 
+	// Customers CRUD
+	mux.HandleFunc("GET /customers", app.RequirePermission(domain.PermItemsView, app.CustomersHandler))
+	mux.HandleFunc("POST /customers/add", app.RequirePermission(domain.PermItemsEdit, app.AddCustomerHandler))
+	mux.HandleFunc("GET /customers/edit/{id}", app.RequirePermission(domain.PermItemsEdit, app.EditCustomerFormHandler))
+	mux.HandleFunc("POST /customers/edit/{id}", app.RequirePermission(domain.PermItemsEdit, app.UpdateCustomerHandler))
+	mux.HandleFunc("GET /customers/row/{id}", app.RequirePermission(domain.PermItemsView, app.CustomerRowHandler))
+	mux.HandleFunc("DELETE /customers/delete/{id}", app.RequirePermission(domain.PermItemsEdit, app.DeleteCustomerHandler))
+	mux.HandleFunc("GET /customers/search", app.RequirePermission(domain.PermItemsView, app.SearchCustomersHandler))
+
 	// Inventory (Landing, Receiving & Adjustments)
 	mux.HandleFunc("GET /inventory", app.RequirePermission(domain.PermInventoryView, app.InventoryHandler))
 	mux.HandleFunc("GET /inventory/stock", app.RequirePermission(domain.PermInventoryView, app.InventoryHandler))
@@ -243,7 +252,7 @@ func parseTemplates() map[string]*template.Template {
 
 	// Pages that use base.html
 	pages := []string{
-		"dashboard.html", "brands.html", "categories.html", "items.html", "uom_settings.html", "uoms.html",
+		"dashboard.html", "brands.html", "categories.html", "items.html", "customers.html", "uom_settings.html", "uoms.html",
 		"inventory.html", "stock_receiving.html", "stock_adjustments.html",
 		"sales.html", "monthly_inventory.html", "receiving_logs.html", "adjustment_logs.html",
 		"brand_new.html", "category_new.html", "item_new.html", "sales_new.html",
@@ -264,6 +273,8 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/category_row.html", "templates/category_rows.html", "templates/category_edit_row.html", "templates/categories_results.html")
 		} else if page == "items.html" {
 			files = append(files, "templates/item_row.html", "templates/item_rows.html", "templates/item_edit_row.html", "templates/brand_select.html", "templates/category_select.html", "templates/uom_select.html", "templates/items_results.html")
+		} else if page == "customers.html" {
+			files = append(files, "templates/customer_row.html", "templates/customer_rows.html", "templates/customer_edit_row.html", "templates/customers_results.html")
 		} else if page == "uom_settings.html" {
 			files = append(files, "templates/uom_setting_row.html", "templates/uom_setting_rows.html", "templates/uom_setting_edit_row.html", "templates/uom_settings_results.html")
 		} else if page == "uoms.html" {
@@ -310,6 +321,7 @@ func parseTemplates() map[string]*template.Template {
 		"brand_row.html", "brand_rows.html", "brand_edit_row.html",
 		"category_row.html", "category_rows.html", "category_edit_row.html",
 		"item_row.html", "item_rows.html", "item_edit_row.html",
+		"customer_row.html", "customer_rows.html", "customer_edit_row.html", "customers_results.html",
 		"receiving_rows.html", "adjustment_rows.html", "sales_rows.html", "inventory_stock_rows.html",
 		"brand_select.html", "category_select.html", "item_select.html",
 		"sale_item_row.html", "receiving_item_row.html", "adjustment_item_row.html",
@@ -361,6 +373,10 @@ func parseTemplates() map[string]*template.Template {
 			files = append(files, "templates/uom_row.html")
 		} else if frag == "uoms_results.html" {
 			files = append(files, "templates/uom_row.html", "templates/uom_rows.html")
+		} else if frag == "customer_rows.html" {
+			files = append(files, "templates/customer_row.html")
+		} else if frag == "customers_results.html" {
+			files = append(files, "templates/customer_row.html", "templates/customer_rows.html")
 		}
 		t = template.Must(t.ParseFiles(files...))
 		templates[frag] = t

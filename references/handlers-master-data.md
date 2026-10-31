@@ -1,97 +1,26 @@
-# Handlers — Master Data
+# Handlers — Master Data (Brands, Categories, Items)
 
-> Back to [[handlers-overview]] · Related: [[routing]], [[domain-item]]
+> Back to [[handlers-overview]] · Related: [[routing]], [[domain-item]], [[domain-customer]]
 
 ## File
-[handlers/master_data.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/master_data.go)
+[handlers/master_data.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/master_data.go) (See [handlers/customers.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/customers.go) and [[domain-customer]] for Customers CRUD).
 
-## Brands Handlers
-
-### `BrandsHandler` (GET `/brands`)
-- Accepts query params: `search`, `filter` (all/in_use/unused), `sort`
-- Builds dynamic SQL with WHERE/HAVING/ORDER BY
-- Item count computed via `LEFT JOIN items` + `COUNT(i.id)`
-- HTMX-aware: returns rows fragment or full page
-
-### `AddBrandHandler` (POST `/brands/add`)
-- Validates code + name are non-empty
-- INSERT with unique constraint on code
-- Returns full brand rows list + success toast
-
-### `EditBrandFormHandler` / `UpdateBrandHandler` / `BrandRowHandler`
-- Inline edit flow: click Edit → swap row with form → submit → swap back to row
-- Uses `r.PathValue("id")` for Go 1.22+ path parameters
-
-### `DeleteBrandHandler` (DELETE `/brands/delete/{id}`)
-- FK constraint prevents deletion if brand has items
-- Returns conflict error toast on FK violation
-
----
-
-## Categories Handlers
-Mirror the exact same pattern as Brands. See source for details.
-
----
+## Brands & Categories Handlers
+- **List (`BrandsHandler`, `CategoriesHandler`)**: Accepts `search`, `filter` (`all`, `in_use`, `unused`), `sort`, and `limit` (`GetLimitParam`). Computes `item_count` via `LEFT JOIN items` + `COUNT(i.id)`.
+- **Create (`AddBrandHandler`, `AddCategoryHandler`)**: Validates via `domain.NewBrand` / `domain.NewCategory`, inserts row, emits `HX-Trigger` toast (+ `brand-added` / `category-added` events for select refreshes).
+- **Inline Edit & Delete**: `Edit*FormHandler` (`GET /.../edit/{id}`), `Update*Handler` (`POST /.../edit/{id}`), `*RowHandler` (`GET /.../row/{id}`), `Delete*Handler` (`DELETE /.../delete/{id}`, blocked with error toast on FK violation).
 
 ## Items Handlers
-
-### `ItemsHandler` (GET `/items`)
-- Additional filters: `brand_id_filter`, `category_id_filter`
-- JOIN with brands + categories for display names
-- Full page render includes brand/category lists for filter dropdowns
-
-### `AddItemHandler` (POST `/items/add`)
-- Handles nullable `brand_id` and `category_id`:
-  ```go
-  var brandID interface{}
-  brandIDVal, err := strconv.Atoi(brandIDStr)
-  if err == nil && brandIDVal > 0 {
-      brandID = brandIDVal
-  } else {
-      brandID = nil  // SQL NULL
-  }
-  ```
-
-### `EditItemFormHandler`
-- Loads item + all brands + all categories for the edit form dropdowns
-
----
-
-## Entry Page Handler
-
-### `EntryHandler` (GET `/entry`)
-- Consolidated data entry page with tabs
-- `tab=receiving` and `tab=adjustments` redirect to `/inventory/receiving` and `/inventory/adjustments`
-- Default tab: `sales`
-- Loads brands, categories, items for the sales entry form
-
----
+- **`ItemsHandler` (`GET /items`)**: Supports `search`, `brand_id_filter`, `category_id_filter`, `sort`, `limit`. Joins `brands` and `categories`.
+- **`AddItemHandler` / `UpdateItemHandler`**: Maps optional `brand_id` and `category_id` (`0` or empty → SQL `NULL`).
+- **`SearchItemsHandler` (`GET /items/search?q=&limit=`)**:
+  - High-performance debounced endpoint (default `LIMIT 20`, hard cap `50`).
+  - Uses indexed single-table scans and subqueries (`i.brand_id IN (SELECT id FROM brands WHERE name LIKE ?)`) instead of multi-table outer joins.
+  - Returns `.dropdown-item` HTML by default, or lowercase JSON (`id, code, description, default_uom`) when `format=json` or `Accept: application/json`.
 
 ## Select Fragment Handlers
-
-These return `<select>` option fragments for HTMX dynamic updates:
-
-| Handler | Route | Template |
-|---|---|---|
-| `SelectBrandsHandler` | `/entry/select/brands` | `brand_select.html` |
-| `SelectCategoriesHandler` | `/entry/select/categories` | `category_select.html` |
-| `SelectItemsHandler` | `/entry/select/items` | `item_select.html` |
-
----
-
-## ItemDefaultsHandler (GET `/entry/item-defaults`)
-
-Returns OOB (Out-of-Band) swap HTML for auto-filling form fields when an item is selected:
-- Looks up the item's `default_uom`
-- Fetches last receiving `cost` and `selling_price` for the item
-- Returns raw HTML with `hx-swap-oob="true"` attributes for inline element replacement
-- Handles two contexts: `tab=receiving` and `tab=adjustments` with different fields
-
-See [[htmx-patterns]] for OOB swap details.
-
-## Related
-- [[routing]] — Route definitions
-- [[domain-item]] — Domain entities for brands/categories/items
-- [[database-schema]] — Table structures
-- [[htmx-patterns]] — Toast notifications and OOB swaps
-- [[templates-overview]] — Template files used
+Return `<option>` fragments for dynamic HTMX `<select>` refreshes:
+- `SelectBrandsHandler` (`GET /brands/select` → `brand_select.html`)
+- `SelectCategoriesHandler` (`GET /categories/select` → `category_select.html`)
+- `SelectItemsHandler` (`GET /items/select` → `item_select.html`)
+- `SelectUomsHandler` (`GET /uoms/select` → `uom_select.html`, in `handlers/settings.go`)

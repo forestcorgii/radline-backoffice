@@ -210,6 +210,15 @@
                                     <span class="quick-create-item-desc">Units & conversions</span>
                                 </div>
                             </a>
+                            <a href="/customers" onclick="handleQuickAction('add-customer', '/customers', event)" class="quick-create-item">
+                                <div class="quick-create-item-icon settings-color">
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                </div>
+                                <div class="quick-create-item-text">
+                                    <span class="quick-create-item-name">+ Add Customer</span>
+                                    <span class="quick-create-item-desc">Client directory & TIN</span>
+                                </div>
+                            </a>
                         </div>
 
                         <!-- Column 4: Tools -->
@@ -550,6 +559,22 @@
                                 </div>
                             </div>
                         </a>
+                        <a href="/customers" hx-get="/customers" onclick="closeMobileSidebarOnNav()" title="Customers: Customer directory & billing">
+                            <div class="nav-item-content">
+                                <div class="nav-icon-wrapper mini">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                </div>
+                                <div class="nav-text-group">
+                                    <span class="nav-title">Customers</span>
+                                    <span class="nav-subtitle">Client directory, TIN & terms</span>
+                                </div>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -882,6 +907,14 @@
                 htmx.ajax('GET', '/uoms', { target: '#main-content', pushUrl: true });
                 return;
             }
+            if (action === 'add-customer') {
+                if (typeof window.toggleAddCustomerForm === 'function' && document.getElementById('add-customer-card')) {
+                    window.toggleAddCustomerForm();
+                    return;
+                }
+                htmx.ajax('GET', '/customers', { target: '#main-content', pushUrl: true });
+                return;
+            }
             if (action === 'record-sale') {
                 if (typeof window.toggleEncodeSalesForm === 'function' && document.getElementById('encode-sales-card')) {
                     window.toggleEncodeSalesForm();
@@ -944,6 +977,7 @@
             const isMasterlist = path === "/items" || path.startsWith("/items/") ||
                                  path === "/brands" || path.startsWith("/brands/") ||
                                  path === "/categories" || path.startsWith("/categories/") ||
+                                 path === "/customers" || path.startsWith("/customers/") ||
                                  path === "/uoms" || path.startsWith("/uoms/") ||
                                  path === "/uom-settings" || path.startsWith("/uom-settings/");
             const isUsers = path.startsWith("/settings/users");
@@ -1022,6 +1056,15 @@
                         <div class="quick-create-item-text">
                             <span class="quick-create-item-name">+ Add UOM</span>
                             <span class="quick-create-item-desc">Units & conversion</span>
+                        </div>
+                    </a>
+                    <a href="/customers" onclick="handleQuickAction('add-customer', '/customers', event)" class="quick-create-item">
+                        <div class="quick-create-item-icon settings-color">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </div>
+                        <div class="quick-create-item-text">
+                            <span class="quick-create-item-name">+ Add Customer</span>
+                            <span class="quick-create-item-desc">Client directory & TIN</span>
                         </div>
                     </a>
                 `;
@@ -1494,6 +1537,186 @@
                 });
             }
         });
+
+        // Customer Autocomplete and Autofill Integration
+        const _customerSearchCache = new Map();
+        let _custSearchDebounceTimer = null;
+
+        function escapeCustHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function handleCustomerAutocomplete(inputEl, tinInputId, addressInputId, contactInputId, termsSelectId) {
+            if (!inputEl) return;
+            const query = inputEl.value.trim();
+            const parent = inputEl.parentElement;
+            if (!parent) return;
+            let dropdown = parent.querySelector('.customer-autocomplete-dropdown, .dropdown-list');
+            if (!dropdown) {
+                dropdown = document.createElement('div');
+                dropdown.className = 'dropdown-list customer-autocomplete-dropdown';
+                dropdown.style.cssText = 'display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 1050; max-height: 220px; overflow-y: auto; background: var(--bg-surface, #fff); border: 1px solid var(--border-color); border-radius: var(--radius-md, 8px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);';
+                parent.appendChild(dropdown);
+            }
+
+            if (query.length === 0) {
+                dropdown.style.display = 'none';
+                dropdown.innerHTML = '';
+                return;
+            }
+
+            const renderResults = (customers) => {
+                if (!Array.isArray(customers) || customers.length === 0) {
+                    dropdown.innerHTML = '<div style="padding: 0.5rem 0.75rem; font-size: 0.8125rem; color: var(--text-muted);">No matching customers in directory</div>';
+                    dropdown.style.display = 'block';
+                    return;
+                }
+
+                dropdown.innerHTML = customers.map((c, idx) => {
+                    const cName = c.name || c.Name || '';
+                    const cCode = c.code || c.Code || '';
+                    const cTin = c.tin_no || c.TINNo || '';
+                    const cAddr = c.address || c.Address || '';
+                    const cContact = c.contact_person || c.ContactPerson || '';
+                    const cTerms = c.payment_terms || c.PaymentTerms || '';
+                    return `
+                    <div class="dropdown-item ${idx === 0 ? 'active' : ''}" 
+                         style="padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid var(--border-color, #eee);"
+                         data-name="${escapeCustHtml(cName)}"
+                         data-tin="${escapeCustHtml(cTin)}"
+                         data-address="${escapeCustHtml(cAddr)}"
+                         data-contact="${escapeCustHtml(cContact)}"
+                         data-terms="${escapeCustHtml(cTerms)}"
+                         onmousedown="applyCustomerSelection(this, '${inputEl.id}', '${tinInputId || ''}', '${addressInputId || ''}', '${contactInputId || ''}', '${termsSelectId || ''}')">
+                        <div style="font-weight: 600; font-size: 0.8125rem; color: var(--text-main);">${escapeCustHtml(cName)}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 0.5rem; margin-top: 2px;">
+                            <span style="font-family: monospace; background: var(--bg-surface-elevated, #f1f5f9); padding: 0 4px; border-radius: 3px;">${escapeCustHtml(cCode)}</span>
+                            ${cTin ? `<span>• TIN: ${escapeCustHtml(cTin)}</span>` : ''}
+                            ${cAddr ? `<span>• ${escapeCustHtml(cAddr.length > 30 ? cAddr.slice(0, 30) + '...' : cAddr)}</span>` : ''}
+                        </div>
+                    </div>
+                `;}).join('');
+                dropdown.style.display = 'block';
+            };
+
+            if (_customerSearchCache.has(query)) {
+                renderResults(_customerSearchCache.get(query));
+                return;
+            }
+
+            clearTimeout(_custSearchDebounceTimer);
+            _custSearchDebounceTimer = setTimeout(() => {
+                fetch('/customers/search?q=' + encodeURIComponent(query) + '&limit=20&format=json', {
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        _customerSearchCache.set(query, data);
+                        if (inputEl.value.trim() === query) {
+                            renderResults(data);
+                        }
+                    }
+                })
+                .catch(err => console.error("Customer search error:", err));
+            }, 80);
+        }
+
+        function handleCustomerKeydown(event, inputEl, tinInputId, addressInputId, contactInputId, termsSelectId) {
+            const parent = inputEl.parentElement;
+            if (!parent) return;
+            const dropdown = parent.querySelector('.customer-autocomplete-dropdown, .dropdown-list');
+            if (!dropdown || dropdown.style.display === 'none') return;
+
+            const items = Array.from(dropdown.querySelectorAll('.dropdown-item'));
+            if (items.length === 0) return;
+
+            let activeIdx = items.findIndex(el => el.classList.contains('active'));
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (activeIdx >= 0) items[activeIdx].classList.remove('active');
+                activeIdx = (activeIdx + 1) % items.length;
+                items[activeIdx].classList.add('active');
+                items[activeIdx].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (activeIdx >= 0) items[activeIdx].classList.remove('active');
+                activeIdx = (activeIdx - 1 + items.length) % items.length;
+                items[activeIdx].classList.add('active');
+                items[activeIdx].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (activeIdx >= 0 && items[activeIdx]) {
+                    applyCustomerSelection(items[activeIdx], inputEl.id, tinInputId, addressInputId, contactInputId, termsSelectId);
+                }
+            } else if (event.key === 'Escape') {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function applyCustomerSelection(itemEl, nameInputId, tinInputId, addressInputId, contactInputId, termsSelectId) {
+            const name = itemEl.getAttribute('data-name') || '';
+            const tin = itemEl.getAttribute('data-tin') || '';
+            const address = itemEl.getAttribute('data-address') || '';
+            const contact = itemEl.getAttribute('data-contact') || '';
+            const terms = itemEl.getAttribute('data-terms') || '';
+
+            if (nameInputId) {
+                const nameEl = document.getElementById(nameInputId);
+                if (nameEl) {
+                    nameEl.value = name;
+                    nameEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    nameEl.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+            if (tinInputId) {
+                const tinEl = document.getElementById(tinInputId);
+                if (tinEl) {
+                    tinEl.value = tin;
+                    tinEl.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+            if (addressInputId) {
+                const addrEl = document.getElementById(addressInputId);
+                if (addrEl) {
+                    addrEl.value = address;
+                    addrEl.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+            if (contactInputId) {
+                const contEl = document.getElementById(contactInputId);
+                if (contEl) {
+                    contEl.value = contact;
+                    contEl.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+            if (termsSelectId && terms) {
+                const termsEl = document.getElementById(termsSelectId);
+                if (termsEl) {
+                    for (let opt of termsEl.options) {
+                        if (opt.value.toLowerCase().includes(terms.toLowerCase()) || terms.toLowerCase().includes(opt.value.toLowerCase())) {
+                            termsEl.value = opt.value;
+                            termsEl.dispatchEvent(new Event('change', { bubbles: true }));
+                            break;
+                        }
+                    }
+                }
+            }
+
+            const dropdown = itemEl.closest('.dropdown-list');
+            if (dropdown) dropdown.style.display = 'none';
+        }
+
+        window.handleCustomerAutocomplete = handleCustomerAutocomplete;
+        window.handleCustomerKeydown = handleCustomerKeydown;
+        window.applyCustomerSelection = applyCustomerSelection;
 
         window.addEventListener('scroll', function() {
             const activeInput = document.activeElement;

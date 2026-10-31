@@ -1,0 +1,11 @@
+{{ range . }}
+    {{ template "customer_row.html" . }}
+{{ else }}
+    <tr>
+        <td colspan="8" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">👥</div>
+            <div style="font-weight: 500;">No customers found</div>
+            <div style="font-size: 0.8125rem; margin-top: 0.25rem;">Try adjusting your search criteria or add a new customer above.</div>
+        </td>
+    </tr>
+{{ end }}

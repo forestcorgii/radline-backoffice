@@ -1,242 +1,84 @@
-# Routing
+# Routing & Middleware
 
-> Back to [[00-index]] · Related: [[architecture]], [[handlers-overview]]
+> Back to [[00-index]] · Related: [[architecture]], [[handlers-overview]], [[htmx-patterns]]
 
 ## File
-[main.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/main.go) — lines 31–110
+[main.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/main.go) (lines 38–219) · Middleware in [handlers/middleware.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/middleware.go)
 
 ## Complete Route Table
 
-### Dashboard
+### Public & PWA Assets (Bypass `AuthMiddleware`)
+| Method | Path | Handler / Source | Notes |
+|---|---|---|---|
+| GET | `/login` | `LoginPageHandler` | Login page |
+| POST | `/login` | `LoginSubmitHandler` | Session creation (`radline_session` cookie) |
+| GET/POST | `/logout` | `LogoutHandler` | Clears session cookie |
+| GET | `/auth/user-chip` | `UserChipHandler` | Sidebar profile chip & `#profile-menu` |
+| GET | `/sw.js`, `/manifest.webmanifest`, `/offline.html`, `/favicon.ico` | Inline file handlers | PWA service worker, manifest, offline fallback |
+| GET | `/static/*` | `http.FileServer` | Static CSS/JS/icons |
+
+### Dashboard, Goals & Operational Calendar (`PermDashboardView`)
 | Method | Path | Handler | Notes |
 |---|---|---|---|
-| `*` | `/` | `DashboardHandler` | Default catch-all |
+| `*` | `/` | `DashboardHandler` | Financial KPIs, `fragment=trends` SVG charts, top 5 items |
+| GET / POST / DELETE | `/goals`, `/goals/add`, `/goals/delete/{id}` | `GoalsHandler`, `AddGoalHandler`, `DeleteGoalHandler` | Revenue & profit targets (`handlers/goals.go`) |
+| GET | `/calendar`, `/reminders` | `RemindersHandler` | Monthly 7-col grid + agenda (`handlers/reminders.go`) |
+| POST | `/reminders/add`, `/calendar/add` | `AddReminderHandler` | Create reminder (supports `?action=new` modal trigger) |
+| POST | `/reminders/edit/{id}`, `/calendar/edit/{id}` | `EditReminderHandler` | Update title, due date, priority, status, assignee |
+| POST | `/reminders/toggle/{id}`, `/calendar/toggle/{id}` | `ToggleReminderHandler` | Toggle Pending/Completed |
+| POST | `/reminders/reschedule/{id}`, `/calendar/reschedule/{id}` | `RescheduleReminderHandler` | Drag-and-drop date reschedule |
+| DELETE | `/reminders/delete/{id}`, `/calendar/delete/{id}` | `DeleteReminderHandler` | Delete reminder |
 
-### Brands CRUD → [[handlers-master-data]]
-| Method | Path | Handler | HTMX Response |
-|---|---|---|---|
-| GET | `/brands` | `BrandsHandler` | Page or rows fragment |
-| GET | `/brands/new` | `NewBrandPageHandler` | Add brand form page |
-| GET | `/brands/select` | `SelectBrandsHandler` | Brand select option list |
-| POST | `/brands/add` | `AddBrandHandler` | Rows fragment + toast |
-| GET | `/brands/edit/{id}` | `EditBrandFormHandler` | Inline edit row |
-| POST | `/brands/edit/{id}` | `UpdateBrandHandler` | Updated row + toast |
-| GET | `/brands/row/{id}` | `BrandRowHandler` | Single row |
-| DELETE | `/brands/delete/{id}` | `DeleteBrandHandler` | Empty + toast |
+### Master Data CRUD (`PermItemsView` / `PermItemsEdit`) → [[handlers-master-data]], [[domain-customer]]
+| Entity | Routes | Handlers |
+|---|---|---|
+| **Brands** | `GET /brands`, `GET /brands/new`, `GET /brands/select`, `POST /brands/add`, `GET|POST /brands/edit/{id}`, `GET /brands/row/{id}`, `DELETE /brands/delete/{id}` | `BrandsHandler`, `NewBrandPageHandler`, `SelectBrandsHandler`, `AddBrandHandler`, `EditBrandFormHandler`, `UpdateBrandHandler`, `BrandRowHandler`, `DeleteBrandHandler` |
+| **Categories** | `GET /categories`, `GET /categories/new`, `GET /categories/select`, `POST /categories/add`, `GET|POST /categories/edit/{id}`, `GET /categories/row/{id}`, `DELETE /categories/delete/{id}` | `CategoriesHandler`, `NewCategoryPageHandler`, `SelectCategoriesHandler`, `AddCategoryHandler`, `EditCategoryFormHandler`, `UpdateCategoryHandler`, `CategoryRowHandler`, `DeleteCategoryHandler` |
+| **Items** | `GET /items`, `GET /items/new`, `GET /items/select`, `GET /items/search`, `POST /items/add`, `GET|POST /items/edit/{id}`, `GET /items/row/{id}`, `DELETE /items/delete/{id}` | `ItemsHandler`, `NewItemPageHandler`, `SelectItemsHandler`, `SearchItemsHandler`, `AddItemHandler`, `EditItemFormHandler`, `UpdateItemHandler`, `ItemRowHandler`, `DeleteItemHandler` |
+| **Customers** | `GET /customers`, `POST /customers/add`, `GET|POST /customers/edit/{id}`, `GET /customers/row/{id}`, `DELETE /customers/delete/{id}`, `GET /customers/search` | `CustomersHandler`, `AddCustomerHandler`, `EditCustomerFormHandler`, `UpdateCustomerHandler`, `CustomerRowHandler`, `DeleteCustomerHandler`, `SearchCustomersHandler` |
 
-### Categories CRUD → [[handlers-master-data]]
-| Method | Path | Handler | HTMX Response |
-|---|---|---|---|
-| GET | `/categories` | `CategoriesHandler` | Page or rows fragment |
-| GET | `/categories/new` | `NewCategoryPageHandler` | Add category form page |
-| GET | `/categories/select` | `SelectCategoriesHandler` | Category select option list |
-| POST | `/categories/add` | `AddCategoryHandler` | Rows fragment + toast |
-| GET | `/categories/edit/{id}` | `EditCategoryFormHandler` | Inline edit row |
-| POST | `/categories/edit/{id}` | `UpdateCategoryHandler` | Updated row + toast |
-| GET | `/categories/row/{id}` | `CategoryRowHandler` | Single row |
-| DELETE | `/categories/delete/{id}` | `DeleteCategoryHandler` | Empty + toast |
-
-### Items CRUD → [[handlers-master-data]]
-| Method | Path | Handler | HTMX Response |
-|---|---|---|---|
-| GET | `/items` | `ItemsHandler` | Page or rows fragment |
-| GET | `/items/new` | `NewItemPageHandler` | Add item form page |
-| GET | `/items/select` | `SelectItemsHandler` | Item select option list |
-| POST | `/items/add` | `AddItemHandler` | Rows fragment + toast |
-| GET | `/items/edit/{id}` | `EditItemFormHandler` | Inline edit row |
-| POST | `/items/edit/{id}` | `UpdateItemHandler` | Updated row + toast |
-| GET | `/items/row/{id}` | `ItemRowHandler` | Single row |
-| DELETE | `/items/delete/{id}` | `DeleteItemHandler` | Empty + toast |
-
-### Inventory → [[handlers-inventory]]
+### Inventory, Receiving & Adjustments (`PermInventoryView|Receive|Adjust`) → [[handlers-inventory]]
 | Method | Path | Handler | Notes |
 |---|---|---|---|
-| GET | `/inventory` | `InventoryHandler` | Stock overview page |
-| GET | `/inventory/stock` | `InventoryHandler` | Alias for `/inventory` |
+| GET | `/inventory`, `/inventory/stock` | `InventoryHandler` | Stock overview |
 | GET | `/inventory/monthly` | `MonthlyInventoryHandler` | Monthly movement report |
-| GET | `/inventory/receiving` | `StockReceivingPageHandler` | Receiving form + logs |
-| GET | `/inventory/receiving/logs` | `ReceivingLogsHandler` | Receiving logs listing |
-| POST | `/inventory/receiving/add` | `ReceiveStockHandler` | Multi-item receive |
-| GET | `/inventory/receiving/new-row` | `NewReceivingRowHandler` | Empty item row fragment |
-| GET | `/inventory/receiving/item-row-details` | `ReceivingItemRowDetailsHandler` | Pre-filled item row |
-| GET | `/inventory/adjustments` | `StockAdjustmentsPageHandler` | Adjustment form + logs |
-| GET | `/inventory/adjustments/logs` | `AdjustmentLogsHandler` | Adjustment logs listing |
-| POST | `/inventory/adjustments/add` | `AdjustStockHandler` | Multi-item adjustment |
-| GET | `/inventory/adjustments/new-row` | `NewAdjustmentRowHandler` | Empty item row fragment |
-| GET | `/inventory/adjustments/item-row-details` | `AdjustmentItemRowDetailsHandler` | Pre-filled item row |
+| GET / POST | `/inventory/receiving`, `/inventory/receiving/add` | `StockReceivingPageHandler`, `ReceiveStockHandler` | Multi-item stock receiving |
+| GET | `/inventory/receiving/logs` | `ReceivingLogsHandler` | Receiving logs list |
+| GET / POST / DELETE | `/inventory/receiving/logs/edit/{id}`, `/inventory/receiving/logs/delete/{id}` | `EditReceivingLogHandler`, `UpdateReceivingLogHandler`, `DeleteReceivingLogHandler` | Receiving log inline edit/delete |
+| GET | `/inventory/receiving/new-row`, `/inventory/receiving/item-row-details` | `NewReceivingRowHandler`, `ReceivingItemRowDetailsHandler` | Dynamic receiving row fragments |
+| GET / POST | `/inventory/adjustments`, `/inventory/adjustments/add` | `StockAdjustmentsPageHandler`, `AdjustStockHandler` | Multi-item stock adjustment |
+| GET | `/inventory/adjustments/logs` | `AdjustmentLogsHandler` | Adjustment logs list |
+| GET | `/inventory/adjustments/new-row`, `/inventory/adjustments/item-row-details` | `NewAdjustmentRowHandler`, `AdjustmentItemRowDetailsHandler` | Dynamic adjustment row fragments |
 
-### Sales → [[handlers-sales]]
-| Method | Path | Handler | HTMX Response |
+### Sales & Printable Forms → [[handlers-sales]]
+| Method | Path | Handler | Permission |
 |---|---|---|---|
-| GET | `/sales` | `SalesHandler` | Page or rows fragment |
-| GET | `/sales/new` | `NewSalesPageHandler` | Add sales form page |
-| POST | `/sales/add` | `AddSalesHandler` | Rows fragment + toast |
-| GET | `/sales/new-row` | `NewSaleRowHandler` | Empty item row fragment |
-| DELETE | `/sales/delete/{id}` | `DeleteSalesHandler` | Empty + toast |
-| GET | `/sales/item-row-details` | `SaleItemRowDetailsHandler` | Pre-filled sale row |
+| GET | `/sales`, `/sales/new` | `SalesHandler`, `NewSalesPageHandler` | `PermSalesView`, `PermSalesCreate` |
+| POST | `/sales/add`, `/sales/edit/{id}`, `/sales/update-status/{id}` | `AddSalesHandler`, `UpdateSalesHandler`, `UpdateSalesStatusHandler` | `PermSalesCreate`, `PermSalesEdit` |
+| GET / DELETE | `/sales/new-row`, `/sales/item-row-details`, `/sales/delete/{id}` | `NewSaleRowHandler`, `SaleItemRowDetailsHandler`, `DeleteSalesHandler` | `PermSalesCreate`, `PermSalesView`, `PermSalesDelete` |
+| GET / POST | `/forms/quotation`, `/forms/purchase-order`, `/forms/purchase-order/save` | `QuotationFormHandler`, `PurchaseOrderFormHandler`, `SavePurchaseOrderHandler` | `PermSalesView`, `PermInventoryView` |
 
-### Settings & System Config CRUD → [[handlers-overview]]
-| Method | Path | Handler | HTMX Response / Notes |
-|---|---|---|---|
-| GET | `/settings` | `SettingsHandler` | Redirects to `/brands` |
-| GET | `/settings/system` | `SystemSettingsHandler` | System & DeepSeek Vision AI configuration page |
-| POST | `/settings/deepseek` | `SaveDeepSeekConfigHandler` | Updates DeepSeek Vision API configuration |
-
-### Units of Measure (UOMs) & Conversions CRUD
-| Method | Path | Handler | HTMX Response / Notes |
-|---|---|---|---|
-| GET | `/uoms` | `UomsHandler` | Page (`uoms.html`) or predefined UOMs rows fragment |
-| POST | `/uoms/add` | `AddUomHandler` | Rows fragment + toast |
-| GET | `/uoms/row/{id}` | `UomRowHandler` | Single row |
-| DELETE | `/uoms/delete/{id}` | `DeleteUomHandler` | Empty + toast |
-| GET | `/uoms/select` | `SelectUomsHandler` | Predefined UOM select option list |
-| GET | `/uom-settings` | `UomSettingsHandler` | Conversion rules rows fragment (supports `search`, `muom`, `sort`, `limit`) or redirect to `/uoms` |
-| GET | `/uom-settings/new` | `NewUomSettingPageHandler` | Add UOM conversion form page |
-| POST | `/uom-settings/add` | `AddUomSettingHandler` | Rows fragment + toast |
-| GET | `/uom-settings/edit/{id}` | `EditUomSettingFormHandler` | Inline edit row |
-| POST | `/uom-settings/edit/{id}` | `UpdateUomSettingHandler` | Updated row + toast |
-| GET | `/uom-settings/row/{id}` | `UomSettingRowHandler` | Single row |
-| DELETE | `/uom-settings/delete/{id}` | `DeleteUomSettingHandler` | Empty + toast |
-
-### Import Routing
-| Method | Path | Handler | Notes |
-|---|---|---|---|
-| GET | `/import` | `ImportPageHandler` | Consolidated data import page |
-| POST | `/import/upload` | `ImportUploadHandler` | Excel spreadsheet upload and parse |
-
-### Tools / Receipt Vision
-| Method | Path | Handler | Notes |
-|---|---|---|---|
-| GET | `/tools/receipt-scanner` | `ReceiptScannerHandler` | Receipt vision scanner uploader page |
-| POST | `/tools/receipt-scanner/parse` | `ReceiptScannerParseHandler` | DeepSeek Vision parser and structured result renderer |
-
-### Static Files
-| Path | Source |
-|---|---|
-| `/static/*` | `static/` directory (CSS/JS) |
-
-## Route Pattern Notes
-
-- Go 1.22+ routing syntax: `"GET /path"`, `"POST /path"`, `"DELETE /path"`
-- Path parameters: `{id}` — accessed via `r.PathValue("id")`
-- The `/` route uses no method prefix → matches all methods (default handler)
-
-## Related
-- [[handlers-overview]] — Handler architecture
-- [[htmx-patterns]] — How HTMX interacts with these routes
-- [[templates-overview]] — What templates each route renders
+### UOMs, Settings, RBAC & Tools
+| Area | Routes | Handlers |
+|---|---|---|
+| **UOMs & Conversions** | `GET /uoms`, `POST /uoms/add`, `GET /uoms/row/{id}`, `DELETE /uoms/delete/{id}`, `GET /uoms/select`, `GET /uom-settings`, `GET /uom-settings/new`, `POST /uom-settings/add`, `GET|POST /uom-settings/edit/{id}`, `GET /uom-settings/row/{id}`, `DELETE /uom-settings/delete/{id}` | `UomsHandler`, `AddUomHandler`, `UomRowHandler`, `DeleteUomHandler`, `SelectUomsHandler`, `UomSettingsHandler`, `NewUomSettingPageHandler`, `AddUomSettingHandler`, `EditUomSettingFormHandler`, `UpdateUomSettingHandler`, `UomSettingRowHandler`, `DeleteUomSettingHandler` |
+| **System & RBAC** | `GET /settings` (→ `/brands`), `GET /settings/system`, `POST /settings/deepseek`, `GET|POST /settings/roles*`, `GET|POST /settings/users*`, `GET /activity-logs` | `SettingsHandler`, `SystemSettingsHandler`, `SaveDeepSeekConfigHandler`, `RolesHandler`, `UsersHandler`, `ActivityLogsHandler` |
+| **Import & Scanner** | `GET /import`, `POST /import/upload`, `GET /tools/receipt-scanner`, `POST /tools/receipt-scanner/parse` | `ImportPageHandler`, `ImportUploadHandler`, `ReceiptScannerHandler`, `ReceiptScannerParseHandler` |
 
 ---
 
-### Context: Server Port Configuration Invariance
+## Learnings & Enforced Routing Invariants
 
-**Problem:**
-Starting the Go local development server occasionally fails due to the default port `8080` being bound by another process. Changing the hardcoded listener port in `main.go` violates configuration invariants and can cause configuration drift or deployment failures.
+### Context: Server Port Configuration Invariance (`:8080`)
+- **Problem**: Changing the default listener port in `main.go` when `:8080` is occupied causes configuration drift.
+- **Enforced Solution**: Never modify the default `8080` port in `main.go`. Check existing processes with `netstat -ano | findstr :8080` and ask the user before terminating any process.
 
-**Enforced Solution:**
-Never change the configured listener port in `main.go` (keep it as `:8080`). If port `8080` is in use:
-- Check for existing processes running on port `8080` (e.g. using `netstat -ano | findstr :8080`).
-- If you need to stop the old process, prompt/explain to the user why it needs to be stopped, and ask for permission before running process termination commands like `taskkill` or `kill`.
-- Never commit port number modifications to `main.go` under any circumstances.
+### Context: Printable Form Views SPA Swapping & Flexible HTMX Target Checks
+- **Problem**: Calling `app.Render` instead of `app.RenderPage` on navigable pages nests `base.html` inside `#main-content`. Also, browsers may send `HX-Target: main-content` (without `#`).
+- **Enforced Solution**:
+  - All full page templates extending `base.html` (including `form_quotation.html` and `form_purchase_order.html`) must use `app.RenderPage(w, r, ...)`.
+  - When checking for main-content HTMX requests in redirect/action handlers, accept `target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true"` and emit `HX-Location: {"path": returnUrl, "target": "#main-content"}`.
 
----
-
-### Context: Role-Based Authentication & Logging Service Routing
-
-**Problem:**
-Securing system routes and tracking user actions without breaking hypermedia/HTMX partial swaps or leaking protected backoffice actions.
-
-**Enforced Solution:**
-- `AuthMiddleware` verifies session token from HTTP-only cookie `radline_session`. Unauthenticated requests redirect to `/login` (issuing `HX-Redirect: /login` on HTMX requests).
-- Public paths `/login`, `/static/` bypass authentication.
-- `RequirePermission(permKey, handler)` guards all sensitive endpoints. Unauthorized attempts return HTTP 403 with `HX-Trigger: show-toast` notification.
-- Auditing is performed via `app.LogActivity(r, action, entityType, entityID, details)` storing immutable records into `activity_logs`.
-- Routes:
-  - Auth: `GET /login`, `POST /login`, `POST /logout`, `GET /logout`, `GET /auth/user-chip`
-  - Roles & Users: `GET /settings/roles`, `POST /settings/roles/add`, `POST /settings/roles/update/{id}`, `DELETE /settings/roles/delete/{id}`, `GET /settings/users`, `POST /settings/users/add`, `POST /settings/users/update/{id}`
-  - Activity Logs: `GET /activity-logs`
-
----
-
-### Context: Dynamic Dashboard Trends, Earning Goals & Reminders Routing
-
-**Problem:**
-Providing dynamic financial and operational management on the dashboard while supporting dedicated pages for goal setting and calendar scheduling.
-
-**Enforced Solution:**
-- Dashboard (`/`) accepts `start_date` and `end_date` query params. When filtered via HTMX, `fragment=trends` re-renders `dashboard_trends.html` containing dual SVG charts (Sales vs Profit and Sales vs Inventory intake).
-- Top Products card queries top 5 items by units sold from `sales_details`.
-- Earning Goals (`/goals`): `GET /goals`, `POST /goals/add`, `DELETE /goals/delete/{id}` calculates dynamic variance and progress percentages against posted sales.
-- Reminders & Operational Calendar (`/calendar` and `/reminders`): `GET /calendar`, `GET /reminders`, `POST /reminders/add`, `POST /calendar/add`, `POST /reminders/toggle/{id}`, `POST /calendar/toggle/{id}`, `DELETE /reminders/delete/{id}`, `DELETE /calendar/delete/{id}` organizes monthly calendar grid and operational agenda. Aliasing `/calendar` ensures consistent navigation from sidebar, quick-actions, and direct URL entry without fallback to the dashboard.
-
----
-
-### Context: Calendar Production 500 Error Resolution (PostgreSQL TIMESTAMPTZ & Schema Migration)
-
-**Problem:**
-Accessing `/calendar` in production (running PostgreSQL with `pgx`) returned HTTP 500. Two interrelated causes:
-1. `RemindersHandler` passed string-formatted dates (`"2006-01-02 00:00:00"`) into `WHERE due_date >= ? AND due_date <= ?`. In PostgreSQL, `due_date` is `TIMESTAMPTZ`. Comparing `timestamptz >= text` fails with `operator does not exist: timestamp with time zone >= text (SQLSTATE 42883)`.
-2. Direct database failure in `RemindersHandler` called `http.Error(w, err.Error(), http.StatusInternalServerError)` without resilience or automated table check.
-
-**Enforced Solution:**
-- **Typed Bounds**: Pass `time.Time` structs (`firstOfMonth`, `endOfMonth`) into queries rather than string formatting. `pgx` binds them as native `TIMESTAMPTZ` in PostgreSQL, while `modernc.org/sqlite` handles them seamlessly in SQLite.
-- **Ensure Table Invariant**: Added `db.EnsureRemindersTable()` executing `CREATE TABLE IF NOT EXISTS reminders` and indexes, called both on database initialization (`db.InitDB`) and as a proactive check in `RemindersHandler`.
-- **Fault-Tolerant Rendering**: Log warnings instead of returning raw 500 errors, falling back to an empty slice so the calendar page always renders successfully.
-
----
-
-### Context: Progressive Web App (PWA) Endpoints & Auth Bypass
-
-**Problem:**
-Enabling standalone installability and offline fallback for Radline BackOffice while preventing authentication redirects for core PWA shell assets (`/sw.js`, `/manifest.webmanifest`, `/offline.html`).
-
-**Enforced Solution:**
-- **PWA Endpoints (`main.go`):**
-  - `GET /sw.js`: Serves `static/sw.js` with `Content-Type: application/javascript; charset=utf-8`, `Service-Worker-Allowed: /`, and `Cache-Control: no-cache`.
-  - `GET /manifest.webmanifest`: Serves `static/manifest.webmanifest` with `Content-Type: application/manifest+json`.
-  - `GET /offline.html`: Serves `static/offline.html` (Radline-themed offline fallback page with auto-reconnect).
-  - `GET /favicon.ico`: Serves `static/icons/icon-192.png`.
-- **Public Auth Bypass (`handlers/middleware.go`):**
-  - `AuthMiddleware` excludes `/sw.js`, `/manifest.webmanifest`, and `/offline.html` in addition to `/login` and `/static/`, allowing browsers and unauthenticated clients to register the worker and download the manifest cleanly.
-- **Service Worker Strategy (`static/sw.js`):**
-  - Static assets (`/static/`, fonts): Cache-first with background revalidation.
-  - Page Navigation: Network-first falling back to `/offline.html`.
-  - HTMX partials (`HX-Request: true`): Network-first falling back to an inline offline notice card.
-  - Mutations (POST/PUT/DELETE): Network-only (no caching).
-
----
-
-### Context: Reminders Operational Calendar (Grid Stability, User Assignment, and In-Place Editing)
-
-**Problem:**
-1. Long reminder titles caused calendar day cells to expand horizontally because default CSS grid `1fr` translates to `minmax(auto, 1fr)`.
-2. Reminders lacked delegation capability (assigning tasks to specific operators/users).
-3. Operators had no mechanism to edit existing scheduled reminders (due date, priority, notes, assigned user, or status) without deleting and recreating them.
-
-**Enforced Solution:**
-- **Rigid 7-Column Grid Layout (`templates/reminders.html`):**
-  - Applied `grid-template-columns: repeat(7, minmax(0, 1fr))` on day headers and week rows.
-  - Added `min-width: 0; overflow: hidden;` to day containers and reminder chips, paired with `white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; box-sizing: border-box;`. This guarantees strict equal 1/7 cell widths regardless of title length.
-- **User Assignment (`db/db.go`, `domain/reminder.go`, `models/goals_reminders.go`):**
-  - Added `assigned_to_user_id INTEGER REFERENCES users(id)` column with safe non-blocking startup migration (`EnsureRemindersTable`).
-  - Queries join `users u ON r.assigned_to_user_id = u.id` returning `COALESCE(u.full_name, u.username, '') AS assigned_to_name`.
-  - Added assignment dropdowns in both Add and Edit modals, displaying operator indicator `👤 <Name>` on calendar chips, agenda cards, and the dashboard.
-- **Reminder Edit Endpoints & Modals (`main.go`, `handlers/reminders.go`):**
-  - Added `POST /reminders/edit/{id}` and `POST /calendar/edit/{id}` mapped to `EditReminderHandler`.
-  - Added client-side data binding with HTML5 dataset attributes (`handleEditReminderClick(el)`) to avoid quote injection/escaping issues, opening `#edit-reminder-modal` from both calendar day chips and agenda edit buttons.
-
----
-
-### Context: Printable Form Views SPA Swapping & Reminder Modal HTMX Targets
-
-**Problem:**
-1. Document generator views (`form_quotation.html` and `form_purchase_order.html`) called `app.Render` instead of `app.RenderPage(w, r, ...)`. When navigating via sidebar HTMX links (`hx-target="#main-content"`), this returned the complete `base.html` shell inside `#main-content`, producing duplicate nested sidebars and corrupting subsequent SPA navigation to other modules like Sales.
-2. The Add Reminder form lacked `hx-target="#main-content"`, and backend handlers strictly tested `HX-Target == "#main-content"` (which fails when browsers strip `#` to send `main-content`), causing unexpected full-page redirects and broken modal refresh behavior.
-3. Quick actions "+ New" -> "Add Reminder" navigated to `/calendar` without activating the creation modal.
-
-**Enforced Solution:**
-- **`RenderPage` for All Navigable Views (`handlers/forms.go`):** All full page templates extending `base.html` must invoke `app.RenderPage(w, r, ...)` so HTMX requests only swap the `content` block without nesting the document shell.
-- **Flexible HTMX Target Verification (`handlers/reminders.go`):** Verify `target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true"`, emitting `HX-Location: {"path": returnUrl, "target": "#main-content"}` for partial updates with toast preservation.
-- **Explicit Modal Targets & Query Trigger (`templates/reminders.html`, `templates/base.html`):** Add `hx-target="#main-content"` to forms, and check `?action=new` to automatically trigger the Add Reminder modal when launched from Quick Create.
-
-
+### Context: Calendar Production 500 Prevention (`TIMESTAMPTZ` & ` repeat(7, minmax(0, 1fr))`)
+- **Problem**: Passing string dates to `WHERE due_date >= ?` fails on PostgreSQL `TIMESTAMPTZ` (`operator does not exist: timestamp with time zone >= text`), and `1fr` grid columns expand on long titles.
+- **Enforced Solution**: Pass native `time.Time` values for date bounds in `RemindersHandler`, call `db.EnsureRemindersTable()` defensively, and use `grid-template-columns: repeat(7, minmax(0, 1fr))` with `min-width: 0; overflow: hidden` on calendar cells.
