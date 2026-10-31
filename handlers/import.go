@@ -85,25 +85,30 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If clear existing is checked, execute deletes in correct order
 	if clearExisting {
-		tablesToClear := []string{
-			"inventory_adjustments",
-			"stock_adjustments",
-			"sales_details",
-			"receiving_logs",
-			"uom_settings",
-			"items",
-			"brands",
-			"categories",
+		deleteQuery := `
+			DELETE FROM inventory_adjustments;
+			DELETE FROM stock_adjustments;
+			DELETE FROM sales_details;
+			DELETE FROM receiving_logs;
+			DELETE FROM uom_settings;
+			DELETE FROM items;
+			DELETE FROM brands;
+			DELETE FROM categories;
+		`
+		_, err = tx.Exec(deleteQuery)
+		if err != nil {
+			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to clear existing database tables."}}`)
+			http.Error(w, fmt.Sprintf("Failed to clear existing database tables: %v", err), http.StatusInternalServerError)
+			return
 		}
-		for _, tbl := range tablesToClear {
-			_, err = tx.Exec(fmt.Sprintf("DELETE FROM %s", tbl))
-			if err != nil {
-				w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "Failed to clear table %s."}}`, tbl))
-				http.Error(w, fmt.Sprintf("Failed to clear table %s: %v", tbl, err), http.StatusInternalServerError)
-				return
-			}
-			// Reset sqlite sequence
-			_, _ = tx.Exec("DELETE FROM sqlite_sequence WHERE name = ?", tbl)
+		// Reset sqlite sequence for all cleared tables in a single query
+		if !db.DB.IsPostgres() {
+			_, _ = tx.Exec(`
+				DELETE FROM sqlite_sequence WHERE name IN (
+					'inventory_adjustments', 'stock_adjustments', 'sales_details',
+					'receiving_logs', 'uom_settings', 'items', 'brands', 'categories'
+				)
+			`)
 		}
 	}
 
