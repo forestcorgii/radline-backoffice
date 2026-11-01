@@ -1,183 +1,126 @@
 {{ define "dashboard_trends.html" }}
-                <div class="card" style="padding: 1.25rem;">
-                    <!-- Inline Header: Graph Selection Dropdown + Legend + Inline Timeframe Filter -->
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-                        <!-- Left: Dropdown graph switcher & description -->
-                        <div style="display: flex; align-items: center; gap: 0.625rem; flex-wrap: wrap;">
-                            <label for="dashboard-graph-select"
-                                style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Trend
-                                View:</label>
-                            <select id="dashboard-graph-select" onchange="window.switchDashboardGraph(this.value)"
-                                class="form-input"
-                                style="font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.5rem; height: 1.75rem; border-radius: var(--radius); cursor: pointer; color: var(--text-main); background-color: var(--bg-color);">
-                                <option value="sales-profit">Sales &amp; Profit Trend</option>
-                                <option value="sales-inventory">Sales &amp; Inventory Trend</option>
-                            </select>
-                            <span id="graph-subtitle-sales-profit" class="graph-subtitle"
-                                style="font-size: 0.6875rem; color: var(--text-muted);">Monthly revenue vs gross profit
-                                margins</span>
-                            <span id="graph-subtitle-sales-inventory" class="graph-subtitle"
-                                style="font-size: 0.6875rem; color: var(--text-muted); display: none;">Comparing sales
-                                revenue vs inventory intake</span>
-                        </div>
+<div class="card" style="padding: 1.25rem;">
+    <!-- Inline Header: Title & Subtitle + Metric Checkboxes + Timeframe Filter -->
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <!-- Left: Title & Subtitle -->
+        <div>
+            <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-main);">Financial Trends</div>
+            <div style="font-size: 0.6875rem; color: var(--text-muted);">Compare monthly sales revenue, profit margins,
+                and inventory intake</div>
+        </div>
 
-                        <!-- Right: Legends + Inline Timeframe Filter -->
-                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                            <!-- Legends -->
-                            <div id="graph-legend-sales-profit" class="graph-legend"
-                                style="display: flex; gap: 0.75rem; font-size: 0.6875rem; font-weight: 500;">
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <div
-                                        style="width: 10px; height: 10px; background-color: hsl(var(--primary)); border-radius: 2px;">
-                                    </div>
-                                    <span class="text-muted">Total Sales</span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                    <div
-                                        style="width: 10px; height: 10px; background-color: hsl(142 72% 35%); border-radius: 2px;">
-                                    </div>
-                                    <span class="text-muted">Gross Profit</span>
-                                </div>
-                            </div>
-                                <div id="graph-legend-sales-inventory" class="graph-legend"
-                                    style="display: none; gap: 0.75rem; font-size: 0.6875rem; font-weight: 500;">
-                                    <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                        <div
-                                            style="width: 10px; height: 10px; background-color: hsl(var(--primary)); border-radius: 2px;">
-                                        </div>
-                                        <span class="text-muted">Sales</span>
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.25rem;">
-                                        <div
-                                            style="width: 10px; height: 10px; background-color: hsl(280 65% 55%); border-radius: 2px;">
-                                        </div>
-                                        <span class="text-muted">Inventory Intake</span>
-                                    </div>
-                                </div>
+        <!-- Right: Metric Checkboxes (Legend) + Divider + Inline Timeframe Filter -->
+        <div style="display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap;">
+            <!-- Checkboxes to hide/unhide Sales, Profit, Inventory -->
+            <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.6875rem; font-weight: 600;">
+                <label
+                    style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="toggle-chart-sales" checked
+                        onchange="window.toggleChartSeries('sales', this.checked)"
+                        style="accent-color: hsl(var(--primary)); cursor: pointer;">
+                    <span style="color: var(--text-main);">Sales</span>
+                </label>
 
-                                <!-- Subtle vertical divider -->
-                                <div style="width: 1px; height: 16px; background-color: var(--border-color);"
-                                    class="hidden sm:block"></div>
+                <label
+                    style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="toggle-chart-profit" checked
+                        onchange="window.toggleChartSeries('profit', this.checked)"
+                        style="accent-color: hsl(142 72% 35%); cursor: pointer;">
+                    <span style="color: var(--text-main);">Profit</span>
+                </label>
 
-                                <!-- Inline Timeframe Filter -->
-                                <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: nowrap;">
-                                    <span
-                                        style="font-size: 0.6875rem; font-weight: 600; color: var(--text-muted); margin-right: 0.15rem;">Timeframe:</span>
-                                    <input type="date" name="start_date" value="{{ .StartDateStr }}" class="form-input"
-                                        style="font-size: 0.6875rem; padding: 0.25rem 0.45rem; height: 1.75rem;"
-                                        hx-get="/?fragment=trends" hx-trigger="change"
-                                        hx-target="#dashboard-trends-container" hx-include="[name='end_date']">
-                                    <span style="font-size: 0.6875rem; color: var(--text-muted);">to</span>
-                                    <input type="date" name="end_date" value="{{ .EndDateStr }}" class="form-input"
-                                        style="font-size: 0.6875rem; padding: 0.25rem 0.45rem; height: 1.75rem;"
-                                        hx-get="/?fragment=trends" hx-trigger="change"
-                                        hx-target="#dashboard-trends-container" hx-include="[name='start_date']">
-                                </div>
-                            </div>
-                        </div>
+                <label
+                    style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="toggle-chart-inventory" checked
+                        onchange="window.toggleChartSeries('inventory', this.checked)"
+                        style="accent-color: hsl(280 65% 55%); cursor: pointer;">
+                    <span style="color: var(--text-main);">Inventory</span>
+                </label>
+            </div>
 
-                        <!-- Graph 1: Sales & Profit Trend -->
-                        <div id="graph-view-sales-profit" style="width: 100%; display: flex; justify-content: center;">
-                            <svg viewBox="0 0 910 210" style="width: 100%; height: auto; max-height: 230px;">
-                                <!-- Grid Lines -->
-                                <line x1="30" y1="10" x2="880" y2="10" stroke="hsl(var(--border) / 0.6)"
-                                    stroke-dasharray="3" />
-                                <line x1="30" y1="65" x2="880" y2="65" stroke="hsl(var(--border) / 0.6)"
-                                    stroke-dasharray="3" />
-                                <line x1="30" y1="120" x2="880" y2="120" stroke="hsl(var(--border) / 0.6)"
-                                    stroke-dasharray="3" />
-                                <line x1="30" y1="175" x2="880" y2="175" stroke="hsl(var(--border) / 0.8)" />
+            <!-- Subtle vertical divider -->
+            <div style="width: 1px; height: 16px; background-color: var(--border-color);" class="hidden sm:block"></div>
 
-                                {{ range .ChartBars }}
-                                <!-- Sales Bar -->
-                                <rect x="{{ .SalesX }}" y="{{ .SalesY }}" width="20" height="{{ .SalesHeight }}" rx="2"
-                                    fill="hsl(var(--primary))" style="transition: all 0.2s ease; opacity: 0.88;">
-                                    <title>{{ .Label }} Sales: ₱{{ printf "%.2f" .Sales }}</title>
-                                </rect>
+            <!-- Inline Timeframe Filter -->
+            <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: nowrap;">
+                <span
+                    style="font-size: 0.6875rem; font-weight: 600; color: var(--text-muted); margin-right: 0.15rem;">Timeframe:</span>
+                <input type="date" name="start_date" value="{{ .StartDateStr }}" class="form-input"
+                    style="font-size: 0.6875rem; padding: 0.25rem 0.45rem; height: 1.75rem;" hx-get="/?fragment=trends"
+                    hx-trigger="change" hx-target="#dashboard-trends-container" hx-include="[name='end_date']">
+                <span style="font-size: 0.6875rem; color: var(--text-muted);">to</span>
+                <input type="date" name="end_date" value="{{ .EndDateStr }}" class="form-input"
+                    style="font-size: 0.6875rem; padding: 0.25rem 0.45rem; height: 1.75rem;" hx-get="/?fragment=trends"
+                    hx-trigger="change" hx-target="#dashboard-trends-container" hx-include="[name='start_date']">
+            </div>
+        </div>
+    </div>
 
-                                <!-- Profit Bar -->
-                                <rect x="{{ .ProfitX }}" y="{{ .ProfitY }}" width="20" height="{{ .ProfitHeight }}"
-                                    rx="2" fill="hsl(142 72% 35%)" style="transition: all 0.2s ease; opacity: 0.88;">
-                                    <title>{{ .Label }} Profit: ₱{{ printf "%.2f" .Profit }}</title>
-                                </rect>
+    <!-- Unified Trend Chart -->
+    <div style="width: 100%; display: flex; justify-content: center;">
+        <svg viewBox="0 0 910 210" style="width: 100%; height: auto; max-height: 230px;">
+            <!-- Grid Lines -->
+            <line x1="30" y1="10" x2="880" y2="10" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+            <line x1="30" y1="65" x2="880" y2="65" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+            <line x1="30" y1="120" x2="880" y2="120" stroke="hsl(var(--border) / 0.6)" stroke-dasharray="3" />
+            <line x1="30" y1="175" x2="880" y2="175" stroke="hsl(var(--border) / 0.8)" />
 
-                                <!-- X Axis Label -->
-                                <text x="{{ .LabelX }}" y="196" text-anchor="middle" class="text-muted"
-                                    style="font-size: 0.6875rem; font-weight: 500;">{{ .Label }}</text>
-                                {{ end }}
-                            </svg>
-                        </div>
+            {{ range .ChartBars }}
+            <!-- Sales Bar -->
+            <rect class="chart-bar-sales" x="{{ .SalesX }}" y="{{ .SalesY }}" width="16" height="{{ .SalesHeight }}"
+                rx="2" fill="hsl(var(--primary))" style="transition: opacity 0.2s ease; opacity: 0.88;">
+                <title>{{ .Label }} Sales: ₱{{ printf "%.2f" .Sales }}</title>
+            </rect>
 
-                        <!-- Graph 2: Sales & Inventory Trend -->
-                        <div id="graph-view-sales-inventory"
-                            style="width: 100%; display: none; justify-content: center;">
-                            <svg viewBox="0 0 910 210" style="width: 100%; height: auto; max-height: 230px;">
-                                <!-- Grid Lines -->
-                                <line x1="30" y1="10" x2="880" y2="10" stroke="hsl(var(--border) / 0.6)"
-                                    stroke-dasharray="3" />
-                                <line x1="30" y1="65" x2="880" y2="65" stroke="hsl(var(--border) / 0.6)"
-                                    stroke-dasharray="3" />
-                                <line x1="30" y1="120" x2="880" y2="120" stroke="hsl(var(--border) / 0.6)"
-                                    stroke-dasharray="3" />
-                                <line x1="30" y1="175" x2="880" y2="175" stroke="hsl(var(--border) / 0.8)" />
+            <!-- Profit Bar -->
+            <rect class="chart-bar-profit" x="{{ .ProfitX }}" y="{{ .ProfitY }}" width="16" height="{{ .ProfitHeight }}"
+                rx="2" fill="hsl(142 72% 35%)" style="transition: opacity 0.2s ease; opacity: 0.88;">
+                <title>{{ .Label }} Profit: ₱{{ printf "%.2f" .Profit }}</title>
+            </rect>
 
-                                {{ range .InvChartBars }}
-                                <!-- Sales Bar -->
-                                <rect x="{{ .SalesX }}" y="{{ .SalesY }}" width="20" height="{{ .SalesH }}" rx="2"
-                                    fill="hsl(var(--primary))" style="transition: all 0.2s ease; opacity: 0.88;">
-                                    <title>{{ .Label }} Sales: ₱{{ printf "%.2f" .Sales }}</title>
-                                </rect>
+            <!-- Inventory Bar -->
+            <rect class="chart-bar-inventory" x="{{ .InventoryX }}" y="{{ .InventoryY }}" width="16"
+                height="{{ .InventoryHeight }}" rx="2" fill="hsl(280 65% 55%)"
+                style="transition: opacity 0.2s ease; opacity: 0.88;">
+                <title>{{ .Label }} Inventory Intake: ₱{{ printf "%.2f" .Inventory }}</title>
+            </rect>
 
-                                <!-- Inventory Bar -->
-                                <rect x="{{ .InvX }}" y="{{ .InvY }}" width="20" height="{{ .InvH }}" rx="2"
-                                    fill="hsl(280 65% 55%)" style="transition: all 0.2s ease; opacity: 0.88;">
-                                    <title>{{ .Label }} Inventory Intake: ₱{{ printf "%.2f" .Inventory }}</title>
-                                </rect>
+            <!-- X Axis Label -->
+            <text x="{{ .LabelX }}" y="196" text-anchor="middle" class="text-muted"
+                style="font-size: 0.6875rem; font-weight: 500;">{{ .Label }}</text>
+            {{ end }}
+        </svg>
+    </div>
+</div>
 
-                                <!-- X Axis Label -->
-                                <text x="{{ .LabelX }}" y="196" text-anchor="middle" class="text-muted"
-                                    style="font-size: 0.6875rem; font-weight: 500;">{{ .Label }}</text>
-                                {{ end }}
-                            </svg>
-                        </div>
-                    </div>
+<script>
+    (function () {
+        window.toggleChartSeries = function (series, isVisible) {
+            if (!window._chartSeriesState) {
+                window._chartSeriesState = { sales: true, profit: true, inventory: true };
+            }
+            window._chartSeriesState[series] = isVisible;
+            var elements = document.querySelectorAll('.chart-bar-' + series);
+            elements.forEach(function (el) {
+                el.style.display = isVisible ? '' : 'none';
+            });
+        };
 
-                    <script>
-                        (function () {
-                            window.switchDashboardGraph = function (val) {
-                                window._dashboardActiveGraph = val;
-                                var select = document.getElementById("dashboard-graph-select");
-                                if (select && select.value !== val) {
-                                    select.value = val;
-                                }
-                                var spView = document.getElementById("graph-view-sales-profit");
-                                var siView = document.getElementById("graph-view-sales-inventory");
-                                var spSub = document.getElementById("graph-subtitle-sales-profit");
-                                var siSub = document.getElementById("graph-subtitle-sales-inventory");
-                                var spLeg = document.getElementById("graph-legend-sales-profit");
-                                var siLeg = document.getElementById("graph-legend-sales-inventory");
-
-                                if (val === "sales-inventory") {
-                                    if (spView) spView.style.display = "none";
-                                    if (siView) siView.style.display = "flex";
-                                    if (spSub) spSub.style.display = "none";
-                                    if (siSub) siSub.style.display = "inline";
-                                    if (spLeg) spLeg.style.display = "none";
-                                    if (siLeg) siLeg.style.display = "flex";
-                                } else {
-                                    if (spView) spView.style.display = "flex";
-                                    if (siView) siView.style.display = "none";
-                                    if (spSub) spSub.style.display = "inline";
-                                    if (siSub) siSub.style.display = "none";
-                                    if (spLeg) spLeg.style.display = "flex";
-                                    if (siLeg) siLeg.style.display = "none";
-                                }
-                            };
-
-                            if (window._dashboardActiveGraph) {
-                                window.switchDashboardGraph(window._dashboardActiveGraph);
-                            }
-                        })();
-                    </script>
-                    {{ end }}
+        if (!window._chartSeriesState) {
+            window._chartSeriesState = { sales: true, profit: true, inventory: true };
+        }
+        ['sales', 'profit', 'inventory'].forEach(function (s) {
+            var chk = document.getElementById('toggle-chart-' + s);
+            var visible = window._chartSeriesState[s] !== false;
+            if (chk) {
+                chk.checked = visible;
+            }
+            var elements = document.querySelectorAll('.chart-bar-' + s);
+            elements.forEach(function (el) {
+                el.style.display = visible ? '' : 'none';
+            });
+        });
+    })();
+</script>
+{{ end }}
