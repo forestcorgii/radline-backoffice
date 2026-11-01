@@ -71,6 +71,40 @@ func TestInitDB_SQLiteInMemory(t *testing.T) {
 		t.Errorf("Expected system setting 'Radline Tools', got %q", val)
 	}
 
+	// Verify user preferences get/set/delete
+	err = SetUserPreference(1, "dashboard_layout", `[{"id":"card-trends","width":"full","height":"large"}]`)
+	if err != nil {
+		t.Fatalf("Failed to set user preference: %v", err)
+	}
+
+	prefVal, err := GetUserPreference(1, "dashboard_layout")
+	if err != nil {
+		t.Fatalf("Failed to get user preference: %v", err)
+	}
+	if prefVal != `[{"id":"card-trends","width":"full","height":"large"}]` {
+		t.Errorf("Expected user preference JSON, got %q", prefVal)
+	}
+
+	// Verify update on conflict
+	err = SetUserPreference(1, "dashboard_layout", `[{"id":"card-workflow","width":"half","height":"small"}]`)
+	if err != nil {
+		t.Fatalf("Failed to update user preference: %v", err)
+	}
+	prefVal, err = GetUserPreference(1, "dashboard_layout")
+	if err != nil || prefVal != `[{"id":"card-workflow","width":"half","height":"small"}]` {
+		t.Errorf("Expected updated preference, got %q", prefVal)
+	}
+
+	// Verify delete
+	err = DeleteUserPreference(1, "dashboard_layout")
+	if err != nil {
+		t.Fatalf("Failed to delete user preference: %v", err)
+	}
+	prefVal, _ = GetUserPreference(1, "dashboard_layout")
+	if prefVal != "" {
+		t.Errorf("Expected empty string after deleting user preference, got %q", prefVal)
+	}
+
 	// Verify RETURNING id works
 	var brandID int64
 	err = DB.QueryRow("INSERT INTO brands (code, name) VALUES (?, ?) RETURNING id", "TEST_BRAND", "Test Brand Name").Scan(&brandID)

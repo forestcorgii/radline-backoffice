@@ -9,7 +9,7 @@
 - **Driver Detection**: `InitDB(datasource)` connects via `pgx` (`github.com/jackc/pgx/v5/stdlib`) when `datasource` starts with `postgres://` or `postgresql://` (required when `APP_ENV=production`), otherwise uses pure-Go SQLite (`modernc.org/sqlite`, driver name `"sqlite"`, file `backoffice.db`) with `PRAGMA foreign_keys = ON;`.
 - **Automatic Placeholder Rebinding**: `db.DB` (`*DBConn`) and `TxConn` wrap `*sqlx.DB` / `*sqlx.Tx` and automatically call `Rebind(query)` on every `Get`, `Select`, `Exec`, `Query`, and `QueryRow`, translating `?` into `$1, $2, ...` on PostgreSQL.
 
-## Complete Table Catalog (17 Tables)
+## Complete Table Catalog (18 Tables)
 
 | Domain Area | Table | Key Columns & FKs |
 |---|---|---|
@@ -31,6 +31,7 @@
 | | `role_permissions` | `role_id` (FK `roles` CASCADE), `permission_key` — PK `(role_id, permission_key)` |
 | | `users` | `id`, `username` (UNIQUE), `password_hash`, `full_name`, `role_id` (FK `roles`), `is_active`, `created_at` |
 | | `user_sessions` | `id` (PK token), `user_id` (FK `users` CASCADE), `expires_at` |
+| | `user_preferences` | `user_id` (FK `users` CASCADE), `pref_key`, `pref_value`, `updated_at` — PK `(user_id, pref_key)` |
 | | `activity_logs` | `id`, `user_id`, `username`, `action`, `entity_type`, `entity_id`, `details`, `ip_address`, `created_at` |
 | | `system_settings` | `key` (PK), `value` |
 

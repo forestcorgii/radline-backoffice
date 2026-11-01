@@ -73,6 +73,8 @@ func main() {
 
 	// Protected Dashboard
 	mux.HandleFunc("/", app.RequirePermission(domain.PermDashboardView, app.DashboardHandler))
+	mux.HandleFunc("POST /dashboard/layout", app.RequirePermission(domain.PermDashboardView, app.SaveDashboardLayoutHandler))
+	mux.HandleFunc("POST /dashboard/layout/reset", app.RequirePermission(domain.PermDashboardView, app.ResetDashboardLayoutHandler))
 
 	// Roles & Users Management (RBAC)
 	mux.HandleFunc("GET /settings/roles", app.RequirePermission(domain.PermSettingsRoles, app.RolesHandler))
