@@ -80,3 +80,12 @@
 - **Enforced Solution**:
   - **Stacked Deductions Column**: Consolidated into a single `Deductions` column (`data-col="patong"`). Read-only rows stack non-zero values (`P:`, `C:`, `W:`) or `—`; edit rows stack three compact inputs (`name="patong"`, `pos_charge`, `wt_2307`).
   - **Dynamic Select Color Sync**: Use `.status-select-*` and `.supplier-select-*` classes in `static/index.css` updated on change via `window.updateSelectColorClass(el)`.
+
+### Context: Customizable Dashboard Grid, Sizing Tokens & Drag-and-Drop Repositioning
+- **Problem**: Fixed dashboard layouts restrict operators with varied workflows and monitor setups from prioritizing relevant KPIs, charts, and operational widgets.
+- **Enforced Solution**:
+  - **12-Column Responsive Grid**: `.dashboard-grid` (`display: grid; grid-template-columns: repeat(12, 1fr); gap: 1rem;`).
+  - **Modular Width Tokens**: `.dash-w-quarter` (span 3 on desktop, 6 on tablet, 12 on mobile), `.dash-w-half` (span 6), `.dash-w-full` (span 12).
+  - **Modular Height Tokens**: `.dash-h-sm` (155px), `.dash-h-md` (310px), `.dash-h-lg` (480px). Internal `.dashboard-card-body` uses `flex: 1 1 auto; min-height: 0; overflow-y: auto;` to handle arbitrary content height cleanly.
+  - **Drag-and-Drop & Accessibility**: HTML5 Drag & Drop with `.dash-drop-indicator` and `.is-dragging` styles, coupled with Left/Right directional move buttons in card settings popovers (`.dash-config-popover`).
+  - **Per-User Database Sync**: Persisted in `user_preferences` (`pref_key = 'dashboard_layout'`) with zero layout shift on server-rendered page load.

@@ -21,6 +21,8 @@
 | Method | Path | Handler | Notes |
 |---|---|---|---|
 | `*` | `/` | `DashboardHandler` | Financial KPIs, `fragment=trends` SVG charts, top 5 items |
+| POST | `/dashboard/layout` | `SaveDashboardLayoutHandler` | Saves JSON card order, width & height to `user_preferences` |
+| POST | `/dashboard/layout/reset` | `ResetDashboardLayoutHandler` | Resets user dashboard layout to system default |
 | GET / POST / DELETE | `/goals`, `/goals/add`, `/goals/delete/{id}` | `GoalsHandler`, `AddGoalHandler`, `DeleteGoalHandler` | Revenue & profit targets (`handlers/goals.go`) |
 | GET | `/calendar`, `/reminders` | `RemindersHandler` | Monthly 7-col grid + agenda (`handlers/reminders.go`) |
 | POST | `/reminders/add`, `/calendar/add` | `AddReminderHandler` | Create reminder (supports `?action=new` modal trigger) |

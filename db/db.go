@@ -459,6 +459,15 @@ func createSchemaSQLite() error {
 		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
 
+	CREATE TABLE IF NOT EXISTS user_preferences (
+		user_id INTEGER NOT NULL,
+		pref_key TEXT NOT NULL,
+		pref_value TEXT NOT NULL,
+		updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (user_id, pref_key),
+		FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
 	CREATE TABLE IF NOT EXISTS activity_logs (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER,
@@ -474,6 +483,7 @@ func createSchemaSQLite() error {
 	CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 	CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 	CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+	CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
 	CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at);
 	CREATE INDEX IF NOT EXISTS idx_activity_logs_username ON activity_logs(username);
 	CREATE INDEX IF NOT EXISTS idx_activity_logs_entity_type ON activity_logs(entity_type);
@@ -713,6 +723,14 @@ func createSchemaPostgres() error {
 		expires_at TIMESTAMPTZ NOT NULL
 	);
 
+	CREATE TABLE IF NOT EXISTS user_preferences (
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		pref_key TEXT NOT NULL,
+		pref_value TEXT NOT NULL,
+		updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		PRIMARY KEY (user_id, pref_key)
+	);
+
 	CREATE TABLE IF NOT EXISTS activity_logs (
 		id SERIAL PRIMARY KEY,
 		user_id INTEGER,
@@ -728,6 +746,7 @@ func createSchemaPostgres() error {
 	CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 	CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id);
 	CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at);
+	CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
 	CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at);
 	CREATE INDEX IF NOT EXISTS idx_activity_logs_username ON activity_logs(username);
 	CREATE INDEX IF NOT EXISTS idx_activity_logs_entity_type ON activity_logs(entity_type);
@@ -1106,5 +1125,40 @@ func SetSystemSetting(key, value string) error {
 		VALUES (?, ?)
 		ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value
 	`, key, value)
+	return err
+}
+
+// GetUserPreference retrieves a user preference value by user_id and pref_key
+func GetUserPreference(userID int64, key string) (string, error) {
+	if DB == nil {
+		return "", fmt.Errorf("database connection is nil")
+	}
+	var val string
+	err := DB.Get(&val, "SELECT pref_value FROM user_preferences WHERE user_id = ? AND pref_key = ? LIMIT 1", userID, key)
+	if err != nil {
+		return "", err
+	}
+	return val, nil
+}
+
+// SetUserPreference inserts or updates a user preference
+func SetUserPreference(userID int64, key, value string) error {
+	if DB == nil {
+		return fmt.Errorf("database connection is nil")
+	}
+	_, err := DB.Exec(`
+		INSERT INTO user_preferences (user_id, pref_key, pref_value, updated_at)
+		VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT(user_id, pref_key) DO UPDATE SET pref_value = EXCLUDED.pref_value, updated_at = CURRENT_TIMESTAMP
+	`, userID, key, value)
+	return err
+}
+
+// DeleteUserPreference deletes a user preference
+func DeleteUserPreference(userID int64, key string) error {
+	if DB == nil {
+		return fmt.Errorf("database connection is nil")
+	}
+	_, err := DB.Exec("DELETE FROM user_preferences WHERE user_id = ? AND pref_key = ?", userID, key)
 	return err
 }

@@ -259,4 +259,11 @@ type CustomerWithStats struct {
 	SalesCount    int       `db:"sales_count" json:"sales_count"`
 }
 
+type DashboardCardConfig struct {
+	ID     string `json:"id"`
+	Width  string `json:"width"`  // "quarter", "half", "full"
+	Height string `json:"height"` // "small", "medium", "large"
+}
+
+
 

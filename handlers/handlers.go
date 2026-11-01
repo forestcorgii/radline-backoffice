@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
@@ -86,7 +87,9 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	// 1. Greeting
 	ctxUser := GetCurrentUser(r)
 	userName := "Operator"
+	var userID int64
 	if ctxUser != nil {
+		userID = ctxUser.User.ID
 		if ctxUser.User.FullName != "" {
 			userName = ctxUser.User.FullName
 		} else {
@@ -356,6 +359,8 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		LIMIT 4
 	`)
 
+	cardConfigs := app.GetUserDashboardCards(userID)
+
 	data := struct {
 		Greeting          string
 		TodayFormatted    string
@@ -369,6 +374,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		TopProducts       []models.TopProduct
 		Goals             []models.GoalWithProgress
 		UpcomingReminders []models.Reminder
+		CardConfigs       []models.DashboardCardConfig
 	}{
 		Greeting:          greeting,
 		TodayFormatted:    todayFormatted,
@@ -382,6 +388,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		TopProducts:       topProducts,
 		Goals:             goals,
 		UpcomingReminders: upcomingReminders,
+		CardConfigs:       cardConfigs,
 	}
 
 	if r.Header.Get("HX-Request") == "true" && r.URL.Query().Get("fragment") == "trends" {
@@ -394,4 +401,156 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.RenderPage(w, r, "dashboard.html", data)
+}
+
+// DefaultDashboardCards returns the standard out-of-the-box layout for dashboard cards
+func DefaultDashboardCards() []models.DashboardCardConfig {
+	return []models.DashboardCardConfig{
+		{ID: "card-workflow", Width: "full", Height: "small"},
+		{ID: "card-kpi-sales", Width: "quarter", Height: "small"},
+		{ID: "card-kpi-costs", Width: "quarter", Height: "small"},
+		{ID: "card-kpi-profit", Width: "quarter", Height: "small"},
+		{ID: "card-kpi-margin", Width: "quarter", Height: "small"},
+		{ID: "card-trends", Width: "full", Height: "medium"},
+		{ID: "card-top-products", Width: "half", Height: "medium"},
+		{ID: "card-goals", Width: "quarter", Height: "medium"},
+		{ID: "card-reminders", Width: "quarter", Height: "medium"},
+	}
+}
+
+// GetUserDashboardCards retrieves the customized card ordering and dimensions for a user from database
+func (app *App) GetUserDashboardCards(userID int64) []models.DashboardCardConfig {
+	defaults := DefaultDashboardCards()
+	if userID <= 0 {
+		return defaults
+	}
+
+	prefVal, err := db.GetUserPreference(userID, "dashboard_layout")
+	if err != nil || strings.TrimSpace(prefVal) == "" {
+		return defaults
+	}
+
+	var saved []models.DashboardCardConfig
+	if err := json.Unmarshal([]byte(prefVal), &saved); err != nil || len(saved) == 0 {
+		return defaults
+	}
+
+	seen := make(map[string]bool)
+	defaultMap := make(map[string]models.DashboardCardConfig)
+	for _, d := range defaults {
+		defaultMap[d.ID] = d
+	}
+
+	var finalCards []models.DashboardCardConfig
+	for _, s := range saved {
+		if d, ok := defaultMap[s.ID]; ok && !seen[s.ID] {
+			seen[s.ID] = true
+			w := s.Width
+			if w != "quarter" && w != "half" && w != "full" {
+				w = d.Width
+			}
+			h := s.Height
+			if h != "small" && h != "medium" && h != "large" {
+				h = d.Height
+			}
+			finalCards = append(finalCards, models.DashboardCardConfig{
+				ID:     s.ID,
+				Width:  w,
+				Height: h,
+			})
+		}
+	}
+
+	// Append any missing cards from defaults
+	for _, d := range defaults {
+		if !seen[d.ID] {
+			finalCards = append(finalCards, d)
+		}
+	}
+
+	return finalCards
+}
+
+// SaveDashboardLayoutHandler updates the user's dashboard layout preference in the database
+func (app *App) SaveDashboardLayoutHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	ctxUser := GetCurrentUser(r)
+	if ctxUser == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var configs []models.DashboardCardConfig
+	if err := json.NewDecoder(r.Body).Decode(&configs); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	defaults := DefaultDashboardCards()
+	defaultMap := make(map[string]models.DashboardCardConfig)
+	for _, d := range defaults {
+		defaultMap[d.ID] = d
+	}
+
+	var cleanConfigs []models.DashboardCardConfig
+	seen := make(map[string]bool)
+	for _, c := range configs {
+		if d, ok := defaultMap[c.ID]; ok && !seen[c.ID] {
+			seen[c.ID] = true
+			w := c.Width
+			if w != "quarter" && w != "half" && w != "full" {
+				w = d.Width
+			}
+			h := c.Height
+			if h != "small" && h != "medium" && h != "large" {
+				h = d.Height
+			}
+			cleanConfigs = append(cleanConfigs, models.DashboardCardConfig{
+				ID:     c.ID,
+				Width:  w,
+				Height: h,
+			})
+		}
+	}
+
+	bytesVal, err := json.Marshal(cleanConfigs)
+	if err != nil {
+		http.Error(w, "Failed to encode layout", http.StatusInternalServerError)
+		return
+	}
+
+	if err := db.SetUserPreference(ctxUser.User.ID, "dashboard_layout", string(bytesVal)); err != nil {
+		http.Error(w, "Failed to save preference", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"success": true}`))
+}
+
+// ResetDashboardLayoutHandler resets the user's dashboard layout to the system default
+func (app *App) ResetDashboardLayoutHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	ctxUser := GetCurrentUser(r)
+	if ctxUser == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	_ = db.DeleteUserPreference(ctxUser.User.ID, "dashboard_layout")
+
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Refresh", "true")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
