@@ -225,38 +225,55 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// 6. Build SVG Chart Bars for Sales & Profit
-	maxSalesVal := 1000.0
-	for _, t := range trend {
-		if t.Sales > maxSalesVal {
-			maxSalesVal = t.Sales
+	// 6. Build SVG Chart Bars for Sales, Profit & Inventory
+	maxVal := 1000.0
+	for i, t := range trend {
+		if t.Sales > maxVal {
+			maxVal = t.Sales
+		}
+		if t.Profit > maxVal {
+			maxVal = t.Profit
+		}
+		if i < len(invTrend) && invTrend[i].InventoryValue > maxVal {
+			maxVal = invTrend[i].InventoryValue
 		}
 	}
-	maxSalesVal = maxSalesVal * 1.15
+	maxVal = maxVal * 1.15
 
 	chartHeight := 170.0
 	chartWidth := 860.0
-	barWidth := 20.0
+	barWidth := 16.0
+	barGap := 3.0
 	spacing := (chartWidth - 40.0) / float64(len(trend))
 
 	type ChartBar struct {
-		Label        string
-		Sales        float64
-		Profit       float64
-		SalesHeight  float64
-		ProfitHeight float64
-		SalesY       float64
-		ProfitY      float64
-		SalesX       float64
-		ProfitX      float64
-		LabelX       float64
+		Label           string
+		Sales           float64
+		Profit          float64
+		Inventory       float64
+		SalesHeight     float64
+		ProfitHeight    float64
+		InventoryHeight float64
+		SalesY          float64
+		ProfitY         float64
+		InventoryY      float64
+		SalesX          float64
+		ProfitX         float64
+		InventoryX      float64
+		LabelX          float64
 	}
 	var chartBars []ChartBar
 	for i, t := range trend {
-		sHeight := (t.Sales / maxSalesVal) * chartHeight
-		pHeight := (t.Profit / maxSalesVal) * chartHeight
+		invVal := 0.0
+		if i < len(invTrend) {
+			invVal = invTrend[i].InventoryValue
+		}
+		sHeight := (t.Sales / maxVal) * chartHeight
+		pHeight := (t.Profit / maxVal) * chartHeight
+		iHeight := (invVal / maxVal) * chartHeight
 		sY := chartHeight - sHeight + 10
 		pY := chartHeight - pHeight + 10
+		iY := chartHeight - iHeight + 10
 		x := 30.0 + float64(i)*spacing + 20.0
 
 		monthLabel := t.Month
@@ -265,67 +282,20 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		chartBars = append(chartBars, ChartBar{
-			Label:        monthLabel,
-			Sales:        t.Sales,
-			Profit:       t.Profit,
-			SalesHeight:  sHeight,
-			ProfitHeight: pHeight,
-			SalesY:       sY,
-			ProfitY:      pY,
-			SalesX:       x,
-			ProfitX:      x + barWidth + 4,
-			LabelX:       x + barWidth + 2,
-		})
-	}
-
-	// 7. Build SVG Chart Bars for Sales & Total Inventory
-	maxInvVal := 1000.0
-	for _, it := range invTrend {
-		if it.Sales > maxInvVal {
-			maxInvVal = it.Sales
-		}
-		if it.InventoryValue > maxInvVal {
-			maxInvVal = it.InventoryValue
-		}
-	}
-	maxInvVal = maxInvVal * 1.15
-
-	type InvChartBar struct {
-		Label     string
-		Sales     float64
-		Inventory float64
-		SalesH    float64
-		InvH      float64
-		SalesY    float64
-		InvY      float64
-		SalesX    float64
-		InvX      float64
-		LabelX    float64
-	}
-	var invChartBars []InvChartBar
-	for i, it := range invTrend {
-		sH := (it.Sales / maxInvVal) * chartHeight
-		iH := (it.InventoryValue / maxInvVal) * chartHeight
-		sY := chartHeight - sH + 10
-		iY := chartHeight - iH + 10
-		x := 30.0 + float64(i)*spacing + 20.0
-
-		monthLabel := it.Month
-		if parsedT, err := time.Parse("2006-01", it.Month); err == nil {
-			monthLabel = parsedT.Format("Jan")
-		}
-
-		invChartBars = append(invChartBars, InvChartBar{
-			Label:     monthLabel,
-			Sales:     it.Sales,
-			Inventory: it.InventoryValue,
-			SalesH:    sH,
-			InvH:      iH,
-			SalesY:    sY,
-			InvY:      iY,
-			SalesX:    x,
-			InvX:      x + barWidth + 4,
-			LabelX:    x + barWidth + 2,
+			Label:           monthLabel,
+			Sales:           t.Sales,
+			Profit:          t.Profit,
+			Inventory:       invVal,
+			SalesHeight:     sHeight,
+			ProfitHeight:    pHeight,
+			InventoryHeight: iHeight,
+			SalesY:          sY,
+			ProfitY:         pY,
+			InventoryY:      iY,
+			SalesX:          x,
+			ProfitX:         x + barWidth + barGap,
+			InventoryX:      x + 2*(barWidth+barGap),
+			LabelX:          x + barWidth + barGap,
 		})
 	}
 
@@ -396,7 +366,6 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		GrossProfit       float64
 		Margin            float64
 		ChartBars         []ChartBar
-		InvChartBars      []InvChartBar
 		TopProducts       []models.TopProduct
 		Goals             []models.GoalWithProgress
 		UpcomingReminders []models.Reminder
@@ -410,7 +379,6 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		GrossProfit:       metrics.GrossProfit,
 		Margin:            margin,
 		ChartBars:         chartBars,
-		InvChartBars:      invChartBars,
 		TopProducts:       topProducts,
 		Goals:             goals,
 		UpcomingReminders: upcomingReminders,
