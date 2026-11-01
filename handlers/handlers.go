@@ -161,12 +161,14 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	type MonthlyTrend struct {
 		Month  string  `db:"month"`
 		Sales  float64 `db:"sales"`
+		Cost   float64 `db:"cost"`
 		Profit float64 `db:"profit"`
 	}
 	var trend []MonthlyTrend
 	_ = db.DB.Select(&trend, `
 		SELECT substr(doc_date, 1, 7) as month, 
 		       COALESCE(SUM(total_sales), 0.0) as sales, 
+		       COALESCE(SUM(total_cost), 0.0) as cost, 
 		       COALESCE(SUM(profit), 0.0) as profit
 		FROM sales_details
 		WHERE doc_status IN ('Posted', 'POSTED') AND doc_date >= ? AND doc_date <= ?
@@ -179,6 +181,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		_ = db.DB.Select(&trend, `
 			SELECT substr(doc_date, 1, 7) as month, 
 			       COALESCE(SUM(total_sales), 0.0) as sales, 
+			       COALESCE(SUM(total_cost), 0.0) as cost, 
 			       COALESCE(SUM(profit), 0.0) as profit
 			FROM sales_details
 			WHERE doc_status IN ('Posted', 'POSTED')
@@ -195,12 +198,12 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	// If still empty, mock data for clean display
 	if len(trend) == 0 {
 		trend = []MonthlyTrend{
-			{Month: "2026-05", Sales: 22000, Profit: 6000},
-			{Month: "2026-06", Sales: 28000, Profit: 7800},
-			{Month: "2026-07", Sales: 24000, Profit: 6500},
-			{Month: "2026-08", Sales: 31000, Profit: 8400},
-			{Month: "2026-09", Sales: 35000, Profit: 9200},
-			{Month: "2026-10", Sales: 39000, Profit: 10500},
+			{Month: "2026-05", Sales: 22000, Cost: 16000, Profit: 6000},
+			{Month: "2026-06", Sales: 28000, Cost: 20200, Profit: 7800},
+			{Month: "2026-07", Sales: 24000, Cost: 17500, Profit: 6500},
+			{Month: "2026-08", Sales: 31000, Cost: 22600, Profit: 8400},
+			{Month: "2026-09", Sales: 35000, Cost: 25800, Profit: 9200},
+			{Month: "2026-10", Sales: 39000, Cost: 28500, Profit: 10500},
 		}
 	}
 
@@ -228,14 +231,20 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// 6. Build SVG Chart Bars for Sales, Profit & Inventory
+	// 6. Build SVG Chart Bars for Sales, Cost, Profit & Inventory
 	maxVal := 1000.0
-	for i, t := range trend {
-		if t.Sales > maxVal {
-			maxVal = t.Sales
+	for i := range trend {
+		if trend[i].Cost == 0 && trend[i].Sales > 0 && trend[i].Sales > trend[i].Profit {
+			trend[i].Cost = trend[i].Sales - trend[i].Profit
 		}
-		if t.Profit > maxVal {
-			maxVal = t.Profit
+		if trend[i].Sales > maxVal {
+			maxVal = trend[i].Sales
+		}
+		if trend[i].Cost > maxVal {
+			maxVal = trend[i].Cost
+		}
+		if trend[i].Profit > maxVal {
+			maxVal = trend[i].Profit
 		}
 		if i < len(invTrend) && invTrend[i].InventoryValue > maxVal {
 			maxVal = invTrend[i].InventoryValue
@@ -245,22 +254,27 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	chartHeight := 170.0
 	chartWidth := 860.0
-	barWidth := 16.0
+	barWidth := 13.0
 	barGap := 3.0
+	stride := barWidth + barGap
 	spacing := (chartWidth - 40.0) / float64(len(trend))
 
 	type ChartBar struct {
 		Label           string
 		Sales           float64
+		Cost            float64
 		Profit          float64
 		Inventory       float64
 		SalesHeight     float64
+		CostHeight      float64
 		ProfitHeight    float64
 		InventoryHeight float64
 		SalesY          float64
+		CostY           float64
 		ProfitY         float64
 		InventoryY      float64
 		SalesX          float64
+		CostX           float64
 		ProfitX         float64
 		InventoryX      float64
 		LabelX          float64
@@ -272,9 +286,11 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 			invVal = invTrend[i].InventoryValue
 		}
 		sHeight := (t.Sales / maxVal) * chartHeight
+		cHeight := (t.Cost / maxVal) * chartHeight
 		pHeight := (t.Profit / maxVal) * chartHeight
 		iHeight := (invVal / maxVal) * chartHeight
 		sY := chartHeight - sHeight + 10
+		cY := chartHeight - cHeight + 10
 		pY := chartHeight - pHeight + 10
 		iY := chartHeight - iHeight + 10
 		x := 30.0 + float64(i)*spacing + 20.0
@@ -287,18 +303,22 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		chartBars = append(chartBars, ChartBar{
 			Label:           monthLabel,
 			Sales:           t.Sales,
+			Cost:            t.Cost,
 			Profit:          t.Profit,
 			Inventory:       invVal,
 			SalesHeight:     sHeight,
+			CostHeight:      cHeight,
 			ProfitHeight:    pHeight,
 			InventoryHeight: iHeight,
 			SalesY:          sY,
+			CostY:           cY,
 			ProfitY:         pY,
 			InventoryY:      iY,
 			SalesX:          x,
-			ProfitX:         x + barWidth + barGap,
-			InventoryX:      x + 2*(barWidth+barGap),
-			LabelX:          x + barWidth + barGap,
+			CostX:           x + stride,
+			ProfitX:         x + 2*stride,
+			InventoryX:      x + 3*stride,
+			LabelX:          x + (3*stride+barWidth)/2,
 		})
 	}
 

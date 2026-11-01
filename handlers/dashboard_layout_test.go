@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"html/template"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"radline/db"
@@ -128,5 +130,45 @@ func TestSaveAndResetDashboardLayoutHandler(t *testing.T) {
 	prefValAfter, _ := db.GetUserPreference(1, "dashboard_layout")
 	if prefValAfter != "" {
 		t.Errorf("Expected preference deleted from DB, got %q", prefValAfter)
+	}
+}
+
+func TestDashboardTrendsWithCost(t *testing.T) {
+	_ = db.InitDB(":memory:")
+
+	tmpl, err := template.ParseFiles("../templates/dashboard_trends.html")
+	if err != nil {
+		t.Fatalf("Failed to parse dashboard_trends.html: %v", err)
+	}
+
+	app := &App{
+		Templates: map[string]*template.Template{
+			"dashboard_trends.html": tmpl,
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/?fragment=trends", nil)
+	req.Header.Set("HX-Request", "true")
+	userCtx := &CurrentUserContext{
+		User: models.User{ID: 1, Username: "admin", RoleID: 1},
+	}
+	req = req.WithContext(context.WithValue(req.Context(), UserContextKey, userCtx))
+	rec := httptest.NewRecorder()
+
+	app.DashboardHandler(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for trends fragment, got %d. Body: %s", rec.Code, rec.Body.String())
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, "toggle-chart-cost") {
+		t.Errorf("Expected rendered trends fragment to contain toggle-chart-cost checkbox")
+	}
+	if !strings.Contains(body, "chart-bar-cost") {
+		t.Errorf("Expected rendered trends fragment to contain chart-bar-cost SVG bars")
+	}
+	if !strings.Contains(body, "toggleChartSeries('cost'") {
+		t.Errorf("Expected rendered trends fragment to contain toggleChartSeries call for cost")
 	}
 }
