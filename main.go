@@ -268,7 +268,7 @@ func parseTemplates() map[string]*template.Template {
 		t := template.New(page).Funcs(funcMap)
 		files := []string{"templates/base.html", "templates/" + page}
 		if page == "dashboard.html" {
-			files = append(files, "templates/dashboard_trends.html")
+			files = append(files, "templates/dashboard_trends.html", "templates/dashboard_top_products.html")
 		} else if page == "brands.html" {
 			files = append(files, "templates/brand_row.html", "templates/brand_rows.html", "templates/brand_edit_row.html", "templates/brands_results.html")
 		} else if page == "categories.html" {
@@ -338,7 +338,7 @@ func parseTemplates() map[string]*template.Template {
 		"receipt_scanner_results.html",
 		"sale_row.html", "sale_edit_row.html",
 		"activity_logs_results.html",
-		"dashboard_trends.html",
+		"dashboard_trends.html", "dashboard_top_products.html",
 	}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)

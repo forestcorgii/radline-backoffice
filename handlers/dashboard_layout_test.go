@@ -172,3 +172,107 @@ func TestDashboardTrendsWithCost(t *testing.T) {
 		t.Errorf("Expected rendered trends fragment to contain toggleChartSeries call for cost")
 	}
 }
+
+func TestDashboardTopProductsFilter(t *testing.T) {
+	_ = db.InitDB(":memory:")
+
+	funcMap := template.FuncMap{
+		"add": func(a, b int) int { return a + b },
+	}
+	tmpl, err := template.New("dashboard_top_products.html").Funcs(funcMap).ParseFiles("../templates/dashboard_top_products.html")
+	if err != nil {
+		t.Fatalf("Failed to parse dashboard_top_products.html: %v", err)
+	}
+
+	app := &App{
+		Templates: map[string]*template.Template{
+			"dashboard_top_products.html": tmpl,
+		},
+	}
+
+	userCtx := &CurrentUserContext{
+		User: models.User{ID: 1, Username: "admin", RoleID: 1},
+	}
+
+	// Seed test items & sales_details
+	if _, err := db.DB.Exec(`INSERT INTO items (id, code, description, default_uom) VALUES (101, 'ITEM-VOL', 'High Volume Item', 'PCS')`); err != nil {
+		t.Fatalf("Failed to insert item 101: %v", err)
+	}
+	if _, err := db.DB.Exec(`INSERT INTO items (id, code, description, default_uom) VALUES (102, 'ITEM-PROF', 'High Profit Item', 'PCS')`); err != nil {
+		t.Fatalf("Failed to insert item 102: %v", err)
+	}
+	if _, err := db.DB.Exec(`INSERT INTO items (id, code, description, default_uom) VALUES (103, 'ITEM-SALES', 'High Sales Item', 'PCS')`); err != nil {
+		t.Fatalf("Failed to insert item 103: %v", err)
+	}
+
+	if _, err := db.DB.Exec(`INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, profit) VALUES ('DR', 'Posted', '2026-01-15', 'DR-001', 'Supp1', 101, 500, 'PCS', 10.0, 5000.0, 9.0, 4500.0, 500.0)`); err != nil {
+		t.Fatalf("Failed to insert sales_detail 101: %v", err)
+	}
+	if _, err := db.DB.Exec(`INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, profit) VALUES ('DR', 'Posted', '2026-01-15', 'DR-002', 'Supp1', 102, 10, 'PCS', 1500.0, 15000.0, 700.0, 7000.0, 8000.0)`); err != nil {
+		t.Fatalf("Failed to insert sales_detail 102: %v", err)
+	}
+	if _, err := db.DB.Exec(`INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, profit) VALUES ('DR', 'Posted', '2026-01-15', 'DR-003', 'Supp1', 103, 5, 'PCS', 10000.0, 50000.0, 9600.0, 48000.0, 2000.0)`); err != nil {
+		t.Fatalf("Failed to insert sales_detail 103: %v", err)
+	}
+
+	// 1. Default (Volume) - Item 101 should appear first
+	reqVol := httptest.NewRequest(http.MethodGet, "/?fragment=top_products&top_filter=volume", nil)
+	reqVol.Header.Set("HX-Request", "true")
+	reqVol = reqVol.WithContext(context.WithValue(reqVol.Context(), UserContextKey, userCtx))
+	recVol := httptest.NewRecorder()
+	app.DashboardHandler(recVol, reqVol)
+	if recVol.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for volume filter, got %d. Body: %s", recVol.Code, recVol.Body.String())
+	}
+	bodyVol := recVol.Body.String()
+	if !strings.Contains(bodyVol, "Highest Volume Bought") {
+		t.Errorf("Expected body to contain 'Highest Volume Bought'")
+	}
+	if !strings.Contains(bodyVol, "High Volume Item") {
+		t.Errorf("Expected body to contain 'High Volume Item'")
+	}
+	// Volume item should appear before profit and sales items
+	idxVolItem := strings.Index(bodyVol, "High Volume Item")
+	idxProfItem := strings.Index(bodyVol, "High Profit Item")
+	if idxVolItem == -1 || (idxProfItem != -1 && idxVolItem > idxProfItem) {
+		t.Errorf("Expected High Volume Item to be ranked first in volume view")
+	}
+
+	// 2. Most Profitable - Item 102 should appear first
+	reqProfit := httptest.NewRequest(http.MethodGet, "/?fragment=top_products&top_filter=profit", nil)
+	reqProfit.Header.Set("HX-Request", "true")
+	reqProfit = reqProfit.WithContext(context.WithValue(reqProfit.Context(), UserContextKey, userCtx))
+	recProfit := httptest.NewRecorder()
+	app.DashboardHandler(recProfit, reqProfit)
+	if recProfit.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for profit filter, got %d. Body: %s", recProfit.Code, recProfit.Body.String())
+	}
+	bodyProfit := recProfit.Body.String()
+	if !strings.Contains(bodyProfit, "Most Profitable Items") {
+		t.Errorf("Expected body to contain 'Most Profitable Items'")
+	}
+	idxProfItemInProfit := strings.Index(bodyProfit, "High Profit Item")
+	idxVolItemInProfit := strings.Index(bodyProfit, "High Volume Item")
+	if idxProfItemInProfit == -1 || (idxVolItemInProfit != -1 && idxProfItemInProfit > idxVolItemInProfit) {
+		t.Errorf("Expected High Profit Item to be ranked first in profit view")
+	}
+
+	// 3. Highest Sales - Item 103 should appear first
+	reqSales := httptest.NewRequest(http.MethodGet, "/?fragment=top_products&top_filter=sales", nil)
+	reqSales.Header.Set("HX-Request", "true")
+	reqSales = reqSales.WithContext(context.WithValue(reqSales.Context(), UserContextKey, userCtx))
+	recSales := httptest.NewRecorder()
+	app.DashboardHandler(recSales, reqSales)
+	if recSales.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for sales filter, got %d. Body: %s", recSales.Code, recSales.Body.String())
+	}
+	bodySales := recSales.Body.String()
+	if !strings.Contains(bodySales, "Highest Sales Revenue") {
+		t.Errorf("Expected body to contain 'Highest Sales Revenue'")
+	}
+	idxSalesItemInSales := strings.Index(bodySales, "High Sales Item")
+	idxProfItemInSales := strings.Index(bodySales, "High Profit Item")
+	if idxSalesItemInSales == -1 || (idxProfItemInSales != -1 && idxSalesItemInSales > idxProfItemInSales) {
+		t.Errorf("Expected High Sales Item to be ranked first in sales view")
+	}
+}
