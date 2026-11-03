@@ -530,28 +530,8 @@
             </div>
         </div>
         <div class="dashboard-card-body">
-            <div style="display: flex; flex-direction: column; gap: 0.625rem;">
-                {{ if eq (len $.TopProducts) 0 }}
-                <div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; padding: 2rem 0;">No sales records available yet</div>
-                {{ else }}
-                {{ range $index, $prod := $.TopProducts }}
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
-                    <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden;">
-                        <div style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            {{ add $index 1 }}
-                        </div>
-                        <div style="min-width: 0;">
-                            <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $prod.Description }}">{{ $prod.Description }}</div>
-                            <div style="font-size: 0.65625rem; color: var(--text-muted);">{{ $prod.BrandName }} &bull; {{ $prod.ItemCode }}</div>
-                        </div>
-                    </div>
-                    <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
-                        <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">{{ printf "%.0f" $prod.TotalQty }} {{ $prod.UOM }}</div>
-                        <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱{{ printf "%.2f" $prod.TotalSales }}</div>
-                    </div>
-                </div>
-                {{ end }}
-                {{ end }}
+            <div id="dashboard-top-products-container" style="display: flex; flex-direction: column; height: 100%; width: 100%;">
+                {{ template "dashboard_top_products.html" $ }}
             </div>
         </div>
     </div>

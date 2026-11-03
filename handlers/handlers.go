@@ -322,7 +322,19 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// 8. Top 5 Most Purchased Products
+	// 8. Top 5 Products (Filtered by volume, profit, or sales)
+	topFilter := strings.TrimSpace(r.URL.Query().Get("top_filter"))
+	topOrderBy := "total_qty DESC"
+	switch topFilter {
+	case "profit":
+		topOrderBy = "total_profit DESC"
+	case "sales":
+		topOrderBy = "total_sales DESC"
+	default:
+		topFilter = "volume"
+		topOrderBy = "total_qty DESC"
+	}
+
 	var topProducts []models.TopProduct
 	_ = db.DB.Select(&topProducts, `
 		SELECT s.item_id, i.code as item_code, i.description, COALESCE(b.name, 'Unbranded') as brand_name,
@@ -332,7 +344,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		LEFT JOIN brands b ON i.brand_id = b.id
 		WHERE s.doc_status IN ('Posted', 'POSTED')
 		GROUP BY s.item_id, i.code, i.description, b.name, s.uom
-		ORDER BY total_qty DESC
+		ORDER BY `+topOrderBy+`
 		LIMIT 5
 	`)
 
@@ -392,6 +404,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		Margin            float64
 		ChartBars         []ChartBar
 		TopProducts       []models.TopProduct
+		TopFilter         string
 		Goals             []models.GoalWithProgress
 		UpcomingReminders []models.Reminder
 		CardConfigs       []models.DashboardCardConfig
@@ -406,17 +419,27 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		Margin:            margin,
 		ChartBars:         chartBars,
 		TopProducts:       topProducts,
+		TopFilter:         topFilter,
 		Goals:             goals,
 		UpcomingReminders: upcomingReminders,
 		CardConfigs:       cardConfigs,
 	}
 
-	if r.Header.Get("HX-Request") == "true" && r.URL.Query().Get("fragment") == "trends" {
-		t, ok := app.Templates["dashboard_trends.html"]
-		if ok {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			_ = t.Execute(w, data)
-			return
+	if r.Header.Get("HX-Request") == "true" {
+		if r.URL.Query().Get("fragment") == "trends" {
+			t, ok := app.Templates["dashboard_trends.html"]
+			if ok {
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				_ = t.Execute(w, data)
+				return
+			}
+		} else if r.URL.Query().Get("fragment") == "top_products" {
+			t, ok := app.Templates["dashboard_top_products.html"]
+			if ok {
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				_ = t.Execute(w, data)
+				return
+			}
 		}
 	}
 

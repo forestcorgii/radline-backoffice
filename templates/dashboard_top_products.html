@@ -1,0 +1,64 @@
+{{ define "dashboard_top_products.html" }}
+<div style="display: flex; flex-direction: column; gap: 0.625rem; height: 100%; width: 100%;">
+    <!-- Sub-header: Dynamic Rank Metric Title + Segmented View Filter -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">
+        <span style="font-size: 0.6875rem; font-weight: 600; color: var(--text-muted);">
+            {{ if eq $.TopFilter "profit" }}
+                Most Profitable Items
+            {{ else if eq $.TopFilter "sales" }}
+                Highest Sales Revenue
+            {{ else }}
+                Highest Volume Bought
+            {{ end }}
+        </span>
+        <div class="dash-segmented-control" style="font-size: 0.6875rem;">
+            <button type="button" class="dash-seg-btn {{ if or (eq $.TopFilter "volume") (not $.TopFilter) }}active{{ end }}"
+                hx-get="/?fragment=top_products&top_filter=volume"
+                hx-target="#dashboard-top-products-container"
+                title="View highest volume bought">Volume</button>
+            <button type="button" class="dash-seg-btn {{ if eq $.TopFilter "profit" }}active{{ end }}"
+                hx-get="/?fragment=top_products&top_filter=profit"
+                hx-target="#dashboard-top-products-container"
+                title="View most profitable items">Profit</button>
+            <button type="button" class="dash-seg-btn {{ if eq $.TopFilter "sales" }}active{{ end }}"
+                hx-get="/?fragment=top_products&top_filter=sales"
+                hx-target="#dashboard-top-products-container"
+                title="View highest sales revenue">Sales</button>
+        </div>
+    </div>
+
+    <!-- Product list -->
+    <div style="display: flex; flex-direction: column; gap: 0.5rem; flex: 1 1 auto; overflow-y: auto;">
+        {{ if eq (len $.TopProducts) 0 }}
+        <div style="text-align: center; color: var(--text-muted); font-size: 0.75rem; padding: 2rem 0;">No sales records available yet</div>
+        {{ else }}
+        {{ range $index, $prod := $.TopProducts }}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: var(--bg-color); border-radius: var(--radius); border: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; gap: 0.625rem; overflow: hidden;">
+                <div style="width: 22px; height: 22px; border-radius: 50%; background: hsl(var(--primary) / 0.1); color: var(--text-main); font-weight: 700; font-size: 0.6875rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    {{ add $index 1 }}
+                </div>
+                <div style="min-width: 0;">
+                    <div style="font-weight: 600; font-size: 0.75rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $prod.Description }}">{{ $prod.Description }}</div>
+                    <div style="font-size: 0.65625rem; color: var(--text-muted);">{{ $prod.BrandName }} &bull; {{ $prod.ItemCode }}</div>
+                </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
+                {{ if eq $.TopFilter "profit" }}
+                    <div style="font-weight: 700; font-size: 0.75rem; color: hsl(142 72% 35%);">₱{{ printf "%.2f" $prod.TotalProfit }}</div>
+                    <div style="font-size: 0.65625rem; color: var(--text-muted);">₱{{ printf "%.2f" $prod.TotalSales }} sales</div>
+                {{ else if eq $.TopFilter "sales" }}
+                    <div style="font-weight: 700; font-size: 0.75rem; color: hsl(var(--primary));">₱{{ printf "%.2f" $prod.TotalSales }}</div>
+                    <div style="font-size: 0.65625rem; color: var(--text-muted);">{{ printf "%.0f" $prod.TotalQty }} {{ $prod.UOM }}</div>
+                {{ else }}
+                    <div style="font-weight: 700; font-size: 0.75rem; color: var(--text-main);">{{ printf "%.0f" $prod.TotalQty }} {{ $prod.UOM }}</div>
+                    <div style="font-size: 0.65625rem; color: hsl(142 72% 35%); font-weight: 600;">₱{{ printf "%.2f" $prod.TotalSales }}</div>
+                {{ end }}
+            </div>
+        </div>
+        {{ end }}
+        {{ end }}
+    </div>
+</div>
+{{ end }}
+
