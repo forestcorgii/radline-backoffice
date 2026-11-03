@@ -1162,3 +1162,24 @@ func DeleteUserPreference(userID int64, key string) error {
 	_, err := DB.Exec("DELETE FROM user_preferences WHERE user_id = ? AND pref_key = ?", userID, key)
 	return err
 }
+
+// GetAllUserPreferences retrieves all preferences for a user as a key-value map
+func GetAllUserPreferences(userID int64) (map[string]string, error) {
+	if DB == nil {
+		return nil, fmt.Errorf("database connection is nil")
+	}
+	type prefRow struct {
+		Key   string `db:"pref_key"`
+		Value string `db:"pref_value"`
+	}
+	var rows []prefRow
+	err := DB.Select(&rows, "SELECT pref_key, pref_value FROM user_preferences WHERE user_id = ?", userID)
+	if err != nil {
+		return nil, err
+	}
+	res := make(map[string]string, len(rows))
+	for _, r := range rows {
+		res[r.Key] = r.Value
+	}
+	return res, nil
+}

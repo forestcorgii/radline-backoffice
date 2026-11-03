@@ -26,26 +26,17 @@
             <div class="form-group">
                 <label>Brand</label>
                 <div class="searchable-dropdown" id="brand-searchable-dd" style="position: relative; width: 100%;">
-                    <input type="text"
-                           class="form-input dropdown-search"
-                           id="brand_search_input"
-                           placeholder="Search Brand..."
-                           onfocus="showDropdown(this); this.select();"
-                           onclick="showDropdown(this); this.select();"
-                           onblur="hideGenericDropdown(this)"
-                           oninput="filterGenericDropdown(this)"
-                           onkeydown="handleGenericDropdownKeydown(event, this)"
-                           style="width: 100%; padding: 0.75rem 1rem; height: auto;">
-                    <input type="hidden" id="brand_id" name="brand_id" value="0"
-                           onchange="updateAddItemSuggestions()">
+                    <input type="text" class="form-input dropdown-search" id="brand_search_input"
+                        placeholder="Search Brand..." onfocus="showDropdown(this); this.select();"
+                        onclick="showDropdown(this); this.select();" onblur="hideGenericDropdown(this)"
+                        oninput="filterGenericDropdown(this)" onkeydown="handleGenericDropdownKeydown(event, this)"
+                        style="width: 100%; padding: 0.75rem 1rem; height: auto;">
+                    <input type="hidden" id="brand_id" name="brand_id" value="0" onchange="updateAddItemSuggestions()">
                     <div class="dropdown-list" id="brand-dropdown-list">
                         {{ range .Brands }}
-                        <div class="dropdown-item generic-dd-item"
-                             data-id="{{ .ID }}"
-                             data-display="{{ .Name }}"
-                             data-code="{{ .Code }}"
-                             data-name="{{ .Name }}"
-                             onmousedown="selectGenericDropdownItem(this)">
+                        <div class="dropdown-item generic-dd-item" data-id="{{ .ID }}" data-display="{{ .Name }}"
+                            data-code="{{ .Code }}" data-name="{{ .Name }}"
+                            onmousedown="selectGenericDropdownItem(this)">
                             {{ .Name }}
                         </div>
                         {{ end }}
@@ -58,26 +49,18 @@
             <div class="form-group">
                 <label>Category</label>
                 <div class="searchable-dropdown" id="category-searchable-dd" style="position: relative; width: 100%;">
-                    <input type="text"
-                           class="form-input dropdown-search"
-                           id="category_search_input"
-                           placeholder="Search Category..."
-                           onfocus="showDropdown(this); this.select();"
-                           onclick="showDropdown(this); this.select();"
-                           onblur="hideGenericDropdown(this)"
-                           oninput="filterGenericDropdown(this)"
-                           onkeydown="handleGenericDropdownKeydown(event, this)"
-                           style="width: 100%; padding: 0.75rem 1rem; height: auto;">
+                    <input type="text" class="form-input dropdown-search" id="category_search_input"
+                        placeholder="Search Category..." onfocus="showDropdown(this); this.select();"
+                        onclick="showDropdown(this); this.select();" onblur="hideGenericDropdown(this)"
+                        oninput="filterGenericDropdown(this)" onkeydown="handleGenericDropdownKeydown(event, this)"
+                        style="width: 100%; padding: 0.75rem 1rem; height: auto;">
                     <input type="hidden" id="category_id" name="category_id" value="0"
-                           onchange="updateAddItemSuggestions()">
+                        onchange="updateAddItemSuggestions()">
                     <div class="dropdown-list" id="category-dropdown-list">
                         {{ range .Categories }}
-                        <div class="dropdown-item generic-dd-item"
-                             data-id="{{ .ID }}"
-                             data-display="{{ .Name }}"
-                             data-code="{{ .Code }}"
-                             data-name="{{ .Name }}"
-                             onmousedown="selectGenericDropdownItem(this)">
+                        <div class="dropdown-item generic-dd-item" data-id="{{ .ID }}" data-display="{{ .Name }}"
+                            data-code="{{ .Code }}" data-name="{{ .Name }}"
+                            onmousedown="selectGenericDropdownItem(this)">
                             {{ .Name }}
                         </div>
                         {{ end }}
@@ -125,20 +108,24 @@
 </div>
 
 <!-- ===== Add Brand Modal ===== -->
-<div id="add-brand-modal" style="display:none; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center;">
-    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);" onclick="closeAddBrandModal()"></div>
+<div id="add-brand-modal"
+    style="display:none; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);"
+        onclick="closeAddBrandModal()"></div>
     <div class="card" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem; padding:1.5rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+        <div
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
             <h3 style="margin:0; font-size:1.125rem; font-weight:600;">Add New Brand</h3>
-            <button type="button" class="btn btn-secondary" onclick="closeAddBrandModal()" style="padding:0.35rem 0.75rem; font-size:0.8125rem;">✕ Close</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAddBrandModal()"
+                style="padding:0.35rem 0.75rem; font-size:0.8125rem;">✕ Close</button>
         </div>
         <form id="add-brand-modal-form" hx-post="/brands/add" hx-swap="none"
-              hx-on::after-request="onAddBrandModalSubmit(event)">
+            hx-on::after-request="onAddBrandModalSubmit(event)">
             <div class="grid grid-cols-2">
                 <div class="form-group">
                     <label for="modal-brand-name">Brand Name</label>
                     <input type="text" id="modal-brand-name" name="name" required class="form-input"
-                           oninput="autoGenerateBrandCodeModal()">
+                        oninput="autoGenerateBrandCodeModal()">
                 </div>
                 <div class="form-group">
                     <label for="modal-brand-code">Brand Code</label>
@@ -154,20 +141,24 @@
 </div>
 
 <!-- ===== Add Category Modal ===== -->
-<div id="add-category-modal" style="display:none; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center;">
-    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);" onclick="closeAddCategoryModal()"></div>
+<div id="add-category-modal"
+    style="display:none; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);"
+        onclick="closeAddCategoryModal()"></div>
     <div class="card" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem; padding:1.5rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+        <div
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
             <h3 style="margin:0; font-size:1.125rem; font-weight:600;">Add New Category</h3>
-            <button type="button" class="btn btn-secondary" onclick="closeAddCategoryModal()" style="padding:0.35rem 0.75rem; font-size:0.8125rem;">✕ Close</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAddCategoryModal()"
+                style="padding:0.35rem 0.75rem; font-size:0.8125rem;">✕ Close</button>
         </div>
         <form id="add-category-modal-form" hx-post="/categories/add" hx-swap="none"
-              hx-on::after-request="onAddCategoryModalSubmit(event)">
+            hx-on::after-request="onAddCategoryModalSubmit(event)">
             <div class="grid grid-cols-2">
                 <div class="form-group">
                     <label for="modal-cat-name">Category Name</label>
                     <input type="text" id="modal-cat-name" name="name" required class="form-input"
-                           oninput="autoGenerateCategoryCodeModal()">
+                        oninput="autoGenerateCategoryCodeModal()">
                 </div>
                 <div class="form-group">
                     <label for="modal-cat-code">Category Code</label>
@@ -184,83 +175,82 @@
 
 <!-- Non-collapsible Items List Card occupying the full width -->
 <div class="card" id="items-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
         <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Items List</h3>
         <div style="display: flex; gap: 0.35rem; align-items: center;">
             <div class="customize-view-container">
-            <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
-                style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
-                title="Customize Visible Columns and Filters">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                </svg>
-            </button>
+                <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
+                    style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
+                    title="Customize Visible Columns and Filters">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                </button>
 
-            <div id="customize-items-view-popover" class="customize-view-popover">
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                    <span style="font-weight: 600; font-size: 0.8125rem;">Masterlist View</span>
-                    <button type="button" onclick="resetItemsViewSettings()"
-                        style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
-                </div>
+                <div id="customize-items-view-popover" class="customize-view-popover">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <span style="font-weight: 600; font-size: 0.8125rem;">Masterlist View</span>
+                        <button type="button" onclick="resetItemsViewSettings()"
+                            style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset
+                            Default</button>
+                    </div>
 
-                <div class="customize-section-title">Table Columns</div>
-                <div class="customize-checkbox-grid">
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="description"
-                            onchange="onItemsViewSettingChange()">
-                        <span>Description</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="model" onchange="onItemsViewSettingChange()">
-                        <span>Model</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="brand" onchange="onItemsViewSettingChange()">
-                        <span>Brand</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="category" onchange="onItemsViewSettingChange()">
-                        <span>Category</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="default_uom"
-                            onchange="onItemsViewSettingChange()">
-                        <span>Default UOM</span>
-                    </label>
-                </div>
+                    <div class="customize-section-title">Table Columns</div>
+                    <div class="customize-checkbox-grid">
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="description" onchange="onItemsViewSettingChange()">
+                            <span>Description</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="model" onchange="onItemsViewSettingChange()">
+                            <span>Model</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="brand" onchange="onItemsViewSettingChange()">
+                            <span>Brand</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="category" onchange="onItemsViewSettingChange()">
+                            <span>Category</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="default_uom" onchange="onItemsViewSettingChange()">
+                            <span>Default UOM</span>
+                        </label>
+                    </div>
 
-                <div class="customize-section-title">Visible Filters</div>
-                <div class="customize-checkbox-grid">
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="search"
-                            onchange="onItemsViewSettingChange()">
-                        <span>Search Bar</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="brand_id_filter"
-                            onchange="onItemsViewSettingChange()">
-                        <span>Brand Filter</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="category_id_filter"
-                            onchange="onItemsViewSettingChange()">
-                        <span>Category Filter</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="sort" onchange="onItemsViewSettingChange()">
-                        <span>Sort By</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="limit" onchange="onItemsViewSettingChange()">
-                        <span>Show Rows (Limit)</span>
-                    </label>
+                    <div class="customize-section-title">Visible Filters</div>
+                    <div class="customize-checkbox-grid">
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="search" onchange="onItemsViewSettingChange()">
+                            <span>Search Bar</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="brand_id_filter"
+                                onchange="onItemsViewSettingChange()">
+                            <span>Brand Filter</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="category_id_filter"
+                                onchange="onItemsViewSettingChange()">
+                            <span>Category Filter</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="sort" onchange="onItemsViewSettingChange()">
+                            <span>Sort By</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="limit" onchange="onItemsViewSettingChange()">
+                            <span>Show Rows (Limit)</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#items-loading-indicator">
         <div class="search-filter-bar">
@@ -270,8 +260,9 @@
                     hx-indicator="#items-loading-indicator" class="form-input">
             </div>
             <div class="filter-item" data-filter="brand_id_filter" style="width: 8.5rem;">
-                <select name="brand_id_filter" class="form-input" title="Brand Filter" hx-get="/items" hx-target="#items-results"
-                    hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
+                <select name="brand_id_filter" class="form-input" title="Brand Filter" hx-get="/items"
+                    hx-target="#items-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#items-loading-indicator">
                     <option value="0">All Brands</option>
                     {{ range .Brands }}
                     <option value="{{ .ID }}">{{ .Name }}</option>
@@ -279,8 +270,9 @@
                 </select>
             </div>
             <div class="filter-item" data-filter="category_id_filter" style="width: 8.5rem;">
-                <select name="category_id_filter" class="form-input" title="Category Filter" hx-get="/items" hx-target="#items-results"
-                    hx-include="closest form" hx-trigger="change" hx-indicator="#items-loading-indicator">
+                <select name="category_id_filter" class="form-input" title="Category Filter" hx-get="/items"
+                    hx-target="#items-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#items-loading-indicator">
                     <option value="0">All Categories</option>
                     {{ range .Categories }}
                     <option value="{{ .ID }}">{{ .Name }}</option>
@@ -315,23 +307,23 @@
 
         <div id="items-results">
             <div class="table-container">
-                <div class="table table-scroll-md resizable-table items-table">
-                    <div class="thead">
-                        <div class="tr">
-                            <div class="th" data-col="description">Description</div>
-                            <div class="th" data-col="model">Model</div>
-                            <div class="th" data-col="brand">Brand</div>
-                            <div class="th" data-col="category">Category</div>
-                            <div class="th" data-col="default_uom">Default UOM</div>
-                            <div class="th" data-col="actions">Actions</div>
+                    <div class="table table-scroll-md resizable-table items-table" id="items-table">
+                        <div class="thead">
+                            <div class="tr">
+                                <div class="th" data-col="description">Description</div>
+                                <div class="th" data-col="model">Model</div>
+                                <div class="th" data-col="brand">Brand</div>
+                                <div class="th" data-col="category">Category</div>
+                                <div class="th" data-col="default_uom">Default UOM</div>
+                                <div class="th" data-col="actions">Actions</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="tbody" id="items-tbody">
-                        {{ template "item_rows.html" .Items }}
+                        <div class="tbody" id="items-tbody">
+                            {{ template "item_rows.html" .Items }}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
     </form>
 </div>
 
@@ -368,7 +360,7 @@
             try {
                 const stored = localStorage.getItem('radline_items_column_widths');
                 if (stored) {
-                    return JSON.parse(stored);
+                    return Object.assign({}, DEFAULT_ITEMS_COL_WIDTHS, JSON.parse(stored));
                 }
             } catch (e) {
                 console.error('Failed to parse items column widths', e);
@@ -380,13 +372,18 @@
 
         function saveItemsColumnWidths() {
             try {
-                localStorage.setItem('radline_items_column_widths', JSON.stringify(currentItemsColumnWidths));
+                if (typeof window.saveRadlinePreference === 'function') {
+                    window.saveRadlinePreference('radline_items_column_widths', JSON.stringify(currentItemsColumnWidths), false);
+                } else {
+                    localStorage.setItem('radline_items_column_widths', JSON.stringify(currentItemsColumnWidths));
+                }
             } catch (e) {
                 console.error('Failed to save items column widths', e);
             }
         }
 
         window.applyItemsColumnWidths = function () {
+            currentItemsColumnWidths = getItemsColumnWidths();
             let styleEl = document.getElementById('items-column-widths-style');
             if (!styleEl) {
                 styleEl = document.createElement('style');
@@ -413,9 +410,7 @@
             styleEl.textContent = cssRules.join('\n');
         };
 
-        window.initItemsColumnResizing = function () {
-            // Disabled in favor of authentic Excel double-line collapsible columns
-        };
+        window.initItemsColumnResizing = function () { };
 
         function getItemsViewConfig() {
             try {
@@ -434,7 +429,11 @@
         }
 
         function saveItemsViewConfig(config) {
-            localStorage.setItem('radline_items_view_config', JSON.stringify(config));
+            if (typeof window.saveRadlinePreference === 'function') {
+                window.saveRadlinePreference('radline_items_view_config', JSON.stringify(config), false);
+            } else {
+                localStorage.setItem('radline_items_view_config', JSON.stringify(config));
+            }
         }
 
         window.applyItemsViewSettings = function () {
@@ -684,7 +683,7 @@
                 });
                 // Re-bind mousedown (textContent doesn't add listeners, use event delegation via onmousedown attr)
                 list.querySelectorAll('.generic-dd-item').forEach(el => {
-                    el.onmousedown = function() { selectGenericDropdownItem(this); };
+                    el.onmousedown = function () { selectGenericDropdownItem(this); };
                 });
                 // Auto-select the newly added brand (the last one)
                 if (lastId) {
@@ -693,7 +692,7 @@
                     document.getElementById('brand_search_input').value = lastName;
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     };
 
     window.autoGenerateBrandCodeModal = function () {
@@ -763,7 +762,7 @@
                     lastId = opt.value; lastName = opt.text;
                 });
                 list.querySelectorAll('.generic-dd-item').forEach(el => {
-                    el.onmousedown = function() { selectGenericDropdownItem(this); };
+                    el.onmousedown = function () { selectGenericDropdownItem(this); };
                 });
                 if (lastId) {
                     document.getElementById('category_id').value = lastId;
@@ -771,7 +770,7 @@
                     document.getElementById('category_search_input').value = lastName;
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     };
 
     window.autoGenerateCategoryCodeModal = function () {

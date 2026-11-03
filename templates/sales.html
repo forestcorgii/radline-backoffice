@@ -37,8 +37,8 @@
             </div>
             <div class="form-group">
                 <label for="supplier">Supplier</label>
-                <select id="supplier" name="supplier" class="form-input supplier-select-ascd" style="padding: 0.75rem 1rem; height: auto;" onchange="updateSelectColorClass(this)"
-                    required>
+                <select id="supplier" name="supplier" class="form-input supplier-select-ascd"
+                    style="padding: 0.75rem 1rem; height: auto;" onchange="updateSelectColorClass(this)" required>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
                     <option value="OTHER">OTHER</option>
@@ -46,7 +46,10 @@
             </div>
             <div class="form-group" style="position: relative;">
                 <label for="customer_name">Customer Name</label>
-                <input type="text" id="customer_name" name="customer_name" class="form-input" placeholder="Client / Company" autocomplete="off" oninput="handleCustomerAutocomplete(this, 'tin_no', 'address')" onkeydown="handleCustomerKeydown(event, this, 'tin_no', 'address')">
+                <input type="text" id="customer_name" name="customer_name" class="form-input"
+                    placeholder="Client / Company" autocomplete="off"
+                    oninput="handleCustomerAutocomplete(this, 'tin_no', 'address')"
+                    onkeydown="handleCustomerKeydown(event, this, 'tin_no', 'address')">
             </div>
             <div class="form-group">
                 <label for="tin_no">TIN No.</label>
@@ -111,7 +114,8 @@
 </div>
 
 <div class="card" id="sales-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
         <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Sales Logs</h3>
         <div style="display: flex; gap: 0.35rem; align-items: center;">
             <button type="button" id="edit-mode-btn" class="btn btn-secondary" onclick="toggleSalesEditMode()"
@@ -128,8 +132,8 @@
                 <button type="button" class="btn btn-secondary" onclick="toggleCustomizeViewPopover(event)"
                     style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
                     title="Customize Visible Columns and Filters">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                     </svg>
                 </button>
@@ -139,7 +143,8 @@
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
                         <span style="font-weight: 600; font-size: 0.8125rem;">Sales Page View</span>
                         <button type="button" onclick="resetSalesViewSettings()"
-                            style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
+                            style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset
+                            Default</button>
                     </div>
 
                     <div class="customize-section-title">Table Columns</div>
@@ -153,11 +158,13 @@
                             <span>Doc Date</span>
                         </label>
                         <label class="customize-checkbox-item">
-                            <input type="checkbox" data-target-col="doc_type_number" onchange="onSalesViewSettingChange()">
+                            <input type="checkbox" data-target-col="doc_type_number"
+                                onchange="onSalesViewSettingChange()">
                             <span>Doc Type / Number</span>
                         </label>
                         <label class="customize-checkbox-item">
-                            <input type="checkbox" data-target-col="customer_name" onchange="onSalesViewSettingChange()">
+                            <input type="checkbox" data-target-col="customer_name"
+                                onchange="onSalesViewSettingChange()">
                             <span>Customer Name</span>
                         </label>
                         <label class="customize-checkbox-item">
@@ -173,7 +180,8 @@
                             <span>Supplier</span>
                         </label>
                         <label class="customize-checkbox-item">
-                            <input type="checkbox" data-target-col="item_description" onchange="onSalesViewSettingChange()">
+                            <input type="checkbox" data-target-col="item_description"
+                                onchange="onSalesViewSettingChange()">
                             <span>Item Description</span>
                         </label>
                         <label class="customize-checkbox-item">
@@ -213,7 +221,8 @@
                             <span>Profit</span>
                         </label>
                         <label class="customize-checkbox-item">
-                            <input type="checkbox" data-target-col="profit_margin" onchange="onSalesViewSettingChange()">
+                            <input type="checkbox" data-target-col="profit_margin"
+                                onchange="onSalesViewSettingChange()">
                             <span>Profit Margin</span>
                         </label>
                         <label class="customize-checkbox-item">
@@ -237,11 +246,13 @@
                             <span>Supplier Filter</span>
                         </label>
                         <label class="customize-checkbox-item">
-                            <input type="checkbox" data-target-filter="date_preset" onchange="onSalesViewSettingChange()">
+                            <input type="checkbox" data-target-filter="date_preset"
+                                onchange="onSalesViewSettingChange()">
                             <span>Period</span>
                         </label>
                         <label class="customize-checkbox-item">
-                            <input type="checkbox" data-target-filter="start_date" onchange="onSalesViewSettingChange()">
+                            <input type="checkbox" data-target-filter="start_date"
+                                onchange="onSalesViewSettingChange()">
                             <span>Start Date</span>
                         </label>
                         <label class="customize-checkbox-item">
@@ -268,14 +279,14 @@
 
         <div class="search-filter-bar">
             <div class="flex-grow" data-filter="search">
-                <input type="text" name="search"
-                    placeholder="Search sales by doc #, customer, item..." hx-get="/sales"
+                <input type="text" name="search" placeholder="Search sales by doc #, customer, item..." hx-get="/sales"
                     hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results"
                     hx-include="#sales-filter-form" hx-indicator="#sales-loading-indicator" class="form-input">
             </div>
             <div class="filter-item filter-period" data-filter="date_preset">
                 <select name="date_preset" id="date_preset_select" class="form-input" title="Period">
-                    <option value="custom" {{ if or (eq .DatePreset "") (eq .DatePreset "custom") }}selected{{ end }}>Custom Range</option>
+                    <option value="custom" {{ if or (eq .DatePreset "" ) (eq .DatePreset "custom" ) }}selected{{ end }}>
+                        Custom Range</option>
                     <option value="today" {{ if eq .DatePreset "today" }}selected{{ end }}>Today</option>
                     <option value="yesterday" {{ if eq .DatePreset "yesterday" }}selected{{ end }}>Yesterday</option>
                     <option value="this_week" {{ if eq .DatePreset "this_week" }}selected{{ end }}>This Week</option>
@@ -287,16 +298,19 @@
                 </select>
             </div>
             <div class="filter-item filter-date" data-filter="start_date">
-                <input type="date" name="start_date" value="{{ .StartDate }}" class="form-input" title="Start Date" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change, keyup delay:300ms" hx-indicator="#sales-loading-indicator">
+                <input type="date" name="start_date" value="{{ .StartDate }}" class="form-input" title="Start Date"
+                    hx-get="/sales" hx-target="#sales-results" hx-include="#sales-filter-form"
+                    hx-trigger="change, keyup delay:300ms" hx-indicator="#sales-loading-indicator">
             </div>
             <div class="filter-item filter-date" data-filter="end_date">
-                <input type="date" name="end_date" value="{{ .EndDate }}" class="form-input" title="End Date" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change, keyup delay:300ms" hx-indicator="#sales-loading-indicator">
+                <input type="date" name="end_date" value="{{ .EndDate }}" class="form-input" title="End Date"
+                    hx-get="/sales" hx-target="#sales-results" hx-include="#sales-filter-form"
+                    hx-trigger="change, keyup delay:300ms" hx-indicator="#sales-loading-indicator">
             </div>
             <div class="filter-item filter-doc-type" data-filter="doc_type">
-                <select name="doc_type_filter" class="form-input" title="Doc Type" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
+                <select name="doc_type_filter" class="form-input" title="Doc Type" hx-get="/sales"
+                    hx-target="#sales-results" hx-include="#sales-filter-form" hx-trigger="change"
+                    hx-indicator="#sales-loading-indicator">
                     <option value="all">All Types</option>
                     <option value="SI">SI</option>
                     <option value="DR">DR</option>
@@ -306,8 +320,9 @@
                 </select>
             </div>
             <div class="filter-item filter-supplier" data-filter="supplier">
-                <select name="supplier_filter" class="form-input" title="Supplier" hx-get="/sales" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-trigger="change" hx-indicator="#sales-loading-indicator">
+                <select name="supplier_filter" class="form-input" title="Supplier" hx-get="/sales"
+                    hx-target="#sales-results" hx-include="#sales-filter-form" hx-trigger="change"
+                    hx-indicator="#sales-loading-indicator">
                     <option value="all">All Suppliers</option>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
@@ -528,7 +543,7 @@
             try {
                 const stored = localStorage.getItem('radline_sales_column_widths');
                 if (stored) {
-                    return JSON.parse(stored);
+                    return Object.assign({}, DEFAULT_SALES_COL_WIDTHS, JSON.parse(stored));
                 }
             } catch (e) {
                 console.error('Failed to parse sales column widths', e);
@@ -540,13 +555,18 @@
 
         function saveSalesColumnWidths() {
             try {
-                localStorage.setItem('radline_sales_column_widths', JSON.stringify(currentSalesColumnWidths));
+                if (typeof window.saveRadlinePreference === 'function') {
+                    window.saveRadlinePreference('radline_sales_column_widths', JSON.stringify(currentSalesColumnWidths), false);
+                } else {
+                    localStorage.setItem('radline_sales_column_widths', JSON.stringify(currentSalesColumnWidths));
+                }
             } catch (e) {
                 console.error('Failed to save sales column widths', e);
             }
         }
 
         window.applySalesColumnWidths = function () {
+            currentSalesColumnWidths = getSalesColumnWidths();
             let styleEl = document.getElementById('sales-column-widths-style');
             if (!styleEl) {
                 styleEl = document.createElement('style');
@@ -571,304 +591,307 @@
             });
 
             styleEl.textContent = cssRules.join('\n');
-          window.initSalesColumnResizing = function () {
-            // Disabled in favor of authentic Excel double-line collapsible columns
-        };        };
+        window.initSalesColumnResizing = function () { };
+    };
 
-        function getSalesViewConfig() {
-            try {
-                const stored = localStorage.getItem('radline_sales_view_config');
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if (parsed.columns && parsed.columns.doc_status === undefined) {
-                        parsed.columns.doc_status = true;
-                    }
-                    return {
-                        columns: Object.assign({}, DEFAULT_SALES_VIEW_CONFIG.columns, parsed.columns || {}),
-                        filters: Object.assign({}, DEFAULT_SALES_VIEW_CONFIG.filters, parsed.filters || {})
-                    };
+    function getSalesViewConfig() {
+        try {
+            const stored = localStorage.getItem('radline_sales_view_config');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (parsed.columns && parsed.columns.doc_status === undefined) {
+                    parsed.columns.doc_status = true;
                 }
-            } catch (e) {
-                console.error('Failed to parse sales view config', e);
+                return {
+                    columns: Object.assign({}, DEFAULT_SALES_VIEW_CONFIG.columns, parsed.columns || {}),
+                    filters: Object.assign({}, DEFAULT_SALES_VIEW_CONFIG.filters, parsed.filters || {})
+                };
             }
-            return DEFAULT_SALES_VIEW_CONFIG;
+        } catch (e) {
+            console.error('Failed to parse sales view config', e);
         }
+        return DEFAULT_SALES_VIEW_CONFIG;
+    }
 
-        function saveSalesViewConfig(config) {
+    function saveSalesViewConfig(config) {
+        if (typeof window.saveRadlinePreference === 'function') {
+            window.saveRadlinePreference('radline_sales_view_config', JSON.stringify(config), false);
+        } else {
             localStorage.setItem('radline_sales_view_config', JSON.stringify(config));
         }
+    }
 
-        window.applySalesViewSettings = function () {
+    window.applySalesViewSettings = function () {
+        const config = getSalesViewConfig();
+
+        // 1. Sync popover checkboxes with config
+        document.querySelectorAll('[data-target-col]').forEach(cb => {
+            const colKey = cb.getAttribute('data-target-col');
+            cb.checked = !!config.columns[colKey];
+        });
+        document.querySelectorAll('[data-target-filter]').forEach(cb => {
+            const filterKey = cb.getAttribute('data-target-filter');
+            cb.checked = !!config.filters[filterKey];
+        });
+
+        // 2. Sync with Universal Excel Collapsible Columns system
+        const table = document.querySelector('.sales-log-table');
+        if (table) {
+            const tableId = table.id || 'sales-log-table';
+            const storageKey = 'radline_collapsed_cols_' + tableId;
+            const hiddenCols = Object.keys(config.columns).filter(k => !config.columns[k]);
+            localStorage.setItem(storageKey, JSON.stringify(hiddenCols));
+            if (typeof window.initExcelCollapsibleColumns === 'function') {
+                window.initExcelCollapsibleColumns();
+            }
+        }
+
+        // 3. Toggle filter visibility in search bar
+        Object.keys(config.filters).forEach(filterKey => {
+            const isVisible = config.filters[filterKey];
+            const elements = document.querySelectorAll(`[data-filter="${filterKey}"]`);
+            elements.forEach(el => {
+                el.style.display = isVisible ? '' : 'none';
+            });
+        });
+    };
+
+    window.addEventListener('radline-excel-cols-updated', function (e) {
+        if (e.detail && (e.detail.tableId === 'sales-log-table' || (e.detail.tableId && e.detail.tableId.includes('sales')))) {
+            const collapsedCols = e.detail.collapsedCols || [];
             const config = getSalesViewConfig();
-
-            // 1. Sync popover checkboxes with config
-            document.querySelectorAll('[data-target-col]').forEach(cb => {
-                const colKey = cb.getAttribute('data-target-col');
-                cb.checked = !!config.columns[colKey];
+            Object.keys(config.columns).forEach(colKey => {
+                config.columns[colKey] = !collapsedCols.includes(colKey);
             });
-            document.querySelectorAll('[data-target-filter]').forEach(cb => {
-                const filterKey = cb.getAttribute('data-target-filter');
-                cb.checked = !!config.filters[filterKey];
-            });
-
-            // 2. Sync with Universal Excel Collapsible Columns system
-            const table = document.querySelector('.sales-log-table');
-            if (table) {
-                const tableId = table.id || 'sales-log-table';
-                const storageKey = 'radline_collapsed_cols_' + tableId;
-                const hiddenCols = Object.keys(config.columns).filter(k => !config.columns[k]);
-                localStorage.setItem(storageKey, JSON.stringify(hiddenCols));
-                if (typeof window.initExcelCollapsibleColumns === 'function') {
-                    window.initExcelCollapsibleColumns();
-                }
-            }
-
-            // 3. Toggle filter visibility in search bar
-            Object.keys(config.filters).forEach(filterKey => {
-                const isVisible = config.filters[filterKey];
-                const elements = document.querySelectorAll(`[data-filter="${filterKey}"]`);
-                elements.forEach(el => {
-                    el.style.display = isVisible ? '' : 'none';
-                });
-            });
-        };
-
-        window.addEventListener('radline-excel-cols-updated', function (e) {
-            if (e.detail && (e.detail.tableId === 'sales-log-table' || (e.detail.tableId && e.detail.tableId.includes('sales')))) {
-                const collapsedCols = e.detail.collapsedCols || [];
-                const config = getSalesViewConfig();
-                Object.keys(config.columns).forEach(colKey => {
-                    config.columns[colKey] = !collapsedCols.includes(colKey);
-                });
-                saveSalesViewConfig(config);
-                document.querySelectorAll('#customize-view-popover input[data-target-col]').forEach(cb => {
-                    const colKey = cb.getAttribute('data-target-col');
-                    cb.checked = !collapsedCols.includes(colKey);
-                });
-            }
-        });
-
-        window.onSalesViewSettingChange = function () {
-            const config = { columns: {}, filters: {} };
-            document.querySelectorAll('[data-target-col]').forEach(cb => {
-                const colKey = cb.getAttribute('data-target-col');
-                config.columns[colKey] = cb.checked;
-            });
-            config.columns.actions = true; // Always keep actions enabled
-
-            document.querySelectorAll('[data-target-filter]').forEach(cb => {
-                const filterKey = cb.getAttribute('data-target-filter');
-                config.filters[filterKey] = cb.checked;
-            });
-
             saveSalesViewConfig(config);
-            window.applySalesViewSettings();
-        };
-
-        window.resetSalesViewSettings = function () {
-            saveSalesViewConfig(DEFAULT_SALES_VIEW_CONFIG);
-            localStorage.removeItem('radline_sales_column_widths');
-            currentSalesColumnWidths = Object.assign({}, DEFAULT_SALES_COL_WIDTHS);
-            window.applySalesColumnWidths();
-            window.applySalesViewSettings();
-        };
-
-        window.toggleSalesEditMode = function () {
-            const editInput = document.getElementById('is_edit_input');
-            const btn = document.getElementById('edit-mode-btn');
-            const btnText = document.getElementById('edit-mode-btn-text');
-            const loadingText = document.getElementById('sales-loading-text');
-            if (!editInput) return;
-
-            if (editInput.value === "1") {
-                editInput.value = "0";
-                if (btn) {
-                    btn.classList.remove('btn-primary');
-                    btn.classList.add('btn-secondary');
-                }
-                if (btnText) btnText.textContent = "Edit";
-                if (loadingText) loadingText.textContent = "Exiting edit mode...";
-            } else {
-                editInput.value = "1";
-                if (btn) {
-                    btn.classList.remove('btn-secondary');
-                    btn.classList.add('btn-primary');
-                }
-                if (btnText) btnText.textContent = "Done Editing";
-                if (loadingText) loadingText.textContent = "Loading batch edit mode...";
-            }
-
-            const form = document.getElementById('sales-filter-form');
-            if (form && typeof htmx !== 'undefined') {
-                htmx.ajax('GET', '/sales', { target: '#sales-results', values: htmx.values(form), source: form });
-            }
-        };
-
-        document.addEventListener('htmx:beforeRequest', function (evt) {
-            const form = document.getElementById('sales-filter-form');
-            if (form && form.contains(evt.detail.elt)) {
-                const loadingText = document.getElementById('sales-loading-text');
-                if (loadingText && evt.detail.elt.id !== 'edit-mode-btn') {
-                    const isEdit = document.getElementById('is_edit_input')?.value === "1";
-                    loadingText.textContent = isEdit ? "Updating batch edit view..." : "Searching & filtering sales logs...";
-                }
-            }
-        });
-
-        window.updateSelectColorClass = function (el) {
-            if (!el) return;
-            el.classList.remove('status-select-active', 'status-select-posted', 'status-select-cancelled', 
-                                'supplier-select-ascd', 'supplier-select-renown', 'supplier-select-other');
-            const val = el.value.toUpperCase();
-            if (val === 'ACTIVE') {
-                el.classList.add('status-select-active');
-            } else if (val === 'POSTED') {
-                el.classList.add('status-select-posted');
-            } else if (val === 'CANCELLED/RETURN' || val === 'CANCELLED') {
-                el.classList.add('status-select-cancelled');
-            } else if (val === 'ASCD') {
-                el.classList.add('supplier-select-ascd');
-            } else if (val === 'RENOWN') {
-                el.classList.add('supplier-select-renown');
-            } else if (val === 'OTHER') {
-                el.classList.add('supplier-select-other');
-            }
-        };
-
-        window.toggleEncodeSalesForm = function () {
-            const card = document.getElementById('encode-sales-card');
-            if (!card) return;
-            if (card.style.display === 'none' || card.style.display === '') {
-                card.style.display = 'block';
-                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-                card.style.display = 'none';
-            }
-        };
-
-        window.toggleCustomizeViewPopover = function (event) {
-            event.stopPropagation();
-            const popover = document.getElementById('customize-view-popover');
-            if (popover) {
-                popover.classList.toggle('show');
-            }
-        };
-
-        // Close popover when clicking outside
-        document.addEventListener('click', function (event) {
-            const container = document.querySelector('.customize-view-container');
-            const popover = document.getElementById('customize-view-popover');
-            if (container && popover && !container.contains(event.target)) {
-                popover.classList.remove('show');
-            }
-        });
-
-        let isSettingDatePreset = false;
-
-        function formatDate(date) {
-            const yyyy = date.getFullYear();
-            const mm = String(date.getMonth() + 1).padStart(2, '0');
-            const dd = String(date.getDate()).padStart(2, '0');
-            return `${yyyy}-${mm}-${dd}`;
+            document.querySelectorAll('#customize-view-popover input[data-target-col]').forEach(cb => {
+                const colKey = cb.getAttribute('data-target-col');
+                cb.checked = !collapsedCols.includes(colKey);
+            });
         }
+    });
 
-        function applyDatePreset(preset) {
-            if (preset === 'custom') return;
+    window.onSalesViewSettingChange = function () {
+        const config = { columns: {}, filters: {} };
+        document.querySelectorAll('[data-target-col]').forEach(cb => {
+            const colKey = cb.getAttribute('data-target-col');
+            config.columns[colKey] = cb.checked;
+        });
+        config.columns.actions = true; // Always keep actions enabled
 
-            const today = new Date();
-            let start, end;
-
-            switch (preset) {
-                case 'today':
-                    start = today;
-                    end = today;
-                    break;
-                case 'yesterday':
-                    const yesterday = new Date(today);
-                    yesterday.setDate(today.getDate() - 1);
-                    start = yesterday;
-                    end = yesterday;
-                    break;
-                case 'this_week':
-                    const day = today.getDay();
-                    const diffToMonday = today.getDate() - day + (day === 0 ? -6 : 1);
-                    start = new Date(today.setDate(diffToMonday));
-                    end = new Date(start);
-                    end.setDate(start.getDate() + 6);
-                    break;
-                case 'last_week':
-                    const currentDay = today.getDay();
-                    const diffToMondayCurrent = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
-                    const mondayThisWeek = new Date(today.setDate(diffToMondayCurrent));
-                    start = new Date(mondayThisWeek);
-                    start.setDate(mondayThisWeek.getDate() - 7);
-                    end = new Date(mondayThisWeek);
-                    end.setDate(mondayThisWeek.getDate() - 1);
-                    break;
-                case 'this_month':
-                    start = new Date(today.getFullYear(), today.getMonth(), 1);
-                    end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                    break;
-                case 'last_month':
-                    start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                    end = new Date(today.getFullYear(), today.getMonth(), 0);
-                    break;
-                case 'this_year':
-                    start = new Date(today.getFullYear(), 0, 1);
-                    end = new Date(today.getFullYear(), 11, 31);
-                    break;
-                case 'last_year':
-                    start = new Date(today.getFullYear() - 1, 0, 1);
-                    end = new Date(today.getFullYear() - 1, 11, 31);
-                    break;
-                default:
-                    return;
-            }
-
-            const startInput = document.querySelector('input[name="start_date"]');
-            const endInput = document.querySelector('input[name="end_date"]');
-            
-            if (startInput && endInput) {
-                isSettingDatePreset = true;
-                startInput.value = formatDate(start);
-                endInput.value = formatDate(end);
-                
-                // Trigger HTMX request by dispatching change event
-                endInput.dispatchEvent(new Event('change'));
-                isSettingDatePreset = false;
-            }
-        }
-
-        // Set up document-level event delegation
-        document.addEventListener('change', function (e) {
-            if (e.target && e.target.id === 'date_preset_select') {
-                applyDatePreset(e.target.value);
-            } else if (e.target && (e.target.name === 'start_date' || e.target.name === 'end_date')) {
-                if (!isSettingDatePreset && e.target.closest('#sales-filter-form')) {
-                    const select = document.getElementById('date_preset_select');
-                    if (select) {
-                        select.value = 'custom';
-                    }
-                }
-            }
+        document.querySelectorAll('[data-target-filter]').forEach(cb => {
+            const filterKey = cb.getAttribute('data-target-filter');
+            config.filters[filterKey] = cb.checked;
         });
 
-        document.addEventListener('input', function (e) {
-            if (e.target && (e.target.name === 'start_date' || e.target.name === 'end_date')) {
-                if (!isSettingDatePreset && e.target.closest('#sales-filter-form')) {
-                    const select = document.getElementById('date_preset_select');
-                    if (select) {
-                        select.value = 'custom';
-                    }
-                }
-            }
-        });
+        saveSalesViewConfig(config);
+        window.applySalesViewSettings();
+    };
 
-        // Apply immediately
+    window.resetSalesViewSettings = function () {
+        saveSalesViewConfig(DEFAULT_SALES_VIEW_CONFIG);
+        localStorage.removeItem('radline_sales_column_widths');
+        currentSalesColumnWidths = Object.assign({}, DEFAULT_SALES_COL_WIDTHS);
         window.applySalesColumnWidths();
         window.applySalesViewSettings();
-        window.initSalesColumnResizing();
-    })();
+    };
+
+    window.toggleSalesEditMode = function () {
+        const editInput = document.getElementById('is_edit_input');
+        const btn = document.getElementById('edit-mode-btn');
+        const btnText = document.getElementById('edit-mode-btn-text');
+        const loadingText = document.getElementById('sales-loading-text');
+        if (!editInput) return;
+
+        if (editInput.value === "1") {
+            editInput.value = "0";
+            if (btn) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            }
+            if (btnText) btnText.textContent = "Edit";
+            if (loadingText) loadingText.textContent = "Exiting edit mode...";
+        } else {
+            editInput.value = "1";
+            if (btn) {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary');
+            }
+            if (btnText) btnText.textContent = "Done Editing";
+            if (loadingText) loadingText.textContent = "Loading batch edit mode...";
+        }
+
+        const form = document.getElementById('sales-filter-form');
+        if (form && typeof htmx !== 'undefined') {
+            htmx.ajax('GET', '/sales', { target: '#sales-results', values: htmx.values(form), source: form });
+        }
+    };
+
+    document.addEventListener('htmx:beforeRequest', function (evt) {
+        const form = document.getElementById('sales-filter-form');
+        if (form && form.contains(evt.detail.elt)) {
+            const loadingText = document.getElementById('sales-loading-text');
+            if (loadingText && evt.detail.elt.id !== 'edit-mode-btn') {
+                const isEdit = document.getElementById('is_edit_input')?.value === "1";
+                loadingText.textContent = isEdit ? "Updating batch edit view..." : "Searching & filtering sales logs...";
+            }
+        }
+    });
+
+    window.updateSelectColorClass = function (el) {
+        if (!el) return;
+        el.classList.remove('status-select-active', 'status-select-posted', 'status-select-cancelled',
+            'supplier-select-ascd', 'supplier-select-renown', 'supplier-select-other');
+        const val = el.value.toUpperCase();
+        if (val === 'ACTIVE') {
+            el.classList.add('status-select-active');
+        } else if (val === 'POSTED') {
+            el.classList.add('status-select-posted');
+        } else if (val === 'CANCELLED/RETURN' || val === 'CANCELLED') {
+            el.classList.add('status-select-cancelled');
+        } else if (val === 'ASCD') {
+            el.classList.add('supplier-select-ascd');
+        } else if (val === 'RENOWN') {
+            el.classList.add('supplier-select-renown');
+        } else if (val === 'OTHER') {
+            el.classList.add('supplier-select-other');
+        }
+    };
+
+    window.toggleEncodeSalesForm = function () {
+        const card = document.getElementById('encode-sales-card');
+        if (!card) return;
+        if (card.style.display === 'none' || card.style.display === '') {
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            card.style.display = 'none';
+        }
+    };
+
+    window.toggleCustomizeViewPopover = function (event) {
+        event.stopPropagation();
+        const popover = document.getElementById('customize-view-popover');
+        if (popover) {
+            popover.classList.toggle('show');
+        }
+    };
+
+    // Close popover when clicking outside
+    document.addEventListener('click', function (event) {
+        const container = document.querySelector('.customize-view-container');
+        const popover = document.getElementById('customize-view-popover');
+        if (container && popover && !container.contains(event.target)) {
+            popover.classList.remove('show');
+        }
+    });
+
+    let isSettingDatePreset = false;
+
+    function formatDate(date) {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function applyDatePreset(preset) {
+        if (preset === 'custom') return;
+
+        const today = new Date();
+        let start, end;
+
+        switch (preset) {
+            case 'today':
+                start = today;
+                end = today;
+                break;
+            case 'yesterday':
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+                start = yesterday;
+                end = yesterday;
+                break;
+            case 'this_week':
+                const day = today.getDay();
+                const diffToMonday = today.getDate() - day + (day === 0 ? -6 : 1);
+                start = new Date(today.setDate(diffToMonday));
+                end = new Date(start);
+                end.setDate(start.getDate() + 6);
+                break;
+            case 'last_week':
+                const currentDay = today.getDay();
+                const diffToMondayCurrent = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+                const mondayThisWeek = new Date(today.setDate(diffToMondayCurrent));
+                start = new Date(mondayThisWeek);
+                start.setDate(mondayThisWeek.getDate() - 7);
+                end = new Date(mondayThisWeek);
+                end.setDate(mondayThisWeek.getDate() - 1);
+                break;
+            case 'this_month':
+                start = new Date(today.getFullYear(), today.getMonth(), 1);
+                end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                break;
+            case 'last_month':
+                start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                end = new Date(today.getFullYear(), today.getMonth(), 0);
+                break;
+            case 'this_year':
+                start = new Date(today.getFullYear(), 0, 1);
+                end = new Date(today.getFullYear(), 11, 31);
+                break;
+            case 'last_year':
+                start = new Date(today.getFullYear() - 1, 0, 1);
+                end = new Date(today.getFullYear() - 1, 11, 31);
+                break;
+            default:
+                return;
+        }
+
+        const startInput = document.querySelector('input[name="start_date"]');
+        const endInput = document.querySelector('input[name="end_date"]');
+
+        if (startInput && endInput) {
+            isSettingDatePreset = true;
+            startInput.value = formatDate(start);
+            endInput.value = formatDate(end);
+
+            // Trigger HTMX request by dispatching change event
+            endInput.dispatchEvent(new Event('change'));
+            isSettingDatePreset = false;
+        }
+    }
+
+    // Set up document-level event delegation
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.id === 'date_preset_select') {
+            applyDatePreset(e.target.value);
+        } else if (e.target && (e.target.name === 'start_date' || e.target.name === 'end_date')) {
+            if (!isSettingDatePreset && e.target.closest('#sales-filter-form')) {
+                const select = document.getElementById('date_preset_select');
+                if (select) {
+                    select.value = 'custom';
+                }
+            }
+        }
+    });
+
+    document.addEventListener('input', function (e) {
+        if (e.target && (e.target.name === 'start_date' || e.target.name === 'end_date')) {
+            if (!isSettingDatePreset && e.target.closest('#sales-filter-form')) {
+                const select = document.getElementById('date_preset_select');
+                if (select) {
+                    select.value = 'custom';
+                }
+            }
+        }
+    });
+
+    // Apply immediately
+    window.applySalesColumnWidths();
+    window.applySalesViewSettings();
+    window.initSalesColumnResizing();
+    }) ();
 
     // Re-apply settings on HTMX swaps
     document.body.addEventListener('htmx:afterSwap', function (evt) {

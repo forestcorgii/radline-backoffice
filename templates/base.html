@@ -11,7 +11,8 @@
     <!-- Google Fonts for Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/index.css?v=6.2">
+    <link rel="stylesheet" href="/static/index.css?v=6.4">
+    <link rel="stylesheet" href="/static/index.css?v=6.5">
     <!-- PWA & Mobile Web App Meta -->
     <meta name="theme-color" content="#1c1917">
     <meta name="mobile-web-app-capable" content="yes">
@@ -47,7 +48,8 @@
                 <div class="brand-mini">
                     <div class="brand-badge">R</div>
                 </div>
-                <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="Collapse Sidebar" title="Collapse Sidebar">
+                <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()"
+                    aria-label="Collapse Sidebar" title="Collapse Sidebar">
                     <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -66,10 +68,12 @@
 
             <!-- QuickBooks Signature "+ New" Quick Action Button -->
             <div class="quick-create-section">
-                <button id="quick-create-btn" class="quick-create-btn" onclick="toggleQuickCreateMenu(event)" aria-haspopup="true" aria-expanded="false" title="Quick Actions">
+                <button id="quick-create-btn" class="quick-create-btn" onclick="toggleQuickCreateMenu(event)"
+                    aria-haspopup="true" aria-expanded="false" title="Quick Actions">
                     <div class="quick-create-btn-left">
                         <span class="quick-create-icon">
-                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
@@ -77,7 +81,9 @@
                         <span class="quick-create-label">New</span>
                     </div>
                     <svg class="quick-create-caret" viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd"
+                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                            clip-rule="evenodd" />
                     </svg>
                 </button>
 
@@ -85,11 +91,17 @@
                 <div id="quick-create-menu" class="quick-create-menu" hx-target="#main-content" hx-push-url="true">
                     <div class="quick-create-header">
                         <span class="quick-create-header-title" id="quick-create-header-title">
-                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5"
+                                fill="none">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
                             Quick Actions
                         </span>
-                        <button type="button" class="quick-create-close-btn" onclick="closeQuickCreateMenu()" aria-label="Close menu" title="Close">
-                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <button type="button" class="quick-create-close-btn" onclick="closeQuickCreateMenu()"
+                            aria-label="Close menu" title="Close">
+                            <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2.2"
+                                fill="none" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                 <line x1="6" y1="6" x2="18" y2="18"></line>
                             </svg>
@@ -101,27 +113,45 @@
                         <!-- Column 1: Sales -->
                         <div class="quick-create-col">
                             <div class="quick-create-col-title">Sales & Billing</div>
-                            <a href="/sales" onclick="handleQuickAction('record-sale', '/sales', event)" class="quick-create-item">
+                            <a href="/sales" onclick="handleQuickAction('record-sale', '/sales', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon sales-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">Record Sale</span>
                                     <span class="quick-create-item-desc">Customer invoice / receipt</span>
                                 </div>
                             </a>
-                            <a href="/goals" onclick="handleQuickAction('add-goal', '/goals', event)" class="quick-create-item">
+                            <a href="/goals" onclick="handleQuickAction('add-goal', '/goals', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon sales-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <circle cx="12" cy="12" r="6"></circle>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">Earning Goal</span>
                                     <span class="quick-create-item-desc">Set revenue target</span>
                                 </div>
                             </a>
-                            <a href="/forms/quotation" onclick="handleQuickAction('quotation', '/forms/quotation', event)" class="quick-create-item">
+                            <a href="/forms/quotation"
+                                onclick="handleQuickAction('quotation', '/forms/quotation', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon sales-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">Quotation Form</span>
@@ -133,36 +163,64 @@
                         <!-- Column 2: Inventory -->
                         <div class="quick-create-col">
                             <div class="quick-create-col-title">Stock & Warehousing</div>
-                            <a href="/forms/purchase-order" onclick="handleQuickAction('po', '/forms/purchase-order', event)" class="quick-create-item">
+                            <a href="/forms/purchase-order"
+                                onclick="handleQuickAction('po', '/forms/purchase-order', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon receiving-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">Purchase Order Form</span>
                                     <span class="quick-create-item-desc">Vendor procurement</span>
                                 </div>
                             </a>
-                            <a href="/inventory/receiving" onclick="handleQuickAction('receive-stock', '/inventory/receiving', event)" class="quick-create-item">
+                            <a href="/inventory/receiving"
+                                onclick="handleQuickAction('receive-stock', '/inventory/receiving', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon receiving-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">+ Receive Stock</span>
                                     <span class="quick-create-item-desc">Log vendor delivery</span>
                                 </div>
                             </a>
-                            <a href="/inventory/adjustments" onclick="handleQuickAction('adjust-stock', '/inventory/adjustments', event)" class="quick-create-item">
+                            <a href="/inventory/adjustments"
+                                onclick="handleQuickAction('adjust-stock', '/inventory/adjustments', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon adj-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="20" y1="21" x2="20" y2="16"></line></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <line x1="4" y1="21" x2="4" y2="14"></line>
+                                        <line x1="12" y1="21" x2="12" y2="12"></line>
+                                        <line x1="20" y1="21" x2="20" y2="16"></line>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">+ Adjust Log</span>
                                     <span class="quick-create-item-desc">Audit & correct count</span>
                                 </div>
                             </a>
-                            <a href="/inventory" onclick="handleQuickAction('inventory', '/inventory', event)" class="quick-create-item">
+                            <a href="/inventory" onclick="handleQuickAction('inventory', '/inventory', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon receiving-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <rect x="3" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="14" width="7" height="7"></rect>
+                                        <rect x="3" y="14" width="7" height="7"></rect>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">Stock Levels</span>
@@ -174,45 +232,80 @@
                         <!-- Column 3: Masterlist -->
                         <div class="quick-create-col">
                             <div class="quick-create-col-title">Masterlist & Items</div>
-                            <a href="/items" onclick="handleQuickAction('add-item', '/items', event)" class="quick-create-item">
+                            <a href="/items" onclick="handleQuickAction('add-item', '/items', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon item-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <path
+                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                        </path>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">+ Add Item</span>
                                     <span class="quick-create-item-desc">Catalog item & barcode</span>
                                 </div>
                             </a>
-                            <a href="/brands" onclick="handleQuickAction('add-brand', '/brands', event)" class="quick-create-item">
+                            <a href="/brands" onclick="handleQuickAction('add-brand', '/brands', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon settings-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path
+                                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.51 1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                        </path>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">+ Add Brand</span>
                                     <span class="quick-create-item-desc">Brand classification</span>
                                 </div>
                             </a>
-                            <a href="/categories" onclick="handleQuickAction('add-category', '/categories', event)" class="quick-create-item">
+                            <a href="/categories" onclick="handleQuickAction('add-category', '/categories', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon settings-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <rect x="3" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="14" width="7" height="7"></rect>
+                                        <rect x="3" y="14" width="7" height="7"></rect>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">+ Add Category</span>
                                     <span class="quick-create-item-desc">Product category</span>
                                 </div>
                             </a>
-                            <a href="/uoms" onclick="handleQuickAction('add-uom-setting', '/uoms', event)" class="quick-create-item">
+                            <a href="/uoms" onclick="handleQuickAction('add-uom-setting', '/uoms', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon settings-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <path d="M4 7V4h3"></path>
+                                        <path d="M20 7V4h-3"></path>
+                                        <path d="M4 17v3h3"></path>
+                                        <path d="M20 17v3h-3"></path>
+                                        <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">+ Add UOM</span>
                                     <span class="quick-create-item-desc">Units & conversions</span>
                                 </div>
                             </a>
-                            <a href="/customers" onclick="handleQuickAction('add-customer', '/customers', event)" class="quick-create-item">
+                            <a href="/customers" onclick="handleQuickAction('add-customer', '/customers', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon settings-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">+ Add Customer</span>
@@ -224,27 +317,50 @@
                         <!-- Column 4: Tools -->
                         <div class="quick-create-col">
                             <div class="quick-create-col-title">Operations & Tools</div>
-                            <a href="/import" onclick="handleQuickAction('import', '/import', event)" class="quick-create-item">
+                            <a href="/import" onclick="handleQuickAction('import', '/import', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon import-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">Import Data</span>
                                     <span class="quick-create-item-desc">Batch Excel & CSV upload</span>
                                 </div>
                             </a>
-                            <a href="/calendar?action=new" onclick="handleQuickAction('add-reminder', '/calendar?action=new', event)" class="quick-create-item">
+                            <a href="/calendar?action=new"
+                                onclick="handleQuickAction('add-reminder', '/calendar?action=new', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon reminder-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">Add Reminder</span>
                                     <span class="quick-create-item-desc">Task deadline & alert</span>
                                 </div>
                             </a>
-                            <a href="/tools/receipt-scanner" onclick="handleQuickAction('scanner', '/tools/receipt-scanner', event)" class="quick-create-item">
+                            <a href="/tools/receipt-scanner"
+                                onclick="handleQuickAction('scanner', '/tools/receipt-scanner', event)"
+                                class="quick-create-item">
                                 <div class="quick-create-item-icon scanner-color">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 7V4h3"></path><path d="M20 7V4h-3"></path><path d="M4 17v3h3"></path><path d="M20 17v3h-3"></path><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>
+                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                        stroke-width="2" fill="none">
+                                        <path d="M4 7V4h3"></path>
+                                        <path d="M20 7V4h-3"></path>
+                                        <path d="M4 17v3h3"></path>
+                                        <path d="M20 17v3h-3"></path>
+                                        <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+                                    </svg>
                                 </div>
                                 <div class="quick-create-item-text">
                                     <span class="quick-create-item-name">Receipt Scanner</span>
@@ -262,10 +378,12 @@
             <!-- Sidebar Navigation with Crisp Icons and Descriptions -->
             <nav class="sidebar-nav" hx-target="#main-content" hx-push-url="true">
                 <!-- Dashboard -->
-                <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()" title="Dashboard: Financial overview & analytics">
+                <a href="/" hx-get="/" onclick="closeMobileSidebarOnNav()"
+                    title="Dashboard: Financial overview & analytics">
                     <div class="nav-item-content">
                         <div class="nav-icon-wrapper">
-                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="3" width="7" height="9"></rect>
                                 <rect x="14" y="3" width="7" height="5"></rect>
                                 <rect x="14" y="12" width="7" height="9"></rect>
@@ -280,10 +398,12 @@
                 </a>
 
                 <!-- Sales -->
-                <a href="/sales" hx-get="/sales" hx-target="#main-content" hx-push-url="true" onclick="closeMobileSidebarOnNav()" title="Sales: Invoices, orders & revenue">
+                <a href="/sales" hx-get="/sales" hx-target="#main-content" hx-push-url="true"
+                    onclick="closeMobileSidebarOnNav()" title="Sales: Invoices, orders & revenue">
                     <div class="nav-item-content">
                         <div class="nav-icon-wrapper">
-                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="1" x2="12" y2="23"></line>
                                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                             </svg>
@@ -296,10 +416,12 @@
                 </a>
 
                 <!-- Earning Goals -->
-                <a href="/goals" hx-get="/goals" onclick="closeMobileSidebarOnNav()" title="Earning Goals: Revenue targets & tracking">
+                <a href="/goals" hx-get="/goals" onclick="closeMobileSidebarOnNav()"
+                    title="Earning Goals: Revenue targets & tracking">
                     <div class="nav-item-content">
                         <div class="nav-icon-wrapper">
-                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <circle cx="12" cy="12" r="6"></circle>
                                 <circle cx="12" cy="12" r="2"></circle>
@@ -313,10 +435,12 @@
                 </a>
 
                 <!-- Calendar & Reminders -->
-                <a href="/calendar" hx-get="/calendar" onclick="closeMobileSidebarOnNav()" title="Calendar: Schedules & operational tasks">
+                <a href="/calendar" hx-get="/calendar" onclick="closeMobileSidebarOnNav()"
+                    title="Calendar: Schedules & operational tasks">
                     <div class="nav-item-content">
                         <div class="nav-icon-wrapper">
-                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                 <line x1="16" y1="2" x2="16" y2="6"></line>
                                 <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -332,10 +456,12 @@
 
                 <!-- Forms Dropdown -->
                 <div class="sidebar-dropdown" id="forms-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Forms: Quotations & Purchase Orders">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)"
+                        title="Forms: Quotations & Purchase Orders">
                         <div class="nav-item-content">
                             <div class="nav-icon-wrapper">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                    stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                     <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -349,14 +475,19 @@
                             </div>
                         </div>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
-                        <a href="/forms/quotation" hx-get="/forms/quotation" hx-target="#main-content" hx-push-url="true" onclick="closeMobileSidebarOnNav()" title="Quotation Forms: Sales estimates & proposals">
+                        <a href="/forms/quotation" hx-get="/forms/quotation" hx-target="#main-content"
+                            hx-push-url="true" onclick="closeMobileSidebarOnNav()"
+                            title="Quotation Forms: Sales estimates & proposals">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                         <polyline points="14 2 14 8 20 8"></polyline>
                                         <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -369,10 +500,13 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/forms/purchase-order" hx-get="/forms/purchase-order" hx-target="#main-content" hx-push-url="true" onclick="closeMobileSidebarOnNav()" title="Purchase Order Forms: Vendor procurement orders">
+                        <a href="/forms/purchase-order" hx-get="/forms/purchase-order" hx-target="#main-content"
+                            hx-push-url="true" onclick="closeMobileSidebarOnNav()"
+                            title="Purchase Order Forms: Vendor procurement orders">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                         <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -389,10 +523,12 @@
 
                 <!-- Inventory Dropdown -->
                 <div class="sidebar-dropdown" id="inventory-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Inventory: Stock levels, logs & counts">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)"
+                        title="Inventory: Stock levels, logs & counts">
                         <div class="nav-item-content">
                             <div class="nav-icon-wrapper">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                    stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
                                     <polygon points="12 22.08 12 12 3 6.92 3 17.08 12 22.08"></polygon>
                                     <polygon points="12 22.08 12 12 21 6.92 21 17.08 12 22.08"></polygon>
@@ -406,14 +542,18 @@
                             </div>
                         </div>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
-                        <a href="/inventory" hx-get="/inventory" onclick="closeMobileSidebarOnNav()" title="Overview: Real-time stock balances">
+                        <a href="/inventory" hx-get="/inventory" onclick="closeMobileSidebarOnNav()"
+                            title="Overview: Real-time stock balances">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <rect x="3" y="3" width="7" height="7"></rect>
                                         <rect x="14" y="3" width="7" height="7"></rect>
                                         <rect x="14" y="14" width="7" height="7"></rect>
@@ -426,10 +566,12 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/inventory/monthly" hx-get="/inventory/monthly" onclick="closeMobileSidebarOnNav()" title="Monthly: Monthly period reconciliation">
+                        <a href="/inventory/monthly" hx-get="/inventory/monthly" onclick="closeMobileSidebarOnNav()"
+                            title="Monthly: Monthly period reconciliation">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                         <line x1="16" y1="2" x2="16" y2="6"></line>
                                         <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -442,10 +584,12 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs" onclick="closeMobileSidebarOnNav()" title="Receiving Logs: Inbound supplier shipments">
+                        <a href="/inventory/receiving/logs" hx-get="/inventory/receiving/logs"
+                            onclick="closeMobileSidebarOnNav()" title="Receiving Logs: Inbound supplier shipments">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="7 10 12 15 17 10"></polyline>
                                         <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -457,10 +601,12 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs" onclick="closeMobileSidebarOnNav()" title="Adjustment Logs: Stock variance audit trail">
+                        <a href="/inventory/adjustments/logs" hx-get="/inventory/adjustments/logs"
+                            onclick="closeMobileSidebarOnNav()" title="Adjustment Logs: Stock variance audit trail">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <line x1="4" y1="21" x2="4" y2="14"></line>
                                         <line x1="4" y1="10" x2="4" y2="3"></line>
                                         <line x1="12" y1="21" x2="12" y2="12"></line>
@@ -480,10 +626,12 @@
 
                 <!-- Masterlist Dropdown -->
                 <div class="sidebar-dropdown" id="masterlist-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Masterlist: Catalog & settings">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)"
+                        title="Masterlist: Catalog & settings">
                         <div class="nav-item-content">
                             <div class="nav-icon-wrapper">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                    stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
                                     <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
                                     <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
@@ -495,15 +643,21 @@
                             </div>
                         </div>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
-                        <a href="/items" hx-get="/items" onclick="closeMobileSidebarOnNav()" title="Items: Product catalog & barcodes">
+                        <a href="/items" hx-get="/items" onclick="closeMobileSidebarOnNav()"
+                            title="Items: Product catalog & barcodes">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-                                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
+                                        <path
+                                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                        </path>
                                     </svg>
                                 </div>
                                 <div class="nav-text-group">
@@ -512,11 +666,15 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/brands" hx-get="/brands" onclick="closeMobileSidebarOnNav()" title="Brands: Brand classification & items">
+                        <a href="/brands" hx-get="/brands" onclick="closeMobileSidebarOnNav()"
+                            title="Brands: Brand classification & items">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
-                                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
+                                        <path
+                                            d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z">
+                                        </path>
                                         <line x1="7" y1="7" x2="7.01" y2="7"></line>
                                     </svg>
                                 </div>
@@ -526,10 +684,12 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/categories" hx-get="/categories" onclick="closeMobileSidebarOnNav()" title="Categories: Product categories & groups">
+                        <a href="/categories" hx-get="/categories" onclick="closeMobileSidebarOnNav()"
+                            title="Categories: Product categories & groups">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <rect x="3" y="3" width="7" height="7"></rect>
                                         <rect x="14" y="3" width="7" height="7"></rect>
                                         <rect x="14" y="14" width="7" height="7"></rect>
@@ -542,10 +702,12 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/uoms" hx-get="/uoms" onclick="closeMobileSidebarOnNav()" title="Units of Measure: UOM list, rules & calculator">
+                        <a href="/uoms" hx-get="/uoms" onclick="closeMobileSidebarOnNav()"
+                            title="Units of Measure: UOM list, rules & calculator">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <path d="M4 7V4h3"></path>
                                         <path d="M20 7V4h-3"></path>
                                         <path d="M4 17v3h3"></path>
@@ -559,10 +721,12 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/customers" hx-get="/customers" onclick="closeMobileSidebarOnNav()" title="Customers: Customer directory & billing">
+                        <a href="/customers" hx-get="/customers" onclick="closeMobileSidebarOnNav()"
+                            title="Customers: Customer directory & billing">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                         <circle cx="9" cy="7" r="4"></circle>
                                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -580,11 +744,15 @@
 
                 <!-- Tools Dropdown -->
                 <div class="sidebar-dropdown" id="tools-dropdown">
-                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)" title="Tools: Data migration & utilities">
+                    <button class="sidebar-dropdown-trigger" onclick="toggleSidebarDropdown(event)"
+                        title="Tools: Data migration & utilities">
                         <div class="nav-item-content">
                             <div class="nav-icon-wrapper">
-                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                                <svg class="nav-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                    stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
+                                    </path>
                                 </svg>
                             </div>
                             <div class="nav-text-group">
@@ -593,14 +761,18 @@
                             </div>
                         </div>
                         <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                     <div class="sidebar-dropdown-menu">
-                        <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()" title="Import: Batch Excel & CSV upload">
+                        <a href="/import" hx-get="/import" onclick="closeMobileSidebarOnNav()"
+                            title="Import: Batch Excel & CSV upload">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                                         <polyline points="17 8 12 3 7 8"></polyline>
                                         <line x1="12" y1="3" x2="12" y2="15"></line>
@@ -612,10 +784,12 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="/tools/receipt-scanner" hx-get="/tools/receipt-scanner" onclick="closeMobileSidebarOnNav()" title="Receipt Scanner: OCR receipt extractor">
+                        <a href="/tools/receipt-scanner" hx-get="/tools/receipt-scanner"
+                            onclick="closeMobileSidebarOnNav()" title="Receipt Scanner: OCR receipt extractor">
                             <div class="nav-item-content">
                                 <div class="nav-icon-wrapper mini">
-                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                                    <svg class="nav-icon" viewBox="0 0 24 24" width="14" height="14"
+                                        stroke="currentColor" stroke-width="2" fill="none">
                                         <path d="M4 7V4h3"></path>
                                         <path d="M20 7V4h-3"></path>
                                         <path d="M4 17v3h3"></path>
@@ -644,8 +818,8 @@
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                     <button id="sidebar-toggle" class="sidebar-toggle-btn" onclick="toggleMobileSidebar()"
                         aria-label="Toggle Sidebar">
-                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"
-                            stroke-linecap="round" stroke-linejoin="round">
+                        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2"
+                            fill="none" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
                             <line x1="3" y1="6" x2="21" y2="6"></line>
                             <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -653,7 +827,8 @@
                     </button>
                     <div class="top-header-title">Radline BackOffice</div>
                 </div>
-                <button class="quick-create-btn-mobile" onclick="toggleQuickCreateMenu(event)" aria-label="Create New Record">
+                <button class="quick-create-btn-mobile" onclick="toggleQuickCreateMenu(event)"
+                    aria-label="Create New Record">
                     + New
                 </button>
             </header>
@@ -975,17 +1150,17 @@
 
             const isInventory = path === "/inventory" || path.startsWith("/inventory/");
             const isMasterlist = path === "/items" || path.startsWith("/items/") ||
-                                 path === "/brands" || path.startsWith("/brands/") ||
-                                 path === "/categories" || path.startsWith("/categories/") ||
-                                 path === "/customers" || path.startsWith("/customers/") ||
-                                 path === "/uoms" || path.startsWith("/uoms/") ||
-                                 path === "/uom-settings" || path.startsWith("/uom-settings/");
+                path === "/brands" || path.startsWith("/brands/") ||
+                path === "/categories" || path.startsWith("/categories/") ||
+                path === "/customers" || path.startsWith("/customers/") ||
+                path === "/uoms" || path.startsWith("/uoms/") ||
+                path === "/uom-settings" || path.startsWith("/uom-settings/");
             const isUsers = path.startsWith("/settings/users");
             const isRoles = path.startsWith("/settings/roles");
             const isSales = path === "/sales" || path.startsWith("/sales/");
             const isGoals = path === "/goals" || path.startsWith("/goals/");
             const isCalendar = path === "/calendar" || path.startsWith("/calendar/") ||
-                               path === "/reminders" || path.startsWith("/reminders/");
+                path === "/reminders" || path.startsWith("/reminders/");
 
             const mobileBtn = document.querySelector(".quick-create-btn-mobile");
 
@@ -1409,13 +1584,13 @@
             if (!container) return;
             const input = container.querySelector('.dropdown-search');
             const hidden = container.querySelector('input[type="hidden"]');
-            
+
             const selectedId = item.getAttribute('data-id');
             const description = item.getAttribute('data-description');
             const uom = item.getAttribute('data-uom');
-            
+
             if (input) input.value = description;
-            
+
             let willSwap = false;
             if (hidden) {
                 const oldVal = hidden.value;
@@ -1427,7 +1602,7 @@
                         if (tbody) {
                             willSwap = true;
                             const rowIndex = Array.from(tbody.children).indexOf(itemRow);
-                            const handleRowSwap = function(event) {
+                            const handleRowSwap = function (event) {
                                 tbody.removeEventListener('htmx:afterSwap', handleRowSwap);
                                 setTimeout(() => {
                                     const newRow = tbody.children[rowIndex];
@@ -1453,18 +1628,18 @@
                     hidden.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
-            
+
             if (uom) {
                 const uomInput = container.closest('form')?.querySelector('#uom, #uom-inline-uom, [name="uom"]');
                 if (uomInput) {
                     uomInput.value = uom;
                 }
             }
-            
+
             const list = container.querySelector('.dropdown-list');
             if (list) list.style.display = 'none';
             cleanupDropdownState(container);
-            
+
             if (!willSwap && input) {
                 const itemRow = input.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
                 if (itemRow) {
@@ -1492,12 +1667,12 @@
                 }
                 return;
             }
-            
+
             const visibleItems = Array.from(container.querySelectorAll('.dropdown-item')).filter(item => item.style.display !== 'none');
             if (visibleItems.length === 0) return;
-            
+
             let activeIndex = visibleItems.findIndex(item => item.classList.contains('active'));
-            
+
             if (event.key === 'ArrowDown') {
                 event.preventDefault();
                 if (activeIndex >= 0) visibleItems[activeIndex].classList.remove('active');
@@ -1527,7 +1702,7 @@
         }
 
         // Global click listener to close dropdowns when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             if (!event.target.closest('.searchable-dropdown')) {
                 document.querySelectorAll('.dropdown-list').forEach(list => {
                     list.style.display = 'none';
@@ -1601,7 +1776,8 @@
                             ${cAddr ? `<span>• ${escapeCustHtml(cAddr.length > 30 ? cAddr.slice(0, 30) + '...' : cAddr)}</span>` : ''}
                         </div>
                     </div>
-                `;}).join('');
+                `;
+                }).join('');
                 dropdown.style.display = 'block';
             };
 
@@ -1615,16 +1791,16 @@
                 fetch('/customers/search?q=' + encodeURIComponent(query) + '&limit=20&format=json', {
                     headers: { 'Accept': 'application/json' }
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data)) {
-                        _customerSearchCache.set(query, data);
-                        if (inputEl.value.trim() === query) {
-                            renderResults(data);
+                    .then(res => res.json())
+                    .then(data => {
+                        if (Array.isArray(data)) {
+                            _customerSearchCache.set(query, data);
+                            if (inputEl.value.trim() === query) {
+                                renderResults(data);
+                            }
                         }
-                    }
-                })
-                .catch(err => console.error("Customer search error:", err));
+                    })
+                    .catch(err => console.error("Customer search error:", err));
             }, 80);
         }
 
@@ -1718,14 +1894,14 @@
         window.handleCustomerKeydown = handleCustomerKeydown;
         window.applyCustomerSelection = applyCustomerSelection;
 
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             const activeInput = document.activeElement;
             if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
                 updateDropdownPosition(activeInput);
             }
         }, true);
 
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', function () {
             const activeInput = document.activeElement;
             if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
                 updateDropdownPosition(activeInput);
@@ -1735,7 +1911,7 @@
         // Global keydown handler for Enter key behavior:
         // 1. On filter inputs/bars, pressing Enter applies the filter.
         // 2. When adding items in receiving, adjustments, or sales, pressing Enter adds another item line.
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key !== 'Enter') return;
             const target = e.target;
             if (!target || !['INPUT', 'SELECT', 'TEXTAREA'].includes(target.tagName)) return;
@@ -1798,7 +1974,7 @@
                                     const isHtmx = addRowBtn.hasAttribute('hx-get') || addRowBtn.hasAttribute('hx-post');
                                     const tbody = parent.querySelector('tbody, #sales-items-tbody, #receiving-items-tbody, #adjustment-items-tbody, .item-grid-container > div');
                                     if (isHtmx && tbody) {
-                                        const handleSwap = function(event) {
+                                        const handleSwap = function (event) {
                                             tbody.removeEventListener('htmx:afterSwap', handleSwap);
                                             setTimeout(() => {
                                                 if (tbody.lastElementChild) {
@@ -1840,7 +2016,7 @@
         });
 
         // Global shadcn/ui Alert Dialog Handler
-        window.showShadcnAlertDialog = function(options) {
+        window.showShadcnAlertDialog = function (options) {
             return new Promise((resolve) => {
                 const dialog = document.getElementById('shadcn-alert-dialog');
                 const titleEl = document.getElementById('shadcn-alert-dialog-title');
@@ -1873,10 +2049,10 @@
                 }
 
                 actionBtn.textContent = options.actionText || options.confirmText || (options.isConfirm ? 'Continue' : 'OK');
-                
-                const isDestructive = options.isDestructive || 
+
+                const isDestructive = options.isDestructive ||
                     (options.description && (options.description.toLowerCase().includes('delete') || options.description.toLowerCase().includes('remove')));
-                
+
                 actionBtn.className = isDestructive ? 'btn btn-danger' : 'btn btn-primary';
 
                 function close(confirmed) {
@@ -1927,7 +2103,7 @@
         };
 
         // Intercept HTMX hx-confirm event
-        document.addEventListener('htmx:confirm', function(evt) {
+        document.addEventListener('htmx:confirm', function (evt) {
             const question = evt.detail.question;
             // Only intercept when there's an actual hx-confirm question; otherwise let HTMX proceed normally
             if (!question) return;
@@ -1939,7 +2115,7 @@
                 confirmText: 'Continue',
                 cancelText: 'Cancel',
                 isDestructive: question.toLowerCase().includes('delete') || question.toLowerCase().includes('remove'),
-                onConfirm: function() {
+                onConfirm: function () {
                     evt.detail.issueRequest(true);
                 }
             });
@@ -1949,7 +2125,7 @@
         if (!window.nativeAlert) {
             window.nativeAlert = window.alert;
         }
-        window.alert = function(message) {
+        window.alert = function (message) {
             showShadcnAlertDialog({
                 title: 'Alert',
                 description: message,
@@ -1962,7 +2138,7 @@
         if (!window.nativeConfirm) {
             window.nativeConfirm = window.confirm;
         }
-        window.confirm = function(message) {
+        window.confirm = function (message) {
             return showShadcnAlertDialog({
                 title: 'Are you sure?',
                 description: message,
@@ -1974,11 +2150,13 @@
     </script>
 
     <!-- shadcn/ui Alert Dialog Component -->
-    <div id="shadcn-alert-dialog" class="alert-dialog-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="shadcn-alert-dialog-title" aria-describedby="shadcn-alert-dialog-description">
+    <div id="shadcn-alert-dialog" class="alert-dialog-overlay" style="display: none;" role="dialog" aria-modal="true"
+        aria-labelledby="shadcn-alert-dialog-title" aria-describedby="shadcn-alert-dialog-description">
         <div class="alert-dialog-content">
             <div class="alert-dialog-header">
                 <h2 id="shadcn-alert-dialog-title" class="alert-dialog-title">Are you sure?</h2>
-                <p id="shadcn-alert-dialog-description" class="alert-dialog-description">This action cannot be undone.</p>
+                <p id="shadcn-alert-dialog-description" class="alert-dialog-description">This action cannot be undone.
+                </p>
             </div>
             <div class="alert-dialog-footer">
                 <button id="shadcn-alert-dialog-cancel" type="button" class="btn btn-secondary">Cancel</button>
@@ -1989,43 +2167,53 @@
 
     <!-- UOM Setting Modal -->
     <div id="uom-setting-modal"
-         style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;"
-         role="dialog" aria-modal="true" aria-labelledby="uom-modal-title">
-        <div style="background:var(--bg-card, #fff); border-radius:0.5rem; box-shadow:0 20px 60px rgba(0,0,0,0.3); width:100%; max-width:400px; padding:1.5rem; margin:1rem;">
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;"
+        role="dialog" aria-modal="true" aria-labelledby="uom-modal-title">
+        <div
+            style="background:var(--bg-card, #fff); border-radius:0.5rem; box-shadow:0 20px 60px rgba(0,0,0,0.3); width:100%; max-width:400px; padding:1.5rem; margin:1rem;">
             <!-- Header -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
                 <div>
-                    <h2 id="uom-modal-title" style="font-size:1rem; font-weight:700; margin:0; color:var(--text-primary);">Add UOM Setting</h2>
-                    <p id="uom-modal-subtitle" style="font-size:0.78rem; color:var(--text-muted); margin:0.2rem 0 0;"></p>
+                    <h2 id="uom-modal-title"
+                        style="font-size:1rem; font-weight:700; margin:0; color:var(--text-primary);">Add UOM Setting
+                    </h2>
+                    <p id="uom-modal-subtitle" style="font-size:0.78rem; color:var(--text-muted); margin:0.2rem 0 0;">
+                    </p>
                 </div>
                 <button type="button" onclick="closeUomSettingModal()"
-                        style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:0.25rem; border-radius:0.25rem; line-height:1;"
-                        aria-label="Close">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    style="background:none; border:none; cursor:pointer; color:var(--text-muted); padding:0.25rem; border-radius:0.25rem; line-height:1;"
+                    aria-label="Close">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
             </div>
             <!-- Form -->
-            <form id="uom-setting-modal-form"
-                  hx-post="/uom-settings/add"
-                  hx-swap="none"
-                  hx-on::after-request="handleUomModalAfterRequest(event)">
+            <form id="uom-setting-modal-form" hx-post="/uom-settings/add" hx-swap="none"
+                hx-on::after-request="handleUomModalAfterRequest(event)">
                 <input type="hidden" id="uom-modal-item-id" name="item_id" value="">
                 <div style="display:flex; flex-direction:column; gap:1rem;">
                     <div>
-                        <label for="uom-modal-muom" style="font-size:0.8rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:0.35rem;">MUOM Code <span style="color:var(--color-danger,#ef4444);">*</span></label>
-                        <input type="text" id="uom-modal-muom" name="muom" class="form-input" placeholder="e.g. BOX, CASE, DOZ"
-                               required style="width:100%; text-transform:uppercase;"
-                               oninput="this.value = this.value.toUpperCase()">
-                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0 0;">The multiple unit of measure code to add for this item.</p>
+                        <label for="uom-modal-muom"
+                            style="font-size:0.8rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:0.35rem;">MUOM
+                            Code <span style="color:var(--color-danger,#ef4444);">*</span></label>
+                        <input type="text" id="uom-modal-muom" name="muom" class="form-input"
+                            placeholder="e.g. BOX, CASE, DOZ" required style="width:100%; text-transform:uppercase;"
+                            oninput="this.value = this.value.toUpperCase()">
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0 0;">The multiple unit of
+                            measure code to add for this item.</p>
                     </div>
                     <div>
-                        <label for="uom-modal-factor" style="font-size:0.8rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:0.35rem;">Conversion Rate <span style="color:var(--color-danger,#ef4444);">*</span></label>
-                        <input type="number" id="uom-modal-factor" name="conversion_factor" class="form-input" placeholder="e.g. 12 (1 BOX = 12 base units)"
-                               step="any" min="0.0001" required style="width:100%;">
-                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0 0;">How many base units are in 1 MUOM unit.</p>
+                        <label for="uom-modal-factor"
+                            style="font-size:0.8rem; font-weight:600; color:var(--text-primary); display:block; margin-bottom:0.35rem;">Conversion
+                            Rate <span style="color:var(--color-danger,#ef4444);">*</span></label>
+                        <input type="number" id="uom-modal-factor" name="conversion_factor" class="form-input"
+                            placeholder="e.g. 12 (1 BOX = 12 base units)" step="any" min="0.0001" required
+                            style="width:100%;">
+                        <p style="font-size:0.72rem; color:var(--text-muted); margin:0.3rem 0 0;">How many base units
+                            are in 1 MUOM unit.</p>
                     </div>
                 </div>
                 <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.5rem;">
@@ -2040,7 +2228,7 @@
         // UOM Setting Modal helpers
         window._uomModalSourceRow = null;
 
-        window.openUomSettingModal = function(itemId, itemDesc) {
+        window.openUomSettingModal = function (itemId, itemDesc) {
             document.getElementById('uom-modal-item-id').value = itemId;
             document.getElementById('uom-modal-subtitle').textContent = itemDesc ? 'Item: ' + itemDesc : '';
             document.getElementById('uom-modal-muom').value = '';
@@ -2052,12 +2240,12 @@
             setTimeout(() => document.getElementById('uom-modal-muom').focus(), 50);
         };
 
-        window.closeUomSettingModal = function() {
+        window.closeUomSettingModal = function () {
             document.getElementById('uom-setting-modal').style.display = 'none';
             window._uomModalSourceRow = null;
         };
 
-        window.handleUomModalAfterRequest = function(event) {
+        window.handleUomModalAfterRequest = function (event) {
             if (event.detail.successful) {
                 closeUomSettingModal();
                 // Re-trigger the item row's hidden input to reload the UOM dropdown
@@ -2068,33 +2256,213 @@
         };
 
         // Close modal when clicking the backdrop
-        document.getElementById('uom-setting-modal').addEventListener('click', function(e) {
+        document.getElementById('uom-setting-modal').addEventListener('click', function (e) {
             if (e.target === this) closeUomSettingModal();
         });
 
         // Close modal on Escape key
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && document.getElementById('uom-setting-modal').style.display === 'flex') {
                 closeUomSettingModal();
             }
         });
         // =========================================================================
-        // Universal Excel-like Collapsible Columns for all Listviews
+        // Universal List Views Engine:
+        // 1. Customizable Column Header Colors (Table Themes + Column Accents)
+        // 2. Smooth 60-FPS Column Resizing with Double-Click Reset
+        // 3. Semantic Column Grouping & Group Hide/Unhide
+        // 4. Column Reordering (Header Drag & Drop + Popover Controls)
+        // 5. Per-User Database Persistence (/api/user-preferences + localStorage)
         // =========================================================================
+
+        window._radlinePrefTimers = window._radlinePrefTimers || {};
+        window.saveRadlinePreference = function (key, valueStr, isDelete) {
+            try {
+                if (isDelete || !valueStr) {
+                    localStorage.removeItem(key);
+                } else {
+                    localStorage.setItem(key, valueStr);
+                }
+            } catch (e) { }
+
+            if (window._radlinePrefTimers[key]) {
+                clearTimeout(window._radlinePrefTimers[key]);
+            }
+            window._radlinePrefTimers[key] = setTimeout(() => {
+                fetch('/api/user-preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        key: key,
+                        value: isDelete ? '' : (valueStr || ''),
+                        delete: !!isDelete
+                    })
+                }).catch(() => { });
+            }, 250);
+        };
+
+        window.syncRadlinePreferencesFromServer = function () {
+            if (window._radlinePrefsSynced) return;
+            window._radlinePrefsSynced = true;
+            fetch('/api/user-preferences', { headers: { 'Accept': 'application/json' } })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (!data || !data.preferences) return;
+                    let changed = false;
+                    Object.keys(data.preferences).forEach(k => {
+                        if (k.startsWith('radline_')) {
+                            const srvVal = data.preferences[k];
+                            if (srvVal && localStorage.getItem(k) !== srvVal) {
+                                localStorage.setItem(k, srvVal);
+                                changed = true;
+                            }
+                        }
+                    });
+                    if (changed && typeof window.initExcelCollapsibleColumns === 'function') {
+                        window.initExcelCollapsibleColumns();
+                    }
+                })
+                .catch(() => { });
+        };
+
+        window.RADLINE_TABLE_GROUPS = {
+            'sales-log-table': [
+                { id: 'doc_info', label: 'Document Info', cols: ['doc_status', 'doc_date', 'doc_type_number'] },
+                { id: 'customer_info', label: 'Customer Info', cols: ['customer_name', 'tin_no', 'address'] },
+                { id: 'product_info', label: 'Product Info', cols: ['supplier', 'item_description', 'qty', 'uom'] },
+                { id: 'financials', label: 'Financials & Remittance', cols: ['price', 'total_sales', 'cost', 'total_cost', 'patong', 'total_remit', 'profit', 'profit_margin', 'remarks'] }
+            ],
+            'inventory-stock-table': [
+                { id: 'item_details', label: 'Item Details', cols: ['description', 'uom'] },
+                { id: 'stock_movements', label: 'Stock Movements', cols: ['received', 'sold', 'adjusted', 'on_hand'] },
+                { id: 'pricing_cost', label: 'Pricing & Cost', cols: ['current_cost', 'current_price'] }
+            ],
+            'monthly-inventory-table': [
+                { id: 'item_period', label: 'Item & Period', cols: ['month', 'description', 'uom'] },
+                { id: 'monthly_movements', label: 'Monthly Movements', cols: ['received', 'sold', 'adjusted', 'net_change'] }
+            ],
+            'items-table': [
+                { id: 'item_identity', label: 'Item Details', cols: ['description', 'model'] },
+                { id: 'item_classification', label: 'Classification & UOM', cols: ['brand', 'category', 'default_uom'] }
+            ],
+            'receiving-logs-table': [
+                { id: 'rec_doc', label: 'Document Info', cols: ['pl_id', 'date', 'supplier'] },
+                { id: 'rec_item', label: 'Item & Valuation', cols: ['item_description', 'qty', 'uom', 'cost_per_unit', 'total_cost', 'remarks'] }
+            ],
+            'adjustment-logs-table': [
+                { id: 'adj_doc', label: 'Adjustment Info', cols: ['adj_id', 'date', 'item_description'] },
+                { id: 'adj_impact', label: 'Quantity & Cost Impact', cols: ['adj_qty', 'uom', 'cost_impact', 'remarks'] }
+            ]
+        };
+
+        window.RADLINE_HEADER_THEMES = [
+            { id: 'slate', label: 'Slate', dot: '#cbd5e1' },
+            { id: 'indigo', label: 'Indigo', dot: '#6366f1' },
+            { id: 'emerald', label: 'Emerald', dot: '#10b981' },
+            { id: 'amber', label: 'Amber', dot: '#f59e0b' },
+            { id: 'navy', label: 'Navy', dot: '#1e293b' },
+            { id: 'rose', label: 'Rose', dot: '#f43f5e' }
+        ];
+
+        window.RADLINE_COL_ACCENTS = [
+            { id: '', label: 'None', dot: '#f8fafc' },
+            { id: 'indigo', label: 'Indigo', dot: '#6366f1' },
+            { id: 'emerald', label: 'Emerald', dot: '#10b981' },
+            { id: 'amber', label: 'Amber', dot: '#f59e0b' },
+            { id: 'rose', label: 'Rose', dot: '#f43f5e' },
+            { id: 'purple', label: 'Purple', dot: '#a855f7' },
+            { id: 'sky', label: 'Sky', dot: '#0ea5e9' }
+        ];
+
+        function getWidthStorageKey(tableId) {
+            if (tableId === 'sales-log-table') return 'radline_sales_column_widths';
+            if (tableId === 'inventory-stock-table') return 'radline_inventory_column_widths';
+            if (tableId === 'monthly-inventory-table') return 'radline_monthly_inventory_column_widths';
+            if (tableId === 'items-table') return 'radline_items_column_widths';
+            if (tableId === 'receiving-logs-table') return 'radline_receiving_column_widths';
+            if (tableId === 'adjustment-logs-table') return 'radline_adjustment_column_widths';
+            return 'radline_col_widths_' + tableId;
+        }
+
+        function getPopoverForTable(tableId) {
+            if (tableId === 'sales-log-table') return document.getElementById('customize-view-popover');
+            if (tableId === 'inventory-stock-table') return document.getElementById('customize-inventory-view-popover');
+            if (tableId === 'monthly-inventory-table') return document.getElementById('customize-monthly-view-popover');
+            if (tableId === 'items-table') return document.getElementById('customize-items-view-popover');
+            return null;
+        }
+
+        window.resetRadlineTableCustomization = function (tableId) {
+            const colorKey = 'radline_header_colors_' + tableId;
+            const orderKey = 'radline_col_order_' + tableId;
+            const collapseKey = 'radline_collapsed_cols_' + tableId;
+            const widthKey = getWidthStorageKey(tableId);
+
+            window.saveRadlinePreference(colorKey, '', true);
+            window.saveRadlinePreference(orderKey, '', true);
+            window.saveRadlinePreference(collapseKey, '', true);
+            window.saveRadlinePreference(widthKey, '', true);
+
+            const styleEl = document.getElementById('radline-universal-widths-' + tableId);
+            if (styleEl) styleEl.textContent = '';
+
+            const table = document.getElementById(tableId);
+            if (table && table._defaultColOrder) {
+                applyColumnOrderToDOM(table, table._defaultColOrder);
+            }
+            if (typeof window.initExcelCollapsibleColumns === 'function') {
+                window.initExcelCollapsibleColumns();
+            }
+        };
+
+        function applyColumnOrderToDOM(table, colOrder) {
+            if (!colOrder || !colOrder.length) return;
+            const theadRow = table.querySelector('.thead .tr, thead tr');
+            if (theadRow) {
+                const thMap = {};
+                Array.from(theadRow.children).forEach(th => {
+                    const c = th.getAttribute('data-col');
+                    if (c) thMap[c] = th;
+                });
+                colOrder.forEach(c => {
+                    if (thMap[c]) theadRow.appendChild(thMap[c]);
+                });
+                if (thMap['actions']) theadRow.appendChild(thMap['actions']);
+            }
+            table.querySelectorAll('.tbody .tr, tbody tr').forEach(row => {
+                const tdMap = {};
+                Array.from(row.children).forEach(td => {
+                    const c = td.getAttribute('data-col');
+                    if (c) tdMap[c] = td;
+                });
+                if (Object.keys(tdMap).length <= 1) return;
+                colOrder.forEach(c => {
+                    if (tdMap[c]) row.appendChild(tdMap[c]);
+                });
+                if (tdMap['actions']) row.appendChild(tdMap['actions']);
+            });
+        }
+
         window.initExcelCollapsibleColumns = function () {
+            window.syncRadlinePreferencesFromServer();
+
             const tables = document.querySelectorAll('.table, .resizable-table, .sales-log-table, table.table-scroll-md, table.table-scroll-lg, .excel-table');
             tables.forEach((table, tableIdx) => {
-                const tableId = table.id || table.getAttribute('data-table-id') || 
-                    (table.classList.contains('inventory-stock-table') ? 'inventory-stock-table' : 
-                    (table.classList.contains('sales-log-table') ? 'sales-log-table' : 
-                    (table.classList.contains('items-table') ? 'items-table' : 
-                    (table.classList.contains('monthly-inventory-table') ? 'monthly-inventory-table' : 
-                    (table.classList.contains('receiving-logs-table') ? 'receiving-logs-table' : 
-                    (table.classList.contains('adjustment-logs-table') ? 'adjustment-logs-table' : 
-                    ('radline_table_' + tableIdx)))))));
+                const tableId = table.id || table.getAttribute('data-table-id') ||
+                    (table.classList.contains('inventory-stock-table') ? 'inventory-stock-table' :
+                        (table.classList.contains('sales-log-table') ? 'sales-log-table' :
+                            (table.classList.contains('items-table') ? 'items-table' :
+                                (table.classList.contains('monthly-inventory-table') ? 'monthly-inventory-table' :
+                                    (table.classList.contains('receiving-logs-table') ? 'receiving-logs-table' :
+                                        (table.classList.contains('adjustment-logs-table') ? 'adjustment-logs-table' :
+                                            ('radline_table_' + tableIdx)))))));
                 if (!table.id) table.id = tableId;
 
                 const storageKey = 'radline_collapsed_cols_' + tableId;
+                const colorKey = 'radline_header_colors_' + tableId;
+                const orderKey = 'radline_col_order_' + tableId;
+                const widthKey = getWidthStorageKey(tableId);
+
                 let collapsedCols = [];
                 try {
                     collapsedCols = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -2102,15 +2470,25 @@
                     collapsedCols = [];
                 }
 
-                let styleEl = document.getElementById('excel-collapsed-style-' + tableId);
-                if (!styleEl) {
-                    styleEl = document.createElement('style');
-                    styleEl.id = 'excel-collapsed-style-' + tableId;
-                    document.head.appendChild(styleEl);
+                let colorConfig = { theme: 'slate', accents: {} };
+                try {
+                    const parsedColors = JSON.parse(localStorage.getItem(colorKey) || 'null');
+                    if (parsedColors && typeof parsedColors === 'object') {
+                        colorConfig.theme = parsedColors.theme || 'slate';
+                        colorConfig.accents = parsedColors.accents || {};
+                    }
+                } catch (e) { }
+
+                let colWidths = {};
+                try {
+                    colWidths = JSON.parse(localStorage.getItem(widthKey) || '{}') || {};
+                } catch (e) {
+                    colWidths = {};
                 }
 
-                const allHeaders = Array.from(table.querySelectorAll('.thead .th[data-col], thead th[data-col], thead th'));
-                allHeaders.forEach((th, idx) => {
+                // Assign data-col to headers & cells if missing
+                const initialHeaders = Array.from(table.querySelectorAll('.thead .th, thead th'));
+                initialHeaders.forEach((th, idx) => {
                     let colKey = th.getAttribute('data-col');
                     if (!colKey) {
                         colKey = 'col_' + idx;
@@ -2120,9 +2498,113 @@
                         });
                     }
                 });
-                const allColKeys = allHeaders.map(h => h.getAttribute('data-col'));
 
-                const updateTableCollapsedStyles = () => {
+                if (!table._defaultColOrder) {
+                    table._defaultColOrder = initialHeaders
+                        .map(h => h.getAttribute('data-col'))
+                        .filter(c => c && c !== 'actions');
+                }
+
+                let colOrder = [...table._defaultColOrder];
+                try {
+                    const savedOrder = JSON.parse(localStorage.getItem(orderKey) || 'null');
+                    if (Array.isArray(savedOrder) && savedOrder.length > 0) {
+                        const validSaved = savedOrder.filter(c => table._defaultColOrder.includes(c));
+                        const missing = table._defaultColOrder.filter(c => !validSaved.includes(c));
+                        colOrder = [...validSaved, ...missing];
+                    }
+                } catch (e) { }
+
+                // Apply column order to DOM
+                applyColumnOrderToDOM(table, colOrder);
+
+                // Re-query headers in their current DOM order
+                const getOrderedHeaders = () => Array.from(table.querySelectorAll('.thead .th, thead th'));
+
+                // Apply Header Theme & Column Accent Colors
+                const applyColors = () => {
+                    table.setAttribute('data-header-theme', colorConfig.theme || 'slate');
+                    getOrderedHeaders().forEach(th => {
+                        const c = th.getAttribute('data-col');
+                        const accent = colorConfig.accents && colorConfig.accents[c];
+                        if (accent) {
+                            th.setAttribute('data-col-accent', accent);
+                        } else {
+                            th.removeAttribute('data-col-accent');
+                        }
+                    });
+                    const pop = getPopoverForTable(tableId);
+                    if (pop) {
+                        pop.querySelectorAll('.theme-swatch-btn').forEach(btn => {
+                            btn.classList.toggle('active', btn.getAttribute('data-theme') === (colorConfig.theme || 'slate'));
+                        });
+                    }
+                };
+                applyColors();
+
+                // Apply Universal Column Widths via Dynamic <style>
+                const applyWidths = () => {
+                    let wStyleEl = document.getElementById('radline-universal-widths-' + tableId);
+                    if (!wStyleEl) {
+                        wStyleEl = document.createElement('style');
+                        wStyleEl.id = 'radline-universal-widths-' + tableId;
+                        document.head.appendChild(wStyleEl);
+                    }
+                    const rules = [];
+                    Object.keys(colWidths).forEach(cKey => {
+                        const w = parseInt(colWidths[cKey], 10);
+                        if (w && w >= 40) {
+                            rules.push(`
+                                #${tableId} .th[data-col="${cKey}"],
+                                #${tableId} .td[data-col="${cKey}"],
+                                #${tableId} th[data-col="${cKey}"],
+                                #${tableId} td[data-col="${cKey}"] {
+                                    width: ${w}px !important;
+                                    min-width: ${w}px !important;
+                                    max-width: ${w}px !important;
+                                    box-sizing: border-box !important;
+                                }
+                            `);
+                        }
+                    });
+                    wStyleEl.textContent = rules.join('\n');
+                };
+                applyWidths();
+
+                let styleEl = document.getElementById('excel-collapsed-style-' + tableId);
+                if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'excel-collapsed-style-' + tableId;
+                    document.head.appendChild(styleEl);
+                }
+
+                const groups = window.RADLINE_TABLE_GROUPS[tableId] || [];
+
+                const syncPopoverGroupCheckboxes = () => {
+                    const pop = getPopoverForTable(tableId);
+                    if (!pop) return;
+                    pop.querySelectorAll('[data-target-col]').forEach(cb => {
+                        const c = cb.getAttribute('data-target-col');
+                        cb.checked = !collapsedCols.includes(c);
+                    });
+                    pop.querySelectorAll('.customize-group-cb').forEach(gcb => {
+                        const gId = gcb.getAttribute('data-group-id');
+                        const grp = groups.find(g => g.id === gId);
+                        if (!grp) return;
+                        const hiddenCount = grp.cols.filter(c => collapsedCols.includes(c)).length;
+                        gcb.checked = hiddenCount < grp.cols.length;
+                        gcb.indeterminate = hiddenCount > 0 && hiddenCount < grp.cols.length;
+                        const badge = gcb.closest('.customize-group-header')?.querySelector('.customize-group-badge');
+                        if (badge) {
+                            badge.textContent = `${grp.cols.length - hiddenCount}/${grp.cols.length}`;
+                        }
+                    });
+                };
+
+                const updateTableCollapsedStyles = (persist = true) => {
+                    const allHeaders = getOrderedHeaders();
+                    const allColKeys = allHeaders.map(h => h.getAttribute('data-col'));
+
                     const rules = [];
                     collapsedCols.forEach(colKey => {
                         rules.push(`
@@ -2135,12 +2617,16 @@
                         `);
                     });
                     styleEl.textContent = rules.join('\n');
-                    try {
-                        localStorage.setItem(storageKey, JSON.stringify(collapsedCols));
-                        window.dispatchEvent(new CustomEvent('radline-excel-cols-updated', { detail: { tableId, collapsedCols } }));
-                    } catch (e) {}
 
-                    // 1. Render sleek unhide chip bar above the table container
+                    if (persist) {
+                        window.saveRadlinePreference(storageKey, JSON.stringify(collapsedCols), collapsedCols.length === 0);
+                        try {
+                            window.dispatchEvent(new CustomEvent('radline-excel-cols-updated', { detail: { tableId, collapsedCols } }));
+                        } catch (e) { }
+                    }
+                    syncPopoverGroupCheckboxes();
+
+                    // Render sleek unhide chip bar (Group Chips + Individual Column Chips)
                     const targetContainer = table.closest('.table-container') || table;
                     const parentCard = targetContainer.parentElement;
                     let bar = parentCard ? parentCard.querySelector(`.collapsed-cols-bar[data-for="${tableId}"]`) : null;
@@ -2153,19 +2639,42 @@
                             parentCard.insertBefore(bar, targetContainer);
                         }
                         if (bar) {
-                            const chipsHtml = collapsedCols.map(k => {
-                                const h = allHeaders.find(hdr => hdr.getAttribute('data-col') === k);
-                                const name = h ? (h.getAttribute('data-original-title') || h.textContent.trim()) : k;
-                                return `
-                                    <button type="button" class="collapsed-col-chip" data-col="${k}" title="Click to unhide column '${name}'">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        <span>${name}</span>
-                                    </button>
-                                `;
-                            }).join('');
+                            const coveredByGroup = new Set();
+                            const groupChipsHtml = [];
+
+                            groups.forEach(grp => {
+                                const presentCols = grp.cols.filter(c => allColKeys.includes(c));
+                                if (presentCols.length >= 2 && presentCols.every(c => collapsedCols.includes(c))) {
+                                    presentCols.forEach(c => coveredByGroup.add(c));
+                                    groupChipsHtml.push(`
+                                        <button type="button" class="collapsed-group-chip" data-group-id="${grp.id}" title="Click to unhide group '${grp.label}' (${presentCols.length} columns)">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="7" height="7"></rect>
+                                                <rect x="14" y="3" width="7" height="7"></rect>
+                                                <rect x="14" y="14" width="7" height="7"></rect>
+                                                <rect x="3" y="14" width="7" height="7"></rect>
+                                            </svg>
+                                            <span>${grp.label} (${presentCols.length} cols)</span>
+                                        </button>
+                                    `);
+                                }
+                            });
+
+                            const indivChipsHtml = collapsedCols
+                                .filter(k => !coveredByGroup.has(k))
+                                .map(k => {
+                                    const h = allHeaders.find(hdr => hdr.getAttribute('data-col') === k);
+                                    const name = h ? (h.getAttribute('data-original-title') || h.textContent.trim()) : k;
+                                    return `
+                                        <button type="button" class="collapsed-col-chip" data-col="${k}" title="Click to unhide column '${name}'">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                            <span>${name}</span>
+                                        </button>
+                                    `;
+                                });
 
                             bar.innerHTML = `
                                 <div class="collapsed-cols-inner">
@@ -2174,19 +2683,31 @@
                                             <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                                             <line x1="1" y1="1" x2="23" y2="23"></line>
                                         </svg>
-                                        <span>Hidden columns (${collapsedCols.length}):</span>
+                                        <span>Hidden (${collapsedCols.length}):</span>
                                     </div>
-                                    <div class="collapsed-cols-chips">${chipsHtml}</div>
+                                    <div class="collapsed-cols-chips">${groupChipsHtml.concat(indivChipsHtml).join('')}</div>
                                     <button type="button" class="collapsed-cols-unhide-all" title="Unhide all columns">Unhide all</button>
                                 </div>
                             `;
+
+                            bar.querySelectorAll('.collapsed-group-chip').forEach(gChip => {
+                                gChip.onclick = (e) => {
+                                    e.stopPropagation();
+                                    const gId = gChip.getAttribute('data-group-id');
+                                    const grp = groups.find(g => g.id === gId);
+                                    if (grp) {
+                                        collapsedCols = collapsedCols.filter(c => !grp.cols.includes(c));
+                                        updateTableCollapsedStyles(true);
+                                    }
+                                };
+                            });
 
                             bar.querySelectorAll('.collapsed-col-chip').forEach(chip => {
                                 chip.onclick = (e) => {
                                     e.stopPropagation();
                                     const col = chip.getAttribute('data-col');
                                     collapsedCols = collapsedCols.filter(c => c !== col);
-                                    updateTableCollapsedStyles();
+                                    updateTableCollapsedStyles(true);
                                 };
                             });
 
@@ -2195,7 +2716,7 @@
                                 unhideAllBtn.onclick = (e) => {
                                     e.stopPropagation();
                                     collapsedCols = [];
-                                    updateTableCollapsedStyles();
+                                    updateTableCollapsedStyles(true);
                                 };
                             }
                         }
@@ -2203,18 +2724,17 @@
                         bar.remove();
                     }
 
-                    // 2. Remove existing divider handles and classes
+                    // Remove existing divider handles
                     table.querySelectorAll('.has-hidden-next, .has-hidden-prev').forEach(el => {
                         el.classList.remove('has-hidden-next', 'has-hidden-prev');
                         const h = el.querySelector('.excel-divider-handle');
                         if (h) h.remove();
                     });
 
-                    // 3. Render visible expand [+] buttons on header divider borders
+                    // Render visible expand [+] buttons on header divider borders
                     const visibleHeaders = allHeaders.filter(h => !collapsedCols.includes(h.getAttribute('data-col')));
 
                     if (visibleHeaders.length > 0) {
-                        // Check if hidden columns precede the first visible column
                         const firstKey = visibleHeaders[0].getAttribute('data-col');
                         const firstIdx = allColKeys.indexOf(firstKey);
                         if (firstIdx > 0) {
@@ -2239,18 +2759,16 @@
                                         </svg>
                                     </button>
                                 `;
-                                const doUnhide = (ev) => {
+                                handle.addEventListener('click', (ev) => {
                                     ev.stopPropagation();
                                     ev.preventDefault();
                                     collapsedCols = collapsedCols.filter(k => !hiddenPreceding.includes(k));
-                                    updateTableCollapsedStyles();
-                                };
-                                handle.addEventListener('click', doUnhide);
+                                    updateTableCollapsedStyles(true);
+                                });
                                 visibleHeaders[0].appendChild(handle);
                             }
                         }
 
-                        // Check hidden columns between visible columns and trailing hidden columns
                         visibleHeaders.forEach((vh, i) => {
                             const curKey = vh.getAttribute('data-col');
                             const curIdx = allColKeys.indexOf(curKey);
@@ -2278,13 +2796,12 @@
                                             </svg>
                                         </button>
                                     `;
-                                    const doUnhide = (ev) => {
+                                    handle.addEventListener('click', (ev) => {
                                         ev.stopPropagation();
                                         ev.preventDefault();
                                         collapsedCols = collapsedCols.filter(k => !hiddenBetween.includes(k));
-                                        updateTableCollapsedStyles();
-                                    };
-                                    handle.addEventListener('click', doUnhide);
+                                        updateTableCollapsedStyles(true);
+                                    });
                                     vh.appendChild(handle);
                                 }
                             }
@@ -2292,8 +2809,147 @@
                     }
                 };
 
-                // Setup header title and collapse hover button
-                allHeaders.forEach((th) => {
+                const moveColumn = (colKey, delta) => {
+                    const idx = colOrder.indexOf(colKey);
+                    if (idx === -1) return;
+                    const targetIdx = idx + delta;
+                    if (targetIdx < 0 || targetIdx >= colOrder.length) return;
+                    const copy = [...colOrder];
+                    const [removed] = copy.splice(idx, 1);
+                    copy.splice(targetIdx, 0, removed);
+                    colOrder = copy;
+                    applyColumnOrderToDOM(table, colOrder);
+                    window.saveRadlinePreference(orderKey, JSON.stringify(colOrder), false);
+                    updateTableCollapsedStyles(false);
+                };
+
+                // Upgrade Customize View Popover (Theme Picker + Grouped Checkboxes + Reorder Controls)
+                const popover = getPopoverForTable(tableId);
+                if (popover && !popover.hasAttribute('data-radline-enhanced')) {
+                    popover.setAttribute('data-radline-enhanced', 'true');
+
+                    const resetBtn = popover.querySelector('button[onclick*="reset"]');
+                    if (resetBtn) {
+                        resetBtn.addEventListener('click', () => {
+                            window.resetRadlineTableCustomization(tableId);
+                        });
+                    }
+
+                    const firstSectionTitle = popover.querySelector('.customize-section-title');
+                    if (firstSectionTitle) {
+                        const themeTitle = document.createElement('div');
+                        themeTitle.className = 'customize-section-title';
+                        themeTitle.textContent = 'Header Color Theme';
+
+                        const swatchesWrap = document.createElement('div');
+                        swatchesWrap.className = 'customize-theme-swatches';
+                        swatchesWrap.innerHTML = window.RADLINE_HEADER_THEMES.map(t => `
+                            <button type="button" class="theme-swatch-btn ${colorConfig.theme === t.id ? 'active' : ''}" data-theme="${t.id}" title="${t.label} Header Theme">
+                                <span class="theme-swatch-dot" style="background: ${t.dot};"></span>
+                                <span>${t.label}</span>
+                            </button>
+                        `).join('');
+
+                        swatchesWrap.querySelectorAll('.theme-swatch-btn').forEach(btn => {
+                            btn.onclick = (ev) => {
+                                ev.stopPropagation();
+                                colorConfig.theme = btn.getAttribute('data-theme') || 'slate';
+                                applyColors();
+                                window.saveRadlinePreference(colorKey, JSON.stringify(colorConfig), false);
+                            };
+                        });
+
+                        firstSectionTitle.parentNode.insertBefore(themeTitle, firstSectionTitle);
+                        firstSectionTitle.parentNode.insertBefore(swatchesWrap, firstSectionTitle);
+                    }
+
+                    const colCheckboxes = Array.from(popover.querySelectorAll('input[data-target-col]'));
+                    const firstColGrid = colCheckboxes[0] ? colCheckboxes[0].closest('.customize-checkbox-grid') : null;
+                    if (firstColGrid && groups.length > 0) {
+                        if (firstSectionTitle) {
+                            firstSectionTitle.textContent = 'Column Groups & Order (Drag headers or use &larr; &rarr;)';
+                        }
+                        const labelMap = {};
+                        colCheckboxes.forEach(cb => {
+                            const cKey = cb.getAttribute('data-target-col');
+                            const lbl = cb.closest('label');
+                            if (cKey && lbl) labelMap[cKey] = lbl;
+                        });
+
+                        const groupsContainer = document.createElement('div');
+                        groups.forEach(grp => {
+                            const grpLabels = grp.cols.map(c => labelMap[c]).filter(Boolean);
+                            if (grpLabels.length === 0) return;
+
+                            const block = document.createElement('div');
+                            block.className = 'customize-group-block';
+                            block.innerHTML = `
+                                <div class="customize-group-header">
+                                    <label>
+                                        <input type="checkbox" class="customize-group-cb" data-group-id="${grp.id}">
+                                        <span>${grp.label}</span>
+                                    </label>
+                                    <span class="customize-group-badge">${grpLabels.length}/${grpLabels.length}</span>
+                                </div>
+                                <div class="customize-group-cols"></div>
+                            `;
+                            const colsBox = block.querySelector('.customize-group-cols');
+                            grpLabels.forEach(lbl => {
+                                const cb = lbl.querySelector('input[data-target-col]');
+                                const cKey = cb.getAttribute('data-target-col');
+                                const rowWrap = document.createElement('div');
+                                rowWrap.className = 'customize-col-row';
+                                rowWrap.setAttribute('data-col-row', cKey);
+
+                                const reorderBtns = document.createElement('div');
+                                reorderBtns.className = 'customize-col-reorder-btns';
+                                reorderBtns.innerHTML = `
+                                    <button type="button" class="btn-col-move" data-dir="-1" title="Move column left">&larr;</button>
+                                    <button type="button" class="btn-col-move" data-dir="1" title="Move column right">&rarr;</button>
+                                `;
+                                reorderBtns.querySelectorAll('.btn-col-move').forEach(mBtn => {
+                                    mBtn.onclick = (ev) => {
+                                        ev.stopPropagation();
+                                        ev.preventDefault();
+                                        const dir = parseInt(mBtn.getAttribute('data-dir'), 10);
+                                        moveColumn(cKey, dir);
+                                    };
+                                });
+
+                                rowWrap.appendChild(lbl);
+                                rowWrap.appendChild(reorderBtns);
+                                colsBox.appendChild(rowWrap);
+                            });
+
+                            const grpCb = block.querySelector('.customize-group-cb');
+                            grpCb.onchange = (ev) => {
+                                ev.stopPropagation();
+                                const shouldShow = grpCb.checked;
+                                grp.cols.forEach(c => {
+                                    const cb = popover.querySelector(`input[data-target-col="${c}"]`);
+                                    if (cb) cb.checked = shouldShow;
+                                    if (shouldShow) {
+                                        collapsedCols = collapsedCols.filter(x => x !== c);
+                                    } else if (!collapsedCols.includes(c)) {
+                                        collapsedCols.push(c);
+                                    }
+                                });
+                                updateTableCollapsedStyles(true);
+                                const sampleCb = popover.querySelector('input[data-target-col]');
+                                if (sampleCb && typeof sampleCb.onchange === 'function') {
+                                    sampleCb.onchange();
+                                }
+                            };
+
+                            groupsContainer.appendChild(block);
+                        });
+
+                        firstColGrid.parentNode.replaceChild(groupsContainer, firstColGrid);
+                    }
+                }
+
+                // Setup each header: title, collapse button, resizer handle, drag-and-drop reorder
+                getOrderedHeaders().forEach((th) => {
                     const colKey = th.getAttribute('data-col');
                     if (colKey === 'actions' || colKey === 'select' || colKey === 'row_select') return;
 
@@ -2304,7 +2960,7 @@
                     if (!thContent) {
                         th.innerHTML = `
                             <div class="th-content">
-                                <span class="th-title" title="${titleText}">${titleText}</span>
+                                <span class="th-title" title="${titleText} (Drag to reorder � Right-click for options)">${titleText}</span>
                                 <button type="button" class="btn-th-collapse" title="Collapse column '${titleText}'" aria-label="Collapse column">
                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -2333,28 +2989,122 @@
                             e.preventDefault();
                             if (!collapsedCols.includes(colKey)) {
                                 collapsedCols.push(colKey);
-                                updateTableCollapsedStyles();
+                                updateTableCollapsedStyles(true);
                             }
                         };
                     }
 
-                    // Right-click context menu shortcut
-                    th.oncontextmenu = (e) => {
-                        e.preventDefault();
+                    // Inject Column Resizer Handle
+                    let resizer = th.querySelector('.table-col-resizer');
+                    if (!resizer) {
+                        resizer = document.createElement('div');
+                        resizer.className = 'table-col-resizer';
+                        resizer.title = 'Drag to resize column � Double-click to reset width';
+                        th.appendChild(resizer);
+                    }
+
+                    resizer.onmousedown = (e) => {
                         e.stopPropagation();
-                        showColumnContextMenu(e, colKey, titleText, collapsedCols, (newCols) => {
-                            collapsedCols = newCols;
-                            updateTableCollapsedStyles();
-                        });
+                        e.preventDefault();
+                        th.setAttribute('draggable', 'false');
+                        const startX = e.clientX;
+                        const startWidth = th.getBoundingClientRect().width;
+                        resizer.classList.add('is-resizing');
+                        document.body.style.cursor = 'col-resize';
+                        document.body.style.userSelect = 'none';
+
+                        const onMouseMove = (moveEv) => {
+                            const newWidth = Math.max(50, Math.round(startWidth + (moveEv.clientX - startX)));
+                            colWidths[colKey] = newWidth;
+                            applyWidths();
+                        };
+
+                        const onMouseUp = () => {
+                            resizer.classList.remove('is-resizing');
+                            document.body.style.cursor = '';
+                            document.body.style.userSelect = '';
+                            th.setAttribute('draggable', 'true');
+                            window.saveRadlinePreference(widthKey, JSON.stringify(colWidths), false);
+                            document.removeEventListener('mousemove', onMouseMove);
+                            document.removeEventListener('mouseup', onMouseUp);
+                        };
+
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    };
+
+                    resizer.ondblclick = (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        delete colWidths[colKey];
+                        applyWidths();
+                        window.saveRadlinePreference(widthKey, JSON.stringify(colWidths), Object.keys(colWidths).length === 0);
+                    };
+
+                    // Enable Column Context Menu on Header
+                    th.oncontextmenu = (e) => {
+                        handleRadlineHeaderContextMenu(e, table, th);
+                    };
+
+                    // Enable HTML5 Drag & Drop Column Reordering
+                    th.setAttribute('draggable', 'true');
+                    th.ondragstart = (e) => {
+                        if (resizer.classList.contains('is-resizing')) {
+                            e.preventDefault();
+                            return;
+                        }
+                        th.classList.add('is-col-dragging');
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', colKey);
+                        table._draggingColKey = colKey;
+                    };
+
+                    th.ondragover = (e) => {
+                        const draggedCol = table._draggingColKey;
+                        if (!draggedCol || draggedCol === colKey) return;
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        const rect = th.getBoundingClientRect();
+                        const isLeft = (e.clientX - rect.left) < rect.width / 2;
+                        th.classList.toggle('col-drop-left', isLeft);
+                        th.classList.toggle('col-drop-right', !isLeft);
+                    };
+
+                    th.ondragleave = () => {
+                        th.classList.remove('col-drop-left', 'col-drop-right');
+                    };
+
+                    th.ondrop = (e) => {
+                        e.preventDefault();
+                        const isLeft = th.classList.contains('col-drop-left');
+                        th.classList.remove('col-drop-left', 'col-drop-right');
+                        const draggedCol = table._draggingColKey || e.dataTransfer.getData('text/plain');
+                        if (!draggedCol || draggedCol === colKey) return;
+
+                        const nextOrder = colOrder.filter(c => c !== draggedCol);
+                        const targetIdx = nextOrder.indexOf(colKey);
+                        if (targetIdx !== -1) {
+                            nextOrder.splice(isLeft ? targetIdx : targetIdx + 1, 0, draggedCol);
+                            colOrder = nextOrder;
+                            applyColumnOrderToDOM(table, colOrder);
+                            window.saveRadlinePreference(orderKey, JSON.stringify(colOrder), false);
+                            updateTableCollapsedStyles(false);
+                        }
+                    };
+
+                    th.ondragend = () => {
+                        table._draggingColKey = null;
+                        getOrderedHeaders().forEach(h => h.classList.remove('is-col-dragging', 'col-drop-left', 'col-drop-right'));
                     };
                 });
 
-                updateTableCollapsedStyles();
+                updateTableCollapsedStyles(false);
             });
         };
 
-        // Context menu for Excel column hiding / unhiding
-        function showColumnContextMenu(e, colKey, titleText, collapsedCols, onUpdate) {
+        // Context menu for Column Colors, Grouping, Reordering & Hiding
+        function showColumnContextMenu(opts) {
+            const { e, tableId, colKey, titleText, collapsedCols, colorConfig, groups, onUpdateCollapsed, onUpdateColors, onMoveCol, onResetAll } = opts;
             let menu = document.getElementById('table-col-context-menu');
             if (!menu) {
                 menu = document.createElement('div');
@@ -2364,15 +3114,53 @@
             }
 
             const hasHidden = collapsedCols && collapsedCols.length > 0;
+            const curAccent = (colorConfig.accents && colorConfig.accents[colKey]) || '';
+            const curTheme = colorConfig.theme || 'slate';
+            const colGroup = (groups || []).find(g => g.cols.includes(colKey));
+            const isGroupHidden = colGroup ? colGroup.cols.every(c => collapsedCols.includes(c)) : false;
+
+            const accentSwatchesHtml = window.RADLINE_COL_ACCENTS.map(a => `
+                <button type="button" class="col-swatch-circle ${curAccent === a.id ? 'active' : ''}" data-accent="${a.id}" title="Column Highlight: ${a.label}" style="background: ${a.dot};"></button>
+            `).join('');
+
+            const themeSwatchesHtml = window.RADLINE_HEADER_THEMES.map(t => `
+                <button type="button" class="col-swatch-circle ${curTheme === t.id ? 'active' : ''}" data-theme="${t.id}" title="Table Theme: ${t.label}" style="background: ${t.dot};"></button>
+            `).join('');
+
             menu.innerHTML = `
+                <div class="col-menu-label">Column "${titleText}" Highlight</div>
+                <div class="col-menu-swatches">${accentSwatchesHtml}</div>
+
+                <div class="col-menu-label">Table Header Theme</div>
+                <div class="col-menu-swatches">${themeSwatchesHtml}</div>
+
+                <div class="col-menu-divider"></div>
+                <button type="button" class="col-menu-item" id="col-menu-move-left">
+                    <span>&larr; Move Column Left</span>
+                </button>
+                <button type="button" class="col-menu-item" id="col-menu-move-right">
+                    <span>&rarr; Move Column Right</span>
+                </button>
+
+                <div class="col-menu-divider"></div>
                 <button type="button" class="col-menu-item" id="col-menu-hide">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                     <span>Collapse column "${titleText}"</span>
                 </button>
+                ${colGroup ? `
+                <button type="button" class="col-menu-item" id="col-menu-toggle-group">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>${isGroupHidden ? 'Unhide' : 'Hide'} Group "${colGroup.label}"</span>
+                </button>
+                ` : ''}
                 ${hasHidden ? `
-                <div style="height: 1px; background: #e2e8f0; margin: 0.25rem 0;"></div>
                 <button type="button" class="col-menu-item" id="col-menu-unhide-all">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -2381,48 +3169,237 @@
                     <span>Unhide all columns (${collapsedCols.length})</span>
                 </button>
                 ` : ''}
+                <div class="col-menu-divider"></div>
+                <button type="button" class="col-menu-item" id="col-menu-reset-all" style="color: #64748b;">
+                    <span>Reset Default View</span>
+                </button>
             `;
 
-            menu.style.display = 'block';
-            const menuWidth = 220;
-            const menuHeight = hasHidden ? 80 : 45;
+            menu.classList.add('is-active');
+            menu.style.setProperty('display', 'block', 'important');
+            menu.style.setProperty('z-index', '9999999', 'important');
+            const menuWidth = 240;
+            const menuHeight = 310;
             let left = e.clientX;
             let top = e.clientY;
-            if (left + menuWidth > window.innerWidth) left = window.innerWidth - menuWidth - 8;
-            if (top + menuHeight > window.innerHeight) top = window.innerHeight - menuHeight - 8;
+            if (left + menuWidth > window.innerWidth) left = Math.max(8, window.innerWidth - menuWidth - 12);
+            if (top + menuHeight > window.innerHeight) top = Math.max(8, window.innerHeight - menuHeight - 12);
             menu.style.left = left + 'px';
             menu.style.top = top + 'px';
 
+            menu.querySelectorAll('[data-accent]').forEach(btn => {
+                btn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    const acc = btn.getAttribute('data-accent');
+                    const nextAccents = Object.assign({}, colorConfig.accents || {});
+                    if (acc) {
+                        nextAccents[colKey] = acc;
+                    } else {
+                        delete nextAccents[colKey];
+                    }
+                    onUpdateColors({ theme: colorConfig.theme || 'slate', accents: nextAccents });
+                    menu.style.display = 'none';
+                };
+            });
+
+            menu.querySelectorAll('[data-theme]').forEach(btn => {
+                btn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    const thm = btn.getAttribute('data-theme') || 'slate';
+                    onUpdateColors({ theme: thm, accents: colorConfig.accents || {} });
+                    menu.style.display = 'none';
+                };
+            });
+
+            const moveLeftBtn = menu.querySelector('#col-menu-move-left');
+            if (moveLeftBtn) {
+                moveLeftBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    menu.style.display = 'none';
+                    onMoveCol(-1);
+                };
+            }
+            const moveRightBtn = menu.querySelector('#col-menu-move-right');
+            if (moveRightBtn) {
+                moveRightBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    menu.style.display = 'none';
+                    onMoveCol(1);
+                };
+            }
+
             const hideBtn = menu.querySelector('#col-menu-hide');
             if (hideBtn) {
-                hideBtn.onclick = () => {
+                hideBtn.onclick = (ev) => {
+                    ev.stopPropagation();
                     menu.style.display = 'none';
                     if (!collapsedCols.includes(colKey)) {
-                        onUpdate([...collapsedCols, colKey]);
+                        onUpdateCollapsed([...collapsedCols, colKey]);
+                    }
+                };
+            }
+
+            const toggleGrpBtn = menu.querySelector('#col-menu-toggle-group');
+            if (toggleGrpBtn && colGroup) {
+                toggleGrpBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    menu.style.display = 'none';
+                    if (isGroupHidden) {
+                        onUpdateCollapsed(collapsedCols.filter(c => !colGroup.cols.includes(c)));
+                    } else {
+                        const merged = Array.from(new Set([...collapsedCols, ...colGroup.cols]));
+                        onUpdateCollapsed(merged);
                     }
                 };
             }
 
             const unhideAllBtn = menu.querySelector('#col-menu-unhide-all');
             if (unhideAllBtn) {
-                unhideAllBtn.onclick = () => {
+                unhideAllBtn.onclick = (ev) => {
+                    ev.stopPropagation();
                     menu.style.display = 'none';
-                    onUpdate([]);
+                    onUpdateCollapsed([]);
                 };
             }
 
-            const closeMenu = (ev) => {
-                if (!menu.contains(ev.target)) {
+            const resetAllBtn = menu.querySelector('#col-menu-reset-all');
+            if (resetAllBtn) {
+                resetAllBtn.onclick = (ev) => {
+                    ev.stopPropagation();
                     menu.style.display = 'none';
-                    document.removeEventListener('click', closeMenu);
-                    document.removeEventListener('contextmenu', closeMenu);
-                }
-            };
-            setTimeout(() => {
-                document.addEventListener('click', closeMenu);
-                document.addEventListener('contextmenu', closeMenu);
-            }, 0);
+                    onResetAll();
+                };
+            }
         }
+
+        // Global Event Delegation for Right-Click (Context Menu) on Table Headers
+        function handleRadlineHeaderContextMenu(e, table, th) {
+            if (!table || !th) return;
+            const colKey = th.getAttribute('data-col');
+            if (!colKey || colKey === 'actions' || colKey === 'select' || colKey === 'row_select') return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const tableId = table.id || table.getAttribute('data-table-id') ||
+                (table.classList.contains('sales-log-table') ? 'sales-log-table' :
+                    (table.classList.contains('inventory-stock-table') ? 'inventory-stock-table' :
+                        (table.classList.contains('monthly-inventory-table') ? 'monthly-inventory-table' :
+                            (table.classList.contains('items-table') ? 'items-table' :
+                                (table.classList.contains('receiving-logs-table') ? 'receiving-logs-table' :
+                                    (table.classList.contains('adjustment-logs-table') ? 'adjustment-logs-table' :
+                                        'sales-log-table'))))));
+            if (!table.id) table.id = tableId;
+
+            if (!table._defaultColOrder) {
+                table._defaultColOrder = Array.from(table.querySelectorAll('.thead .th, thead th'))
+                    .map(h => h.getAttribute('data-col'))
+                    .filter(c => c && c !== 'actions' && c !== 'select' && c !== 'row_select');
+            }
+
+            const storageKey = 'radline_collapsed_cols_' + tableId;
+            const colorKey = 'radline_header_colors_' + tableId;
+            const orderKey = 'radline_col_order_' + tableId;
+
+            let collapsedCols = [];
+            try {
+                collapsedCols = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            } catch (err) { }
+
+            let colorConfig = { theme: 'slate', accents: {} };
+            try {
+                const parsedColors = JSON.parse(localStorage.getItem(colorKey) || 'null');
+                if (parsedColors && typeof parsedColors === 'object') {
+                    colorConfig.theme = parsedColors.theme || 'slate';
+                    colorConfig.accents = parsedColors.accents || {};
+                }
+            } catch (err) { }
+
+            const groups = window.RADLINE_TABLE_GROUPS[tableId] || [];
+            const titleText = th.getAttribute('data-original-title') || th.querySelector('.th-title')?.textContent.trim() || th.textContent.trim();
+
+            showColumnContextMenu({
+                e,
+                tableId,
+                colKey,
+                titleText,
+                collapsedCols,
+                colorConfig,
+                groups,
+                onUpdateCollapsed: (newCols) => {
+                    try {
+                        localStorage.setItem(storageKey, JSON.stringify(newCols));
+                        window.saveRadlinePreference(storageKey, JSON.stringify(newCols), newCols.length === 0);
+                    } catch (err) { }
+                    if (typeof window.initExcelCollapsibleColumns === 'function') {
+                        window.initExcelCollapsibleColumns();
+                    }
+                },
+                onUpdateColors: (newColors) => {
+                    colorConfig = newColors;
+                    try {
+                        localStorage.setItem(colorKey, JSON.stringify(colorConfig));
+                        window.saveRadlinePreference(colorKey, JSON.stringify(colorConfig), false);
+                    } catch (err) { }
+                    if (typeof window.initExcelCollapsibleColumns === 'function') {
+                        window.initExcelCollapsibleColumns();
+                    }
+                },
+                onMoveCol: (delta) => {
+                    let colOrder = [...(table._defaultColOrder || [])];
+                    try {
+                        const savedOrder = JSON.parse(localStorage.getItem(orderKey) || 'null');
+                        if (Array.isArray(savedOrder) && savedOrder.length > 0) {
+                            colOrder = savedOrder;
+                        }
+                    } catch (err) { }
+                    const idx = colOrder.indexOf(colKey);
+                    if (idx === -1) return;
+                    const targetIdx = idx + delta;
+                    if (targetIdx < 0 || targetIdx >= colOrder.length) return;
+                    const copy = [...colOrder];
+                    const [removed] = copy.splice(idx, 1);
+                    copy.splice(targetIdx, 0, removed);
+                    colOrder = copy;
+                    applyColumnOrderToDOM(table, colOrder);
+                    window.saveRadlinePreference(orderKey, JSON.stringify(colOrder), false);
+                    if (typeof window.initExcelCollapsibleColumns === 'function') {
+                        window.initExcelCollapsibleColumns();
+                    }
+                },
+                onResetAll: () => {
+                    if (typeof window.resetRadlineTableCustomization === 'function') {
+                        window.resetRadlineTableCustomization(tableId);
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('contextmenu', function (e) {
+            const th = e.target.closest('.thead .th, thead th, .th[data-col], th[data-col]');
+            if (!th) {
+                const menu = document.getElementById('table-col-context-menu');
+                if (menu && !menu.contains(e.target)) {
+                    menu.classList.remove('is-active');
+                    menu.style.display = 'none';
+                }
+                return;
+            }
+
+            const table = th.closest('.table, .resizable-table, .sales-log-table, table.table-scroll-md, table.table-scroll-lg, .excel-table, table');
+            if (!table) return;
+
+            handleRadlineHeaderContextMenu(e, table, th);
+        });
+
+        // Global dismiss for context menu on click outside
+        document.addEventListener('click', function (e) {
+            const menu = document.getElementById('table-col-context-menu');
+            if (menu && !menu.contains(e.target)) {
+                menu.classList.remove('is-active');
+                menu.style.display = 'none';
+            }
+        });
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', window.initExcelCollapsibleColumns);
@@ -2435,22 +3412,22 @@
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
+            window.addEventListener('load', function () {
                 navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                    .catch(function(err) {
+                    .catch(function (err) {
                         console.warn('PWA ServiceWorker registration failed:', err);
                     });
             });
         }
 
         // Online / Offline Status Toasts
-        window.addEventListener('offline', function() {
+        window.addEventListener('offline', function () {
             document.body.dispatchEvent(new CustomEvent('show-toast', {
                 detail: { type: 'warning', message: 'Network offline. Using cached shell.' }
             }));
         });
 
-        window.addEventListener('online', function() {
+        window.addEventListener('online', function () {
             document.body.dispatchEvent(new CustomEvent('show-toast', {
                 detail: { type: 'success', message: 'Connection restored. Back online.' }
             }));

@@ -597,3 +597,87 @@ func (app *App) ResetDashboardLayoutHandler(w http.ResponseWriter, r *http.Reque
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+// SaveUserPreferenceHandler persists a generic key-value user preference (such as list view customization)
+func (app *App) SaveUserPreferenceHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	ctxUser := GetCurrentUser(r)
+	if ctxUser == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var payload struct {
+		Key    string `json:"key"`
+		Value  string `json:"value"`
+		Delete bool   `json:"delete"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
+		return
+	}
+
+	key := strings.TrimSpace(payload.Key)
+	if key == "" || len(key) > 128 {
+		http.Error(w, "Invalid preference key", http.StatusBadRequest)
+		return
+	}
+
+	if payload.Delete || payload.Value == "" {
+		if err := db.DeleteUserPreference(ctxUser.User.ID, key); err != nil {
+			http.Error(w, "Failed to delete preference", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		if err := db.SetUserPreference(ctxUser.User.ID, key, payload.Value); err != nil {
+			http.Error(w, "Failed to save preference", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte(`{"success": true}`))
+}
+
+// GetUserPreferenceHandler retrieves a specific preference key or all preferences for the current user
+func (app *App) GetUserPreferenceHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	ctxUser := GetCurrentUser(r)
+	if ctxUser == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	key := strings.TrimSpace(r.PathValue("key"))
+	if key == "" {
+		key = strings.TrimSpace(r.URL.Query().Get("key"))
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if key != "" {
+		val, err := db.GetUserPreference(ctxUser.User.ID, key)
+		if err != nil {
+			val = ""
+		}
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"key":   key,
+			"value": val,
+		})
+		return
+	}
+
+	prefs, err := db.GetAllUserPreferences(ctxUser.User.ID)
+	if err != nil {
+		prefs = map[string]string{}
+	}
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		"preferences": prefs,
+	})
+}

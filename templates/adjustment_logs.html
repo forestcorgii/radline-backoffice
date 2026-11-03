@@ -55,24 +55,24 @@
 
         <div id="adjustment-logs-results">
             <div class="table-container">
-                <div class="table table-scroll-md resizable-table adjustment-logs-table">
-                    <div class="thead">
-                        <div class="tr">
-                            <div class="th" data-col="adj_id">Adj#</div>
-                            <div class="th" data-col="date">Date</div>
-                            <div class="th" data-col="item_description">Item Description</div>
-                            <div class="th" data-col="adj_qty">Adj Qty</div>
-                            <div class="th" data-col="uom">UOM</div>
-                            <div class="th" data-col="cost_impact">Cost Impact</div>
-                            <div class="th" data-col="remarks">Remarks</div>
+                    <div class="table table-scroll-md resizable-table adjustment-logs-table" id="adjustment-logs-table">
+                        <div class="thead">
+                            <div class="tr">
+                                <div class="th" data-col="adj_id">Adj#</div>
+                                <div class="th" data-col="date">Date</div>
+                                <div class="th" data-col="item_description">Item Description</div>
+                                <div class="th" data-col="adj_qty">Adj Qty</div>
+                                <div class="th" data-col="uom">UOM</div>
+                                <div class="th" data-col="cost_impact">Cost Impact</div>
+                                <div class="th" data-col="remarks">Remarks</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="tbody" id="adjustment-logs-tbody">
-                        {{ template "adjustment_rows.html" .AdjustmentLogs }}
+                        <div class="tbody" id="adjustment-logs-tbody">
+                            {{ template "adjustment_rows.html" .AdjustmentLogs }}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
     </form>
 </div>
 
@@ -92,7 +92,7 @@
             try {
                 const stored = localStorage.getItem('radline_adjustment_column_widths');
                 if (stored) {
-                    return JSON.parse(stored);
+                    return Object.assign({}, DEFAULT_ADJUSTMENT_COL_WIDTHS, JSON.parse(stored));
                 }
             } catch (e) {
                 console.error('Failed to parse adjustment column widths', e);
@@ -104,13 +104,18 @@
 
         function saveAdjustmentColumnWidths() {
             try {
-                localStorage.setItem('radline_adjustment_column_widths', JSON.stringify(currentAdjustmentColumnWidths));
+                if (typeof window.saveRadlinePreference === 'function') {
+                    window.saveRadlinePreference('radline_adjustment_column_widths', JSON.stringify(currentAdjustmentColumnWidths), false);
+                } else {
+                    localStorage.setItem('radline_adjustment_column_widths', JSON.stringify(currentAdjustmentColumnWidths));
+                }
             } catch (e) {
                 console.error('Failed to save adjustment column widths', e);
             }
         }
 
         window.applyAdjustmentColumnWidths = function () {
+            currentAdjustmentColumnWidths = getAdjustmentColumnWidths();
             let styleEl = document.getElementById('adjustment-column-widths-style');
             if (!styleEl) {
                 styleEl = document.createElement('style');

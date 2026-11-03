@@ -276,3 +276,57 @@ func TestDashboardTopProductsFilter(t *testing.T) {
 		t.Errorf("Expected High Sales Item to be ranked first in sales view")
 	}
 }
+
+func TestUserPreferencesAPI(t *testing.T) {
+	_ = db.InitDB(":memory:")
+	app := &App{}
+
+	// 1. Unauthorized POST
+	req := httptest.NewRequest(http.MethodPost, "/api/user-preferences", bytes.NewBufferString(`{"key":"radline_sales_theme","value":"indigo"}`))
+	rec := httptest.NewRecorder()
+	app.SaveUserPreferenceHandler(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Errorf("Expected 401 Unauthorized, got %d", rec.Code)
+	}
+
+	userCtx := &CurrentUserContext{
+		User: models.User{
+			ID:       1,
+			Username: "admin",
+		},
+	}
+
+	// 2. Authorized POST Save
+	req = httptest.NewRequest(http.MethodPost, "/api/user-preferences", bytes.NewBufferString(`{"key":"radline_sales_theme","value":"emerald"}`))
+	req = req.WithContext(context.WithValue(req.Context(), UserContextKey, userCtx))
+	rec = httptest.NewRecorder()
+	app.SaveUserPreferenceHandler(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	// 3. Authorized GET All
+	reqGet := httptest.NewRequest(http.MethodGet, "/api/user-preferences", nil)
+	reqGet = reqGet.WithContext(context.WithValue(reqGet.Context(), UserContextKey, userCtx))
+	recGet := httptest.NewRecorder()
+	app.GetUserPreferenceHandler(recGet, reqGet)
+	if recGet.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK on GET all, got %d", recGet.Code)
+	}
+	if !strings.Contains(recGet.Body.String(), `"radline_sales_theme":"emerald"`) {
+		t.Errorf("Expected response to contain radline_sales_theme=emerald, got %s", recGet.Body.String())
+	}
+
+	// 4. Authorized POST Delete
+	reqDel := httptest.NewRequest(http.MethodPost, "/api/user-preferences", bytes.NewBufferString(`{"key":"radline_sales_theme","delete":true}`))
+	reqDel = reqDel.WithContext(context.WithValue(reqDel.Context(), UserContextKey, userCtx))
+	recDel := httptest.NewRecorder()
+	app.SaveUserPreferenceHandler(recDel, reqDel)
+	if recDel.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK on delete, got %d", recDel.Code)
+	}
+	val, _ := db.GetUserPreference(1, "radline_sales_theme")
+	if val != "" {
+		t.Errorf("Expected deleted preference, got %q", val)
+	}
+}
