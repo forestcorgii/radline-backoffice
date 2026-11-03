@@ -3,7 +3,7 @@
 > Back to [[00-index]] · Related: [[htmx-patterns]], [[sidebar-navigation]], [[responsive-design]], [[templates-overview]]
 
 ## Canonical Stylesheet
-[static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css) (linked in [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) as `/static/index.css?v=6.1` — always increment `?v=` when changing CSS).
+[static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css) (linked in [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) as `/static/index.css?v=6.3` — always increment `?v=` when changing CSS).
 
 ## Current Theme & Base Typography (QuickBooks / shadcn Royal Indigo)
 ```css
@@ -89,3 +89,13 @@
   - **Modular Height Tokens**: `.dash-h-sm` (155px), `.dash-h-md` (310px), `.dash-h-lg` (480px). Internal `.dashboard-card-body` uses `flex: 1 1 auto; min-height: 0; overflow-y: auto;` to handle arbitrary content height cleanly.
   - **Drag-and-Drop & Accessibility**: HTML5 Drag & Drop with `.dash-drop-indicator` and `.is-dragging` styles, coupled with Left/Right directional move buttons in card settings popovers (`.dash-config-popover`).
   - **Per-User Database Sync**: Persisted in `user_preferences` (`pref_key = 'dashboard_layout'`) with zero layout shift on server-rendered page load.
+
+### Context: Universal List Views Engine (Header Themes, Column Accents, Resizing, Grouping & Reordering)
+- **Problem**: Operators need spreadsheet-grade customization across all tabular list views (Sales, Inventory, Monthly Inventory, Items, Receiving, Adjustments) including customizable header colors, interactive column resizing, semantic column grouping with group hide/unhide, column reordering, and cross-device user persistence without extra header rows cluttering table height.
+- **Enforced Solution**:
+  - **Customizable Header Colors**: Table-wide header themes (`[data-header-theme="slate|indigo|emerald|amber|navy|rose"]`) selectable from `.customize-theme-swatches` in the Customize View popover or header context menu, paired with individual column top-border & tint accents (`[data-col-accent="indigo|emerald|amber|rose|purple|sky"]`) via right-click context menu.
+  - **60-FPS Column Resizing**: Active `.table-col-resizer` handles (`width: 6px; cursor: col-resize`) on every `th[data-col]`, injecting dynamic `<style id="radline-universal-widths-<tableId>">` rules on drag and resetting on double-click.
+  - **Predefined Semantic Column Groups**: Configured in `window.RADLINE_TABLE_GROUPS` in `templates/base.html`. Automatically upgrades `.customize-view-popover` into collapsible `.customize-group-block` sections with master group checkboxes (`.customize-group-cb`) and renders consolidated `.collapsed-group-chip` pills in `.collapsed-cols-bar` when an entire group is hidden.
+  - **Column Reordering**: HTML5 Drag & Drop directly on `.th[data-col]` headers (with `.col-drop-left` / `.col-drop-right` indicators) and `←`/`→` buttons (`.btn-col-move`) in the Customize View popover and context menu, reordering header and body cells in DOM across initial loads and `htmx:afterSwap`.
+  - **Hybrid Local + Database Persistence**: `window.saveRadlinePreference()` writes immediately to `localStorage` for zero layout shift and debounces `POST /api/user-preferences` (`SaveUserPreferenceHandler` / `GetUserPreferenceHandler` in `handlers/handlers.go`) to sync with the `user_preferences` table.
+

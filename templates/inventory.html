@@ -7,9 +7,11 @@
 {{ template "adjust_stock_form.html" . }}
 
 <div class="card" id="inventory-stock-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Current Stock Levels</h3>
+            <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Current Stock Levels
+            </h3>
         </div>
         <div style="display: flex; gap: 0.35rem; align-items: center;">
             <div class="customize-view-container">
@@ -22,68 +24,75 @@
                     </svg>
                 </button>
 
-            <div id="customize-inventory-view-popover" class="customize-view-popover">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                    <span style="font-weight: 600; font-size: 0.8125rem;">Inventory View</span>
-                    <button type="button" onclick="resetInventoryViewSettings()"
-                        style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset Default</button>
-                </div>
+                <div id="customize-inventory-view-popover" class="customize-view-popover">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <span style="font-weight: 600; font-size: 0.8125rem;">Inventory View</span>
+                        <button type="button" onclick="resetInventoryViewSettings()"
+                            style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset
+                            Default</button>
+                    </div>
 
-                <div class="customize-section-title">Table Columns</div>
-                <div class="customize-checkbox-grid">
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="description" onchange="onInventoryViewSettingChange()">
-                        <span>Description</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="uom" onchange="onInventoryViewSettingChange()">
-                        <span>UOM</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="received" onchange="onInventoryViewSettingChange()">
-                        <span>Received</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="sold" onchange="onInventoryViewSettingChange()">
-                        <span>Sold</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="adjusted" onchange="onInventoryViewSettingChange()">
-                        <span>Adjusted</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="on_hand" onchange="onInventoryViewSettingChange()">
-                        <span>On Hand</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="current_cost" onchange="onInventoryViewSettingChange()">
-                        <span>Current Cost</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-col="current_price" onchange="onInventoryViewSettingChange()">
-                        <span>Current Price</span>
-                    </label>
-                </div>
+                    <div class="customize-section-title">Table Columns</div>
+                    <div class="customize-checkbox-grid">
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="description"
+                                onchange="onInventoryViewSettingChange()">
+                            <span>Description</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="uom" onchange="onInventoryViewSettingChange()">
+                            <span>UOM</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="received" onchange="onInventoryViewSettingChange()">
+                            <span>Received</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="sold" onchange="onInventoryViewSettingChange()">
+                            <span>Sold</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="adjusted" onchange="onInventoryViewSettingChange()">
+                            <span>Adjusted</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="on_hand" onchange="onInventoryViewSettingChange()">
+                            <span>On Hand</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="current_cost"
+                                onchange="onInventoryViewSettingChange()">
+                            <span>Current Cost</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="current_price"
+                                onchange="onInventoryViewSettingChange()">
+                            <span>Current Price</span>
+                        </label>
+                    </div>
 
-                <div class="customize-section-title">Visible Filters</div>
-                <div class="customize-checkbox-grid">
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="search" onchange="onInventoryViewSettingChange()">
-                        <span>Search Bar</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="stock_filter" onchange="onInventoryViewSettingChange()">
-                        <span>Stock Filter</span>
-                    </label>
-                    <label class="customize-checkbox-item">
-                        <input type="checkbox" data-target-filter="limit" onchange="onInventoryViewSettingChange()">
-                        <span>Show Rows (Limit)</span>
-                    </label>
+                    <div class="customize-section-title">Visible Filters</div>
+                    <div class="customize-checkbox-grid">
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="search"
+                                onchange="onInventoryViewSettingChange()">
+                            <span>Search Bar</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="stock_filter"
+                                onchange="onInventoryViewSettingChange()">
+                            <span>Stock Filter</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="limit" onchange="onInventoryViewSettingChange()">
+                            <span>Show Rows (Limit)</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#inventory-loading-indicator">
         <div class="search-filter-bar">
@@ -103,8 +112,9 @@
                 </select>
             </div>
             <div class="filter-item" data-filter="limit" style="width: 6rem;">
-                <select name="limit" class="form-input" title="Rows" hx-get="/inventory/stock" hx-target="#inventory-stock-results"
-                    hx-include="closest form" hx-trigger="change" hx-indicator="#inventory-loading-indicator">
+                <select name="limit" class="form-input" title="Rows" hx-get="/inventory/stock"
+                    hx-target="#inventory-stock-results" hx-include="closest form" hx-trigger="change"
+                    hx-indicator="#inventory-loading-indicator">
                     <option value="25" selected>25 rows</option>
                     <option value="50">50 rows</option>
                     <option value="100">100 rows</option>
@@ -121,25 +131,25 @@
 
         <div id="inventory-stock-results">
             <div class="table-container">
-                <div class="table table-scroll-md resizable-table inventory-stock-table">
-                    <div class="thead">
-                        <div class="tr">
-                            <div class="th" data-col="description">Description</div>
-                            <div class="th" data-col="uom">UOM</div>
-                            <div class="th" data-col="received">Received</div>
-                            <div class="th" data-col="sold">Sold</div>
-                            <div class="th" data-col="adjusted">Adjusted</div>
-                            <div class="th" data-col="on_hand">On Hand</div>
-                            <div class="th" data-col="current_cost">Current Cost</div>
-                            <div class="th" data-col="current_price">Current Price</div>
+                    <div class="table table-scroll-md resizable-table inventory-stock-table" id="inventory-stock-table">
+                        <div class="thead">
+                            <div class="tr">
+                                <div class="th" data-col="description">Description</div>
+                                <div class="th" data-col="uom">UOM</div>
+                                <div class="th" data-col="received">Received</div>
+                                <div class="th" data-col="sold">Sold</div>
+                                <div class="th" data-col="adjusted">Adjusted</div>
+                                <div class="th" data-col="on_hand">On Hand</div>
+                                <div class="th" data-col="current_cost">Current Cost</div>
+                                <div class="th" data-col="current_price">Current Price</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="tbody" id="inventory-stock-tbody">
-                        {{ template "inventory_stock_rows.html" .StockItems }}
+                        <div class="tbody" id="inventory-stock-tbody">
+                            {{ template "inventory_stock_rows.html" .StockItems }}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
     </form>
 </div>
 
@@ -178,7 +188,7 @@
             try {
                 const stored = localStorage.getItem('radline_inventory_column_widths');
                 if (stored) {
-                    return JSON.parse(stored);
+                    return Object.assign({}, DEFAULT_INVENTORY_COL_WIDTHS, JSON.parse(stored));
                 }
             } catch (e) {
                 console.error('Failed to parse inventory column widths', e);
@@ -190,13 +200,18 @@
 
         function saveInventoryColumnWidths() {
             try {
-                localStorage.setItem('radline_inventory_column_widths', JSON.stringify(currentInventoryColumnWidths));
+                if (typeof window.saveRadlinePreference === 'function') {
+                    window.saveRadlinePreference('radline_inventory_column_widths', JSON.stringify(currentInventoryColumnWidths), false);
+                } else {
+                    localStorage.setItem('radline_inventory_column_widths', JSON.stringify(currentInventoryColumnWidths));
+                }
             } catch (e) {
                 console.error('Failed to save inventory column widths', e);
             }
         }
 
         window.applyInventoryColumnWidths = function () {
+            currentInventoryColumnWidths = getInventoryColumnWidths();
             let styleEl = document.getElementById('inventory-column-widths-style');
             if (!styleEl) {
                 styleEl = document.createElement('style');
@@ -223,9 +238,7 @@
             styleEl.textContent = cssRules.join('\n');
         };
 
-        window.initInventoryColumnResizing = function () {
-            // Disabled in favor of authentic Excel double-line collapsible columns
-        };
+        window.initInventoryColumnResizing = function () { };
 
         function getInventoryViewConfig() {
             try {
@@ -245,7 +258,11 @@
         window.getInventoryViewConfig = getInventoryViewConfig;
 
         function saveInventoryViewConfig(config) {
-            localStorage.setItem('radline_inventory_view_config', JSON.stringify(config));
+            if (typeof window.saveRadlinePreference === 'function') {
+                window.saveRadlinePreference('radline_inventory_view_config', JSON.stringify(config), false);
+            } else {
+                localStorage.setItem('radline_inventory_view_config', JSON.stringify(config));
+            }
         }
         window.saveInventoryViewConfig = saveInventoryViewConfig;
 

@@ -70,6 +70,9 @@ func main() {
 	mux.HandleFunc("POST /logout", app.LogoutHandler)
 	mux.HandleFunc("GET /logout", app.LogoutHandler)
 	mux.HandleFunc("GET /auth/user-chip", app.UserChipHandler)
+	mux.HandleFunc("GET /api/user-preferences", app.GetUserPreferenceHandler)
+	mux.HandleFunc("GET /api/user-preferences/{key}", app.GetUserPreferenceHandler)
+	mux.HandleFunc("POST /api/user-preferences", app.SaveUserPreferenceHandler)
 
 	// Protected Dashboard
 	mux.HandleFunc("/", app.RequirePermission(domain.PermDashboardView, app.DashboardHandler))

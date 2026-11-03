@@ -95,7 +95,7 @@
             try {
                 const stored = localStorage.getItem('radline_receiving_column_widths');
                 if (stored) {
-                    return JSON.parse(stored);
+                    return Object.assign({}, DEFAULT_RECEIVING_COL_WIDTHS, JSON.parse(stored));
                 }
             } catch (e) {
                 console.error('Failed to parse receiving column widths', e);
@@ -107,13 +107,18 @@
 
         function saveReceivingColumnWidths() {
             try {
-                localStorage.setItem('radline_receiving_column_widths', JSON.stringify(currentReceivingColumnWidths));
+                if (typeof window.saveRadlinePreference === 'function') {
+                    window.saveRadlinePreference('radline_receiving_column_widths', JSON.stringify(currentReceivingColumnWidths), false);
+                } else {
+                    localStorage.setItem('radline_receiving_column_widths', JSON.stringify(currentReceivingColumnWidths));
+                }
             } catch (e) {
                 console.error('Failed to save receiving column widths', e);
             }
         }
 
         window.applyReceivingColumnWidths = function () {
+            currentReceivingColumnWidths = getReceivingColumnWidths();
             let styleEl = document.getElementById('receiving-column-widths-style');
             if (!styleEl) {
                 styleEl = document.createElement('style');
