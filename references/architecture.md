@@ -4,7 +4,7 @@
 
 ## Overview
 
-Radline BackOffice is a **server-side rendered (SSR) web application** for managing a distribution/wholesale business. It follows a strict **hypermedia-driven architecture** using [[htmx-patterns|HTMX]] — no JSON API, no SPA framework.
+RAV BackOffice is a **server-side rendered (SSR) web application** for managing a distribution/wholesale business. It follows a strict **hypermedia-driven architecture** using [[htmx-patterns|HTMX]] — no JSON API, no SPA framework.
 
 ```
 ┌─────────────────────────────────────────────────┐

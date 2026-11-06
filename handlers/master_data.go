@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"radline/db"
-	"radline/models"
+	"rav/db"
+	"rav/models"
 )
 
 // BrandsHandler lists all brands

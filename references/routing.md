@@ -11,7 +11,7 @@
 | Method | Path | Handler / Source | Notes |
 |---|---|---|---|
 | GET | `/login` | `LoginPageHandler` | Login page |
-| POST | `/login` | `LoginSubmitHandler` | Session creation (`radline_session` cookie) |
+| POST | `/login` | `LoginSubmitHandler` | Session creation (`rav_session` cookie) |
 | GET/POST | `/logout` | `LogoutHandler` | Clears session cookie |
 | GET | `/auth/user-chip` | `UserChipHandler` | Sidebar profile chip & `#profile-menu` |
 | GET | `/sw.js`, `/manifest.webmanifest`, `/offline.html`, `/favicon.ico` | Inline file handlers | PWA service worker, manifest, offline fallback |

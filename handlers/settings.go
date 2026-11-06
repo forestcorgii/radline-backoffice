@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"radline/db"
-	"radline/models"
+	"rav/db"
+	"rav/models"
 )
 
 // SettingsHandler redirects to /brands now that brands, categories, and UOMs have separate pages

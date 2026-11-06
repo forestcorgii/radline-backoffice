@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"radline/db"
-	"radline/models"
+	"rav/db"
+	"rav/models"
 )
 
 func parseCustomerTemplatesForTest() map[string]*template.Template {

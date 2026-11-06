@@ -18,7 +18,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Radline">
+    <meta name="apple-mobile-web-app-title" content="RAV">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
     <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
@@ -41,7 +41,7 @@
                 <div class="brand-wrapper brand-full">
                     <div class="brand-badge">R</div>
                     <div class="brand-info">
-                        <span class="brand-title">Radline</span>
+                        <span class="brand-title">RAV</span>
                         <span class="brand-sub">Enterprise Suite</span>
                     </div>
                 </div>
@@ -825,7 +825,7 @@
                             <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <div class="top-header-title">Radline BackOffice</div>
+                    <div class="top-header-title">RAV BackOffice</div>
                 </div>
                 <button class="quick-create-btn-mobile" onclick="toggleQuickCreateMenu(event)"
                     aria-label="Create New Record">
@@ -2310,7 +2310,7 @@
                     if (!data || !data.preferences) return;
                     let changed = false;
                     Object.keys(data.preferences).forEach(k => {
-                        if (k.startsWith('radline_')) {
+                        if (k.startsWith('radline_') || k.startsWith('rav_')) {
                             const srvVal = data.preferences[k];
                             if (srvVal && localStorage.getItem(k) !== srvVal) {
                                 localStorage.setItem(k, srvVal);

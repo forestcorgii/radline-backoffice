@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"radline/db"
+	"rav/db"
 
 	"github.com/xuri/excelize/v2"
 )

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"radline/domain"
+	"rav/domain"
 )
 
 func TestNewStockReceive_Validation(t *testing.T) {

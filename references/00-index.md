@@ -1,6 +1,6 @@
-# 🗂️ Radline BackOffice — Knowledge Vault & Fast Retrieval Index
+# 🗂️ RAV BackOffice — Knowledge Vault & Fast Retrieval Index
 
-> **Module:** `radline` · **Port:** `:8080` (invariant — never change in `main.go`)  
+> **Module:** `rav` · **Port:** `:8080` (invariant — never change in `main.go`)  
 > **Stack:** Go 1.26 · Dual SQLite (`modernc.org/sqlite`) & PostgreSQL (`pgx/v5`) · HTMX 1.9 · `html/template` · `sqlx`  
 > **Architecture:** Server-Side Rendered Hypermedia (DDD domain-only TDD, vanilla CSS shadcn/QuickBooks Indigo tokens)
 
@@ -14,7 +14,7 @@
 | **HTMX Swaps, Toasts, Filters, Dropdowns, `<script>` tags** | [htmx-patterns.md](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/references/htmx-patterns.md) | **Never** use top-level `let`/`const` in partials (use `window.*`); explicit `hx-target="#main-content"`; `limit` selector (no pagination); `HX-Trigger` `show-toast` |
 | **Sidebar, `+ New` Quick Create, Profile Menu, Z-Index** | [sidebar-navigation.md](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/references/sidebar-navigation.md) | 254px/68px sidebar, context-aware `#quick-create-menu`, `#profile-menu` (Users, Roles, Logs, System Settings), `.sidebar` `z-index: 10000` |
 | **Mobile Breakpoints, Table Overflow, Column Resizing** | [responsive-design.md](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/references/responsive-design.md) | `.table-container` horizontal scroll, `white-space: nowrap`, `position: fixed; z-index: 999999` popovers, `localStorage` column widths |
-| **Routes, Auth, Permissions (`RequirePermission`), PWA** | [routing.md](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/references/routing.md) | Complete route map, `radline_session` cookie, 17 RBAC permission keys, `/sw.js` & `/manifest.webmanifest` auth bypass |
+| **Routes, Auth, Permissions (`RequirePermission`), PWA** | [routing.md](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/references/routing.md) | Complete route map, `rav_session` cookie (with legacy `radline_session` support), 17 RBAC permission keys, `/sw.js` & `/manifest.webmanifest` auth bypass |
 | **Database Tables, SQLite + Postgres Queries, Indexes** | [database-schema.md](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/references/database-schema.md) | 17 tables, `DBConn` auto-rebinds `?`→`$1`, use `RETURNING id`, `ON CONFLICT DO NOTHING`, `substr(date, 1, 7)` |
 | **Adding Columns/Tables, Postgres 500s, `GROUP BY`** | [database-migrations.md](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/references/database-migrations.md) | Update **both** `runSQLiteMigrations()` & `runPostgresMigrations()`, `COALESCE` nullable cols, list all non-agg cols in `GROUP BY` |
 | **DTO Structs & Nullable FKs (`models/`)** | [models-layer.md](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/references/models-layer.md) | `models/` uses `*int` for nullable FKs; `domain/` uses `int` (`0` = unset). `CalculateStockOnHand` bridge |

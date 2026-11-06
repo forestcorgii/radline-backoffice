@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"radline/db"
-	"radline/domain"
-	"radline/models"
+	"rav/db"
+	"rav/domain"
+	"rav/models"
 )
 
 type App struct {

@@ -45,7 +45,7 @@
 	--radius: 0.5rem;
 	/* 8px standard radius */
 
-	/* Mapped Aliases for Radline Application */
+	/* Mapped Aliases for RAV Application */
 	--bg-color: hsl(232 30% 98%);
 	/* Crisp clean white-blue background #f8f9fd */
 	--surface-color: hsl(var(--card));

@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 
-	"radline/db"
-	"radline/domain"
-	"radline/handlers"
+	"rav/db"
+	"rav/domain"
+	"rav/handlers"
 )
 
 func main() {

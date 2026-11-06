@@ -3,7 +3,7 @@ package domain_test
 import (
 	"testing"
 
-	"radline/domain"
+	"rav/domain"
 )
 
 func TestRoleHasPermission(t *testing.T) {

@@ -40,7 +40,7 @@ func (app *App) AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		cookie, err := r.Cookie(SessionCookieName)
+		cookie, err := GetSessionCookie(r)
 		if err != nil || cookie.Value == "" {
 			app.handleUnauthenticated(w, r)
 			return
