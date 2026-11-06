@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"radline/db"
-	"radline/models"
+	"rav/db"
+	"rav/models"
 )
 
 type ExtractedItem struct {
@@ -359,7 +359,7 @@ Return ONLY valid JSON matching this schema.`
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(cfg.APIKey))
 	req.Header.Set("HTTP-Referer", "http://localhost:8080")
-	req.Header.Set("X-Title", "Radline BackOffice")
+	req.Header.Set("X-Title", "RAV BackOffice")
 
 	client := &http.Client{Timeout: 45 * time.Second}
 	resp, err := client.Do(req)

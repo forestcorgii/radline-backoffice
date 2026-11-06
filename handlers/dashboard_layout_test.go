@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"radline/db"
-	"radline/models"
+	"rav/db"
+	"rav/models"
 )
 
 func TestDefaultDashboardCards(t *testing.T) {

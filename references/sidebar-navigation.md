@@ -7,7 +7,7 @@
 
 ## Current Sidebar Architecture (`254px` Desktop / `64px–68px` Collapsed)
 1. **Brand Header (`.sidebar-brand`)**:
-   - `.brand-full` (`R` badge + "Radline Enterprise Suite") and `.brand-mini` (collapsed mode).
+   - `.brand-full` (`R` badge + "RAV Enterprise Suite") and `.brand-mini` (collapsed mode).
    - `#sidebar-collapse-btn` (`toggleSidebarCollapse()`) and mobile `.sidebar-close-btn` (`toggleMobileSidebar()`).
    - Immediate inline `<script>` after `<aside id="sidebar">` restores `localStorage.getItem("sidebar-collapsed") === "true"` before first paint (zero FOUT).
 2. **Signature `+ New` Quick Action Button (`.quick-create-section`)**:

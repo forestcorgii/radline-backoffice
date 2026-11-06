@@ -1,7 +1,7 @@
 {
-  "name": "Radline BackOffice",
-  "short_name": "Radline",
-  "description": "Radline BackOffice Enterprise Suite",
+  "name": "RAV BackOffice",
+  "short_name": "RAV",
+  "description": "RAV BackOffice Enterprise Suite",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"radline/db"
-	"radline/domain"
-	"radline/models"
+	"rav/db"
+	"rav/domain"
+	"rav/models"
 )
 
 type RoleWithDetails struct {

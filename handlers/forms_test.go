@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"radline/db"
-	"radline/models"
+	"rav/db"
+	"rav/models"
 )
 
 func parseFormsTemplatesForTest() map[string]*template.Template {
@@ -164,7 +164,7 @@ func TestForms_PurchaseOrderAndSearch(t *testing.T) {
 		form.Set("vendor_tin", "987-654-321")
 		form.Set("vendor_address", "123 Industrial Rd, Manila")
 		form.Set("vendor_contact", "Jane Doe")
-		form.Set("ship_to", "Radline Main Warehouse")
+		form.Set("ship_to", "RAV Main Warehouse")
 		form.Set("payment_terms", "Net 30 Days")
 		form.Set("shipping_method", "Delivery Truck")
 		form.Set("prepared_by", "Purchasing Test Officer")

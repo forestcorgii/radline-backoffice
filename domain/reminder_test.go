@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"radline/domain"
+	"rav/domain"
 )
 
 func TestReminder_IsOverdue(t *testing.T) {

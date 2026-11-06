@@ -10,12 +10,22 @@ import (
 	"strings"
 	"time"
 
-	"radline/db"
-	"radline/domain"
-	"radline/models"
+	"rav/db"
+	"rav/domain"
+	"rav/models"
 )
 
-const SessionCookieName = "radline_session"
+const SessionCookieName = "rav_session"
+const LegacySessionCookieName = "radline_session"
+
+// GetSessionCookie fetches the session cookie, checking rav_session first, falling back to legacy radline_session
+func GetSessionCookie(r *http.Request) (*http.Cookie, error) {
+	c, err := r.Cookie(SessionCookieName)
+	if err == nil && c.Value != "" {
+		return c, nil
+	}
+	return r.Cookie(LegacySessionCookieName)
+}
 const SessionDuration = 7 * 24 * time.Hour
 
 type contextKey string
@@ -85,7 +95,7 @@ func GetUserFromSession(token string) (*CurrentUserContext, error) {
 // LoginPageHandler renders the login screen
 func (app *App) LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 	// If already authenticated, redirect to dashboard
-	cookie, err := r.Cookie(SessionCookieName)
+	cookie, err := GetSessionCookie(r)
 	if err == nil && cookie.Value != "" {
 		if ctxUser, errUser := GetUserFromSession(cookie.Value); errUser == nil && ctxUser != nil {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -176,7 +186,7 @@ func (app *App) LoginSubmitHandler(w http.ResponseWriter, r *http.Request) {
 
 // LogoutHandler terminates the user session
 func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(SessionCookieName)
+	cookie, err := GetSessionCookie(r)
 	if err == nil && cookie.Value != "" {
 		// Log activity before deleting session
 		if ctxUser, errU := GetUserFromSession(cookie.Value); errU == nil && ctxUser != nil {

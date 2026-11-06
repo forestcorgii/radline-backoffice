@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"radline/db"
+	"rav/db"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -49,7 +49,7 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 	clearExisting := r.FormValue("clear_existing") == "true"
 
 	// Create a temp file to open with excelize (since excelize.OpenReader needs an io.Reader, but opening file directly can sometimes be cleaner for cell formats)
-	tempFile, err := os.CreateTemp("", "radline_upload_*.xlsx")
+	tempFile, err := os.CreateTemp("", "rav_upload_*.xlsx")
 	if err != nil {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to create temp file."}}`)
 		http.Error(w, "Failed to create temp file", http.StatusInternalServerError)

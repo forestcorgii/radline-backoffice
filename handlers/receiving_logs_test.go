@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"radline/db"
+	"rav/db"
 )
 
 func parseTemplatesForTest() map[string]*template.Template {

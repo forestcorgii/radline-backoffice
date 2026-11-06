@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"radline/db"
-	"radline/models"
+	"rav/db"
+	"rav/models"
 )
 
 func parseRemindersTemplatesForTest() map[string]*template.Template {

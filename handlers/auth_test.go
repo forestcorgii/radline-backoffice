@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"radline/db"
-	"radline/models"
+	"rav/db"
+	"rav/models"
 )
 
 func TestUserChipHandler(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"radline/db"
+	"rav/db"
 )
 
 func TestParseDeepSeekJSON_ValidJSON(t *testing.T) {

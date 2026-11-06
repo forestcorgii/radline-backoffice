@@ -7,7 +7,7 @@
 | Component | Choice | Version |
 |---|---|---|
 | Language | Go | 1.26.2 |
-| Module | `radline` | — |
+| Module | `rav` | — |
 | Server | `net/http` (stdlib) | — |
 | Templates | `html/template` (stdlib) | — |
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'radline-v1';
+const CACHE_NAME = 'rav-v1';
 const PRECACHE_ASSETS = [
   '/',
   '/offline.html',
