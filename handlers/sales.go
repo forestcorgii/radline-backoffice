@@ -162,7 +162,11 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
+	if isEdit {
+		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
+	} else {
+		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 25")
+	}
 
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")

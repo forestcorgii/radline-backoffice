@@ -70,13 +70,15 @@
                                         <input type="hidden" name="item_id" value="{{.ItemID}}" />
                                         <input type="text" class="form-input dropdown-search" placeholder="Search item..."
                                             value="{{.ItemDescription}}"
-                                            onfocus="showDropdown(this)" oninput="filterDropdown(this)" onblur="hideDropdown(this)"
+                                            onfocus="showDropdown(this); this.select();" onclick="showDropdown(this); this.select();"
+                                            oninput="filterDropdown(this)" onblur="hideDropdown(this)"
                                             onkeydown="handleDropdownKeydown(event, this)" autocomplete="off" />
                                         <div class="dropdown-list">
                                             {{range $.Items}}
-                                            <div class="dropdown-item" data-id="{{.ID}}" data-description="{{.Code}} — {{.Description}}" data-uom="{{.DefaultUOM}}"
-                                                onclick="selectScanItem(this)">
-                                                {{.Code}} — {{.Description}}
+                                            <div class="dropdown-item" data-id="{{.ID}}" data-code="{{.Code}}" data-description="{{.Description}}" data-uom="{{.DefaultUOM}}"
+                                                onmousedown="selectDropdownItem(this)">
+                                                <span class="dropdown-item-main">{{.Description}}</span>
+                                                <span class="dropdown-item-meta"><span class="dd-item-code">{{.Code}}</span><span class="dd-item-uom">{{.DefaultUOM}}</span></span>
                                             </div>
                                             {{end}}
                                         </div>
@@ -119,13 +121,15 @@
                                     <div class="searchable-dropdown">
                                         <input type="hidden" name="item_id" value="0" />
                                         <input type="text" class="form-input dropdown-search" placeholder="Search item..."
-                                            onfocus="showDropdown(this)" oninput="filterDropdown(this)" onblur="hideDropdown(this)"
+                                            onfocus="showDropdown(this); this.select();" onclick="showDropdown(this); this.select();"
+                                            oninput="filterDropdown(this)" onblur="hideDropdown(this)"
                                             onkeydown="handleDropdownKeydown(event, this)" autocomplete="off" />
                                         <div class="dropdown-list">
                                             {{range $.Items}}
-                                            <div class="dropdown-item" data-id="{{.ID}}" data-description="{{.Code}} — {{.Description}}" data-uom="{{.DefaultUOM}}"
-                                                onclick="selectScanItem(this)">
-                                                {{.Code}} — {{.Description}}
+                                            <div class="dropdown-item" data-id="{{.ID}}" data-code="{{.Code}}" data-description="{{.Description}}" data-uom="{{.DefaultUOM}}"
+                                                onmousedown="selectDropdownItem(this)">
+                                                <span class="dropdown-item-main">{{.Description}}</span>
+                                                <span class="dropdown-item-meta"><span class="dd-item-code">{{.Code}}</span><span class="dd-item-uom">{{.DefaultUOM}}</span></span>
                                             </div>
                                             {{end}}
                                         </div>

@@ -29,15 +29,16 @@
                 <label>Select Item</label>
                 <div class="searchable-dropdown" style="position: relative; width: 100%;">
                     <input type="text" class="form-input dropdown-search" placeholder="Search Item..."
-                           style="width: 100%; padding: 0.5rem 0.75rem; height: auto;"
-                           onfocus="showUomDropdown(this)" onblur="hideUomDropdown(this)"
-                           oninput="filterUomDropdown(this)" onkeydown="handleUomDropdownKeydown(event, this)">
+                           onfocus="showDropdown(this); this.select();" onclick="showDropdown(this); this.select();"
+                           onblur="hideDropdown(this)"
+                           oninput="filterDropdown(this)" onkeydown="handleDropdownKeydown(event, this)">
                     <input type="hidden" name="item_id" value="">
                     <div class="dropdown-list">
                         {{ range .Items }}
-                        <div class="dropdown-item" data-id="{{ .ID }}" data-description="{{ .Code }} - {{ .Description }}"
-                             data-uom="{{ .DefaultUOM }}" onmousedown="selectUomDropdownItem(this)">
-                            {{ .Code }} - {{ .Description }}
+                        <div class="dropdown-item" data-id="{{ .ID }}" data-code="{{ .Code }}" data-description="{{ .Description }}"
+                             data-uom="{{ .DefaultUOM }}" onmousedown="selectDropdownItem(this)">
+                            <span class="dropdown-item-main">{{ .Description }}</span>
+                            <span class="dropdown-item-meta"><span class="dd-item-code">{{ .Code }}</span><span class="dd-item-uom">{{ .DefaultUOM }}</span></span>
                         </div>
                         {{ end }}
                     </div>
@@ -45,12 +46,11 @@
             </div>
             <div class="form-group">
                 <label for="uom_base_val">Base UOM</label>
-                <input type="text" id="uom_base_val" name="uom" class="form-input" readonly placeholder="Auto (from item)"
-                       style="width: 100%; background-color: rgba(0,0,0,0.03); color: var(--text-muted); cursor: not-allowed; padding: 0.5rem 0.75rem;">
+                <input type="text" id="uom_base_val" name="uom" class="form-input readonly-input" readonly placeholder="Auto (from item)">
             </div>
             <div class="form-group">
                 <label for="uom_muom">Multiple UOM (MUOM)</label>
-                <select id="uom_muom" name="muom" required class="form-input" style="width: 100%; padding: 0.5rem 0.75rem; height: auto;">
+                <select id="uom_muom" name="muom" required class="form-input">
                     <option value="">-- Select MUOM --</option>
                     {{ range .Uoms }}
                     <option value="{{ .Code }}">{{ .Code }}</option>
@@ -59,7 +59,7 @@
             </div>
             <div class="form-group">
                 <label for="uom_conv_factor">Conversion Rate</label>
-                <input type="number" step="any" id="uom_conv_factor" name="conversion_factor" placeholder="e.g. 10.0" required class="form-input" style="width: 100%; padding: 0.5rem 0.75rem;">
+                <input type="number" step="any" id="uom_conv_factor" name="conversion_factor" placeholder="e.g. 10.0" required class="form-input">
             </div>
         </div>
         <div style="display: flex; gap: 0.5rem;" class="mt-4">

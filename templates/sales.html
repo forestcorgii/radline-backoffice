@@ -25,8 +25,7 @@
             </div>
             <div class="form-group">
                 <label for="doc_type">Doc Type</label>
-                <select id="doc_type" name="doc_type" class="form-input" style="padding: 0.75rem 1rem; height: auto;"
-                    required>
+                <select id="doc_type" name="doc_type" class="form-input" required>
                     <option value="SI">Sales Invoice (SI)</option>
                     <option value="DR">Delivery Receipt (DR)</option>
                 </select>
@@ -38,7 +37,7 @@
             <div class="form-group">
                 <label for="supplier">Supplier</label>
                 <select id="supplier" name="supplier" class="form-input supplier-select-ascd"
-                    style="padding: 0.75rem 1rem; height: auto;" onchange="updateSelectColorClass(this)" required>
+                    onchange="updateSelectColorClass(this)" required>
                     <option value="ASCD">ASCD</option>
                     <option value="RENOWN">RENOWN</option>
                     <option value="OTHER">OTHER</option>
@@ -62,7 +61,7 @@
             <div class="form-group">
                 <label for="doc_status_encode">Status</label>
                 <select id="doc_status_encode" name="doc_status" class="form-input status-select-active"
-                    style="padding: 0.75rem 1rem; height: auto;" onchange="updateSelectColorClass(this)" required>
+                    onchange="updateSelectColorClass(this)" required>
                     <option value="Active" selected>Active</option>
                     <option value="Posted">Posted</option>
                     <option value="Cancelled/Return">Cancelled/Return</option>
@@ -115,11 +114,10 @@
 
 <div class="card" id="sales-card">
     <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
-        <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Sales Logs</h3>
-        <div style="display: flex; gap: 0.35rem; align-items: center;">
-            <button type="button" id="edit-mode-btn" class="btn btn-secondary" onclick="toggleSalesEditMode()"
-                style="height: 1.75rem; font-size: 0.75rem; padding: 0 0.55rem; display: inline-flex; align-items: center; gap: 0.25rem;"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.875rem; padding-bottom: 0.625rem; border-bottom: 1px solid hsl(var(--border) / 0.8);">
+        <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-main);">Sales Logs</h3>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" id="edit-mode-btn" class="btn btn-secondary btn-sm" onclick="toggleSalesEditMode()"
                 title="Toggle Edit Mode for Sales Rows">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -129,8 +127,8 @@
                 <span id="edit-mode-btn-text">Edit</span>
             </button>
             <div class="customize-view-container">
-                <button type="button" class="btn btn-secondary" onclick="toggleCustomizeViewPopover(event)"
-                    style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCustomizeViewPopover(event)"
+                    style="width: 1.875rem; padding: 0;"
                     title="Customize Visible Columns and Filters">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">

@@ -813,7 +813,7 @@ func (app *App) SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	limitStr := r.URL.Query().Get("limit")
-	limit := 100
+	limit := 40
 	if limitStr == "all" {
 		limit = 1000
 	} else if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
@@ -835,8 +835,9 @@ func (app *App) SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
 			clauses = append(clauses, "(i.code LIKE ? OR i.description LIKE ? OR i.model LIKE ? OR i.variation LIKE ? OR i.brand_id IN (SELECT id FROM brands WHERE name LIKE ?) OR i.category_id IN (SELECT id FROM categories WHERE name LIKE ?))")
 			args = append(args, term, term, term, term, term, term)
 		}
-		query := "SELECT i.id, i.code, i.description, i.default_uom, i.model FROM items i WHERE " + strings.Join(clauses, " AND ") + " ORDER BY i.description ASC LIMIT ?"
-		args = append(args, limit)
+		prefixTerm := q + "%"
+		query := "SELECT i.id, i.code, i.description, i.default_uom, i.model FROM items i WHERE " + strings.Join(clauses, " AND ") + " ORDER BY (LOWER(i.code) = LOWER(?)) DESC, (LOWER(i.code) LIKE LOWER(?)) DESC, (LOWER(i.description) LIKE LOWER(?)) DESC, i.description ASC LIMIT ?"
+		args = append(args, q, prefixTerm, prefixTerm, limit)
 		err = db.DB.Select(&items, query, args...)
 	} else {
 		query := "SELECT i.id, i.code, i.description, i.default_uom, i.model FROM items i ORDER BY i.description ASC LIMIT ?"
@@ -866,7 +867,10 @@ func (app *App) SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	for _, item := range items {
-		fmt.Fprintf(w, `<div class="dropdown-item" data-id="%d" data-code="%s" data-description="%s" data-uom="%s" onmousedown="selectDropdownItem(this)">%s</div>`,
-			item.ID, template.HTMLEscapeString(item.Code), template.HTMLEscapeString(item.Description), template.HTMLEscapeString(item.DefaultUOM), template.HTMLEscapeString(item.Description))
+		escCode := template.HTMLEscapeString(item.Code)
+		escDesc := template.HTMLEscapeString(item.Description)
+		escUOM := template.HTMLEscapeString(item.DefaultUOM)
+		fmt.Fprintf(w, `<div class="dropdown-item" data-id="%d" data-code="%s" data-description="%s" data-uom="%s" onmousedown="selectDropdownItem(this)"><span class="dropdown-item-main">%s</span><span class="dropdown-item-meta"><span class="dd-item-code">%s</span><span class="dd-item-uom">%s</span></span></div>`,
+			item.ID, escCode, escDesc, escUOM, escDesc, escCode, escUOM)
 	}
 }

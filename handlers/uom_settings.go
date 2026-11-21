@@ -41,9 +41,9 @@ func (app *App) UomsHandler(w http.ResponseWriter, r *http.Request) {
 		ORDER BY i.code ASC, u.muom ASC
 	`)
 
-	// Fetch Items for conversion form dropdown
+	// Fetch Items for conversion form dropdown (dynamic search loads full catalog via /items/search)
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 25")
 
 	data := struct {
 		Uoms           []models.Uom

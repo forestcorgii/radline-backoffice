@@ -79,3 +79,12 @@ w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Sav
 
 ### Context: Calendar Drag & Drop Rescheduling via HTMX
 - Guard click handlers with `_calendarDragActive` (cleared 120ms after `dragend`) so dropping a chip does not open the edit modal. On drop to a new date, call `htmx.ajax('POST', '/reminders/reschedule/' + id, { target: '#main-content', values: { due_date: targetDate } })`.
+
+### Context: High-Performance Searchable Dropdown Engine (v7.0)
+- **Problem**: Embedding `LIMIT 500` (or unbounded) items per form row bloated initial DOM payloads (`2,500+` nodes on multi-row pages), caused main-thread layout thrashing during typing, triggered out-of-order network races without request cancellation, and clipped dropdowns near the bottom of the viewport.
+- **Enforced Solution**:
+  - **Lightweight Initial Pre-Fetch (`LIMIT 25`)**: Page handlers (`SalesHandler`, `InventoryHandler`, `ReceivingLogsHandler`, `AdjustmentLogsHandler`, `UomsHandler`, `ReceiptScannerHandler`) pre-populate only `LIMIT 25` items per row on initial render.
+  - **Sub-Millisecond Multi-Token Client Filtering & DOM Cap**: `applyClientFilterOnList()` in `/static/js/base-ui.js?v=7.0` splits queries into whitespace tokens, matches against `data-code` and `data-description`, caps visible DOM nodes at `MAX_VISIBLE = 50`, and toggles a `.dropdown-empty` state automatically.
+  - **AbortController + 60ms Debounce + Relevance Ranking**: `filterDropdown()` aborts in-flight `/items/search` `fetch()` calls via `_dropdownFetchAbortCtrl`, debounces at `60ms`, caches HTML fragments in `_itemSearchHtmlCache`, and queries `GET /items/search?limit=40`, which ranks exact/prefix matches on `i.code` and `i.description` first.
+  - **Smart Viewport Auto-Flip & RAF Scroll Throttling**: `updateDropdownPosition()` flips the fixed menu above the input when `spaceBelow < 180 && spaceAbove > spaceBelow`, sets `minWidth = Math.max(rect.width, 260)`, and throttles `scroll`/`resize` listeners via `requestAnimationFrame` while ignoring internal `.dropdown-list` scroll events.
+  - **Unified Picker Across All Modules**: Sales (`sale_item_row.html`), Receiving (`receiving_item_row.html`), Adjustments (`adjustment_item_row.html`), UOM Conversions (`uoms.html`), and Receipt Scanner (`receipt_scanner_results.html`) all share the unified `showDropdown`/`filterDropdown`/`hideDropdown`/`handleDropdownKeydown`/`selectDropdownItem` engine with rich `.dropdown-item-main` + `.dd-item-code` + `.dd-item-uom` pill badges.

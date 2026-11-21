@@ -354,8 +354,8 @@ func (app *App) UserChipHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	roleColor := "var(--primary-color)"
-	roleBgColor := "rgba(79, 70, 229, 0.1)"
-	roleBorderColor := "rgba(79, 70, 229, 0.25)"
+	roleBgColor := "rgba(37, 99, 235, 0.1)"
+	roleBorderColor := "rgba(37, 99, 235, 0.25)"
 	if strings.EqualFold(ctxUser.User.RoleName, "Admin") {
 		roleColor = "#dc2626"
 		roleBgColor = "rgba(220, 38, 38, 0.1)"

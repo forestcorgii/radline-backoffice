@@ -13,9 +13,10 @@
                 hx-swap="outerHTML" hx-trigger="change">
             <div class="dropdown-list">
                 {{ range .Items }}
-                <div class="dropdown-item" data-id="{{ .ID }}" data-description="{{ .Description }}" data-uom="{{ .DefaultUOM }}"
+                <div class="dropdown-item" data-id="{{ .ID }}" data-code="{{ .Code }}" data-description="{{ .Description }}" data-uom="{{ .DefaultUOM }}"
                     onmousedown="selectDropdownItem(this)">
-                    {{ .Description }}
+                    <span class="dropdown-item-main">{{ .Description }}</span>
+                    <span class="dropdown-item-meta"><span class="dd-item-code">{{ .Code }}</span><span class="dd-item-uom">{{ .DefaultUOM }}</span></span>
                 </div>
                 {{ end }}
             </div>

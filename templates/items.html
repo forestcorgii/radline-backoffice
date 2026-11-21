@@ -29,8 +29,7 @@
                     <input type="text" class="form-input dropdown-search" id="brand_search_input"
                         placeholder="Search Brand..." onfocus="showDropdown(this); this.select();"
                         onclick="showDropdown(this); this.select();" onblur="hideGenericDropdown(this)"
-                        oninput="filterGenericDropdown(this)" onkeydown="handleGenericDropdownKeydown(event, this)"
-                        style="width: 100%; padding: 0.75rem 1rem; height: auto;">
+                        oninput="filterGenericDropdown(this)" onkeydown="handleGenericDropdownKeydown(event, this)">
                     <input type="hidden" id="brand_id" name="brand_id" value="0" onchange="updateAddItemSuggestions()">
                     <div class="dropdown-list" id="brand-dropdown-list">
                         {{ range .Brands }}
@@ -52,8 +51,7 @@
                     <input type="text" class="form-input dropdown-search" id="category_search_input"
                         placeholder="Search Category..." onfocus="showDropdown(this); this.select();"
                         onclick="showDropdown(this); this.select();" onblur="hideGenericDropdown(this)"
-                        oninput="filterGenericDropdown(this)" onkeydown="handleGenericDropdownKeydown(event, this)"
-                        style="width: 100%; padding: 0.75rem 1rem; height: auto;">
+                        oninput="filterGenericDropdown(this)" onkeydown="handleGenericDropdownKeydown(event, this)">
                     <input type="hidden" id="category_id" name="category_id" value="0"
                         onchange="updateAddItemSuggestions()">
                     <div class="dropdown-list" id="category-dropdown-list">
@@ -110,14 +108,13 @@
 <!-- ===== Add Brand Modal ===== -->
 <div id="add-brand-modal"
     style="display:none; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center;">
-    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);"
+    <div style="position:absolute; inset:0; background:rgba(15, 23, 42, 0.45); backdrop-filter:blur(4px);"
         onclick="closeAddBrandModal()"></div>
-    <div class="card" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem; padding:1.5rem;">
+    <div class="alert-dialog-content" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem; padding:1.5rem;">
         <div
             style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
             <h3 style="margin:0; font-size:1.125rem; font-weight:600;">Add New Brand</h3>
-            <button type="button" class="btn btn-secondary" onclick="closeAddBrandModal()"
-                style="padding:0.35rem 0.75rem; font-size:0.8125rem;">✕ Close</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeAddBrandModal()">✕ Close</button>
         </div>
         <form id="add-brand-modal-form" hx-post="/brands/add" hx-swap="none"
             hx-on::after-request="onAddBrandModalSubmit(event)">
@@ -143,14 +140,13 @@
 <!-- ===== Add Category Modal ===== -->
 <div id="add-category-modal"
     style="display:none; position:fixed; inset:0; z-index:100000; align-items:center; justify-content:center;">
-    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.45); backdrop-filter:blur(2px);"
+    <div style="position:absolute; inset:0; background:rgba(15, 23, 42, 0.45); backdrop-filter:blur(4px);"
         onclick="closeAddCategoryModal()"></div>
-    <div class="card" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem; padding:1.5rem;">
+    <div class="alert-dialog-content" style="position:relative; z-index:1; width:100%; max-width:480px; margin:1rem; padding:1.5rem;">
         <div
             style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
             <h3 style="margin:0; font-size:1.125rem; font-weight:600;">Add New Category</h3>
-            <button type="button" class="btn btn-secondary" onclick="closeAddCategoryModal()"
-                style="padding:0.35rem 0.75rem; font-size:0.8125rem;">✕ Close</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeAddCategoryModal()">✕ Close</button>
         </div>
         <form id="add-category-modal-form" hx-post="/categories/add" hx-swap="none"
             hx-on::after-request="onAddCategoryModalSubmit(event)">
@@ -176,12 +172,12 @@
 <!-- Non-collapsible Items List Card occupying the full width -->
 <div class="card" id="items-card">
     <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding-bottom: 0.35rem; border-bottom: 1px solid hsl(var(--border) / 0.6);">
-        <h3 style="font-size: 0.875rem; font-weight: 700; margin: 0; color: var(--text-main);">Items List</h3>
-        <div style="display: flex; gap: 0.35rem; align-items: center;">
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.875rem; padding-bottom: 0.625rem; border-bottom: 1px solid hsl(var(--border) / 0.8);">
+        <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-main);">Items List</h3>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
             <div class="customize-view-container">
-                <button type="button" class="btn btn-secondary" onclick="toggleCustomizeItemsViewPopover(event)"
-                    style="height: 1.75rem; width: 1.75rem; padding: 0; display: inline-flex; align-items: center; justify-content: center;"
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCustomizeItemsViewPopover(event)"
+                    style="width: 1.875rem; padding: 0;"
                     title="Customize Visible Columns and Filters">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">

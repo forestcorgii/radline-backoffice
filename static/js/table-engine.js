@@ -145,16 +145,16 @@ window.RADLINE_TABLE_GROUPS = {
 
 window.RADLINE_HEADER_THEMES = [
     { id: 'slate', label: 'Slate', dot: '#cbd5e1' },
-    { id: 'indigo', label: 'Indigo', dot: '#6366f1' },
+    { id: 'indigo', label: 'Blue', dot: '#2563eb' },
     { id: 'emerald', label: 'Emerald', dot: '#10b981' },
     { id: 'amber', label: 'Amber', dot: '#f59e0b' },
-    { id: 'navy', label: 'Navy', dot: '#1e293b' },
+    { id: 'navy', label: 'Navy', dot: '#0f172a' },
     { id: 'rose', label: 'Rose', dot: '#f43f5e' }
 ];
 
 window.RADLINE_COL_ACCENTS = [
     { id: '', label: 'None', dot: '#f8fafc' },
-    { id: 'indigo', label: 'Indigo', dot: '#6366f1' },
+    { id: 'indigo', label: 'Blue', dot: '#2563eb' },
     { id: 'emerald', label: 'Emerald', dot: '#10b981' },
     { id: 'amber', label: 'Amber', dot: '#f59e0b' },
     { id: 'rose', label: 'Rose', dot: '#f43f5e' },

@@ -104,7 +104,7 @@ type DeepSeekConfig struct {
 // ReceiptScannerHandler renders the receipt scanner page
 func (app *App) ReceiptScannerHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC LIMIT 25")
 
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
@@ -225,8 +225,12 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 			if matched.DefaultUOM != "" {
 				extractedItems[i].Uom = matched.DefaultUOM
 			}
-			extractedItems[i].ItemDescription = fmt.Sprintf("%s — %s", matched.Code, matched.Description)
+			extractedItems[i].ItemDescription = matched.Description
 		}
+	}
+
+	if len(items) > 25 {
+		items = items[:25]
 	}
 
 	var uoms []models.Uom

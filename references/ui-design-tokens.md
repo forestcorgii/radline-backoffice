@@ -3,32 +3,33 @@
 > Back to [[00-index]] · Related: [[htmx-patterns]], [[sidebar-navigation]], [[responsive-design]], [[templates-overview]]
 
 ## Canonical Stylesheet & Extracted JS Modules
-- **Stylesheet**: [`static/index.css`](../static/index.css) (linked in [`templates/base.html`](../templates/base.html) as `/static/index.css?v=6.5` — always increment `?v=` when changing CSS).
+- **Stylesheet**: [`static/index.css`](../static/index.css) (linked in [`templates/base.html`](../templates/base.html) as `/static/index.css?v=7.0` — always increment `?v=` when changing CSS).
 - **Extracted Frontend Scripts** (linked in [`templates/base.html`](../templates/base.html)):
-  - [`static/js/base-ui.js`](../static/js/base-ui.js) (`/static/js/base-ui.js?v=6.5`) — Sidebar collapse/mobile drawers, `+ New` Quick Actions menu, `#shadcn-alert-dialog` HTMX confirmation interceptors, toasts, and searchable dropdown positioning/caching.
-  - [`static/js/table-engine.js`](../static/js/table-engine.js) (`/static/js/table-engine.js?v=6.5`) — Universal List Views Engine (Excel collapsible columns, `.table-col-resizer` 60-FPS resizing, semantic column groups, drag-and-drop column reordering, header themes, and hybrid `localStorage` + `POST /api/user-preferences` sync).
+  - [`static/js/base-ui.js`](../static/js/base-ui.js) (`/static/js/base-ui.js?v=7.0`) — Sidebar collapse/mobile drawers, `+ New` Quick Actions menu, `#shadcn-alert-dialog` HTMX confirmation interceptors, toasts, and searchable dropdown positioning/caching.
+  - [`static/js/table-engine.js`](../static/js/table-engine.js) (`/static/js/table-engine.js?v=7.0`) — Universal List Views Engine (Excel collapsible columns, `.table-col-resizer` 60-FPS resizing, semantic column groups, drag-and-drop column reordering, header themes, and hybrid `localStorage` + `POST /api/user-preferences` sync).
 
-## Current Theme & Base Typography (QuickBooks / shadcn Royal Indigo)
+## Current Theme & Base Typography (Enterprise Blue & Breathing Room v7.0)
 ```css
 :root {
     --background: 0 0% 100%;             /* #ffffff */
-    --foreground: 232 38% 15%;           /* #191c2b */
+    --foreground: 222 47% 11%;           /* Deep Navy Slate #0f172a */
     --card: 0 0% 100%;
-    --primary: 243 75% 59%;              /* Royal Indigo #4f46e5 */
-    --primary-dark: 244 75% 48%;         /* #3730a3 */
-    --primary-tint: 243 100% 96%;        /* #eef2ff */
-    --secondary: 235 48% 96%;            /* #eef1fa */
-    --muted: 235 32% 96%;
-    --muted-foreground: 230 14% 48%;     /* #6c7285 */
-    --accent: 235 60% 97%;               /* #f0f3ff */
+    --primary: 217 91% 53%;              /* Enterprise Blue #2563eb */
+    --primary-dark: 221 83% 45%;         /* Deep Ocean Blue #1d4ed8 */
+    --primary-tint: 214 100% 97%;        /* Ice Blue Tint #eff6ff */
+    --secondary: 214 32% 95%;            /* Cool Slate #eef2f6 */
+    --muted: 214 32% 96%;
+    --muted-foreground: 215 16% 45%;     /* Slate Gray #606f85 */
+    --accent: 214 60% 96%;               /* #eff5fc */
     --destructive: 0 84.2% 60.2%;
-    --border: 232 20% 90%;               /* #e0e3ed */
-    --input: 232 20% 88%;
-    --ring: 243 75% 59%;
-    --radius: 0.5rem;
+    --border: 214 32% 90%;               /* #dfe7f0 */
+    --input: 214 28% 86%;
+    --ring: 217 91% 53%;
+    --radius: 0.625rem;                  /* 10px */
+    --radius-sm: 0.5rem;                 /* 8px */
 
     /* Mapped Application Aliases */
-    --bg-color: hsl(232 30% 98%);        /* #f8f9fd */
+    --bg-color: hsl(214 33% 98%);        /* #f8fafc */
     --surface-color: hsl(var(--card));
     --primary-color: hsl(var(--primary));
     --primary-hover: hsl(var(--primary-dark));
@@ -37,18 +38,18 @@
     --border-color: hsl(var(--border));
 }
 ```
-- **High-Density Base Scale**: `body` uses `font-size: 0.75rem` (12px), `line-height: 1.35`, `font-variant-numeric: tabular-nums`, and `'Inter', system-ui, sans-serif`.
+- **Breathing Room Base Scale**: `body` uses `font-size: 0.84375rem` (13.5px), `line-height: 1.5`, `font-variant-numeric: tabular-nums`, and `'Inter', system-ui, sans-serif`.
 - **Never hardcode HEX/RGB** in templates when a CSS variable or semantic class exists.
 
 ## Core Component Classes
 
 | Category | Classes | Current Spec |
 |---|---|---|
-| **Cards & Layout** | `.card`, `main#main-content` | White surface, `1px solid var(--border-color)`, compact padding (`0.75rem 1rem`), max-width `1440px` |
-| **Buttons** | `.btn`, `.btn-secondary`, `.btn-outline`, `.btn-ghost`, `.btn-success`, `.btn-danger` | Compact height `1.75rem`–`1.875rem`, radius `0.375rem`–`0.5rem` |
-| **Icon Actions** | `.btn-icon`, `.actions-cell`, `.btn-table-action.btn-delete` | `1.75rem × 1.75rem` inline-flex with Lucide SVGs (`stroke="currentColor"`) and `title` tooltip. Row delete stays neutral gray until hover |
-| **Inputs & Filters** | `.form-input`, `.form-group`, `.search-filter-bar`, `.date-filters-row`, `.filter-item` | Compact height `1.75rem`–`1.875rem`, single-line filter toolbars without stacked labels |
-| **Tables / Listviews** | `.table-container`, `.th`/`th`, `.td`/`td`, `.edit-row` | Form-sheet aesthetic: `#f8fafc` headers (`2px solid #cbd5e1` bottom border), `white-space: nowrap`, zebra striping on `:nth-child(even)`, `#f1f5f9` hover |
+| **Cards & Layout** | `.card`, `main#main-content` | White surface, `1px solid var(--border-color)`, generous padding (`1.25rem 1.5rem` card, `1.25rem 1.75rem` main), max-width `1560px` |
+| **Buttons** | `.btn`, `.btn-secondary`, `.btn-outline`, `.btn-ghost`, `.btn-success`, `.btn-danger`, `.btn-sm` | Standardized height `2.25rem` (`36px`), `.btn-sm` `1.875rem` (`30px`), radius `0.5rem` |
+| **Icon Actions** | `.btn-icon`, `.actions-cell`, `.btn-table-action.btn-delete` | `2rem × 2rem` inline-flex with Lucide SVGs (`stroke="currentColor"`) and `title` tooltip. Row delete stays neutral gray until hover |
+| **Inputs & Filters** | `.form-input`, `.form-group`, `.search-filter-bar`, `.date-filters-row`, `.filter-item` | Standardized height `2.25rem` (`36px`), `0.8125rem` font-size, 3px soft focus ring (`0 0 0 3px hsl(var(--ring) / 0.16)`) |
+| **Tables / Listviews** | `.table-container`, `.th`/`th`, `.td`/`td`, `.edit-row`, `.excel-table` | Form-sheet aesthetic: `#f8fafc` headers (`2px solid #cbd5e1` bottom border), `0.625rem 0.875rem` cell padding (`13px` text), `.excel-table` rows `2.375rem` (`38px`) |
 | **Item Entry Grids** | `.item-grid-header`, `.item-grid-row`, `.item-grid-cell` | `display: flex; flex-direction: row; flex-wrap: nowrap` with `:nth-child(n)` flex ratios (cross-browser Edge/Chrome safe) |
 | **Badges & Statuses** | `.badge`, `.badge-active`, `.badge-inactive`, `.status-icon-btn` (`.status-icon-active`, `-posted`, `-cancelled`), `.supplier-select-*` | Subtle pastel pills; Sales Log uses 24px circular `.status-icon-btn` triggering fixed `.status-menu-popover` |
 | **Dialogs & Toasts** | `#shadcn-alert-dialog` (`.alert-dialog-*`), `.toast` (`.toast-success`, `-error`, `-warning`, `-info`) | Intercepts `htmx:confirm`, `window.alert`, and `window.confirm` via `window.showShadcnAlertDialog()` |
@@ -102,3 +103,15 @@
   - **Column Reordering**: HTML5 Drag & Drop directly on `.th[data-col]` headers (with `.col-drop-left` / `.col-drop-right` indicators) and `←`/`→` buttons (`.btn-col-move`) in the Customize View popover and context menu, reordering header and body cells in DOM across initial loads and `htmx:afterSwap`.
   - **Hybrid Local + Database Persistence**: `window.saveRadlinePreference()` writes immediately to `localStorage` for zero layout shift and debounces `POST /api/user-preferences` (`SaveUserPreferenceHandler` / `GetUserPreferenceHandler` in `handlers/handlers.go`) to sync with the `user_preferences` table.
 
+
+### Context: Enterprise Blue Theme & Breathing Room Density Scale (v7.0)
+- **Problem**: The legacy 12px purple-indigo theme (`#4f46e5`) felt cramped during extended back-office data entry and lacked clear visual separation between containers, tables, and form controls.
+- **Enforced Solution**:
+  - **Refined Enterprise Blue Palette**: `--primary: 217 91% 53%` (`#2563eb`), `--primary-dark: 221 83% 45%` (`#1d4ed8`), `--primary-tint: 214 100% 97%` (`#eff6ff`), `--foreground: 222 47% 11%` (`#0f172a`), and `--border: 214 32% 90%` (`#dfe7f0`).
+  - **More Breathing Room Scale**:
+    - `body`: `0.84375rem` (`13.5px`), `line-height: 1.5`.
+    - `main#main-content`: `padding: 1.25rem 1.75rem; max-width: 1560px;`.
+    - `.card`: `padding: 1.25rem 1.5rem; margin-bottom: 1rem; border-radius: 0.625rem;`.
+    - Standardized Form Controls & Buttons (`.form-input`, `input`, `select`, `.btn`): `height: 2.25rem` (`36px`), `font-size: 0.8125rem`, soft 3px focus ring (`0 0 0 3px hsl(var(--ring) / 0.16)`). Compact button variant `.btn-sm` uses `height: 1.875rem` (`30px`).
+    - Table Density (`th, td`, `.th, .td`): `padding: 0.625rem 0.875rem` (`10px 14px`), `font-size: 0.8125rem` (`13px`). `.excel-table` row height expanded to `2.375rem` (`38px`).
+    - Dashboard Height Tokens: `.dash-h-sm: 175px`, `.dash-h-md: 340px`, `.dash-h-lg: 510px`, `.dashboard-grid` gap `1.25rem`.

@@ -324,7 +324,7 @@ function updateDynamicQuickMenu() {
         defaultGrid.style.display = "none";
         dynamicList.style.display = "flex";
         if (mobileBtn) mobileBtn.textContent = "+ Stock";
-        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Stock Actions`;
+        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(217 91% 53%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Stock Actions`;
         dynamicList.innerHTML = `
             <a href="/inventory/receiving" onclick="handleQuickAction('receive-stock', '/inventory/receiving', event)" class="quick-create-item">
                 <div class="quick-create-item-icon receiving-color">
@@ -350,7 +350,7 @@ function updateDynamicQuickMenu() {
         defaultGrid.style.display = "none";
         dynamicList.style.display = "flex";
         if (mobileBtn) mobileBtn.textContent = "+ Masterlist";
-        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Masterlist Actions`;
+        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(217 91% 53%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Masterlist Actions`;
         dynamicList.innerHTML = `
             <a href="/items" onclick="handleQuickAction('add-item', '/items', event)" class="quick-create-item">
                 <div class="quick-create-item-icon item-color">
@@ -403,7 +403,7 @@ function updateDynamicQuickMenu() {
         defaultGrid.style.display = "none";
         dynamicList.style.display = "flex";
         if (mobileBtn) mobileBtn.textContent = "+ Sale";
-        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Sales Actions`;
+        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(217 91% 53%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Sales Actions`;
         dynamicList.innerHTML = `
             <a href="/sales" onclick="handleQuickAction('record-sale', '/sales', event)" class="quick-create-item">
                 <div class="quick-create-item-icon sales-color">
@@ -420,7 +420,7 @@ function updateDynamicQuickMenu() {
         defaultGrid.style.display = "none";
         dynamicList.style.display = "flex";
         if (mobileBtn) mobileBtn.textContent = "+ Goal";
-        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Earning Goals`;
+        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(217 91% 53%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Earning Goals`;
         dynamicList.innerHTML = `
             <a href="/goals" onclick="handleQuickAction('add-goal', '/goals', event)" class="quick-create-item">
                 <div class="quick-create-item-icon sales-color">
@@ -437,7 +437,7 @@ function updateDynamicQuickMenu() {
         defaultGrid.style.display = "none";
         dynamicList.style.display = "flex";
         if (mobileBtn) mobileBtn.textContent = "+ Reminder";
-        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Calendar Actions`;
+        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(217 91% 53%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Calendar Actions`;
         dynamicList.innerHTML = `
             <a href="/calendar?action=new" onclick="handleQuickAction('add-reminder', '/calendar?action=new', event)" class="quick-create-item">
                 <div class="quick-create-item-icon reminder-color">
@@ -454,7 +454,7 @@ function updateDynamicQuickMenu() {
         defaultGrid.style.display = "none";
         dynamicList.style.display = "flex";
         if (mobileBtn) mobileBtn.textContent = "+ Admin";
-        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Admin Actions`;
+        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(217 91% 53%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Admin Actions`;
         dynamicList.innerHTML = `
             <a href="/settings/users" onclick="handleQuickAction('add-user', '/settings/users', event)" class="quick-create-item">
                 <div class="quick-create-item-icon settings-color">
@@ -481,7 +481,7 @@ function updateDynamicQuickMenu() {
         defaultGrid.style.display = "grid";
         dynamicList.style.display = "none";
         if (mobileBtn) mobileBtn.textContent = "+ New";
-        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(243 75% 59%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Quick Actions`;
+        if (titleEl) titleEl.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" stroke="hsl(217 91% 53%)" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Quick Actions`;
     }
 }
 window.updateDynamicQuickMenu = updateDynamicQuickMenu;
@@ -600,7 +600,10 @@ document.body.addEventListener('htmx:sendError', function () {
     document.body.addEventListener(evtName, clearSearchCaches);
 });
 
-// Searchable Dropdown functions
+// High-Performance Searchable Dropdown Engine
+let _dropdownFetchAbortCtrl = null;
+let _ddScrollRaf = null;
+
 function updateDropdownPosition(input) {
     const container = input.closest('.searchable-dropdown');
     if (!container) return;
@@ -608,13 +611,34 @@ function updateDropdownPosition(input) {
     if (!list || list.style.display === 'none') return;
 
     const rect = input.getBoundingClientRect();
+    const minWidth = Math.max(rect.width, 260);
+    const maxRight = window.innerWidth - 12;
+    let leftPos = rect.left;
+    if (leftPos + minWidth > maxRight) {
+        leftPos = Math.max(12, maxRight - minWidth);
+    }
+
     list.style.position = 'fixed';
-    list.style.top = (rect.bottom + 2) + 'px';
-    list.style.bottom = 'auto';
-    list.style.left = rect.left + 'px';
-    list.style.width = rect.width + 'px';
+    list.style.left = leftPos + 'px';
+    list.style.width = minWidth + 'px';
     list.style.zIndex = '999999';
     list.style.marginTop = '0px';
+
+    const spaceBelow = window.innerHeight - rect.bottom - 12;
+    const spaceAbove = rect.top - 12;
+    const listHeight = Math.min(list.scrollHeight || 240, 260);
+
+    if (spaceBelow < 180 && spaceAbove > spaceBelow) {
+        const availH = Math.min(260, Math.max(120, spaceAbove));
+        list.style.maxHeight = availH + 'px';
+        list.style.top = 'auto';
+        list.style.bottom = (window.innerHeight - rect.top + 4) + 'px';
+    } else {
+        const availH = Math.min(260, Math.max(140, spaceBelow));
+        list.style.maxHeight = availH + 'px';
+        list.style.bottom = 'auto';
+        list.style.top = (rect.bottom + 4) + 'px';
+    }
 }
 
 function cleanupDropdownState(container) {
@@ -658,8 +682,7 @@ function showDropdown(input) {
             if (l !== list) l.style.display = 'none';
         });
         list.style.display = 'block';
-        updateDropdownPosition(input);
-        filterDropdown(input);
+        filterDropdown(input, true);
     }
 }
 
@@ -673,7 +696,7 @@ function hideDropdown(input) {
             list.style.display = 'none';
             const hidden = container.querySelector('input[type="hidden"]');
             if (input.value.trim() === '') {
-                if (hidden && hidden.value !== '') {
+                if (hidden && hidden.value !== '' && hidden.value !== '0') {
                     hidden.value = '';
                     if (window.htmx) {
                         htmx.trigger(hidden, 'change');
@@ -681,11 +704,13 @@ function hideDropdown(input) {
                     hidden.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             } else {
-                const currentText = input.value.trim();
+                const currentText = input.value.trim().toLowerCase();
                 const items = container.querySelectorAll('.dropdown-item');
                 let match = null;
                 for (const item of items) {
-                    if ((item.getAttribute('data-description') || '').toLowerCase() === currentText.toLowerCase()) {
+                    const desc = (item.getAttribute('data-description') || '').toLowerCase();
+                    const code = (item.getAttribute('data-code') || '').toLowerCase();
+                    if (desc === currentText || (code && code === currentText)) {
                         match = item;
                         break;
                     }
@@ -700,7 +725,7 @@ function hideDropdown(input) {
                         }
                         hidden.dispatchEvent(new Event('change', { bubbles: true }));
                     }
-                } else if (hidden && hidden.value) {
+                } else if (hidden && hidden.value && hidden.value !== '0') {
                     for (const item of items) {
                         if (item.getAttribute('data-id') === hidden.value) {
                             input.value = item.getAttribute('data-description');
@@ -710,46 +735,113 @@ function hideDropdown(input) {
                 }
             }
         }
-    }, 200);
+    }, 180);
+}
+
+function applyClientFilterOnList(container, filterStr) {
+    const list = container.querySelector('.dropdown-list');
+    if (!list) return;
+    const tokens = filterStr.toLowerCase().split(/\s+/).filter(Boolean);
+    const items = list.querySelectorAll('.dropdown-item');
+    const MAX_VISIBLE = 50;
+    let visibleCount = 0;
+    let firstVisible = null;
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        item.classList.remove('active');
+        if (visibleCount >= MAX_VISIBLE) {
+            item.style.display = 'none';
+            continue;
+        }
+        if (tokens.length === 0) {
+            item.style.display = '';
+            if (!firstVisible) firstVisible = item;
+            visibleCount++;
+            continue;
+        }
+        const desc = (item.getAttribute('data-description') || item.textContent || '').toLowerCase();
+        const code = (item.getAttribute('data-code') || '').toLowerCase();
+        let allMatch = true;
+        for (let t = 0; t < tokens.length; t++) {
+            const tok = tokens[t];
+            if (!desc.includes(tok) && !code.includes(tok)) {
+                allMatch = false;
+                break;
+            }
+        }
+        if (allMatch) {
+            item.style.display = '';
+            if (!firstVisible) firstVisible = item;
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    }
+
+    if (firstVisible) {
+        firstVisible.classList.add('active');
+    }
+
+    let emptyEl = list.querySelector('.dropdown-empty');
+    if (visibleCount === 0 && items.length > 0) {
+        if (!emptyEl) {
+            emptyEl = document.createElement('div');
+            emptyEl.className = 'dropdown-empty';
+            emptyEl.textContent = 'No matching items found';
+            const addNew = list.querySelector('.dropdown-add-new');
+            if (addNew) {
+                list.insertBefore(emptyEl, addNew);
+            } else {
+                list.appendChild(emptyEl);
+            }
+        }
+        emptyEl.style.display = 'block';
+    } else if (emptyEl) {
+        emptyEl.style.display = 'none';
+    }
 }
 
 let _dropdownSearchTimer = null;
-function filterDropdown(input) {
+function filterDropdown(input, isInitialOpen) {
     const container = input.closest('.searchable-dropdown');
     if (!container) return;
     const hidden = container.querySelector('input[type="hidden"]');
     const isItemDropdown = hidden && (hidden.name === 'item_id' || hidden.id === 'item_id');
+    const queryStr = input.value.trim();
 
-    // 1. Instant client-side filtering on items currently in DOM (0ms response)
-    const filter = input.value.trim().toLowerCase();
-    const items = container.querySelectorAll('.dropdown-item');
-    let firstVisible = null;
-    items.forEach(item => {
-        const text = (item.getAttribute('data-description') || item.textContent || '').toLowerCase();
-        const code = (item.getAttribute('data-code') || '').toLowerCase();
-        if (filter === '' || text.includes(filter) || code.includes(filter)) {
-            item.style.display = 'block';
-            if (!firstVisible) firstVisible = item;
-        } else {
-            item.style.display = 'none';
+    // If opening a dropdown that already has a selected item value matching the input text,
+    // show all initial items on open so the user can browse or type to filter immediately.
+    let clientFilterQuery = queryStr;
+    if (isInitialOpen && hidden && hidden.value && hidden.value !== '0') {
+        const selectedNode = container.querySelector(`.dropdown-item[data-id="${hidden.value}"]`);
+        if (selectedNode && (selectedNode.getAttribute('data-description') || '') === queryStr) {
+            clientFilterQuery = '';
         }
-    });
-    items.forEach(item => item.classList.remove('active'));
-    if (firstVisible) {
-        firstVisible.classList.add('active');
     }
+
+    // 1. Instant client-side filtering on items currently in DOM (<1ms response, capped at 50 visible items)
+    applyClientFilterOnList(container, clientFilterQuery);
     updateDropdownPosition(input);
 
-    // 2. Supplement with full catalog fetch for item dropdowns
+    // 2. Supplement with indexed server catalog fetch for item dropdowns
     if (isItemDropdown) {
+        if (isInitialOpen && clientFilterQuery === '' && container.querySelectorAll('.dropdown-item').length >= 15) {
+            return;
+        }
         clearTimeout(_dropdownSearchTimer);
-        const queryStr = input.value.trim();
+        if (_dropdownFetchAbortCtrl) {
+            _dropdownFetchAbortCtrl.abort();
+            _dropdownFetchAbortCtrl = null;
+        }
+
+        const fetchQuery = isInitialOpen && clientFilterQuery === '' ? '' : queryStr;
 
         // If cached in memory, apply immediately with 0 network latency!
-        if (_itemSearchHtmlCache.has(queryStr)) {
+        if (_itemSearchHtmlCache.has(fetchQuery)) {
             const list = container.querySelector('.dropdown-list');
             if (list) {
-                list.innerHTML = _itemSearchHtmlCache.get(queryStr);
+                list.innerHTML = _itemSearchHtmlCache.get(fetchQuery);
                 const first = list.querySelector('.dropdown-item');
                 if (first) first.classList.add('active');
                 updateDropdownPosition(input);
@@ -757,31 +849,41 @@ function filterDropdown(input) {
             return;
         }
 
-        // Rapid debounce (80ms) for background server fetch
+        // Rapid debounce (60ms) with AbortController for background server fetch
         _dropdownSearchTimer = setTimeout(() => {
-            fetch('/items/search?q=' + encodeURIComponent(queryStr) + '&limit=100')
+            _dropdownFetchAbortCtrl = new AbortController();
+            fetch('/items/search?q=' + encodeURIComponent(fetchQuery) + '&limit=40', {
+                signal: _dropdownFetchAbortCtrl.signal
+            })
                 .then(res => {
                     if (!res.ok || res.redirected || (res.url && res.url.includes('/login'))) return null;
                     return res.text();
                 })
                 .then(html => {
-                    if (!html) return;
-                    if (_itemSearchHtmlCache.size >= 100) {
+                    if (html === null) return;
+                    const finalHtml = html.trim() !== ''
+                        ? html
+                        : '<div class="dropdown-empty">No matching catalog items found</div>';
+                    if (_itemSearchHtmlCache.size >= 150) {
                         const firstKey = _itemSearchHtmlCache.keys().next().value;
                         _itemSearchHtmlCache.delete(firstKey);
                     }
-                    _itemSearchHtmlCache.set(queryStr, html);
+                    _itemSearchHtmlCache.set(fetchQuery, finalHtml);
                     if (input.value.trim() === queryStr) {
                         const list = container.querySelector('.dropdown-list');
                         if (!list) return;
-                        list.innerHTML = html;
+                        list.innerHTML = finalHtml;
                         const first = list.querySelector('.dropdown-item');
                         if (first) first.classList.add('active');
                         updateDropdownPosition(input);
                     }
                 })
-                .catch(err => console.error("Error querying items:", err));
-        }, 80);
+                .catch(err => {
+                    if (err && err.name !== 'AbortError') {
+                        console.error("Error querying items:", err);
+                    }
+                });
+        }, 60);
     }
 }
 
@@ -792,17 +894,31 @@ function selectDropdownItem(item) {
     const hidden = container.querySelector('input[type="hidden"]');
 
     const selectedId = item.getAttribute('data-id');
-    const description = item.getAttribute('data-description');
+    const description = item.getAttribute('data-description') || item.textContent.trim();
     const uom = item.getAttribute('data-uom');
 
     if (input) input.value = description;
+
+    // Support UOM Conversion Form (#uom_base_val) when selecting an item
+    const baseUomInput = document.getElementById('uom_base_val');
+    if (baseUomInput && container.closest('#add-conversion-card')) {
+        baseUomInput.value = uom || '';
+    }
+
+    // Support Receipt Scanner row UOM auto-fill
+    const scanRow = container.closest('.scan-item-row');
+    if (scanRow && uom) {
+        const scanUomInput = scanRow.querySelector('input[name="uom"]');
+        if (scanUomInput) scanUomInput.value = uom;
+    }
 
     let willSwap = false;
     if (hidden) {
         const oldVal = hidden.value;
         hidden.value = selectedId;
+        const hasHxGet = hidden.hasAttribute('hx-get') || hidden.hasAttribute('hx-post');
         if (oldVal !== selectedId || hidden.name === 'item_id') {
-            if (hidden.name === 'item_id') {
+            if (hidden.name === 'item_id' && hasHxGet) {
                 const itemRow = input.closest('#receiving-items-tbody tr, #adjustment-items-tbody tr, #sales-items-tbody tr, #scan-items-body tr, .item-grid-row, .scan-item-row');
                 const tbody = itemRow ? itemRow.parentElement : null;
                 if (tbody) {
@@ -828,16 +944,16 @@ function selectDropdownItem(item) {
                     }, 2000);
                 }
             }
-            if (window.htmx) {
+            if (window.htmx && hasHxGet) {
                 htmx.trigger(hidden, 'change');
             }
             hidden.dispatchEvent(new Event('change', { bubbles: true }));
         }
     }
 
-    if (uom) {
+    if (uom && !scanRow) {
         const uomInput = container.closest('form')?.querySelector('#uom, #uom-inline-uom, [name="uom"]');
-        if (uomInput) {
+        if (uomInput && !uomInput.closest('.searchable-dropdown')) {
             uomInput.value = uom;
         }
     }
@@ -875,7 +991,15 @@ function handleDropdownKeydown(event, input) {
     }
 
     const visibleItems = Array.from(container.querySelectorAll('.dropdown-item')).filter(item => item.style.display !== 'none');
-    if (visibleItems.length === 0) return;
+    if (visibleItems.length === 0) {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            list.style.display = 'none';
+            cleanupDropdownState(container);
+            input.blur();
+        }
+        return;
+    }
 
     let activeIndex = visibleItems.findIndex(item => item.classList.contains('active'));
 
@@ -1106,18 +1230,29 @@ window.handleCustomerAutocomplete = handleCustomerAutocomplete;
 window.handleCustomerKeydown = handleCustomerKeydown;
 window.applyCustomerSelection = applyCustomerSelection;
 
-window.addEventListener('scroll', function () {
-    const activeInput = document.activeElement;
-    if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
-        updateDropdownPosition(activeInput);
+window.addEventListener('scroll', function (evt) {
+    if (evt && evt.target && evt.target.classList && evt.target.classList.contains('dropdown-list')) {
+        return;
     }
+    if (_ddScrollRaf) return;
+    _ddScrollRaf = requestAnimationFrame(function () {
+        _ddScrollRaf = null;
+        const activeInput = document.activeElement;
+        if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
+            updateDropdownPosition(activeInput);
+        }
+    });
 }, true);
 
 window.addEventListener('resize', function () {
-    const activeInput = document.activeElement;
-    if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
-        updateDropdownPosition(activeInput);
-    }
+    if (_ddScrollRaf) return;
+    _ddScrollRaf = requestAnimationFrame(function () {
+        _ddScrollRaf = null;
+        const activeInput = document.activeElement;
+        if (activeInput && activeInput.classList && activeInput.classList.contains('dropdown-search')) {
+            updateDropdownPosition(activeInput);
+        }
+    });
 });
 
 // Global keydown handler for Enter key behavior:

@@ -232,7 +232,7 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 25")
 
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
@@ -832,7 +832,7 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 25")
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
@@ -911,7 +911,7 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var adjItems []models.Item
-	_ = db.DB.Select(&adjItems, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
+	_ = db.DB.Select(&adjItems, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 25")
 	var adjUoms []models.Uom
 	_ = db.DB.Select(&adjUoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 

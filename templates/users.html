@@ -64,11 +64,11 @@
 </div>
 
 <!-- Modal: Add New User -->
-<div id="add-user-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: #ffffff; border-radius: 0.5rem; max-width: 480px; width: 100%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+<div id="add-user-modal" class="alert-dialog-overlay" style="display: none; padding: 1rem;">
+    <div class="alert-dialog-content" style="max-width: 480px; width: 100%; padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.625rem;">
             <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">Create User Account</h3>
-            <button onclick="document.getElementById('add-user-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            <button onclick="document.getElementById('add-user-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer;">&times;</button>
         </div>
 
         <form hx-post="/settings/users/add">
@@ -105,11 +105,11 @@
 </div>
 
 <!-- Modal: Edit User -->
-<div id="edit-user-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; padding: 1rem;">
-    <div style="background: #ffffff; border-radius: 0.5rem; max-width: 480px; width: 100%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+<div id="edit-user-modal" class="alert-dialog-overlay" style="display: none; padding: 1rem;">
+    <div class="alert-dialog-content" style="max-width: 480px; width: 100%; padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.625rem;">
             <h3 style="font-size: 1rem; font-weight: 700; margin: 0;">Edit User Account</h3>
-            <button onclick="document.getElementById('edit-user-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            <button onclick="document.getElementById('edit-user-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; color: var(--text-muted); cursor: pointer;">&times;</button>
         </div>
 
         <form id="edit-user-form" method="POST">

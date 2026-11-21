@@ -42,7 +42,7 @@
                     style="display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer; user-select: none;">
                     <input type="checkbox" id="toggle-chart-inventory" checked
                         onchange="window.toggleChartSeries('inventory', this.checked)"
-                        style="accent-color: hsl(280 65% 55%); cursor: pointer;">
+                        style="accent-color: hsl(199 89% 48%); cursor: pointer;">
                     <span style="color: var(--text-main);">Inventory</span>
                 </label>
             </div>
@@ -97,8 +97,8 @@
             </rect>
 
             <!-- Inventory Bar -->
-                class="chart-bar-inventory" x="{{ .InventoryX }}" y="{{ .InventoryY }}" width="13"
-                height="{{ .InventoryHeight }}" rx="2" fill="hsl(280 65% 55%)"
+            <rect class="chart-bar-inventory" x="{{ .InventoryX }}" y="{{ .InventoryY }}" width="13"
+                height="{{ .InventoryHeight }}" rx="2" fill="hsl(199 89% 48%)"
                 style="transition: opacity 0.2s ease; opacity: 0.88;">
                 <title>{{ .Label }} Inventory Intake: ₱{{ printf "%.2f" .Inventory }}</title>
             </rect>
