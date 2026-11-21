@@ -3,7 +3,7 @@
 > Back to [[domain-overview]] · Related: [[database-schema]]
 
 ## Brand Entity
-**File:** [brand.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/brand.go)
+**File:** [`domain/brand.go`](../domain/brand.go)
 
 ```go
 type Brand struct {
@@ -20,7 +20,7 @@ type Brand struct {
 ---
 
 ## Category Entity
-**File:** [category.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/category.go)
+**File:** [`domain/category.go`](../domain/category.go)
 
 ```go
 type Category struct {
@@ -37,7 +37,7 @@ type Category struct {
 ---
 
 ## Item Entity
-**File:** [item.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/item.go)
+**File:** [`domain/item.go`](../domain/item.go)
 
 ```go
 type Item struct {
@@ -63,7 +63,7 @@ type Item struct {
 ---
 
 ## UomSetting Value Object
-**File:** [uom_setting.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/uom_setting.go)
+**File:** [`domain/uom_setting.go`](../domain/uom_setting.go)
 
 ```go
 type UomSetting struct {
@@ -81,5 +81,5 @@ type UomSetting struct {
 ## Related
 - [[domain-stock]] — How items participate in stock calculations
 - [[handlers-master-data]] — CRUD handlers for these entities
-- [[database-schema]] — SQLite table definitions
+- [[database-schema]] — Dual SQLite/PostgreSQL table definitions
 - [[domain-testing]] — Validation test cases

@@ -35,5 +35,13 @@ Desktop.ini
 
 # Go
 vendor/
-Copy of RADLINE REPORT - BACKUP 6_13_26.xlsx
-radline.exe
+
+# Scratch, test snapshots, and local data backups
+scratch/
+.playwright-mcp/
+*.xlsx
+/747903028_1060701843283149_1099210608277773646_n.jpg
+/inventory-sidebar.md
+/sidebar-snapshot.md
+/new_bench.txt
+/old_bench.txt

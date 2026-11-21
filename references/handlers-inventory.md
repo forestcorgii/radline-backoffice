@@ -3,7 +3,7 @@
 > Back to [[handlers-overview]] · Related: [[routing]], [[domain-receiving]], [[domain-adjustment]]
 
 ## File
-[handlers/inventory.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/inventory.go)
+[`handlers/inventory.go`](../handlers/inventory.go)
 
 ## Stock Overview
 
@@ -16,7 +16,7 @@
 - Low stock threshold: `on_hand > 0 AND on_hand <= 10`
 - HTMX-aware: rows fragment or full page
 
-**Note:** This uses raw SQL aggregation for performance, not the [[domain-stock|domain `ItemStock` aggregate]]. The domain aggregate is used when precise per-supplier calculation is needed (e.g., in [[models-layer|`CalculateStockOnHand`]]).
+**Note:** This uses raw SQL aggregation for performance, not the [[domain-stock|domain `ItemStock` aggregate]]. The domain aggregate is used when precise per-supplier calculation or FIFO batch resolution is needed (e.g., via `FetchItemsStockBatch` in `handlers/inventory.go`).
 
 ---
 
@@ -33,12 +33,12 @@
 
 ### `StockReceivingPageHandler` (GET `/inventory/receiving`)
 Renders the receiving form + recent logs. Loads:
-- All items (for the item select dropdown)
+- Items (for the item select dropdown)
 - Recent receiving logs with item codes
 
 ### `ReceiveStockHandler` (POST `/inventory/receiving/add`)
 Multi-item stock receive flow:
-1. Parse form arrays: `item_id[]`, `qty[]`, `uom[]`, `cost[]`, `unit_price[]`
+1. Parse form arrays: `item_id[]`, `qty[]`, `uom[]`, `unit_price[]`, `less1[]`, `less2[]`, `cost[]`, `markup[]`, `remarks[]`
 2. Validate lengths match
 3. Construct `[]domain.StockReceiveItem`
 4. Call `domain.NewStockReceive(plNo, supplier, date, items)` for validation
@@ -66,9 +66,9 @@ Same pattern as receiving: form + recent logs.
 Multi-item adjustment flow:
 1. Parse form arrays: `item_id[]`, `adjustment_qty[]`, `uom[]`, `cost[]`
 2. Construct `domain.NewStockAdjustment(date, remarks, items)`
-3. INSERT header into `stock_adjustments`, get `lastInsertId`
+3. `INSERT INTO stock_adjustments (date, remarks) VALUES (?, ?) RETURNING id` via `tx.QueryRow(...).Scan(&adjID)` (required for dual SQLite + PostgreSQL `pgx/v5` compatibility)
 4. `stockAdj.ToInventoryAdjustments()` to flatten
-5. INSERT each with the real `adjustment_id`
+5. INSERT each detail row with the returned `adjustment_id`
 6. All within a single transaction
 7. On success: toast + `HX-Location: /inventory/adjustments/logs`
 

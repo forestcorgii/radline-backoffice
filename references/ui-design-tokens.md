@@ -2,8 +2,11 @@
 
 > Back to [[00-index]] · Related: [[htmx-patterns]], [[sidebar-navigation]], [[responsive-design]], [[templates-overview]]
 
-## Canonical Stylesheet
-[static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css) (linked in [templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) as `/static/index.css?v=6.3` — always increment `?v=` when changing CSS).
+## Canonical Stylesheet & Extracted JS Modules
+- **Stylesheet**: [`static/index.css`](../static/index.css) (linked in [`templates/base.html`](../templates/base.html) as `/static/index.css?v=6.5` — always increment `?v=` when changing CSS).
+- **Extracted Frontend Scripts** (linked in [`templates/base.html`](../templates/base.html)):
+  - [`static/js/base-ui.js`](../static/js/base-ui.js) (`/static/js/base-ui.js?v=6.5`) — Sidebar collapse/mobile drawers, `+ New` Quick Actions menu, `#shadcn-alert-dialog` HTMX confirmation interceptors, toasts, and searchable dropdown positioning/caching.
+  - [`static/js/table-engine.js`](../static/js/table-engine.js) (`/static/js/table-engine.js?v=6.5`) — Universal List Views Engine (Excel collapsible columns, `.table-col-resizer` 60-FPS resizing, semantic column groups, drag-and-drop column reordering, header themes, and hybrid `localStorage` + `POST /api/user-preferences` sync).
 
 ## Current Theme & Base Typography (QuickBooks / shadcn Royal Indigo)
 ```css
@@ -57,16 +60,16 @@
 
 ### Context: Universal shadcn/ui Alert Dialog for HTMX Confirmations and JS Alerts
 - **Problem**: Native `window.confirm()` / `window.alert()` popups break visual consistency.
-- **Enforced Solution**: `#shadcn-alert-dialog` in `templates/base.html` intercepts `htmx:confirm` (calling `evt.detail.issueRequest(true)` on confirm) and overrides `window.alert` / `window.confirm` via `window.showShadcnAlertDialog()`.
+- **Enforced Solution**: `#shadcn-alert-dialog` in `templates/base.html` (powered by `/static/js/base-ui.js?v=6.5`) intercepts `htmx:confirm` (calling `evt.detail.issueRequest(true)` on confirm) and overrides `window.alert` / `window.confirm` via `window.showShadcnAlertDialog()`.
 
 ### Context: Listviews Form-Sheet Aesthetic & Direct Column Header Collapse / Expand
 - **Problem**: Wide tables need spreadsheet-like column hiding/unhiding and clean headers without outer redundant `.header-bar` blocks.
 - **Enforced Solution**:
-  - **Column Collapse**: `window.initExcelCollapsibleColumns()` in `templates/base.html` provides:
+  - **Column Collapse**: `window.initExcelCollapsibleColumns()` in `/static/js/table-engine.js?v=6.5` provides:
     1. Hover collapse button (`.btn-th-collapse`) on collapsible headers and right-click context menu (`showColumnContextMenu`).
     2. Fully hidden collapsed cells (`display: none !important` on matching `th`/`.th` and `td`/`.td`).
     3. Excel double-line divider (`||`) with `.excel-unhide-btn` (`[+]`) on header borders and a `.collapsed-cols-bar` chip bar mounted **outside/above** `.table-container` (so it doesn't clip on horizontal scroll).
-    4. Persists in `localStorage` (`radline_collapsed_cols_<tableId>`) and syncs with view popovers via `radline-excel-cols-updated`.
+    4. Persists in `localStorage` (`radline_collapsed_cols_<tableId>`) and syncs with `user_preferences` and view popovers via `radline-excel-cols-updated`.
   - **Strict Card Header Div Matching**: Always close all nested `.customize-view-container` and header flex wrappers before `<form>` and `.table-container` begin.
 
 ### Context: Fixed Viewport Popovers & Sub-100ms Form Item Search
@@ -95,7 +98,7 @@
 - **Enforced Solution**:
   - **Customizable Header Colors**: Table-wide header themes (`[data-header-theme="slate|indigo|emerald|amber|navy|rose"]`) selectable from `.customize-theme-swatches` in the Customize View popover or header context menu, paired with individual column top-border & tint accents (`[data-col-accent="indigo|emerald|amber|rose|purple|sky"]`) via right-click context menu.
   - **60-FPS Column Resizing**: Active `.table-col-resizer` handles (`width: 6px; cursor: col-resize`) on every `th[data-col]`, injecting dynamic `<style id="radline-universal-widths-<tableId>">` rules on drag and resetting on double-click.
-  - **Predefined Semantic Column Groups**: Configured in `window.RADLINE_TABLE_GROUPS` in `templates/base.html`. Automatically upgrades `.customize-view-popover` into collapsible `.customize-group-block` sections with master group checkboxes (`.customize-group-cb`) and renders consolidated `.collapsed-group-chip` pills in `.collapsed-cols-bar` when an entire group is hidden.
+  - **Predefined Semantic Column Groups**: Configured in `window.RADLINE_TABLE_GROUPS` in `/static/js/table-engine.js?v=6.5`. Automatically upgrades `.customize-view-popover` into collapsible `.customize-group-block` sections with master group checkboxes (`.customize-group-cb`) and renders consolidated `.collapsed-group-chip` pills in `.collapsed-cols-bar` when an entire group is hidden.
   - **Column Reordering**: HTML5 Drag & Drop directly on `.th[data-col]` headers (with `.col-drop-left` / `.col-drop-right` indicators) and `←`/`→` buttons (`.btn-col-move`) in the Customize View popover and context menu, reordering header and body cells in DOM across initial loads and `htmx:afterSwap`.
   - **Hybrid Local + Database Persistence**: `window.saveRadlinePreference()` writes immediately to `localStorage` for zero layout shift and debounces `POST /api/user-preferences` (`SaveUserPreferenceHandler` / `GetUserPreferenceHandler` in `handlers/handlers.go`) to sync with the `user_preferences` table.
 

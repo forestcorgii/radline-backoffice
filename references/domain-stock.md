@@ -3,7 +3,7 @@
 > Back to [[domain-overview]] · Related: [[domain-receiving]], [[domain-sales]], [[domain-adjustment]]
 
 ## File
-[stock.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/stock.go)
+[`domain/stock.go`](../domain/stock.go)
 
 ## ItemStock Aggregate Root
 
@@ -30,6 +30,7 @@ OnHand = Σ(Received * UOM_Factor) - Σ(Sold * UOM_Factor)
 ```
 
 - Only includes receiving/sales records matching the given `supplier`
+- Excludes sales records where `DocStatus` is `"Cancelled/Return"`
 - Converts all quantities to the item's `DefaultUOM` via [[domain-item|UomSetting]] conversion factors
 
 ### `CalculateGlobalOnHand() float64`
@@ -40,7 +41,7 @@ Calculates stock on hand **across all suppliers**, including adjustments.
 GlobalOnHand = Σ(All Received * Factor) - Σ(All Sold * Factor) + Σ(All Adjusted * Factor)
 ```
 
-- No supplier filter — sums everything
+- No supplier filter — sums everything (excluding cancelled/returned sales)
 - Includes `InventoryAdjustment` records (positive or negative)
 
 ### `getConversionFactor(uom string) float64` (private)
@@ -62,19 +63,13 @@ OnHand = 20 - 3 = 17 PCS
 
 ## Integration Point
 
-The [[models-layer|`models/stock.go`]] file contains `CalculateStockOnHand()`, which:
-1. Loads the item, UOM settings, receiving logs, sales, and adjustments from the DB
-2. Maps each DB DTO to the corresponding domain type
-3. Constructs `domain.NewItemStock(...)` 
-4. Calls `stock.CalculateOnHand(supplierName)`
-
-This keeps the domain calculation pure and the DB loading in the infrastructure layer.
+The `FetchItemsStockBatch` helper in [`handlers/inventory.go`](../handlers/inventory.go) batch-loads items, UOM settings, receiving logs, sales details, and adjustments from the database in 5 bulk `IN (?)` queries, maps each DTO to its pure domain type, and constructs `domain.NewItemStock(...)` aggregates in memory.
 
 ## Important Notes
 
 - **`CalculateOnHand` does NOT include adjustments** — it's supplier-scoped and adjustments are not supplier-specific
-- **`CalculateGlobalOnHand` DOES include adjustments** — used for the inventory overview page
-- The SQL-based stock view in [[handlers-inventory|`stockListQuery`]] uses raw SQL aggregation for the overview table, which is a simpler (but less domain-pure) approach
+- **`CalculateGlobalOnHand` DOES include adjustments** — used for global stock calculations and FIFO resolution
+- The SQL-based stock view in [[handlers-inventory|`stockListQuery`]] uses raw SQL aggregation for the overview table, whereas `FetchItemsStockBatch` + `ItemStock` handles FIFO batch cost/price resolution (`GetOldestPLWithStock`)
 
 ## Learnings
 
@@ -93,5 +88,5 @@ This keeps the domain calculation pure and the DB loading in the infrastructure 
 - [[domain-receiving]] — `ReceivingLog` entity
 - [[domain-sales]] — `SalesDetail` entity
 - [[domain-adjustment]] — `InventoryAdjustment` entity
-- [[models-layer]] — `CalculateStockOnHand` integration
-- [[domain-testing]] — Test cases including UOM conversion
+- [[models-layer]] — DTO structs mapped to `domain.ItemStock`
+- [[domain-testing]] — Test cases including UOM conversion and FIFO

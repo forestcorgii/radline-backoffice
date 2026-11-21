@@ -3,7 +3,7 @@
 > Back to [[domain-overview]] · Related: [[domain-stock]], [[handlers-inventory]]
 
 ## File
-[receiving.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/receiving.go)
+[`domain/receiving.go`](../domain/receiving.go)
 
 ## ReceivingLog Entity
 
@@ -16,22 +16,32 @@ type ReceivingLog struct {
     ItemID       int
     Qty          float64
     UOM          string
-    UnitPrice    float64       // Selling price per unit
-    Cost         float64       // Cost per unit
-    TotalCost    float64       // Auto-calculated: Qty * Cost
-    SellingPrice float64       // Set to UnitPrice on creation
+    UnitPrice    float64       // Supplier list price per unit before discounts
+    Less1        float64       // First discount percentage (0..100)
+    Less2        float64       // Second discount percentage (0..100)
+    Cost         float64       // Net unit cost after discounts
+    TotalCost    float64       // Auto-calculated: round2(Qty * Cost)
+    Markup       float64       // Markup percentage (defaults to 130 when <= 0)
+    SellingPrice float64       // Auto-calculated: round2(Cost * Markup / 100)
+    Remarks      string
 }
 ```
 
 **Invariants (enforced by `NewReceivingLog`):**
 - `Supplier` cannot be empty
 - `ItemID` must be > 0
-- `Qty` must be > 0
+- `Qty` must be > 0 (and finite)
 - `UOM` cannot be empty
-- `Cost` cannot be negative
-- `UnitPrice` cannot be negative
+- `UnitPrice` cannot be negative (`>= 0`)
+- `Less1`, `Less2` must be within `0 <= Less1, Less2 <= 100`
+- `Cost` cannot be negative (`>= 0`)
+- `Markup` defaults to `130` when `<= 0`
+- All numeric inputs reject `NaN` / `Inf` and computed currency values use 2-decimal `float64` rounding (`round2`).
 
-**Auto-computed:** `TotalCost = Qty * Cost`, `SellingPrice = UnitPrice`
+**Pricing & Cost Formula:**
+- `Cost = round2(UnitPrice * (1 - Less1/100) * (1 - Less2/100))`
+- `TotalCost = round2(Qty * Cost)`
+- `SellingPrice = round2(Cost * Markup / 100)` (default `Markup = 130`)
 
 ---
 
@@ -55,10 +65,14 @@ type StockReceiveItem struct {
     ItemID       int
     Qty          float64
     UOM          string
-    UnitPrice    float64
-    Cost         float64
-    TotalCost    float64       // Auto: Qty * Cost
-    SellingPrice float64       // Auto: UnitPrice
+    UnitPrice    float64       // Supplier list price before discounts
+    Less1        float64       // First discount percentage (0..100)
+    Less2        float64       // Second discount percentage (0..100)
+    Cost         float64       // Auto: round2(UnitPrice * (1 - Less1/100) * (1 - Less2/100))
+    TotalCost    float64       // Auto: round2(Qty * Cost)
+    Markup       float64       // Markup percentage (default 130)
+    SellingPrice float64       // Auto: round2(Cost * Markup / 100)
+    Remarks      string
 }
 ```
 
@@ -66,10 +80,10 @@ type StockReceiveItem struct {
 - `Supplier` cannot be empty
 - `Date` cannot be zero
 - Must have at least 1 item
-- Each item: `ItemID > 0`, `Qty > 0`, `UOM` not empty, `Cost >= 0`, `UnitPrice >= 0`
+- Each item: `ItemID > 0`, `Qty > 0`, `UOM` not empty, `UnitPrice >= 0`, `0 <= Less1, Less2 <= 100`, `Cost >= 0`, `Markup` defaults to `130` if `<= 0`, no `NaN`/`Inf`, 2-decimal `round2` currency rounding.
 
 ### `ToReceivingLogs() []ReceivingLog`
-Flattens the aggregate into individual `ReceivingLog` records ready for DB insertion. Maps header fields (`Supplier`, `Date`, `PLNo`) onto each line item.
+Flattens the aggregate into individual `ReceivingLog` records ready for DB insertion. Maps header fields (`Supplier`, `Date`, `PLNo`) and all pricing/discount fields (`UnitPrice`, `Less1`, `Less2`, `Cost`, `TotalCost`, `Markup`, `SellingPrice`, `Remarks`) onto each line item.
 
 ## Flow
 

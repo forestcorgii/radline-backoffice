@@ -3,7 +3,7 @@
 > Back to [[handlers-overview]] · Related: [[routing]], [[domain-item]], [[domain-customer]]
 
 ## File
-[handlers/master_data.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/master_data.go) (See [handlers/customers.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/customers.go) and [[domain-customer]] for Customers CRUD).
+[`handlers/master_data.go`](../handlers/master_data.go) (See [`handlers/customers.go`](../handlers/customers.go) and [[domain-customer]] for Customers CRUD).
 
 ## Brands & Categories Handlers
 - **List (`BrandsHandler`, `CategoriesHandler`)**: Accepts `search`, `filter` (`all`, `in_use`, `unused`), `sort`, and `limit` (`GetLimitParam`). Computes `item_count` via `LEFT JOIN items` + `COUNT(i.id)`.

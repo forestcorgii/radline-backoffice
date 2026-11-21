@@ -2,12 +2,12 @@
 
 > Back to [[00-index]] · Related: [[ui-design-tokens]], [[responsive-design]], [[htmx-patterns]], [[templates-overview]]
 
-## File
-[templates/base.html](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/templates/base.html) · Styles in [static/index.css](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/static/index.css)
+## Files
+[`templates/base.html`](../templates/base.html) · Scripts in [`static/js/base-ui.js`](../static/js/base-ui.js) · Styles in [`static/index.css`](../static/index.css)
 
 ## Current Sidebar Architecture (`254px` Desktop / `64px–68px` Collapsed)
 1. **Brand Header (`.sidebar-brand`)**:
-   - `.brand-full` (`R` badge + "RAV Enterprise Suite") and `.brand-mini` (collapsed mode).
+   - `.brand-full` (`R` badge + "Radline BackOffice" / "RAV Enterprise Suite") and `.brand-mini` (collapsed mode).
    - `#sidebar-collapse-btn` (`toggleSidebarCollapse()`) and mobile `.sidebar-close-btn` (`toggleMobileSidebar()`).
    - Immediate inline `<script>` after `<aside id="sidebar">` restores `localStorage.getItem("sidebar-collapsed") === "true"` before first paint (zero FOUT).
 2. **Signature `+ New` Quick Action Button (`.quick-create-section`)**:

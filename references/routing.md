@@ -3,7 +3,12 @@
 > Back to [[00-index]] · Related: [[architecture]], [[handlers-overview]], [[htmx-patterns]]
 
 ## File
-[main.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/main.go) (lines 38–219) · Middleware in [handlers/middleware.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/handlers/middleware.go)
+[`main.go`](../main.go) · Middleware in [`handlers/middleware.go`](../handlers/middleware.go)
+
+## Security & Middleware Stack
+- **CSRF Protection**: `http.CrossOriginProtection` wraps the router alongside `app.AuthMiddleware(mux)` to block cross-origin state-mutating requests.
+- **Session Cookie**: Uses `rav_session` (`HttpOnly`, `SameSiteLaxMode`, `Secure` in production) stored in the `user_sessions` table.
+- **Permission Guard**: `app.RequirePermission(permissionKey, handler)` enforces RBAC across all protected routes.
 
 ## Complete Route Table
 
@@ -12,24 +17,33 @@
 |---|---|---|---|
 | GET | `/login` | `LoginPageHandler` | Login page |
 | POST | `/login` | `LoginSubmitHandler` | Session creation (`rav_session` cookie) |
-| GET/POST | `/logout` | `LogoutHandler` | Clears session cookie |
+| POST | `/logout` | `LogoutHandler` | Clears session cookie (`GET /logout` is removed to prevent CSRF logout attacks) |
 | GET | `/auth/user-chip` | `UserChipHandler` | Sidebar profile chip & `#profile-menu` |
 | GET | `/sw.js`, `/manifest.webmanifest`, `/offline.html`, `/favicon.ico` | Inline file handlers | PWA service worker, manifest, offline fallback |
 | GET | `/static/*` | `http.FileServer` | Static CSS/JS/icons |
 
-### Dashboard, Goals & Operational Calendar (`PermDashboardView`)
+### User Preferences JSON Endpoints (Authenticated)
 | Method | Path | Handler | Notes |
 |---|---|---|---|
-| `*` | `/` | `DashboardHandler` | Financial KPIs, `fragment=trends` SVG charts, top 5 items |
-| POST | `/dashboard/layout` | `SaveDashboardLayoutHandler` | Saves JSON card order, width & height to `user_preferences` |
-| POST | `/dashboard/layout/reset` | `ResetDashboardLayoutHandler` | Resets user dashboard layout to system default |
-| GET / POST / DELETE | `/goals`, `/goals/add`, `/goals/delete/{id}` | `GoalsHandler`, `AddGoalHandler`, `DeleteGoalHandler` | Revenue & profit targets (`handlers/goals.go`) |
-| GET | `/calendar`, `/reminders` | `RemindersHandler` | Monthly 7-col grid + agenda (`handlers/reminders.go`) |
-| POST | `/reminders/add`, `/calendar/add` | `AddReminderHandler` | Create reminder (supports `?action=new` modal trigger) |
-| POST | `/reminders/edit/{id}`, `/calendar/edit/{id}` | `EditReminderHandler` | Update title, due date, priority, status, assignee |
-| POST | `/reminders/toggle/{id}`, `/calendar/toggle/{id}` | `ToggleReminderHandler` | Toggle Pending/Completed |
-| POST | `/reminders/reschedule/{id}`, `/calendar/reschedule/{id}` | `RescheduleReminderHandler` | Drag-and-drop date reschedule |
-| DELETE | `/reminders/delete/{id}`, `/calendar/delete/{id}` | `DeleteReminderHandler` | Delete reminder |
+| GET | `/api/user-preferences` | `GetUserPreferenceHandler` | Fetch user preference(s) from `user_preferences` |
+| GET | `/api/user-preferences/{key}` | `GetUserPreferenceHandler` | Fetch single preference key as JSON |
+| POST | `/api/user-preferences` | `SaveUserPreferenceHandler` | Upsert preference key/value JSON in `user_preferences` |
+
+### Dashboard, Goals & Operational Calendar
+| Method | Path | Handler | Permission | Notes |
+|---|---|---|---|---|
+| GET | `/{$}` | `DashboardHandler` | `PermDashboardView` | Exact root route (`GET /{$}`); financial KPIs, `fragment=trends` SVG charts, top products |
+| POST | `/dashboard/layout` | `SaveDashboardLayoutHandler` | `PermDashboardView` | Saves JSON card order, width & height to `user_preferences` |
+| POST | `/dashboard/layout/reset` | `ResetDashboardLayoutHandler` | `PermDashboardView` | Resets user dashboard layout to system default |
+| GET | `/goals` | `GoalsHandler` | `PermDashboardView` | Revenue & profit targets (`handlers/goals.go`) |
+| POST | `/goals/add` | `AddGoalHandler` | `PermSettingsEdit` | Create earning goal (requires edit permission) |
+| DELETE | `/goals/delete/{id}` | `DeleteGoalHandler` | `PermSettingsEdit` | Delete earning goal (requires edit permission) |
+| GET | `/calendar`, `/reminders` | `RemindersHandler` | `PermDashboardView` | Monthly 7-col grid + agenda (`handlers/reminders.go`) |
+| POST | `/reminders/add`, `/calendar/add` | `AddReminderHandler` | `PermDashboardView` (or `PermSettingsEdit` / authenticated operator) | Create reminder (supports `?action=new` modal trigger) |
+| POST | `/reminders/edit/{id}`, `/calendar/edit/{id}` | `EditReminderHandler` | `PermDashboardView` | Update title, due date, priority, status, assignee |
+| POST | `/reminders/toggle/{id}`, `/calendar/toggle/{id}` | `ToggleReminderHandler` | `PermDashboardView` | Toggle Pending/Completed |
+| POST | `/reminders/reschedule/{id}`, `/calendar/reschedule/{id}` | `RescheduleReminderHandler` | `PermDashboardView` | Drag-and-drop date reschedule |
+| DELETE | `/reminders/delete/{id}`, `/calendar/delete/{id}` | `DeleteReminderHandler` | `PermDashboardView` | Delete reminder |
 
 ### Master Data CRUD (`PermItemsView` / `PermItemsEdit`) → [[handlers-master-data]], [[domain-customer]]
 | Entity | Routes | Handlers |
@@ -58,7 +72,8 @@
 | GET | `/sales`, `/sales/new` | `SalesHandler`, `NewSalesPageHandler` | `PermSalesView`, `PermSalesCreate` |
 | POST | `/sales/add`, `/sales/edit/{id}`, `/sales/update-status/{id}` | `AddSalesHandler`, `UpdateSalesHandler`, `UpdateSalesStatusHandler` | `PermSalesCreate`, `PermSalesEdit` |
 | GET / DELETE | `/sales/new-row`, `/sales/item-row-details`, `/sales/delete/{id}` | `NewSaleRowHandler`, `SaleItemRowDetailsHandler`, `DeleteSalesHandler` | `PermSalesCreate`, `PermSalesView`, `PermSalesDelete` |
-| GET / POST | `/forms/quotation`, `/forms/purchase-order`, `/forms/purchase-order/save` | `QuotationFormHandler`, `PurchaseOrderFormHandler`, `SavePurchaseOrderHandler` | `PermSalesView`, `PermInventoryView` |
+| GET | `/forms/quotation`, `/forms/purchase-order` | `QuotationFormHandler`, `PurchaseOrderFormHandler` | `PermSalesView`, `PermInventoryView` |
+| POST | `/forms/purchase-order/save` | `SavePurchaseOrderHandler` | `PermInventoryReceive` |
 
 ### UOMs, Settings, RBAC & Tools
 | Area | Routes | Handlers |
@@ -81,6 +96,6 @@
   - All full page templates extending `base.html` (including `form_quotation.html` and `form_purchase_order.html`) must use `app.RenderPage(w, r, ...)`.
   - When checking for main-content HTMX requests in redirect/action handlers, accept `target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true"` and emit `HX-Location: {"path": returnUrl, "target": "#main-content"}`.
 
-### Context: Calendar Production 500 Prevention (`TIMESTAMPTZ` & ` repeat(7, minmax(0, 1fr))`)
+### Context: Calendar Production 500 Prevention (`TIMESTAMPTZ` & `repeat(7, minmax(0, 1fr))`)
 - **Problem**: Passing string dates to `WHERE due_date >= ?` fails on PostgreSQL `TIMESTAMPTZ` (`operator does not exist: timestamp with time zone >= text`), and `1fr` grid columns expand on long titles.
 - **Enforced Solution**: Pass native `time.Time` values for date bounds in `RemindersHandler`, call `db.EnsureRemindersTable()` defensively, and use `grid-template-columns: repeat(7, minmax(0, 1fr))` with `min-width: 0; overflow: hidden` on calendar cells.

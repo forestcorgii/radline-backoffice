@@ -6,9 +6,10 @@
 
 | Component | Choice | Version |
 |---|---|---|
+| Application | Radline BackOffice | — |
 | Language | Go | 1.26.2 |
 | Module | `rav` | — |
-| Server | `net/http` (stdlib) | — |
+| Server | `net/http` (stdlib, `http.CrossOriginProtection`) | — |
 | Templates | `html/template` (stdlib) | — |
 
 ## Dependencies
@@ -17,16 +18,20 @@
 
 | Package | Purpose | Notes |
 |---|---|---|
-| `github.com/jmoiron/sqlx` | SQL extensions for `database/sql` | Struct scanning via `db:` tags |
-| `github.com/jackc/pgx/v5/stdlib` | PostgreSQL driver | Pure-Go production database driver |
-| `github.com/xuri/excelize/v2` | Excel file reader and writer | Used for batch data importing |
-| `modernc.org/sqlite` | Pure-Go SQLite driver | **No CGO required** — local dev. Registered as `"sqlite"` |
+| `github.com/jmoiron/sqlx` | SQL extensions for `database/sql` | Wrapped by `*db.DBConn` and `*db.TxConn` for automatic `?`→`$1` rebinding |
+| `github.com/jackc/pgx/v5` (`pgx/v5/stdlib`) | PostgreSQL driver | Pure-Go production database driver |
+| `modernc.org/sqlite` | Pure-Go SQLite driver | **No CGO required** — local dev (`WAL`, `busy_timeout=5000`, `foreign_keys=ON`, `SetMaxOpenConns(1)`). Registered as `"sqlite"` |
+| `golang.org/x/crypto/bcrypt` | Password hashing | Used in `domain/auth.go` (`HashPassword`, `CheckPasswordHash`) and `db/db.go` (`seedDefaults`) |
+| `github.com/xuri/excelize/v2` | Excel file reader and writer | Used for batch data importing (`handlers/import.go`) |
 
-### Frontend (CDN)
+### Frontend Assets (`static/`)
 
-| Library | Version | Purpose |
+| Asset | Version / Path | Purpose |
 |---|---|---|
-| HTMX | 1.9.10 | Hypermedia-driven UI updates |
+| HTMX | 1.9.10 (`/static/htmx.min.js`) | Locally hosted hypermedia-driven UI updates |
+| Design Tokens & Styles | `/static/index.css?v=6.5` | Vanilla CSS shadcn/QuickBooks Royal Indigo design tokens |
+| Base UI Script | `/static/js/base-ui.js?v=6.5` | Sidebar, quick actions, alert dialog, toasts, dropdown helpers |
+| Universal Table Engine | `/static/js/table-engine.js?v=6.5` | Column collapse/expand, resizing, grouping, reordering, header themes |
 | Inter (Google Fonts) | 400/500/700 | Typography |
 
 ### Indirect (auto-pulled)
@@ -43,24 +48,22 @@
 
 ## Why These Choices
 
-### Why `modernc.org/sqlite` over `mattn/go-sqlite3`?
-`mattn/go-sqlite3` requires CGO and a C compiler (GCC). On default Windows setups without MinGW, the build fails. `modernc.org/sqlite` is a **pure Go** translation of SQLite, requiring zero external tooling. See [[database-schema]] for schema details.
+### Why Dual SQLite (`modernc.org/sqlite`) + PostgreSQL (`pgx/v5`)?
+`mattn/go-sqlite3` requires CGO and a C compiler (GCC). `modernc.org/sqlite` is a **pure Go** SQLite implementation requiring zero external tooling for local development and tests (configured with `journal_mode=WAL`, `busy_timeout=5000`, `foreign_keys=ON`, `SetMaxOpenConns(1)`). In production (`APP_ENV=production`), `DATABASE_URL` connects via `github.com/jackc/pgx/v5` (`pgx/v5/stdlib`). `*db.DBConn` and `*db.TxConn` transparently rebind `?` placeholders to `$1, $2, ...`. See [[database-schema]].
 
-### Why no JSON API?
-The application follows a strict **hypermedia architecture**. All state is managed server-side and rendered as HTML. HTMX handles partial page updates. This eliminates the need for a separate frontend framework. See [[htmx-patterns]].
+### Why SSR HTML/HTMX with Targeted JSON Endpoints?
+Radline BackOffice follows a **hypermedia-first architecture** where application state is rendered server-side as HTML via `html/template` and swapped via HTMX (`/static/htmx.min.js`). Targeted JSON endpoints are provided only where client-side persistence or autocomplete requires them: user preferences (`GET/POST /api/user-preferences*`) and fast item/customer search (`?format=json` on `/items/search` and `/customers/search`). See [[htmx-patterns]].
 
-### Why no migration tool?
-The project uses inline startup migrations in [[database-migrations|db/db.go]]. This keeps the deployment simple (single binary + SQLite file) without requiring a migration CLI.
+### Why Inline Startup Migrations?
+The project uses idempotent inline startup migrations in [[database-migrations|`db/db.go`]] (`runSQLiteMigrations` and `runPostgresMigrations`). This keeps deployment simple (single binary) without requiring an external migration CLI.
 
 ## Learnings
 
 ### Context: BackOffice System Go Rewrite
-**Problem**: Migrating from Python Flask to Go + HTMX. Ensuring adherence to the `golang-htmx-dev` rules.
+**Problem**: Migrating from Python Flask to Go + HTMX while keeping the architecture lightweight and maintainable.
 **Enforced Solution**: 
-- Handlers will strictly return HTML fragments.
-- State is managed purely on the server via HTMX attributes.
-- Use `html/template` combined with `sqlx` for database querying and rendering.
-- No JSON endpoints are allowed unless strictly necessary for an external integration (none planned).
+- Handlers primarily return HTML pages and fragments rendered via `html/template` and `sqlx`.
+- State is managed on the server via HTMX attributes, with targeted JSON endpoints for user preferences (`/api/user-preferences*`) and search autocomplete (`?format=json`).
 
 ### Context: SQLite Database Driver on Windows/CGO-disabled Environments
 **Problem**: Compiling the project on environments without a C compiler (like a default Windows/VS Code setup) fails because `github.com/mattn/go-sqlite3` requires CGO (`CGO_ENABLED=1`) and a GCC toolchain.
@@ -80,5 +83,5 @@ The project uses inline startup migrations in [[database-migrations|db/db.go]]. 
 
 ## Related
 - [[architecture]] — System layering
-- [[database-schema]] — SQLite tables
+- [[database-schema]] — Dual SQLite/PostgreSQL 21-table schema
 - [[htmx-patterns]] — Frontend interaction model

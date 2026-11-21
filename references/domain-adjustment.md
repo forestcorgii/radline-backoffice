@@ -3,7 +3,7 @@
 > Back to [[domain-overview]] · Related: [[domain-stock]], [[handlers-inventory]]
 
 ## File
-[adjustment.go](file:///c:/Users/USER/Documents/Coding%20Projects/antigravity/radline/domain/adjustment.go)
+[`domain/adjustment.go`](../domain/adjustment.go)
 
 ## InventoryAdjustment Entity
 
@@ -77,7 +77,7 @@ See [[database-schema]] for the full DDL.
 Form POST → Handler parses multi-value fields
           → Constructs []StockAdjustmentItem
           → domain.NewStockAdjustment(date, remarks, items)
-          → INSERT header into stock_adjustments, get lastInsertId
+          → INSERT INTO stock_adjustments ... RETURNING id (via QueryRow().Scan(&adjID))
           → stockAdj.ToInventoryAdjustments()
           → INSERT each adjustment with real adjustmentID
           → All within a DB transaction
@@ -88,13 +88,13 @@ Form POST → Handler parses multi-value fields
 ### Context: Multi-Item Stock Adjustment with Header Table
 **Problem**: The stock adjustment form only allowed a single item per submission, requiring users to submit repeatedly. Grouping adjustments by a shared reason/date required a mechanism to batch items together.
 **Enforced Solution**:
-- Created a `stock_adjustments` header table (`id INTEGER PRIMARY KEY AUTOINCREMENT`, `date`, `remarks`) and added `adjustment_id INTEGER` FK to `inventory_adjustments`.
+- Created a `stock_adjustments` header table (`id`, `date`, `remarks`) and added `adjustment_id INTEGER` FK to `inventory_adjustments`.
 - Added `StockAdjustment` aggregate in `domain/adjustment.go` with `StockAdjustmentItem` value objects, full validation, and `ToInventoryAdjustments()` mapper.
 - Created `adjustment_item_row.html` fragment with HTMX-driven item selection and UOM auto-fill.
 - Updated `inventory.html` to render a multi-item table with "Add Item Row" / "Remove" and "Commit Adjustment" button.
 - Added routes `/inventory/adjustments/new-row` and `/inventory/adjustments/item-row-details`.
 - Implemented `NewAdjustmentRowHandler` and `AdjustmentItemRowDetailsHandler`.
-- Updated `AdjustStockHandler` to parse array form fields, validate via domain aggregate, insert header + items within a single DB transaction.
+- Updated `AdjustStockHandler` to parse array form fields, validate via domain aggregate, and insert header (`INSERT INTO stock_adjustments ... RETURNING id` for dual SQLite + PostgreSQL `pgx/v5` compatibility) + items within a single DB transaction.
 - Added safe migration for existing `inventory_adjustments` tables missing the `adjustment_id` column.
 - Added unit tests for `StockAdjustment` in `domain/adjustment_test.go`.
 

@@ -3,7 +3,7 @@
 > Back to [[00-index]] · Related: [[handlers-overview]], [[templates-overview]], [[ui-design-tokens]]
 
 ## Core Architecture
-Radline uses **HTMX** (`/static/htmx.min.js` in `templates/base.html`) for all dynamic interactions. All application state is server-rendered hypermedia (HTML fragments), with JSON used only where explicitly needed by client-side helpers (`/items/search?format=json`, `/customers/search?format=json`).
+Radline BackOffice (Go module `rav`) uses **HTMX** (`/static/htmx.min.js` in `templates/base.html`) alongside `/static/js/base-ui.js?v=6.5` and `/static/js/table-engine.js?v=6.5` for all dynamic interactions. Application state is primarily server-rendered hypermedia (HTML fragments), supplemented by targeted JSON endpoints for user preferences (`GET/POST /api/user-preferences*`) and autocomplete (`?format=json` on `/items/search` and `/customers/search`).
 
 ---
 
