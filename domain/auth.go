@@ -10,23 +10,23 @@ import (
 
 // Standard Permission Keys
 const (
-	PermDashboardView   = "dashboard:view"
-	PermSalesView       = "sales:view"
-	PermSalesCreate     = "sales:create"
-	PermSalesEdit       = "sales:edit"
-	PermSalesDelete     = "sales:delete"
-	PermInventoryView   = "inventory:view"
+	PermDashboardView    = "dashboard:view"
+	PermSalesView        = "sales:view"
+	PermSalesCreate      = "sales:create"
+	PermSalesEdit        = "sales:edit"
+	PermSalesDelete      = "sales:delete"
+	PermInventoryView    = "inventory:view"
 	PermInventoryReceive = "inventory:receive"
-	PermInventoryAdjust = "inventory:adjust"
-	PermItemsView       = "items:view"
-	PermItemsEdit       = "items:edit"
-	PermSettingsView    = "settings:view"
-	PermSettingsEdit    = "settings:edit"
-	PermSettingsRoles   = "settings:roles"
-	PermSettingsUsers   = "settings:users"
-	PermLogsView        = "logs:view"
-	PermToolsImport     = "tools:import"
-	PermToolsScanner    = "tools:scanner"
+	PermInventoryAdjust  = "inventory:adjust"
+	PermItemsView        = "items:view"
+	PermItemsEdit        = "items:edit"
+	PermSettingsView     = "settings:view"
+	PermSettingsEdit     = "settings:edit"
+	PermSettingsRoles    = "settings:roles"
+	PermSettingsUsers    = "settings:users"
+	PermLogsView         = "logs:view"
+	PermToolsImport      = "tools:import"
+	PermToolsScanner     = "tools:scanner"
 )
 
 // AllPermissions returns the comprehensive catalog of system permissions with descriptions
@@ -59,6 +59,20 @@ func GetSystemPermissions() []PermissionDef {
 	}
 }
 
+// IsValidPermission returns true iff key matches one of the system permissions in GetSystemPermissions().
+func IsValidPermission(key string) bool {
+	trimmed := strings.TrimSpace(key)
+	if trimmed == "" {
+		return false
+	}
+	for _, p := range GetSystemPermissions() {
+		if p.Key == trimmed {
+			return true
+		}
+	}
+	return false
+}
+
 // User represents an authenticated operator in the system
 type User struct {
 	ID           int64     `json:"id" db:"id"`
@@ -83,7 +97,10 @@ type Role struct {
 // HasPermission checks if a role contains a specific permission key.
 // "Admin" role always evaluates to true for all permissions.
 func (r *Role) HasPermission(permissionKey string) bool {
-	if strings.EqualFold(r.Name, "Admin") {
+	if r == nil {
+		return false
+	}
+	if strings.EqualFold(strings.TrimSpace(r.Name), "Admin") {
 		return true
 	}
 	for _, p := range r.Permissions {
@@ -109,8 +126,11 @@ type ActivityLog struct {
 
 // Password helpers
 func HashPassword(password string) (string, error) {
-	if len(password) < 4 {
-		return "", errors.New("password must be at least 4 characters")
+	if len([]rune(strings.TrimSpace(password))) < 8 {
+		return "", errors.New("password must be at least 8 characters")
+	}
+	if len(password) > 72 {
+		return "", errors.New("password cannot exceed 72 bytes")
 	}
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
@@ -124,7 +144,7 @@ func CheckPasswordHash(password, hash string) bool {
 // Domain validations
 func ValidateUsername(username string) error {
 	trimmed := strings.TrimSpace(username)
-	if len(trimmed) < 3 {
+	if len([]rune(trimmed)) < 3 {
 		return errors.New("username must be at least 3 characters")
 	}
 	if strings.ContainsAny(trimmed, " \t\r\n/\\") {
@@ -135,8 +155,11 @@ func ValidateUsername(username string) error {
 
 func ValidateRole(name string) error {
 	trimmed := strings.TrimSpace(name)
-	if len(trimmed) < 2 {
+	if len([]rune(trimmed)) < 2 {
 		return errors.New("role name must be at least 2 characters")
+	}
+	if strings.EqualFold(trimmed, "Admin") {
+		return errors.New("role name 'Admin' is reserved")
 	}
 	return nil
 }

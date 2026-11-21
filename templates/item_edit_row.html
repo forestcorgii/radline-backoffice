@@ -5,7 +5,7 @@
         <input type="text" name="description" value="{{ .Item.Description }}" required class="form-input" style="font-weight: 500;">
     </div>
     <div class="td" data-col="model">
-        <input type="text" name="model" value="{{ .Item.Model }}" class="form-input">
+        <input type="text" name="model" value="{{ derefStr .Item.Model }}" class="form-input">
     </div>
     <div class="td" data-col="brand">
         <select name="brand_id" class="form-input" style="padding: 0.5rem 0.5rem; height: auto;">

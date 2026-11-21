@@ -1,12 +1,19 @@
 package domain_test
 
 import (
+	"strings"
 	"testing"
 
 	"rav/domain"
 )
 
 func TestRoleHasPermission(t *testing.T) {
+	// Nil role is safe
+	var nilRole *domain.Role
+	if nilRole.HasPermission(domain.PermDashboardView) {
+		t.Errorf("expected nil Role NOT to have any permission")
+	}
+
 	// Admin has all permissions automatically
 	adminRole := domain.Role{
 		Name:        "Admin",
@@ -56,10 +63,22 @@ func TestPasswordHashingAndVerification(t *testing.T) {
 		t.Errorf("expected invalid password verification to fail")
 	}
 
-	// Too short password
-	_, errShort := domain.HashPassword("12")
+	// Too short password (< 8 chars)
+	_, errShort := domain.HashPassword("1234567")
 	if errShort == nil {
-		t.Errorf("expected error for too short password")
+		t.Errorf("expected error for password shorter than 8 characters")
+	}
+
+	// Whitespace-padded short password
+	_, errSpace := domain.HashPassword("   1234   ")
+	if errSpace == nil {
+		t.Errorf("expected error for whitespace-padded password shorter than 8 characters")
+	}
+
+	// Too long password (> 72 bytes)
+	_, errLong := domain.HashPassword(strings.Repeat("a", 73))
+	if errLong == nil {
+		t.Errorf("expected error for password exceeding 72 bytes")
 	}
 }
 
@@ -77,7 +96,22 @@ func TestValidateUsername(t *testing.T) {
 	}
 }
 
-func TestGetSystemPermissions(t *testing.T) {
+func TestValidateRole(t *testing.T) {
+	if err := domain.ValidateRole("Manager"); err != nil {
+		t.Errorf("expected 'Manager' to be valid, got: %v", err)
+	}
+	if err := domain.ValidateRole("a"); err == nil {
+		t.Errorf("expected error for 1-char role name")
+	}
+	if err := domain.ValidateRole("Admin"); err == nil {
+		t.Errorf("expected error for reserved role name 'Admin'")
+	}
+	if err := domain.ValidateRole("  admin  "); err == nil {
+		t.Errorf("expected error for reserved role name 'admin' (case-insensitive)")
+	}
+}
+
+func TestGetSystemPermissionsAndIsValidPermission(t *testing.T) {
 	perms := domain.GetSystemPermissions()
 	if len(perms) == 0 {
 		t.Errorf("expected non-empty list of system permissions")
@@ -92,5 +126,15 @@ func TestGetSystemPermissions(t *testing.T) {
 	}
 	if !foundDashboard {
 		t.Errorf("expected PermDashboardView to be in catalog")
+	}
+
+	if !domain.IsValidPermission(domain.PermSalesView) {
+		t.Errorf("expected PermSalesView to be valid")
+	}
+	if domain.IsValidPermission("unknown:perm") {
+		t.Errorf("expected 'unknown:perm' to be invalid")
+	}
+	if domain.IsValidPermission("") {
+		t.Errorf("expected empty permission key to be invalid")
 	}
 }

@@ -1,13 +1,16 @@
 package handlers
 
 import (
+	"bytes"
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"rav/db"
@@ -18,6 +21,87 @@ import (
 const SessionCookieName = "rav_session"
 const LegacySessionCookieName = "radline_session"
 
+// dummyBcryptHash is a valid bcrypt hash used to equalize response timing when a user is not found or inactive.
+const dummyBcryptHash = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy"
+
+const (
+	loginRateLimitMaxAttempts = 10
+	loginRateLimitWindow      = time.Minute
+)
+
+var (
+	loginRateLimiterMu sync.Mutex
+	loginFailures      = make(map[string][]time.Time)
+)
+
+// ResetLoginRateLimiter clears all recorded login failure attempts (useful for isolated tests).
+func ResetLoginRateLimiter() {
+	loginRateLimiterMu.Lock()
+	defer loginRateLimiterMu.Unlock()
+	loginFailures = make(map[string][]time.Time)
+}
+
+func loginRateLimitKey(r *http.Request, username string) string {
+	ip := getClientIP(r)
+	return ip + "|" + strings.ToLower(strings.TrimSpace(username))
+}
+
+func isLoginRateLimited(key string, now time.Time) bool {
+	loginRateLimiterMu.Lock()
+	defer loginRateLimiterMu.Unlock()
+
+	cutoff := now.Add(-loginRateLimitWindow)
+	timestamps := loginFailures[key]
+	valid := timestamps[:0]
+	for _, ts := range timestamps {
+		if ts.After(cutoff) {
+			valid = append(valid, ts)
+		}
+	}
+	if len(valid) == 0 {
+		delete(loginFailures, key)
+		return false
+	}
+	loginFailures[key] = valid
+	return len(valid) >= loginRateLimitMaxAttempts
+}
+
+func recordLoginFailure(key string, now time.Time) {
+	loginRateLimiterMu.Lock()
+	defer loginRateLimiterMu.Unlock()
+
+	cutoff := now.Add(-loginRateLimitWindow)
+	timestamps := loginFailures[key]
+	valid := timestamps[:0]
+	for _, ts := range timestamps {
+		if ts.After(cutoff) {
+			valid = append(valid, ts)
+		}
+	}
+	loginFailures[key] = append(valid, now)
+}
+
+func clearLoginFailures(key string) {
+	loginRateLimiterMu.Lock()
+	defer loginRateLimiterMu.Unlock()
+	delete(loginFailures, key)
+}
+
+func isSecureRequest(r *http.Request) bool {
+	if os.Getenv("APP_ENV") == "production" {
+		return true
+	}
+	if r != nil {
+		if r.TLS != nil {
+			return true
+		}
+		if strings.EqualFold(strings.TrimSpace(r.Header.Get("X-Forwarded-Proto")), "https") {
+			return true
+		}
+	}
+	return false
+}
+
 // GetSessionCookie fetches the session cookie, checking rav_session first, falling back to legacy radline_session
 func GetSessionCookie(r *http.Request) (*http.Cookie, error) {
 	c, err := r.Cookie(SessionCookieName)
@@ -26,6 +110,7 @@ func GetSessionCookie(r *http.Request) (*http.Cookie, error) {
 	}
 	return r.Cookie(LegacySessionCookieName)
 }
+
 const SessionDuration = 7 * 24 * time.Hour
 
 type contextKey string
@@ -61,7 +146,7 @@ func GetUserFromSession(token string) (*CurrentUserContext, error) {
 
 	var user models.User
 	err = db.DB.Get(&user, `
-		SELECT u.id, u.username, u.password_hash, u.full_name, u.role_id, r.name as role_name, u.is_active, u.created_at
+		SELECT u.id, u.username, u.full_name, u.role_id, r.name as role_name, u.is_active, u.created_at
 		FROM users u
 		JOIN roles r ON u.role_id = r.id
 		WHERE u.id = ? AND u.is_active = TRUE
@@ -72,7 +157,9 @@ func GetUserFromSession(token string) (*CurrentUserContext, error) {
 
 	// Fetch role permissions
 	var permKeys []string
-	_ = db.DB.Select(&permKeys, "SELECT permission_key FROM role_permissions WHERE role_id = ?", user.RoleID)
+	if err := db.DB.Select(&permKeys, "SELECT permission_key FROM role_permissions WHERE role_id = ?", user.RoleID); err != nil {
+		return nil, err
+	}
 
 	permMap := make(map[string]bool)
 	isAdmin := strings.EqualFold(user.RoleName, "Admin")
@@ -108,8 +195,14 @@ func (app *App) LoginPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Login template not found", http.StatusInternalServerError)
 		return
 	}
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, nil); err != nil {
+		log.Printf("LoginPageHandler template error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_ = t.Execute(w, nil)
+	_, _ = w.Write(buf.Bytes())
 }
 
 // LoginSubmitHandler handles credentials verification and session creation
@@ -123,9 +216,18 @@ func (app *App) LoginSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Please enter both username and password"}}`)
+		setHXTriggerToast(w, "error", "Please enter both username and password")
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`<div class="badge badge-danger" style="display:block; padding:0.6rem; margin-top:0.5rem; text-align:center;">Username and password required</div>`))
+		return
+	}
+
+	now := time.Now()
+	rateKey := loginRateLimitKey(r, username)
+	if isLoginRateLimited(rateKey, now) {
+		setHXTriggerToast(w, "error", "Too many failed login attempts. Please try again in a minute.")
+		w.WriteHeader(http.StatusTooManyRequests)
+		w.Write([]byte(`<div class="badge badge-danger" style="display:block; padding:0.6rem; margin-top:0.5rem; text-align:center;">Too many login attempts. Please wait a minute.</div>`))
 		return
 	}
 
@@ -137,20 +239,36 @@ func (app *App) LoginSubmitHandler(w http.ResponseWriter, r *http.Request) {
 		WHERE u.username = ?
 	`, username)
 
-	if err != nil || !domain.CheckPasswordHash(password, user.PasswordHash) {
+	if err != nil {
+		_ = domain.CheckPasswordHash(password, dummyBcryptHash)
+		recordLoginFailure(rateKey, now)
 		app.LogActivity(r, "LOGIN_FAILED", "User", username, "Invalid login attempt for "+username)
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid username or password"}}`)
+		setHXTriggerToast(w, "error", "Invalid username or password")
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(`<div class="badge badge-danger" style="display:block; padding:0.6rem; margin-top:0.5rem; text-align:center;">Invalid username or password</div>`))
 		return
 	}
 
 	if !user.IsActive {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Account has been deactivated. Contact an administrator."}}`)
-		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte(`<div class="badge badge-danger" style="display:block; padding:0.6rem; margin-top:0.5rem; text-align:center;">Account deactivated</div>`))
+		_ = domain.CheckPasswordHash(password, dummyBcryptHash)
+		recordLoginFailure(rateKey, now)
+		app.LogActivity(r, "LOGIN_FAILED", "User", username, "Login attempt for inactive account "+username)
+		setHXTriggerToast(w, "error", "Invalid username or password")
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`<div class="badge badge-danger" style="display:block; padding:0.6rem; margin-top:0.5rem; text-align:center;">Invalid username or password</div>`))
 		return
 	}
+
+	if !domain.CheckPasswordHash(password, user.PasswordHash) {
+		recordLoginFailure(rateKey, now)
+		app.LogActivity(r, "LOGIN_FAILED", "User", username, "Invalid login attempt for "+username)
+		setHXTriggerToast(w, "error", "Invalid username or password")
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`<div class="badge badge-danger" style="display:block; padding:0.6rem; margin-top:0.5rem; text-align:center;">Invalid username or password</div>`))
+		return
+	}
+
+	clearLoginFailures(rateKey)
 
 	// Create session
 	token, err := GenerateSessionToken()
@@ -173,7 +291,7 @@ func (app *App) LoginSubmitHandler(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		Expires:  expiresAt,
 		HttpOnly: true,
-		Secure:   os.Getenv("APP_ENV") == "production" || r.TLS != nil,
+		Secure:   isSecureRequest(r),
 		SameSite: http.SameSiteLaxMode,
 	})
 
@@ -187,7 +305,7 @@ func (app *App) LoginSubmitHandler(w http.ResponseWriter, r *http.Request) {
 // LogoutHandler terminates the user session
 func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := GetSessionCookie(r)
-	if err == nil && cookie.Value != "" {
+	if err == nil && cookie.Value != "" && db.DB != nil {
 		// Log activity before deleting session
 		if ctxUser, errU := GetUserFromSession(cookie.Value); errU == nil && ctxUser != nil {
 			app.LogActivityWithUser(ctxUser.User.ID, ctxUser.User.Username, r, "LOGOUT", "User", fmt.Sprintf("%d", ctxUser.User.ID), "User logged out")
@@ -195,16 +313,21 @@ func (app *App) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		_, _ = db.DB.Exec("DELETE FROM user_sessions WHERE id = ?", cookie.Value)
 	}
 
-	// Clear cookie
-	http.SetCookie(w, &http.Cookie{
-		Name:     SessionCookieName,
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   os.Getenv("APP_ENV") == "production" || r.TLS != nil,
-	})
+	secure := isSecureRequest(r)
+
+	// Clear both current and legacy session cookies
+	for _, cookieName := range []string{SessionCookieName, LegacySessionCookieName} {
+		http.SetCookie(w, &http.Cookie{
+			Name:     cookieName,
+			Value:    "",
+			Path:     "/",
+			Expires:  time.Unix(0, 0),
+			MaxAge:   -1,
+			HttpOnly: true,
+			Secure:   secure,
+			SameSite: http.SameSiteLaxMode,
+		})
+	}
 
 	if r.Header.Get("HX-Request") == "true" {
 		w.Header().Set("HX-Redirect", "/login")
@@ -222,12 +345,12 @@ func (app *App) UserChipHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Output clean user badge with avatar initial and role pill
+	// Output clean user badge with avatar initial (sliced by rune, not byte) and role pill
 	initial := "U"
-	if len(ctxUser.User.FullName) > 0 {
-		initial = strings.ToUpper(string(ctxUser.User.FullName[0]))
-	} else if len(ctxUser.User.Username) > 0 {
-		initial = strings.ToUpper(string(ctxUser.User.Username[0]))
+	if fullNameRunes := []rune(strings.TrimSpace(ctxUser.User.FullName)); len(fullNameRunes) > 0 {
+		initial = strings.ToUpper(string(fullNameRunes[0]))
+	} else if usernameRunes := []rune(strings.TrimSpace(ctxUser.User.Username)); len(usernameRunes) > 0 {
+		initial = strings.ToUpper(string(usernameRunes[0]))
 	}
 
 	roleColor := "var(--primary-color)"

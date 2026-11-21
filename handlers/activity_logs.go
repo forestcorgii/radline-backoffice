@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,21 +12,35 @@ import (
 	"rav/models"
 )
 
-// getClientIP extracts caller IP address
+// getClientIP extracts caller IP address, trusting proxy headers only when the direct peer is loopback.
 func getClientIP(r *http.Request) string {
 	if r == nil {
 		return ""
 	}
-	xff := r.Header.Get("X-Forwarded-For")
-	if xff != "" {
-		parts := strings.Split(xff, ",")
-		return strings.TrimSpace(parts[0])
+	host, _, err := net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
+	if err != nil {
+		host = strings.TrimSpace(r.RemoteAddr)
 	}
-	xrip := r.Header.Get("X-Real-IP")
-	if xrip != "" {
-		return strings.TrimSpace(xrip)
+
+	peerIP := net.ParseIP(host)
+	isTrustedPeer := peerIP != nil && peerIP.IsLoopback()
+
+	if isTrustedPeer {
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			parts := strings.Split(xff, ",")
+			candidate := strings.TrimSpace(parts[0])
+			if net.ParseIP(candidate) != nil {
+				return candidate
+			}
+		}
+		if xrip := strings.TrimSpace(r.Header.Get("X-Real-IP")); xrip != "" {
+			if net.ParseIP(xrip) != nil {
+				return xrip
+			}
+		}
 	}
-	return r.RemoteAddr
+
+	return host
 }
 
 // LogActivity records an action performed by the current authenticated user
@@ -48,10 +64,15 @@ func (app *App) LogActivityWithUser(userID int64, username string, r *http.Reque
 	}
 	ip := getClientIP(r)
 
+	var uid *int64
+	if userID > 0 {
+		uid = &userID
+	}
+
 	_, err := db.DB.Exec(`
 		INSERT INTO activity_logs (user_id, username, action, entity_type, entity_id, details, ip_address)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
-	`, userID, username, action, entityType, entityID, details, ip)
+	`, uid, username, action, entityType, entityID, details, ip)
 	if err != nil {
 		log.Printf("[AUDIT LOG ERROR] Failed to record activity log: %v", err)
 	}
@@ -109,7 +130,8 @@ func (app *App) ActivityLogsHandler(w http.ResponseWriter, r *http.Request) {
 	var logs []models.ActivityLog
 	err := db.DB.Select(&logs, query, args...)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("ActivityLogsHandler select error: %v", err)
+		http.Error(w, "Failed to load activity logs", http.StatusInternalServerError)
 		return
 	}
 
@@ -142,8 +164,14 @@ func (app *App) ActivityLogsHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Fragment template not found", http.StatusInternalServerError)
 			return
 		}
+		var buf bytes.Buffer
+		if err := t.Execute(&buf, data); err != nil {
+			log.Printf("ActivityLogsHandler execute template error: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = t.Execute(w, data)
+		_, _ = w.Write(buf.Bytes())
 		return
 	}
 

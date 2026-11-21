@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"path"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"time"
 
 	"rav/db"
 	"rav/domain"
@@ -26,6 +33,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
+	defer func() {
+		if db.DB != nil {
+			_ = db.DB.Close()
+		}
+	}()
 
 	// Parse Templates
 	templates := parseTemplates()
@@ -37,9 +49,25 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Serve Static Files
-	fs := http.FileServer(http.Dir("static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	// Serve Static Files (with directory listing disabled)
+	fs := http.StripPrefix("/static/", http.FileServer(http.Dir("static")))
+	mux.Handle("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			http.NotFound(w, r)
+			return
+		}
+		cleanRel := strings.TrimPrefix(path.Clean(r.URL.Path), "/static")
+		if cleanRel == "" || cleanRel == "/" || cleanRel == "." {
+			http.NotFound(w, r)
+			return
+		}
+		diskPath := filepath.Join("static", filepath.FromSlash(cleanRel))
+		if info, err := os.Stat(diskPath); err != nil || info.IsDir() {
+			http.NotFound(w, r)
+			return
+		}
+		fs.ServeHTTP(w, r)
+	}))
 
 	// PWA Endpoints
 	mux.HandleFunc("GET /sw.js", func(w http.ResponseWriter, r *http.Request) {
@@ -68,14 +96,13 @@ func main() {
 	mux.HandleFunc("GET /login", app.LoginPageHandler)
 	mux.HandleFunc("POST /login", app.LoginSubmitHandler)
 	mux.HandleFunc("POST /logout", app.LogoutHandler)
-	mux.HandleFunc("GET /logout", app.LogoutHandler)
 	mux.HandleFunc("GET /auth/user-chip", app.UserChipHandler)
 	mux.HandleFunc("GET /api/user-preferences", app.GetUserPreferenceHandler)
 	mux.HandleFunc("GET /api/user-preferences/{key}", app.GetUserPreferenceHandler)
 	mux.HandleFunc("POST /api/user-preferences", app.SaveUserPreferenceHandler)
 
 	// Protected Dashboard
-	mux.HandleFunc("/", app.RequirePermission(domain.PermDashboardView, app.DashboardHandler))
+	mux.HandleFunc("GET /{$}", app.RequirePermission(domain.PermDashboardView, app.DashboardHandler))
 	mux.HandleFunc("POST /dashboard/layout", app.RequirePermission(domain.PermDashboardView, app.SaveDashboardLayoutHandler))
 	mux.HandleFunc("POST /dashboard/layout/reset", app.RequirePermission(domain.PermDashboardView, app.ResetDashboardLayoutHandler))
 
@@ -185,8 +212,8 @@ func main() {
 
 	// Earning Goals Routing
 	mux.HandleFunc("GET /goals", app.RequirePermission(domain.PermDashboardView, app.GoalsHandler))
-	mux.HandleFunc("POST /goals/add", app.RequirePermission(domain.PermDashboardView, app.AddGoalHandler))
-	mux.HandleFunc("DELETE /goals/delete/{id}", app.RequirePermission(domain.PermDashboardView, app.DeleteGoalHandler))
+	mux.HandleFunc("POST /goals/add", app.RequirePermission(domain.PermSettingsEdit, app.AddGoalHandler))
+	mux.HandleFunc("DELETE /goals/delete/{id}", app.RequirePermission(domain.PermSettingsEdit, app.DeleteGoalHandler))
 
 	// Reminders & Calendar Routing
 	mux.HandleFunc("GET /calendar", app.RequirePermission(domain.PermDashboardView, app.RemindersHandler))
@@ -209,51 +236,54 @@ func main() {
 	// Forms Routing (Quotation & Purchase Order)
 	mux.HandleFunc("GET /forms/quotation", app.RequirePermission(domain.PermSalesView, app.QuotationFormHandler))
 	mux.HandleFunc("GET /forms/purchase-order", app.RequirePermission(domain.PermInventoryView, app.PurchaseOrderFormHandler))
-	mux.HandleFunc("POST /forms/purchase-order/save", app.RequirePermission(domain.PermInventoryView, app.SavePurchaseOrderHandler))
+	mux.HandleFunc("POST /forms/purchase-order/save", app.RequirePermission(domain.PermInventoryReceive, app.SavePurchaseOrderHandler))
 
-	// Wrap entire router with AuthMiddleware
-	handler := app.AuthMiddleware(mux)
+	// Wrap entire router with AuthMiddleware and CrossOriginProtection (CSRF)
+	csrf := http.NewCrossOriginProtection()
+	handler := csrf.Handler(app.AuthMiddleware(mux))
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
-	log.Printf("Server starting on http://localhost:%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, handler))
+	srv := &http.Server{
+		Addr:              ":" + port,
+		Handler:           handler,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		log.Printf("Server starting on http://localhost:%s\n", port)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Server failed: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	stop()
+	log.Println("Shutting down server gracefully...")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("Server forced to shutdown: %v", err)
+	}
+	if db.DB != nil {
+		_ = db.DB.Close()
+	}
 }
 
 func parseTemplates() map[string]*template.Template {
 	templates := make(map[string]*template.Template)
 
-	funcMap := template.FuncMap{
-		"add": func(a, b int) int {
-			return a + b
-		},
-		"mul": func(a, b float64) float64 {
-			return a * b
-		},
-		"derefInt": func(p *int) int {
-			if p == nil {
-				return 0
-			}
-			return *p
-		},
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-	}
+	funcMap := handlers.TemplateFuncMap()
 
 	// Pages that use base.html
 	pages := []string{

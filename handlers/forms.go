@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,10 +14,18 @@ import (
 	"rav/models"
 )
 
+func isDuplicateKeyError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "unique") || strings.Contains(msg, "duplicate") || strings.Contains(msg, "23505")
+}
+
 // QuotationFormHandler renders the printable Quotation Form page
 func (app *App) QuotationFormHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
 
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
@@ -42,7 +51,7 @@ func (app *App) QuotationFormHandler(w http.ResponseWriter, r *http.Request) {
 // PurchaseOrderFormHandler renders the Purchase Order Form page
 func (app *App) PurchaseOrderFormHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
 
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
@@ -73,14 +82,14 @@ func (app *App) SavePurchaseOrderHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := r.ParseForm(); err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to parse form data."}}`)
+		setHXTriggerToast(w, "error", "Failed to parse form data.")
 		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
 	poNo := strings.TrimSpace(r.FormValue("po_no"))
 	if poNo == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Purchase order number is required."}}`)
+		setHXTriggerToast(w, "error", "Purchase order number is required.")
 		http.Error(w, "Purchase order number is required", http.StatusBadRequest)
 		return
 	}
@@ -101,7 +110,7 @@ func (app *App) SavePurchaseOrderHandler(w http.ResponseWriter, r *http.Request)
 
 	vendorName := strings.TrimSpace(r.FormValue("vendor_name"))
 	if vendorName == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Vendor / Supplier name is required."}}`)
+		setHXTriggerToast(w, "error", "Vendor / Supplier name is required.")
 		http.Error(w, "Vendor name is required", http.StatusBadRequest)
 		return
 	}
@@ -171,15 +180,16 @@ func (app *App) SavePurchaseOrderHandler(w http.ResponseWriter, r *http.Request)
 	domainPO.CalculateTotals()
 
 	if err := domainPO.Validate(); err != nil {
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		setHXTriggerToast(w, "error", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	tx, err := db.DB.Beginx()
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to start database transaction."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("SavePurchaseOrderHandler begin tx error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to start database transaction.")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -218,8 +228,14 @@ func (app *App) SavePurchaseOrderHandler(w http.ResponseWriter, r *http.Request)
 	).Scan(&poID)
 
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save purchase order header. PO number might already exist."}}`)
-		http.Error(w, "Failed to save purchase order: "+err.Error(), http.StatusInternalServerError)
+		if isDuplicateKeyError(err) {
+			setHXTriggerToast(w, "error", "Purchase order number already exists.")
+			http.Error(w, "Purchase order number already exists", http.StatusConflict)
+			return
+		}
+		log.Printf("SavePurchaseOrderHandler insert header error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to save purchase order header.")
+		http.Error(w, "Failed to save purchase order", http.StatusInternalServerError)
 		return
 	}
 
@@ -240,15 +256,17 @@ func (app *App) SavePurchaseOrderHandler(w http.ResponseWriter, r *http.Request)
 			item.TotalAmount,
 		)
 		if err != nil {
-			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save purchase order item."}}`)
-			http.Error(w, "Failed to save purchase order item: "+err.Error(), http.StatusInternalServerError)
+			log.Printf("SavePurchaseOrderHandler insert item error: %v", err)
+			setHXTriggerToast(w, "error", "Failed to save purchase order item.")
+			http.Error(w, "Failed to save purchase order item", http.StatusInternalServerError)
 			return
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to commit purchase order transaction."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Printf("SavePurchaseOrderHandler commit error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to commit purchase order transaction.")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
@@ -256,8 +274,15 @@ func (app *App) SavePurchaseOrderHandler(w http.ResponseWriter, r *http.Request)
 	nextPONo := fmt.Sprintf("PO-%s-%03d", now.Format("060102"), now.Minute()*60+now.Second())
 
 	successMsg := fmt.Sprintf("Purchase Order %s saved to system successfully!", domainPO.PONo)
-	triggerJSON := fmt.Sprintf(`{"show-toast": {"type": "success", "message": "%s"}, "po-saved": {"next_po_no": "%s"}}`, successMsg, nextPONo)
-	w.Header().Set("HX-Trigger", triggerJSON)
+	setHXTrigger(w, map[string]any{
+		"show-toast": map[string]string{
+			"type":    "success",
+			"message": successMsg,
+		},
+		"po-saved": map[string]string{
+			"next_po_no": nextPONo,
+		},
+	})
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{

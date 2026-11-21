@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -18,28 +17,7 @@ import (
 
 func parseFormsTemplatesForTest() map[string]*template.Template {
 	templates := make(map[string]*template.Template)
-	funcMap := template.FuncMap{
-		"derefInt": func(p *int) int {
-			if p == nil {
-				return 0
-			}
-			return *p
-		},
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			d := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				k, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				d[k] = values[i+1]
-			}
-			return d, nil
-		},
-	}
+	funcMap := TemplateFuncMap()
 
 	pages := []string{"form_purchase_order.html", "form_quotation.html"}
 	for _, page := range pages {
@@ -53,9 +31,13 @@ func parseFormsTemplatesForTest() map[string]*template.Template {
 }
 
 func TestForms_PurchaseOrderAndSearch(t *testing.T) {
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to init db: %v", err)
+	setupIsolatedTestDB(t)
+
+	if _, err := db.DB.Exec("INSERT INTO uoms (code) VALUES ('PCS'), ('BOX') ON CONFLICT DO NOTHING"); err != nil {
+		t.Fatalf("Failed to seed uoms: %v", err)
+	}
+	if _, err := db.DB.Exec("INSERT INTO items (code, description, default_uom) VALUES ('ITM-PO-1', 'Heavy Duty Steel Bracket', 'PCS') ON CONFLICT DO NOTHING"); err != nil {
+		t.Fatalf("Failed to seed item: %v", err)
 	}
 
 	app := &App{

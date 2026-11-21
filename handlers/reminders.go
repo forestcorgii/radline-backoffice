@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +23,78 @@ type CalendarDay struct {
 
 type CalendarWeek struct {
 	Days []CalendarDay
+}
+
+// sanitizeReminderReturnURL ensures a return URL from HX-Current-URL or Referer is a safe relative internal path.
+func sanitizeReminderReturnURL(raw string, r *http.Request) string {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return "/reminders"
+	}
+	if strings.ContainsAny(trimmed, "\r\n\"\\") {
+		return "/reminders"
+	}
+
+	u, err := url.Parse(trimmed)
+	if err != nil {
+		return "/reminders"
+	}
+
+	if u.Scheme != "" || u.Host != "" {
+		if r == nil || r.Host == "" || !strings.EqualFold(u.Host, r.Host) {
+			return "/reminders"
+		}
+	}
+
+	path := u.Path
+	if path == "" || !strings.HasPrefix(path, "/") || strings.HasPrefix(path, "//") {
+		return "/reminders"
+	}
+
+	if u.RawQuery != "" {
+		return path + "?" + u.RawQuery
+	}
+	return path
+}
+
+func resolveReminderReturnURL(r *http.Request) string {
+	raw := r.Header.Get("HX-Current-URL")
+	if raw == "" {
+		raw = r.Header.Get("Referer")
+	}
+	return sanitizeReminderReturnURL(raw, r)
+}
+
+func isReminderAdminOrManager(currUser *CurrentUserContext) bool {
+	if currUser == nil {
+		return true
+	}
+	return strings.EqualFold(currUser.User.RoleName, "Admin") || currUser.HasPermission(domain.PermSettingsEdit)
+}
+
+func canCreateReminder(currUser *CurrentUserContext) bool {
+	if currUser == nil {
+		return true
+	}
+	if isReminderAdminOrManager(currUser) {
+		return true
+	}
+	return currUser.HasPermission(domain.PermSalesCreate) ||
+		currUser.HasPermission(domain.PermInventoryReceive) ||
+		currUser.HasPermission(domain.PermItemsEdit)
+}
+
+func canModifyReminder(currUser *CurrentUserContext, assignedToUserID *int64) bool {
+	if currUser == nil {
+		return true
+	}
+	if isReminderAdminOrManager(currUser) {
+		return true
+	}
+	if !canCreateReminder(currUser) {
+		return false
+	}
+	return assignedToUserID != nil && *assignedToUserID == currUser.User.ID
 }
 
 // RemindersHandler renders the interactive calendar view and reminder list
@@ -45,9 +118,6 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 	currentMonthStr := firstOfMonth.Format("2006-01")
 	displayMonthName := firstOfMonth.Format("January 2006")
 
-	// Ensure reminders table exists in the active database
-	_ = db.EnsureRemindersTable()
-
 	// Fetch all reminders for this month using typed time.Time parameters for PostgreSQL TIMESTAMPTZ compatibility
 	var monthlyReminders []models.Reminder
 	if db.DB != nil {
@@ -63,7 +133,6 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 		`, firstOfMonth, endOfMonth)
 		if err != nil {
 			log.Printf("[RemindersHandler] Warning: failed to fetch monthly reminders with time.Time: %v. Retrying with string fallback...", err)
-			_ = db.EnsureRemindersTable()
 			_ = db.DB.Select(&monthlyReminders, `
 				SELECT 
 					r.id, r.title, r.details, r.due_date, r.priority, r.category, r.status, r.created_at,
@@ -182,6 +251,13 @@ func (app *App) RemindersHandler(w http.ResponseWriter, r *http.Request) {
 
 // AddReminderHandler creates a new scheduled task
 func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
+	currUser := GetCurrentUser(r)
+	if !canCreateReminder(currUser) {
+		setHXTriggerToast(w, "error", "Access Denied: You do not have permission to create reminders.")
+		http.Error(w, "403 Forbidden: Insufficient Permissions", http.StatusForbidden)
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
@@ -203,13 +279,13 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 
 	dueDate, err := time.Parse("2006-01-02", dueDateStr)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid due date format. Expected YYYY-MM-DD."}}`)
+		setHXTriggerToast(w, "error", "Invalid due date format. Expected YYYY-MM-DD.")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	if err := domain.ValidateReminder(title, dueDate, domain.ReminderPriority(priorityStr)); err != nil {
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		setHXTriggerToast(w, "error", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -221,8 +297,18 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if currUser != nil && !isReminderAdminOrManager(currUser) {
+		if assignedToUserID == nil {
+			uid := currUser.User.ID
+			assignedToUserID = &uid
+		} else if *assignedToUserID != currUser.User.ID {
+			setHXTriggerToast(w, "error", "Access Denied: You can only assign reminders to yourself.")
+			http.Error(w, "403 Forbidden: Cannot assign reminder to another user", http.StatusForbidden)
+			return
+		}
+	}
+
 	var newID int64
-	_ = db.EnsureRemindersTable()
 	err = db.DB.QueryRow(`
 		INSERT INTO reminders (title, details, due_date, priority, category, status, assigned_to_user_id)
 		VALUES (?, ?, ?, ?, ?, 'Pending', ?)
@@ -230,23 +316,17 @@ func (app *App) AddReminderHandler(w http.ResponseWriter, r *http.Request) {
 	`, title, details, dueDate, priorityStr, category, assignedToUserID).Scan(&newID)
 	if err != nil {
 		log.Printf("ERROR: Failed to create reminder: %v", err)
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to create reminder."}}`)
+		setHXTriggerToast(w, "error", "Failed to create reminder.")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	app.LogActivity(r, "CREATE_REMINDER", "Reminder", fmt.Sprintf("%d", newID), fmt.Sprintf("Scheduled reminder '%s' for %s", title, dueDateStr))
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder created successfully!"}}`)
-	returnUrl := r.Header.Get("HX-Current-URL")
-	if returnUrl == "" {
-		returnUrl = r.Header.Get("Referer")
-	}
-	if returnUrl == "" {
-		returnUrl = "/calendar"
-	}
-	target := r.Header.Get("HX-Target")
-	if target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
+	setHXTriggerToast(w, "success", "Reminder created successfully!")
+	returnUrl := resolveReminderReturnURL(r)
+	target := strings.TrimPrefix(r.Header.Get("HX-Target"), "#")
+	if target == "main-content" || r.Header.Get("HX-Request") == "true" {
+		setHXLocation(w, returnUrl, "#main-content")
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)
 	}
@@ -259,6 +339,20 @@ func (app *App) EditReminderHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		http.Error(w, "Invalid reminder ID", http.StatusBadRequest)
+		return
+	}
+
+	var existingAssignedTo *int64
+	err = db.DB.Get(&existingAssignedTo, "SELECT assigned_to_user_id FROM reminders WHERE id = ?", id)
+	if err != nil {
+		http.Error(w, "Reminder not found", http.StatusNotFound)
+		return
+	}
+
+	currUser := GetCurrentUser(r)
+	if !canModifyReminder(currUser, existingAssignedTo) {
+		setHXTriggerToast(w, "error", "Access Denied: You can only modify your own reminders.")
+		http.Error(w, "403 Forbidden: Insufficient Permissions", http.StatusForbidden)
 		return
 	}
 
@@ -287,19 +381,19 @@ func (app *App) EditReminderHandler(w http.ResponseWriter, r *http.Request) {
 
 	dueDate, err := time.Parse("2006-01-02", dueDateStr)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid due date format. Expected YYYY-MM-DD."}}`)
+		setHXTriggerToast(w, "error", "Invalid due date format. Expected YYYY-MM-DD.")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	if err := domain.ValidateReminder(title, dueDate, domain.ReminderPriority(priorityStr)); err != nil {
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		setHXTriggerToast(w, "error", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	if err := domain.ValidateReminderStatus(domain.ReminderStatus(status)); err != nil {
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		setHXTriggerToast(w, "error", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -311,29 +405,35 @@ func (app *App) EditReminderHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if currUser != nil && !isReminderAdminOrManager(currUser) {
+		if assignedToUserID == nil {
+			uid := currUser.User.ID
+			assignedToUserID = &uid
+		} else if *assignedToUserID != currUser.User.ID {
+			setHXTriggerToast(w, "error", "Access Denied: You cannot reassign reminders to another user.")
+			http.Error(w, "403 Forbidden: Cannot reassign reminder", http.StatusForbidden)
+			return
+		}
+	}
+
 	_, err = db.DB.Exec(`
 		UPDATE reminders
 		SET title = ?, details = ?, due_date = ?, priority = ?, category = ?, status = ?, assigned_to_user_id = ?
 		WHERE id = ?
 	`, title, details, dueDate, priorityStr, category, status, assignedToUserID, id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update reminder."}}`)
+		log.Printf("EditReminderHandler update error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to update reminder.")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	app.LogActivity(r, "UPDATE_REMINDER", "Reminder", idStr, fmt.Sprintf("Updated reminder '%s' (due %s)", title, dueDateStr))
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder updated successfully!"}}`)
-	returnUrl := r.Header.Get("HX-Current-URL")
-	if returnUrl == "" {
-		returnUrl = r.Header.Get("Referer")
-	}
-	if returnUrl == "" {
-		returnUrl = "/calendar"
-	}
-	target := r.Header.Get("HX-Target")
-	if target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
+	setHXTriggerToast(w, "success", "Reminder updated successfully!")
+	returnUrl := resolveReminderReturnURL(r)
+	target := strings.TrimPrefix(r.Header.Get("HX-Target"), "#")
+	if target == "main-content" || r.Header.Get("HX-Request") == "true" {
+		setHXLocation(w, returnUrl, "#main-content")
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)
 	}
@@ -349,33 +449,58 @@ func (app *App) ToggleReminderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var curStatus string
-	err = db.DB.Get(&curStatus, "SELECT status FROM reminders WHERE id = ?", id)
+	tx, err := db.DB.Beginx()
+	if err != nil {
+		log.Printf("ToggleReminderHandler begin tx error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to toggle reminder.")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	var row struct {
+		Status           string `db:"status"`
+		AssignedToUserID *int64 `db:"assigned_to_user_id"`
+	}
+	err = tx.Get(&row, "SELECT status, assigned_to_user_id FROM reminders WHERE id = ?", id)
 	if err != nil {
 		http.Error(w, "Reminder not found", http.StatusNotFound)
 		return
 	}
 
+	currUser := GetCurrentUser(r)
+	if !canModifyReminder(currUser, row.AssignedToUserID) {
+		setHXTriggerToast(w, "error", "Access Denied: You can only toggle your own reminders.")
+		http.Error(w, "403 Forbidden: Insufficient Permissions", http.StatusForbidden)
+		return
+	}
+
 	newStatus := "Completed"
-	if curStatus == "Completed" {
+	if row.Status == "Completed" {
 		newStatus = "Pending"
 	}
 
-	_, _ = db.DB.Exec("UPDATE reminders SET status = ? WHERE id = ?", newStatus, id)
+	if _, err := tx.Exec("UPDATE reminders SET status = ? WHERE id = ?", newStatus, id); err != nil {
+		log.Printf("ToggleReminderHandler update error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to update reminder status.")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Printf("ToggleReminderHandler commit error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to commit reminder status.")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	app.LogActivity(r, "TOGGLE_REMINDER", "Reminder", idStr, fmt.Sprintf("Marked reminder ID %s as %s", idStr, newStatus))
 
-	returnUrl := r.Header.Get("HX-Current-URL")
-	if returnUrl == "" {
-		returnUrl = r.Header.Get("Referer")
-	}
-	if returnUrl == "" {
-		returnUrl = "/calendar"
-	}
-
-	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "success", "message": "Reminder marked as %s"}}`, newStatus))
-	target := r.Header.Get("HX-Target")
-	if target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
+	returnUrl := resolveReminderReturnURL(r)
+	setHXTriggerToast(w, "success", fmt.Sprintf("Reminder marked as %s", newStatus))
+	target := strings.TrimPrefix(r.Header.Get("HX-Target"), "#")
+	if target == "main-content" || r.Header.Get("HX-Request") == "true" {
+		setHXLocation(w, returnUrl, "#main-content")
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)
 	}
@@ -391,21 +516,33 @@ func (app *App) DeleteReminderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = db.DB.Exec("DELETE FROM reminders WHERE id = ?", id)
+	var existingAssignedTo *int64
+	err = db.DB.Get(&existingAssignedTo, "SELECT assigned_to_user_id FROM reminders WHERE id = ?", id)
+	if err != nil {
+		http.Error(w, "Reminder not found", http.StatusNotFound)
+		return
+	}
+
+	currUser := GetCurrentUser(r)
+	if !canModifyReminder(currUser, existingAssignedTo) {
+		setHXTriggerToast(w, "error", "Access Denied: You can only delete your own reminders.")
+		http.Error(w, "403 Forbidden: Insufficient Permissions", http.StatusForbidden)
+		return
+	}
+
+	if _, err := db.DB.Exec("DELETE FROM reminders WHERE id = ?", id); err != nil {
+		log.Printf("DeleteReminderHandler delete error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to delete reminder.")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	app.LogActivity(r, "DELETE_REMINDER", "Reminder", idStr, "Removed reminder ID "+idStr)
 
-	returnUrl := r.Header.Get("HX-Current-URL")
-	if returnUrl == "" {
-		returnUrl = r.Header.Get("Referer")
-	}
-	if returnUrl == "" {
-		returnUrl = "/calendar"
-	}
-
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Reminder deleted"}}`)
-	target := r.Header.Get("HX-Target")
-	if target == "#main-content" || target == "main-content" || r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
+	returnUrl := resolveReminderReturnURL(r)
+	setHXTriggerToast(w, "success", "Reminder deleted")
+	target := strings.TrimPrefix(r.Header.Get("HX-Target"), "#")
+	if target == "main-content" || r.Header.Get("HX-Request") == "true" {
+		setHXLocation(w, returnUrl, "#main-content")
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)
 	}
@@ -424,41 +561,46 @@ func (app *App) RescheduleReminderHandler(w http.ResponseWriter, r *http.Request
 	dueDateStr := strings.TrimSpace(r.FormValue("due_date"))
 	dueDate, err := time.Parse("2006-01-02", dueDateStr)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Invalid date format. Expected YYYY-MM-DD."}}`)
+		setHXTriggerToast(w, "error", "Invalid date format. Expected YYYY-MM-DD.")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	var title string
-	err = db.DB.Get(&title, "SELECT title FROM reminders WHERE id = ?", id)
+	var row struct {
+		Title            string `db:"title"`
+		AssignedToUserID *int64 `db:"assigned_to_user_id"`
+	}
+	err = db.DB.Get(&row, "SELECT title, assigned_to_user_id FROM reminders WHERE id = ?", id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Reminder not found."}}`)
+		setHXTriggerToast(w, "error", "Reminder not found.")
 		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	currUser := GetCurrentUser(r)
+	if !canModifyReminder(currUser, row.AssignedToUserID) {
+		setHXTriggerToast(w, "error", "Access Denied: You can only reschedule your own reminders.")
+		http.Error(w, "403 Forbidden: Insufficient Permissions", http.StatusForbidden)
 		return
 	}
 
 	_, err = db.DB.Exec("UPDATE reminders SET due_date = ? WHERE id = ?", dueDate, id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to reschedule reminder."}}`)
+		log.Printf("RescheduleReminderHandler update error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to reschedule reminder.")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	app.LogActivity(r, "RESCHEDULE_REMINDER", "Reminder", idStr, fmt.Sprintf("Rescheduled reminder '%s' to %s", title, dueDateStr))
+	app.LogActivity(r, "RESCHEDULE_REMINDER", "Reminder", idStr, fmt.Sprintf("Rescheduled reminder '%s' to %s", row.Title, dueDateStr))
 
-	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "success", "message": "Rescheduled '%s' to %s!"}}`, title, dueDate.Format("Jan 02, 2006")))
+	setHXTriggerToast(w, "success", fmt.Sprintf("Rescheduled '%s' to %s!", row.Title, dueDate.Format("Jan 02, 2006")))
 
-	returnUrl := r.Header.Get("HX-Current-URL")
-	if returnUrl == "" {
-		returnUrl = r.Header.Get("Referer")
-	}
-	if returnUrl == "" {
-		returnUrl = "/calendar"
-	}
+	returnUrl := resolveReminderReturnURL(r)
 
-	target := r.Header.Get("HX-Target")
-	if target == "#main-content" || target == "main-content" {
-		w.Header().Set("HX-Location", fmt.Sprintf(`{"path": "%s", "target": "#main-content"}`, returnUrl))
+	target := strings.TrimPrefix(r.Header.Get("HX-Target"), "#")
+	if target == "main-content" {
+		setHXLocation(w, returnUrl, "#main-content")
 	} else {
 		w.Header().Set("HX-Redirect", returnUrl)
 	}

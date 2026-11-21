@@ -121,12 +121,11 @@ func TestUserChipHandler(t *testing.T) {
 }
 
 func TestLogoutHandler(t *testing.T) {
-	// Initialize test db
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to initialize test DB: %v", err)
+	setupIsolatedTestDB(t)
+
+	if _, err := db.DB.Exec("INSERT INTO roles (id, name, description) VALUES (1, 'Admin', 'Admin') ON CONFLICT DO NOTHING"); err != nil {
+		t.Fatalf("Failed to seed role: %v", err)
 	}
-	defer db.DB.Close()
 
 	app := &App{}
 
@@ -135,9 +134,10 @@ func TestLogoutHandler(t *testing.T) {
 		sessionToken := "test-session-logout-1"
 		expiresAt := time.Now().Add(1 * time.Hour)
 		// Instead of assuming user 1 exists, we just insert a user for the test
-		_, err = db.DB.Exec("INSERT INTO users (id, username, password_hash, full_name, role_id, is_active) VALUES (99991, 'testuser1', 'hash', 'Test User', 1, 1) ON CONFLICT DO NOTHING")
-		_, err = db.DB.Exec("INSERT INTO user_sessions (id, user_id, expires_at) VALUES (?, 99991, ?) ON CONFLICT DO NOTHING", sessionToken, expiresAt)
-		if err != nil {
+		if _, err := db.DB.Exec("INSERT INTO users (id, username, password_hash, full_name, role_id, is_active) VALUES (99991, 'testuser1', 'hash', 'Test User', 1, 1) ON CONFLICT DO NOTHING"); err != nil {
+			t.Fatalf("Failed to insert test user: %v", err)
+		}
+		if _, err := db.DB.Exec("INSERT INTO user_sessions (id, user_id, expires_at) VALUES (?, 99991, ?) ON CONFLICT DO NOTHING", sessionToken, expiresAt); err != nil {
 			t.Fatalf("Failed to create test session: %v", err)
 		}
 
@@ -165,7 +165,7 @@ func TestLogoutHandler(t *testing.T) {
 
 		// Check that the session was deleted from the database
 		var count int
-		err = db.DB.Get(&count, "SELECT COUNT(*) FROM user_sessions WHERE id = ?", sessionToken)
+		err := db.DB.Get(&count, "SELECT COUNT(*) FROM user_sessions WHERE id = ?", sessionToken)
 		if err != nil {
 			t.Fatalf("Failed to count user sessions: %v", err)
 		}
@@ -202,9 +202,10 @@ func TestLogoutHandler(t *testing.T) {
 		sessionToken := "test-session-logout-2"
 		expiresAt := time.Now().Add(1 * time.Hour)
 		// Instead of assuming user 1 exists, we just insert a user for the test
-		_, err = db.DB.Exec("INSERT INTO users (id, username, password_hash, full_name, role_id, is_active) VALUES (99992, 'testuser2', 'hash', 'Test User', 1, 1) ON CONFLICT DO NOTHING")
-		_, err = db.DB.Exec("INSERT INTO user_sessions (id, user_id, expires_at) VALUES (?, 99992, ?) ON CONFLICT DO NOTHING", sessionToken, expiresAt)
-		if err != nil {
+		if _, err := db.DB.Exec("INSERT INTO users (id, username, password_hash, full_name, role_id, is_active) VALUES (99992, 'testuser2', 'hash', 'Test User', 1, 1) ON CONFLICT DO NOTHING"); err != nil {
+			t.Fatalf("Failed to insert test user: %v", err)
+		}
+		if _, err := db.DB.Exec("INSERT INTO user_sessions (id, user_id, expires_at) VALUES (?, 99992, ?) ON CONFLICT DO NOTHING", sessionToken, expiresAt); err != nil {
 			t.Fatalf("Failed to create test session: %v", err)
 		}
 
@@ -233,7 +234,7 @@ func TestLogoutHandler(t *testing.T) {
 
 		// Check that the session was deleted from the database
 		var count int
-		err = db.DB.Get(&count, "SELECT COUNT(*) FROM user_sessions WHERE id = ?", sessionToken)
+		err := db.DB.Get(&count, "SELECT COUNT(*) FROM user_sessions WHERE id = ?", sessionToken)
 		if err != nil {
 			t.Fatalf("Failed to count user sessions: %v", err)
 		}

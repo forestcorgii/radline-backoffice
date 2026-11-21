@@ -47,16 +47,16 @@
                     <option value="deepseek_official" data-base="https://api.deepseek.com/v1" data-model="deepseek-chat">Official DeepSeek API (sk-...) — OCR + DeepSeek V3 AI</option>
                     <option value="openrouter" data-base="https://openrouter.ai/api/v1" data-model="deepseek/deepseek-chat">OpenRouter (sk-or-v1-...) — Direct Vision API</option>
                     <option value="siliconflow" data-base="https://api.siliconflow.cn/v1" data-model="deepseek-ai/deepseek-vl-7b-chat">SiliconFlow — Direct Vision API</option>
-                    <option value="ollama" data-base="http://localhost:11434/v1" data-model="deepseek-vl">Ollama / Local — Direct Vision API</option>
                 </select>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
                 <div>
-                    <label for="ds-api-key" style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                    <label for="ds-api-key" style="font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; margin-bottom: 4px;">
                         DeepSeek API Key
+                        {{ if or .DeepSeekConfig.APIKey .DeepSeekConfig.HasAPIKey }}<span class="badge badge-success" style="font-size: 0.65rem; padding: 0.1rem 0.35rem; background-color: var(--accent-green, #10b981); color: #fff; border-radius: 3px;">Configured</span>{{ end }}
                     </label>
                     <div style="position: relative; display: flex; align-items: center;">
-                        <input type="password" id="ds-api-key" name="api_key" value="{{ .DeepSeekConfig.APIKey }}" placeholder="sk-..." required class="form-input" style="width: 100%; padding-right: 2.5rem;">
+                        <input type="password" id="ds-api-key" name="api_key" value="" placeholder="{{ if or .DeepSeekConfig.APIKey .DeepSeekConfig.HasAPIKey }}•••••••••••••••• (Configured — leave blank to keep current){{ else }}sk-...{{ end }}" {{ if not (or .DeepSeekConfig.APIKey .DeepSeekConfig.HasAPIKey) }}required{{ end }} class="form-input" style="width: 100%; padding-right: 2.5rem;">
                         <button type="button" onclick="togglePasswordVisibility('ds-api-key')" style="position: absolute; right: 0.5rem; background: none; border: none; cursor: pointer; color: var(--text-muted);">
                             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -102,7 +102,7 @@
         if (!option || !option.value) return;
         const base = option.getAttribute('data-base');
         const model = option.getAttribute('data-model');
-        if (base && document.getElementById(baseInputId)) document.getElementById(baseInputId).value = base;
+        if (base && base.startsWith('https://') && document.getElementById(baseInputId)) document.getElementById(baseInputId).value = base;
         if (model && document.getElementById(modelInputId)) document.getElementById(modelInputId).value = model;
     }
 </script>

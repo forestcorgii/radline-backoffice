@@ -19,13 +19,24 @@ func GetCurrentUser(r *http.Request) *CurrentUserContext {
 	return ctxUser
 }
 
+// HasPermission checks if the user context holds a specific permission
+func (u *CurrentUserContext) HasPermission(permKey string) bool {
+	if u == nil {
+		return false
+	}
+	if strings.EqualFold(strings.TrimSpace(u.User.RoleName), "Admin") {
+		return true
+	}
+	if u.Permissions == nil {
+		return false
+	}
+	return u.Permissions[permKey]
+}
+
 // HasPermission checks if the user in request context holds a specific permission
 func HasPermission(r *http.Request, permKey string) bool {
 	ctxUser := GetCurrentUser(r)
-	if ctxUser == nil {
-		return false
-	}
-	return ctxUser.Permissions[permKey]
+	return ctxUser.HasPermission(permKey)
 }
 
 // AuthMiddleware inspects session cookie and enforces authentication for non-public routes
@@ -76,9 +87,9 @@ func (app *App) RequirePermission(permKey string, handler http.HandlerFunc) http
 			return
 		}
 
-		if !ctxUser.Permissions[permKey] {
+		if !ctxUser.HasPermission(permKey) {
 			if r.Header.Get("HX-Request") == "true" {
-				w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Access Denied: You do not have permission to perform this action."}}`)
+				setHXTriggerToast(w, "error", "Access Denied: You do not have permission to perform this action.")
 				w.WriteHeader(http.StatusForbidden)
 				w.Write([]byte(`<div class="badge badge-danger" style="display:inline-block; padding:0.5rem 0.75rem;">Access Denied (Insufficient Permissions)</div>`))
 				return

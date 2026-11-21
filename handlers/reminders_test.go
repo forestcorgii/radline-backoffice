@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -16,28 +15,7 @@ import (
 
 func parseRemindersTemplatesForTest() map[string]*template.Template {
 	templates := make(map[string]*template.Template)
-	funcMap := template.FuncMap{
-		"derefInt": func(p *int) int {
-			if p == nil {
-				return 0
-			}
-			return *p
-		},
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			d := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				k, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				d[k] = values[i+1]
-			}
-			return d, nil
-		},
-	}
+	funcMap := TemplateFuncMap()
 
 	pages := []string{"reminders.html"}
 	for _, page := range pages {
@@ -51,9 +29,13 @@ func parseRemindersTemplatesForTest() map[string]*template.Template {
 }
 
 func TestReminders_AddEditAndAssign(t *testing.T) {
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to init db: %v", err)
+	setupIsolatedTestDB(t)
+
+	if _, err := db.DB.Exec("INSERT INTO roles (id, name, description) VALUES (1, 'Admin', 'Admin') ON CONFLICT DO NOTHING"); err != nil {
+		t.Fatalf("Failed to seed role: %v", err)
+	}
+	if _, err := db.DB.Exec("INSERT INTO users (username, password_hash, full_name, role_id, is_active) VALUES ('remtest', 'hash', 'Reminder Tester', 1, TRUE) ON CONFLICT DO NOTHING"); err != nil {
+		t.Fatalf("Failed to seed active user: %v", err)
 	}
 
 	app := &App{
@@ -62,7 +44,7 @@ func TestReminders_AddEditAndAssign(t *testing.T) {
 
 	// Ensure there is at least one active user to assign to
 	var user models.User
-	err = db.DB.Get(&user, "SELECT id, username, full_name FROM users WHERE is_active = TRUE LIMIT 1")
+	err := db.DB.Get(&user, "SELECT id, username, full_name FROM users WHERE is_active = TRUE LIMIT 1")
 	if err != nil {
 		t.Fatalf("Expected at least one active user: %v", err)
 	}
@@ -172,10 +154,7 @@ func TestReminders_AddEditAndAssign(t *testing.T) {
 }
 
 func TestReminders_RescheduleDragAndDrop(t *testing.T) {
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to init db: %v", err)
-	}
+	setupIsolatedTestDB(t)
 
 	app := &App{
 		Templates: parseRemindersTemplatesForTest(),

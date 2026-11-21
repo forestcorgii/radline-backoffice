@@ -1,9 +1,13 @@
 package db
 
 import (
+	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -53,6 +57,22 @@ func (db *DBConn) QueryRow(query string, args ...interface{}) *sql.Row {
 
 func (db *DBConn) QueryRowx(query string, args ...interface{}) *sqlx.Row {
 	return db.DB.QueryRowx(db.Rebind(query), args...)
+}
+
+func (db *DBConn) Prepare(query string) (*sql.Stmt, error) {
+	return db.DB.Prepare(db.Rebind(query))
+}
+
+func (db *DBConn) Preparex(query string) (*sqlx.Stmt, error) {
+	return db.DB.Preparex(db.Rebind(query))
+}
+
+func (db *DBConn) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	return db.DB.PrepareContext(ctx, db.Rebind(query))
+}
+
+func (db *DBConn) PreparexContext(ctx context.Context, query string) (*sqlx.Stmt, error) {
+	return db.DB.PreparexContext(ctx, db.Rebind(query))
 }
 
 func (db *DBConn) Beginx() (*TxConn, error) {
@@ -108,6 +128,22 @@ func (tx *TxConn) QueryRowx(query string, args ...interface{}) *sqlx.Row {
 	return tx.Tx.QueryRowx(tx.Rebind(query), args...)
 }
 
+func (tx *TxConn) Prepare(query string) (*sql.Stmt, error) {
+	return tx.Tx.Prepare(tx.Rebind(query))
+}
+
+func (tx *TxConn) Preparex(query string) (*sqlx.Stmt, error) {
+	return tx.Tx.Preparex(tx.Rebind(query))
+}
+
+func (tx *TxConn) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	return tx.Tx.PrepareContext(ctx, tx.Rebind(query))
+}
+
+func (tx *TxConn) PreparexContext(ctx context.Context, query string) (*sqlx.Stmt, error) {
+	return tx.Tx.PreparexContext(ctx, tx.Rebind(query))
+}
+
 var DB *DBConn
 
 func InitDB(datasource string) error {
@@ -119,6 +155,11 @@ func InitDB(datasource string) error {
 	sqlx.BindDriver("pgx", sqlx.DOLLAR)
 	sqlx.BindDriver("sqlite", sqlx.QUESTION)
 
+	if DB != nil && DB.DB != nil {
+		_ = DB.DB.Close()
+		DB = nil
+	}
+
 	rawDB, err := sqlx.Connect(driver, datasource)
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s: %w", driver, err)
@@ -129,144 +170,271 @@ func InitDB(datasource string) error {
 		DriverName: driver,
 	}
 
-	if driver == "pgx" {
-		DB.SetMaxOpenConns(25)
-		DB.SetMaxIdleConns(5)
-		DB.SetConnMaxLifetime(5 * time.Minute)
-		DB.SetConnMaxIdleTime(2 * time.Minute)
+	initErr := func() error {
+		if driver == "pgx" {
+			DB.SetMaxOpenConns(25)
+			DB.SetMaxIdleConns(5)
+			DB.SetConnMaxLifetime(5 * time.Minute)
+			DB.SetConnMaxIdleTime(2 * time.Minute)
 
-		if err := createSchemaPostgres(); err != nil {
+			if err := createSchemaPostgres(); err != nil {
+				return err
+			}
+			if err := runPostgresMigrations(); err != nil {
+				return err
+			}
+		} else {
+			DB.SetMaxOpenConns(1)
+			if _, err := DB.Exec("PRAGMA journal_mode = WAL;"); err != nil {
+				return fmt.Errorf("failed to enable SQLite WAL mode: %w", err)
+			}
+			if _, err := DB.Exec("PRAGMA busy_timeout = 5000;"); err != nil {
+				return fmt.Errorf("failed to set SQLite busy_timeout: %w", err)
+			}
+			if _, err := DB.Exec("PRAGMA foreign_keys = ON;"); err != nil {
+				return fmt.Errorf("failed to enable SQLite foreign_keys: %w", err)
+			}
+			if err := createSchemaSQLite(); err != nil {
+				return err
+			}
+			if err := runSQLiteMigrations(); err != nil {
+				return err
+			}
+		}
+
+		if err := EnsureRemindersTable(); err != nil {
 			return err
 		}
-		runPostgresMigrations()
-	} else {
-		// Enable foreign key constraints in SQLite
-		if _, err := DB.Exec("PRAGMA foreign_keys = ON;"); err != nil {
+		if err := EnsureCustomersTable(); err != nil {
 			return err
 		}
-		runSQLiteMigrations()
-		if err := createSchemaSQLite(); err != nil {
+		if err := seedDefaults(); err != nil {
 			return err
 		}
+		return nil
+	}()
+	if initErr != nil {
+		_ = rawDB.Close()
+		DB = nil
+		return initErr
 	}
-
-	_ = EnsureRemindersTable()
-	_ = EnsureCustomersTable()
-	seedDefaults()
 	return nil
 }
 
-func runSQLiteMigrations() {
-	// Safe migration check for receiving_logs
-	_, err := DB.Exec("SELECT total_cost FROM receiving_logs LIMIT 0")
-	if err != nil {
-		var rowCount int
-		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM receiving_logs")
-		if errCount == nil {
-			if rowCount == 0 {
-				_, _ = DB.Exec("DROP TABLE IF EXISTS receiving_logs;")
-			} else {
-				_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN total_cost REAL NOT NULL DEFAULT 0.0;")
-				_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN selling_price REAL;")
-			}
+func sqliteHasColumn(tx *TxConn, table, column string) (bool, error) {
+	type pragmaCol struct {
+		CID       int     `db:"cid"`
+		Name      string  `db:"name"`
+		Type      string  `db:"type"`
+		NotNull   int     `db:"notnull"`
+		DfltValue *string `db:"dflt_value"`
+		PK        int     `db:"pk"`
+	}
+	var cols []pragmaCol
+	if err := tx.Select(&cols, "PRAGMA table_info("+table+")"); err != nil {
+		return false, fmt.Errorf("inspecting table %s: %w", table, err)
+	}
+	for _, c := range cols {
+		if strings.EqualFold(c.Name, column) {
+			return true, nil
 		}
 	}
-
-	// Safe migration check for sales_details
-	_, err = DB.Exec("SELECT doc_type FROM sales_details LIMIT 0")
-	if err != nil {
-		var rowCount int
-		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM sales_details")
-		if errCount == nil {
-			if rowCount == 0 {
-				_, _ = DB.Exec("DROP TABLE IF EXISTS sales_details;")
-			} else {
-				_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN doc_type TEXT NOT NULL DEFAULT 'SI';")
-				_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN doc_status TEXT NOT NULL DEFAULT 'POSTED';")
-				_, _ = DB.Exec("ALTER TABLE sales_details RENAME COLUMN invoice_no TO doc_number;")
-				_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN customer_name TEXT;")
-				_, _ = DB.Exec("ALTER TABLE sales_details RENAME COLUMN unit_price TO price;")
-				_, _ = DB.Exec("ALTER TABLE sales_details RENAME COLUMN margin_amount TO profit;")
-				_, _ = DB.Exec("ALTER TABLE sales_details RENAME COLUMN date TO doc_date;")
-			}
-		}
-	}
-
-	// Safe migration check for receiving_logs: rename channel to supplier
-	_, err = DB.Exec("SELECT supplier FROM receiving_logs LIMIT 0")
-	if err != nil {
-		_, errTable := DB.Exec("SELECT channel FROM receiving_logs LIMIT 0")
-		if errTable == nil {
-			_, _ = DB.Exec("ALTER TABLE receiving_logs RENAME COLUMN channel TO supplier;")
-		}
-	}
-
-	// Safe migration: add less1, less2, markup, remarks columns to receiving_logs
-	_, err = DB.Exec("SELECT less1 FROM receiving_logs LIMIT 0")
-	if err != nil {
-		_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN less1 REAL NOT NULL DEFAULT 0;")
-		_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN less2 REAL NOT NULL DEFAULT 0;")
-		_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN markup REAL NOT NULL DEFAULT 130;")
-		_, _ = DB.Exec("ALTER TABLE receiving_logs ADD COLUMN remarks TEXT NOT NULL DEFAULT '';")
-	}
-
-	// Safe migration check for sales_details: rename channel to supplier
-	_, err = DB.Exec("SELECT supplier FROM sales_details LIMIT 0")
-	if err != nil {
-		_, errTable := DB.Exec("SELECT channel FROM sales_details LIMIT 0")
-		if errTable == nil {
-			_, _ = DB.Exec("ALTER TABLE sales_details RENAME COLUMN channel TO supplier;")
-		}
-	}
-
-	// Safe migration: add adjustment_id column to inventory_adjustments if it doesn't exist
-	_, err = DB.Exec("SELECT adjustment_id FROM inventory_adjustments LIMIT 0")
-	if err != nil {
-		var rowCount int
-		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM inventory_adjustments")
-		if errCount == nil {
-			_, _ = DB.Exec("ALTER TABLE inventory_adjustments ADD COLUMN adjustment_id INTEGER;")
-		}
-	}
-
-	// Safe migration: add ref_pl, patong, pos_charge, wt_2307, total_remit, profit_margin, remarks columns to sales_details if they don't exist
-	_, err = DB.Exec("SELECT ref_pl FROM sales_details LIMIT 0")
-	if err != nil {
-		var rowCount int
-		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM sales_details")
-		if errCount == nil {
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN ref_pl TEXT;")
-		}
-	}
-
-	_, err = DB.Exec("SELECT patong FROM sales_details LIMIT 0")
-	if err != nil {
-		var rowCount int
-		errCount := DB.Get(&rowCount, "SELECT COUNT(*) FROM sales_details")
-		if errCount == nil {
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN patong REAL NOT NULL DEFAULT 0.0;")
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN pos_charge REAL NOT NULL DEFAULT 0.0;")
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN wt_2307 REAL NOT NULL DEFAULT 0.0;")
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN total_remit REAL NOT NULL DEFAULT 0.0;")
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN profit_margin REAL NOT NULL DEFAULT 0.0;")
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN remarks TEXT NOT NULL DEFAULT '';")
-		}
-	}
-
-	// Safe migration: add tin_no and address columns to sales_details if they don't exist
-	_, err = DB.Exec("SELECT tin_no FROM sales_details LIMIT 0")
-	if err != nil {
-		if DB.IsPostgres() {
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS tin_no TEXT DEFAULT '';")
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';")
-		} else {
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN tin_no TEXT DEFAULT '';")
-			_, _ = DB.Exec("ALTER TABLE sales_details ADD COLUMN address TEXT DEFAULT '';")
-		}
-	}
+	return false, nil
 }
 
-func runPostgresMigrations() {
+func runSQLiteMigrations() error {
+	tx, err := DB.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to begin SQLite migration transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// receiving_logs migrations
+	hasTotalCost, err := sqliteHasColumn(tx, "receiving_logs", "total_cost")
+	if err != nil {
+		return err
+	}
+	if !hasTotalCost {
+		if _, err := tx.Exec("ALTER TABLE receiving_logs ADD COLUMN total_cost REAL NOT NULL DEFAULT 0.0;"); err != nil {
+			return err
+		}
+	}
+	hasSellingPrice, err := sqliteHasColumn(tx, "receiving_logs", "selling_price")
+	if err != nil {
+		return err
+	}
+	if !hasSellingPrice {
+		if _, err := tx.Exec("ALTER TABLE receiving_logs ADD COLUMN selling_price REAL;"); err != nil {
+			return err
+		}
+	}
+	hasRecSupplier, err := sqliteHasColumn(tx, "receiving_logs", "supplier")
+	if err != nil {
+		return err
+	}
+	if !hasRecSupplier {
+		hasRecChannel, err := sqliteHasColumn(tx, "receiving_logs", "channel")
+		if err != nil {
+			return err
+		}
+		if hasRecChannel {
+			if _, err := tx.Exec("ALTER TABLE receiving_logs RENAME COLUMN channel TO supplier;"); err != nil {
+				return err
+			}
+		}
+	}
+	recCols := []struct {
+		name string
+		ddl  string
+	}{
+		{"less1", "ALTER TABLE receiving_logs ADD COLUMN less1 REAL NOT NULL DEFAULT 0;"},
+		{"less2", "ALTER TABLE receiving_logs ADD COLUMN less2 REAL NOT NULL DEFAULT 0;"},
+		{"markup", "ALTER TABLE receiving_logs ADD COLUMN markup REAL NOT NULL DEFAULT 130;"},
+		{"remarks", "ALTER TABLE receiving_logs ADD COLUMN remarks TEXT NOT NULL DEFAULT '';"},
+	}
+	for _, c := range recCols {
+		has, err := sqliteHasColumn(tx, "receiving_logs", c.name)
+		if err != nil {
+			return err
+		}
+		if !has {
+			if _, err := tx.Exec(c.ddl); err != nil {
+				return err
+			}
+		}
+	}
+
+	// sales_details migrations
+	hasDocType, err := sqliteHasColumn(tx, "sales_details", "doc_type")
+	if err != nil {
+		return err
+	}
+	if !hasDocType {
+		if _, err := tx.Exec("ALTER TABLE sales_details ADD COLUMN doc_type TEXT NOT NULL DEFAULT 'SI';"); err != nil {
+			return err
+		}
+	}
+	hasDocStatus, err := sqliteHasColumn(tx, "sales_details", "doc_status")
+	if err != nil {
+		return err
+	}
+	if !hasDocStatus {
+		if _, err := tx.Exec("ALTER TABLE sales_details ADD COLUMN doc_status TEXT NOT NULL DEFAULT 'POSTED';"); err != nil {
+			return err
+		}
+	}
+	salesRenames := []struct {
+		newCol string
+		oldCol string
+	}{
+		{"doc_number", "invoice_no"},
+		{"price", "unit_price"},
+		{"profit", "margin_amount"},
+		{"doc_date", "date"},
+		{"supplier", "channel"},
+	}
+	for _, r := range salesRenames {
+		hasNew, err := sqliteHasColumn(tx, "sales_details", r.newCol)
+		if err != nil {
+			return err
+		}
+		if !hasNew {
+			hasOld, err := sqliteHasColumn(tx, "sales_details", r.oldCol)
+			if err != nil {
+				return err
+			}
+			if hasOld {
+				if _, err := tx.Exec(fmt.Sprintf("ALTER TABLE sales_details RENAME COLUMN %s TO %s;", r.oldCol, r.newCol)); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	salesAdds := []struct {
+		name string
+		ddl  string
+	}{
+		{"customer_name", "ALTER TABLE sales_details ADD COLUMN customer_name TEXT;"},
+		{"ref_pl", "ALTER TABLE sales_details ADD COLUMN ref_pl TEXT;"},
+		{"patong", "ALTER TABLE sales_details ADD COLUMN patong REAL NOT NULL DEFAULT 0.0;"},
+		{"pos_charge", "ALTER TABLE sales_details ADD COLUMN pos_charge REAL NOT NULL DEFAULT 0.0;"},
+		{"wt_2307", "ALTER TABLE sales_details ADD COLUMN wt_2307 REAL NOT NULL DEFAULT 0.0;"},
+		{"total_remit", "ALTER TABLE sales_details ADD COLUMN total_remit REAL NOT NULL DEFAULT 0.0;"},
+		{"profit_margin", "ALTER TABLE sales_details ADD COLUMN profit_margin REAL NOT NULL DEFAULT 0.0;"},
+		{"remarks", "ALTER TABLE sales_details ADD COLUMN remarks TEXT NOT NULL DEFAULT '';"},
+		{"tin_no", "ALTER TABLE sales_details ADD COLUMN tin_no TEXT DEFAULT '';"},
+		{"address", "ALTER TABLE sales_details ADD COLUMN address TEXT DEFAULT '';"},
+	}
+	for _, c := range salesAdds {
+		has, err := sqliteHasColumn(tx, "sales_details", c.name)
+		if err != nil {
+			return err
+		}
+		if !has {
+			if _, err := tx.Exec(c.ddl); err != nil {
+				return err
+			}
+		}
+	}
+
+	// inventory_adjustments migrations
+	hasAdjID, err := sqliteHasColumn(tx, "inventory_adjustments", "adjustment_id")
+	if err != nil {
+		return err
+	}
+	if !hasAdjID {
+		if _, err := tx.Exec("ALTER TABLE inventory_adjustments ADD COLUMN adjustment_id INTEGER;"); err != nil {
+			return err
+		}
+	}
+
+	// reminders migrations
+	hasAssignedTo, err := sqliteHasColumn(tx, "reminders", "assigned_to_user_id")
+	if err != nil {
+		return err
+	}
+	if !hasAssignedTo {
+		if _, err := tx.Exec("ALTER TABLE reminders ADD COLUMN assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;"); err != nil {
+			return err
+		}
+	}
+
+	// Safe deduplication + unique index for uom_settings(item_id, muom)
+	if _, err := tx.Exec("DELETE FROM uom_settings WHERE id NOT IN (SELECT MIN(id) FROM uom_settings GROUP BY item_id, muom);"); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_uom_settings_item_muom ON uom_settings(item_id, muom);"); err != nil {
+		return err
+	}
+
+	// Ensure indexes exist on legacy and fresh databases after migrations run
+	indexStmts := []string{
+		"CREATE INDEX IF NOT EXISTS idx_receiving_logs_supplier ON receiving_logs(supplier);",
+		"CREATE INDEX IF NOT EXISTS idx_receiving_logs_pl_no ON receiving_logs(pl_no);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_doc_date ON sales_details(doc_date);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_doc_number ON sales_details(doc_number);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_doc_status ON sales_details(doc_status);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_supplier ON sales_details(supplier);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_customer_name ON sales_details(customer_name);",
+		"CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_adj_id ON inventory_adjustments(adjustment_id);",
+		"CREATE INDEX IF NOT EXISTS idx_reminders_assigned_to ON reminders(assigned_to_user_id);",
+	}
+	for _, stmt := range indexStmts {
+		if _, err := tx.Exec(stmt); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func runPostgresMigrations() error {
+	tx, err := DB.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to begin PostgreSQL migration transaction: %w", err)
+	}
+	defer tx.Rollback()
+
 	migrations := []string{
 		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS doc_type TEXT NOT NULL DEFAULT 'SI';",
 		"ALTER TABLE sales_details ADD COLUMN IF NOT EXISTS doc_status TEXT NOT NULL DEFAULT 'POSTED';",
@@ -288,17 +456,39 @@ func runPostgresMigrations() {
 		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS remarks TEXT NOT NULL DEFAULT '';",
 		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS total_cost DOUBLE PRECISION NOT NULL DEFAULT 0.0;",
 		"ALTER TABLE receiving_logs ADD COLUMN IF NOT EXISTS selling_price DOUBLE PRECISION;",
-		"ALTER TABLE inventory_adjustments ADD COLUMN IF NOT EXISTS adjustment_id INTEGER REFERENCES stock_adjustments(id);",
-		"ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id);",
-		"CREATE TABLE IF NOT EXISTS purchase_orders (id SERIAL PRIMARY KEY, po_no TEXT NOT NULL UNIQUE, date TIMESTAMPTZ NOT NULL, due_date TIMESTAMPTZ, vendor_name TEXT NOT NULL, vendor_tin TEXT DEFAULT '', vendor_address TEXT DEFAULT '', vendor_contact TEXT DEFAULT '', ship_to TEXT DEFAULT '', payment_terms TEXT DEFAULT '', shipping_method TEXT DEFAULT '', prepared_by TEXT DEFAULT '', freight DOUBLE PRECISION NOT NULL DEFAULT 0.0, apply_vat INTEGER NOT NULL DEFAULT 0, vat_amt DOUBLE PRECISION NOT NULL DEFAULT 0.0, subtotal DOUBLE PRECISION NOT NULL DEFAULT 0.0, grand_total DOUBLE PRECISION NOT NULL DEFAULT 0.0, notes TEXT DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP);",
+		"ALTER TABLE inventory_adjustments ADD COLUMN IF NOT EXISTS adjustment_id INTEGER REFERENCES stock_adjustments(id) ON DELETE CASCADE;",
+		"ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;",
+		"CREATE TABLE IF NOT EXISTS purchase_orders (id SERIAL PRIMARY KEY, po_no TEXT NOT NULL UNIQUE, date TIMESTAMPTZ NOT NULL, due_date TIMESTAMPTZ, vendor_name TEXT NOT NULL, vendor_tin TEXT DEFAULT '', vendor_address TEXT DEFAULT '', vendor_contact TEXT DEFAULT '', ship_to TEXT DEFAULT '', payment_terms TEXT DEFAULT '', shipping_method TEXT DEFAULT '', prepared_by TEXT DEFAULT '', freight DOUBLE PRECISION NOT NULL DEFAULT 0.0, apply_vat BOOLEAN NOT NULL DEFAULT FALSE, vat_amt DOUBLE PRECISION NOT NULL DEFAULT 0.0, subtotal DOUBLE PRECISION NOT NULL DEFAULT 0.0, grand_total DOUBLE PRECISION NOT NULL DEFAULT 0.0, notes TEXT DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP);",
 		"CREATE TABLE IF NOT EXISTS purchase_order_items (id SERIAL PRIMARY KEY, po_id INTEGER NOT NULL REFERENCES purchase_orders(id) ON DELETE CASCADE, item_code TEXT DEFAULT '', description TEXT NOT NULL, uom TEXT DEFAULT '', qty DOUBLE PRECISION NOT NULL DEFAULT 0.0, unit_cost DOUBLE PRECISION NOT NULL DEFAULT 0.0, total_amount DOUBLE PRECISION NOT NULL DEFAULT 0.0);",
+		`DO $$
+		BEGIN
+			IF EXISTS (
+				SELECT 1 FROM information_schema.columns
+				WHERE table_schema = 'public' AND table_name = 'purchase_orders'
+				  AND column_name = 'apply_vat' AND data_type IN ('integer', 'smallint', 'bigint')
+			) THEN
+				ALTER TABLE purchase_orders ALTER COLUMN apply_vat DROP DEFAULT;
+				ALTER TABLE purchase_orders ALTER COLUMN apply_vat TYPE BOOLEAN USING (apply_vat <> 0);
+				ALTER TABLE purchase_orders ALTER COLUMN apply_vat SET DEFAULT FALSE;
+			END IF;
+		END $$;`,
+		"DELETE FROM uom_settings WHERE id NOT IN (SELECT MIN(id) FROM uom_settings GROUP BY item_id, muom);",
+		"CREATE UNIQUE INDEX IF NOT EXISTS idx_uom_settings_item_muom ON uom_settings(item_id, muom);",
+		"CREATE INDEX IF NOT EXISTS idx_receiving_logs_supplier ON receiving_logs(supplier);",
+		"CREATE INDEX IF NOT EXISTS idx_receiving_logs_pl_no ON receiving_logs(pl_no);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_doc_number ON sales_details(doc_number);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_doc_status ON sales_details(doc_status);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_supplier ON sales_details(supplier);",
+		"CREATE INDEX IF NOT EXISTS idx_sales_details_customer_name ON sales_details(customer_name);",
+		"CREATE INDEX IF NOT EXISTS idx_reminders_assigned_to ON reminders(assigned_to_user_id);",
 	}
 
 	for _, stmt := range migrations {
-		if _, err := DB.Exec(stmt); err != nil {
-			log.Printf("PostgreSQL migration notice (%s): %v", stmt, err)
+		if _, err := tx.Exec(stmt); err != nil {
+			return fmt.Errorf("PostgreSQL migration failed (%s): %w", stmt, err)
 		}
 	}
+	return tx.Commit()
 }
 
 func createSchemaSQLite() error {
@@ -339,7 +529,8 @@ func createSchemaSQLite() error {
 		item_id INTEGER NOT NULL,
 		muom TEXT NOT NULL,
 		conversion_factor REAL NOT NULL,
-		FOREIGN KEY(item_id) REFERENCES items(id)
+		UNIQUE(item_id, muom),
+		FOREIGN KEY(item_id) REFERENCES items(id) ON DELETE CASCADE
 	);
 
 	CREATE TABLE IF NOT EXISTS receiving_logs (
@@ -404,7 +595,7 @@ func createSchemaSQLite() error {
 		adjustment_qty REAL NOT NULL,
 		cost REAL NOT NULL,
 		remarks TEXT,
-		FOREIGN KEY(adjustment_id) REFERENCES stock_adjustments(id),
+		FOREIGN KEY(adjustment_id) REFERENCES stock_adjustments(id) ON DELETE CASCADE,
 		FOREIGN KEY(item_id) REFERENCES items(id)
 	);
 
@@ -422,10 +613,8 @@ func createSchemaSQLite() error {
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_item_id ON receiving_logs(item_id);
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_date ON receiving_logs(date);
 	CREATE INDEX IF NOT EXISTS idx_sales_details_item_id ON sales_details(item_id);
-	CREATE INDEX IF NOT EXISTS idx_sales_details_doc_date ON sales_details(doc_date);
 	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_item_id ON inventory_adjustments(item_id);
 	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_date ON inventory_adjustments(date);
-	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_adj_id ON inventory_adjustments(adjustment_id);
 
 	CREATE TABLE IF NOT EXISTS roles (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -506,6 +695,7 @@ func createSchemaSQLite() error {
 		priority TEXT NOT NULL DEFAULT 'Medium',
 		category TEXT NOT NULL DEFAULT 'General',
 		status TEXT NOT NULL DEFAULT 'Pending',
+		assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
 		created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);
 
@@ -527,7 +717,7 @@ func createSchemaSQLite() error {
 		shipping_method TEXT DEFAULT '',
 		prepared_by TEXT DEFAULT '',
 		freight REAL NOT NULL DEFAULT 0.0,
-		apply_vat INTEGER NOT NULL DEFAULT 0,
+		apply_vat BOOLEAN NOT NULL DEFAULT 0,
 		vat_amt REAL NOT NULL DEFAULT 0.0,
 		subtotal REAL NOT NULL DEFAULT 0.0,
 		grand_total REAL NOT NULL DEFAULT 0.0,
@@ -608,9 +798,10 @@ func createSchemaPostgres() error {
 
 	CREATE TABLE IF NOT EXISTS uom_settings (
 		id SERIAL PRIMARY KEY,
-		item_id INTEGER NOT NULL REFERENCES items(id),
+		item_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
 		muom TEXT NOT NULL,
-		conversion_factor DOUBLE PRECISION NOT NULL
+		conversion_factor DOUBLE PRECISION NOT NULL,
+		UNIQUE(item_id, muom)
 	);
 
 	CREATE TABLE IF NOT EXISTS receiving_logs (
@@ -666,7 +857,7 @@ func createSchemaPostgres() error {
 
 	CREATE TABLE IF NOT EXISTS inventory_adjustments (
 		id SERIAL PRIMARY KEY,
-		adjustment_id INTEGER REFERENCES stock_adjustments(id),
+		adjustment_id INTEGER REFERENCES stock_adjustments(id) ON DELETE CASCADE,
 		date TIMESTAMPTZ NOT NULL,
 		item_id INTEGER NOT NULL REFERENCES items(id),
 		uom TEXT NOT NULL,
@@ -689,10 +880,8 @@ func createSchemaPostgres() error {
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_item_id ON receiving_logs(item_id);
 	CREATE INDEX IF NOT EXISTS idx_receiving_logs_date ON receiving_logs(date);
 	CREATE INDEX IF NOT EXISTS idx_sales_details_item_id ON sales_details(item_id);
-	CREATE INDEX IF NOT EXISTS idx_sales_details_doc_date ON sales_details(doc_date);
 	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_item_id ON inventory_adjustments(item_id);
 	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_date ON inventory_adjustments(date);
-	CREATE INDEX IF NOT EXISTS idx_inventory_adjustments_adj_id ON inventory_adjustments(adjustment_id);
 
 	CREATE TABLE IF NOT EXISTS roles (
 		id SERIAL PRIMARY KEY,
@@ -769,6 +958,7 @@ func createSchemaPostgres() error {
 		priority TEXT NOT NULL DEFAULT 'Medium',
 		category TEXT NOT NULL DEFAULT 'General',
 		status TEXT NOT NULL DEFAULT 'Pending',
+		assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
 		created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);
 
@@ -790,7 +980,7 @@ func createSchemaPostgres() error {
 		shipping_method TEXT DEFAULT '',
 		prepared_by TEXT DEFAULT '',
 		freight DOUBLE PRECISION NOT NULL DEFAULT 0.0,
-		apply_vat INTEGER NOT NULL DEFAULT 0,
+		apply_vat BOOLEAN NOT NULL DEFAULT FALSE,
 		vat_amt DOUBLE PRECISION NOT NULL DEFAULT 0.0,
 		subtotal DOUBLE PRECISION NOT NULL DEFAULT 0.0,
 		grand_total DOUBLE PRECISION NOT NULL DEFAULT 0.0,
@@ -831,16 +1021,16 @@ func createSchemaPostgres() error {
 	CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
 
 	CREATE OR REPLACE FUNCTION substr(val timestamptz, s int, l int) RETURNS text AS $$
-	SELECT substr(to_char(val, 'YYYY-MM-DD HH24:MI:SS'), s, l);
-	$$ LANGUAGE SQL IMMUTABLE;
+	SELECT substr(to_char(val AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'), s, l);
+	$$ LANGUAGE SQL STABLE;
 
 	CREATE OR REPLACE FUNCTION substr(val timestamp, s int, l int) RETURNS text AS $$
 	SELECT substr(to_char(val, 'YYYY-MM-DD HH24:MI:SS'), s, l);
-	$$ LANGUAGE SQL IMMUTABLE;
+	$$ LANGUAGE SQL STABLE;
 
 	CREATE OR REPLACE FUNCTION substr(val date, s int, l int) RETURNS text AS $$
 	SELECT substr(to_char(val, 'YYYY-MM-DD'), s, l);
-	$$ LANGUAGE SQL IMMUTABLE;
+	$$ LANGUAGE SQL STABLE;
 	`
 	_, err := DB.DB.Exec(schema)
 	if err != nil {
@@ -849,22 +1039,28 @@ func createSchemaPostgres() error {
 	return nil
 }
 
-func seedDefaults() {
+func seedDefaults() error {
 	// Seed default UOM values if table is empty
 	var uomCount int
 	err := DB.Get(&uomCount, "SELECT COUNT(*) FROM uoms")
-	if err == nil && uomCount == 0 {
+	if err != nil {
+		return fmt.Errorf("failed to check uoms count: %w", err)
+	}
+	if uomCount == 0 {
 		_, errSeed := DB.Exec(`
 			INSERT INTO uoms (code) VALUES
 			('PC/S'), ('PCS'), ('BOX'), ('PACK/S'), ('PACK'), ('CASE'), ('BAG/S'), ('BAG'), ('BOT'), ('CAN/S'), ('CAN'), ('DOZ'), ('FT'), ('GAL'), ('KG/S'), ('KG'), ('L/S'), ('L'), ('MTR/S'), ('MTR'), ('PAIR/S'), ('ROLL/S'), ('SET/S'), ('UNIT/S')
 		`)
 		if errSeed != nil {
-			log.Printf("Failed to seed default UOMs: %v", errSeed)
+			return fmt.Errorf("failed to seed default UOMs: %w", errSeed)
 		}
 	}
 
-	seedAuthDefaults()
+	if err := seedAuthDefaults(); err != nil {
+		return err
+	}
 	seedGoalsAndRemindersDefaults()
+	return nil
 }
 
 // EnsureRemindersTable guarantees the earning_goals and reminders tables and indexes exist
@@ -891,7 +1087,7 @@ func EnsureRemindersTable() error {
 				priority TEXT NOT NULL DEFAULT 'Medium',
 				category TEXT NOT NULL DEFAULT 'General',
 				status TEXT NOT NULL DEFAULT 'Pending',
-				assigned_to_user_id INTEGER REFERENCES users(id),
+				assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
 				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 			);
 			CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
@@ -901,7 +1097,7 @@ func EnsureRemindersTable() error {
 		if err != nil {
 			return err
 		}
-		_, _ = DB.Exec("ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id);")
+		_, _ = DB.Exec("ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;")
 		_, _ = DB.Exec("CREATE INDEX IF NOT EXISTS idx_reminders_assigned_to ON reminders(assigned_to_user_id);")
 		return nil
 	}
@@ -923,7 +1119,7 @@ func EnsureRemindersTable() error {
 			priority TEXT NOT NULL DEFAULT 'Medium',
 			category TEXT NOT NULL DEFAULT 'General',
 			status TEXT NOT NULL DEFAULT 'Pending',
-			assigned_to_user_id INTEGER REFERENCES users(id),
+			assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE INDEX IF NOT EXISTS idx_earning_goals_period ON earning_goals(target_period);
@@ -937,11 +1133,7 @@ func EnsureRemindersTable() error {
 	// Safe migration check: add assigned_to_user_id if not present
 	rows, err := DB.Query("SELECT assigned_to_user_id FROM reminders LIMIT 0")
 	if err != nil {
-		if DB.IsPostgres() {
-			_, _ = DB.Exec("ALTER TABLE reminders ADD COLUMN IF NOT EXISTS assigned_to_user_id INTEGER REFERENCES users(id);")
-		} else {
-			_, _ = DB.Exec("ALTER TABLE reminders ADD COLUMN assigned_to_user_id INTEGER;")
-		}
+		_, _ = DB.Exec("ALTER TABLE reminders ADD COLUMN assigned_to_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL;")
 	} else {
 		_ = rows.Close()
 	}
@@ -1034,28 +1226,83 @@ func seedGoalsAndRemindersDefaults() {
 	}
 }
 
-func seedAuthDefaults() {
+func resolveSeedPassword(envVar, devFallback string, isDevOrTest, required bool) (password string, generated bool, err error) {
+	if pw := strings.TrimSpace(os.Getenv(envVar)); pw != "" {
+		if len(pw) < 8 || len([]byte(pw)) > 72 {
+			return "", false, fmt.Errorf("%s must be at least 8 characters and at most 72 bytes", envVar)
+		}
+		return pw, false, nil
+	}
+	if isDevOrTest {
+		return devFallback, false, nil
+	}
+	if !required {
+		return "", false, nil
+	}
+	buf := make([]byte, 16)
+	if _, err := rand.Read(buf); err != nil {
+		return "", false, fmt.Errorf("failed to generate random bootstrap password: %w", err)
+	}
+	return base64.RawURLEncoding.EncodeToString(buf), true, nil
+}
+
+func seedAuthDefaults() error {
 	var roleCount int
 	err := DB.Get(&roleCount, "SELECT COUNT(*) FROM roles")
-	if err != nil || roleCount > 0 {
-		return
+	if err != nil {
+		return fmt.Errorf("failed to check roles count: %w", err)
 	}
+	if roleCount > 0 {
+		return nil
+	}
+
+	appEnv := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+	isDevOrTest := (appEnv == "" || appEnv == "development" || appEnv == "dev" || appEnv == "test" || appEnv == "local") && !(DB.IsPostgres() && appEnv == "")
+
+	adminPassword, adminGenerated, err := resolveSeedPassword("ADMIN_SEED_PASSWORD", "admin123", isDevOrTest, true)
+	if err != nil {
+		return err
+	}
+	staffPassword, _, err := resolveSeedPassword("STAFF_SEED_PASSWORD", "staff123", isDevOrTest, false)
+	if err != nil {
+		return err
+	}
+
+	bytesAdmin, err := bcrypt.GenerateFromPassword([]byte(adminPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash admin seed password: %w", err)
+	}
+	var bytesStaff []byte
+	if staffPassword != "" {
+		bytesStaff, err = bcrypt.GenerateFromPassword([]byte(staffPassword), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("failed to hash staff seed password: %w", err)
+		}
+	}
+
+	tx, err := DB.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to begin auth seed transaction: %w", err)
+	}
+	defer tx.Rollback()
 
 	// Insert Admin role
 	var adminRoleID int64
-	err = DB.QueryRow("INSERT INTO roles (name, description) VALUES ('Admin', 'Full administrative access across all system modules') RETURNING id").Scan(&adminRoleID)
-	if err != nil {
-		log.Printf("Failed to seed Admin role: %v", err)
-		return
+	if err := tx.QueryRow("INSERT INTO roles (name, description) VALUES ('Admin', 'Full administrative access across all system modules') RETURNING id").Scan(&adminRoleID); err != nil {
+		return fmt.Errorf("failed to seed Admin role: %w", err)
 	}
 
 	// Insert Manager role
 	var managerRoleID int64
-	_ = DB.QueryRow("INSERT INTO roles (name, description) VALUES ('Manager', 'Access to sales, inventory operations, and viewing logs') RETURNING id").Scan(&managerRoleID)
+	if err := tx.QueryRow("INSERT INTO roles (name, description) VALUES ('Manager', 'Access to sales, inventory operations, and viewing logs') RETURNING id").Scan(&managerRoleID); err != nil {
+		return fmt.Errorf("failed to seed Manager role: %w", err)
+	}
 
 	// Insert Staff role
 	var staffRoleID int64
-	_ = DB.QueryRow("INSERT INTO roles (name, description) VALUES ('Staff', 'Daily sales entry and inventory view access') RETURNING id").Scan(&staffRoleID)
+	if err := tx.QueryRow("INSERT INTO roles (name, description) VALUES ('Staff', 'Daily sales entry and inventory view access') RETURNING id").Scan(&staffRoleID); err != nil {
+		return fmt.Errorf("failed to seed Staff role: %w", err)
+	}
 
 	allPerms := []string{
 		"dashboard:view", "sales:view", "sales:create", "sales:edit", "sales:delete",
@@ -1066,7 +1313,9 @@ func seedAuthDefaults() {
 
 	// Assign all perms to Admin
 	for _, p := range allPerms {
-		_, _ = DB.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", adminRoleID, p)
+		if _, err := tx.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", adminRoleID, p); err != nil {
+			return fmt.Errorf("failed to seed Admin permission %s: %w", p, err)
+		}
 	}
 
 	// Assign Manager perms
@@ -1076,7 +1325,9 @@ func seedAuthDefaults() {
 		"items:view", "items:edit", "settings:view", "logs:view", "tools:scanner",
 	}
 	for _, p := range managerPerms {
-		_, _ = DB.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", managerRoleID, p)
+		if _, err := tx.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", managerRoleID, p); err != nil {
+			return fmt.Errorf("failed to seed Manager permission %s: %w", p, err)
+		}
 	}
 
 	// Assign Staff perms
@@ -1084,22 +1335,35 @@ func seedAuthDefaults() {
 		"dashboard:view", "sales:view", "sales:create", "inventory:view", "items:view",
 	}
 	for _, p := range staffPerms {
-		_, _ = DB.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", staffRoleID, p)
+		if _, err := tx.Exec("INSERT INTO role_permissions (role_id, permission_key) VALUES (?, ?) ON CONFLICT DO NOTHING", staffRoleID, p); err != nil {
+			return fmt.Errorf("failed to seed Staff permission %s: %w", p, err)
+		}
 	}
 
-	// Seed default users: admin / admin123 and staff / staff123
-	bytesAdmin, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-	bytesStaff, _ := bcrypt.GenerateFromPassword([]byte("staff123"), bcrypt.DefaultCost)
-
-	_, _ = DB.Exec(`
+	if _, err := tx.Exec(`
 		INSERT INTO users (username, password_hash, full_name, role_id, is_active)
 		VALUES (?, ?, 'System Administrator', ?, TRUE)
-	`, "admin", string(bytesAdmin), adminRoleID)
+	`, "admin", string(bytesAdmin), adminRoleID); err != nil {
+		return fmt.Errorf("failed to seed admin user: %w", err)
+	}
 
-	_, _ = DB.Exec(`
-		INSERT INTO users (username, password_hash, full_name, role_id, is_active)
-		VALUES (?, ?, 'Staff Operator', ?, TRUE)
-	`, "staff", string(bytesStaff), staffRoleID)
+	if staffPassword != "" {
+		if _, err := tx.Exec(`
+			INSERT INTO users (username, password_hash, full_name, role_id, is_active)
+			VALUES (?, ?, 'Staff Operator', ?, TRUE)
+		`, "staff", string(bytesStaff), staffRoleID); err != nil {
+			return fmt.Errorf("failed to seed staff user: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit auth seed transaction: %w", err)
+	}
+
+	if adminGenerated {
+		log.Printf("BOOTSTRAP NOTICE: Created initial admin user 'admin' with generated one-time password: %s", adminPassword)
+	}
+	return nil
 }
 
 // GetSystemSetting retrieves a configuration value by key from system_settings

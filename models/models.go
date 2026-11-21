@@ -17,27 +17,19 @@ type Category struct {
 }
 
 type Item struct {
-	ID          int    `db:"id"`
-	Code        string `db:"code"`
-	Description string `db:"description"`
-	DefaultUOM  string `db:"default_uom"`
-	Model       string `db:"model"`
-	BrandID     *int   `db:"brand_id"`
-	CategoryID  *int   `db:"category_id"`
-	Variation   string `db:"variation"`
-	Remarks     string `db:"remarks"`
+	ID          int     `db:"id"`
+	Code        string  `db:"code"`
+	Description string  `db:"description"`
+	DefaultUOM  string  `db:"default_uom"`
+	Model       *string `db:"model"`
+	BrandID     *int    `db:"brand_id"`
+	CategoryID  *int    `db:"category_id"`
+	Variation   *string `db:"variation"`
+	Remarks     *string `db:"remarks"`
 }
 
 type ItemWithRelations struct {
-	ID           int    `db:"id"`
-	Code         string `db:"code"`
-	Description  string `db:"description"`
-	DefaultUOM   string `db:"default_uom"`
-	Model        string `db:"model"`
-	BrandID      *int   `db:"brand_id"`
-	CategoryID   *int   `db:"category_id"`
-	Variation    string `db:"variation"`
-	Remarks      string `db:"remarks"`
+	Item
 	BrandName    string `db:"brand_name"`
 	CategoryName string `db:"category_name"`
 }
@@ -53,38 +45,24 @@ type ReceivingLog struct {
 	ID           int       `db:"id"`
 	Supplier     string    `db:"supplier"`
 	Date         time.Time `db:"date"`
-	PLNo         string    `db:"pl_no"`
+	PLNo         *string   `db:"pl_no"`
 	ItemID       int       `db:"item_id"`
 	Qty          float64   `db:"qty"`
 	UOM          string    `db:"uom"`
-	UnitPrice    float64   `db:"unit_price"`
+	UnitPrice    *float64  `db:"unit_price"`
 	Less1        float64   `db:"less1"`
 	Less2        float64   `db:"less2"`
 	Cost         float64   `db:"cost"`
 	TotalCost    float64   `db:"total_cost"`
 	Markup       float64   `db:"markup"`
-	SellingPrice float64   `db:"selling_price"`
+	SellingPrice *float64  `db:"selling_price"`
 	Remarks      string    `db:"remarks"`
 }
 
 type ReceivingLogWithItem struct {
-	ID           int       `db:"id"`
-	Supplier     string    `db:"supplier"`
-	Date         time.Time `db:"date"`
-	PLNo         string    `db:"pl_no"`
-	ItemID       int       `db:"item_id"`
-	Qty          float64   `db:"qty"`
-	UOM          string    `db:"uom"`
-	UnitPrice    float64   `db:"unit_price"`
-	Less1        float64   `db:"less1"`
-	Less2        float64   `db:"less2"`
-	Cost         float64   `db:"cost"`
-	TotalCost    float64   `db:"total_cost"`
-	Markup       float64   `db:"markup"`
-	SellingPrice float64   `db:"selling_price"`
-	Remarks      string    `db:"remarks"`
-	ItemCode     string    `db:"item_code"`
-	Description  string    `db:"item_description"`
+	ReceivingLog
+	ItemCode    string `db:"item_code"`
+	Description string `db:"item_description"`
 }
 
 type SalesDetail struct {
@@ -93,9 +71,9 @@ type SalesDetail struct {
 	DocStatus    string    `db:"doc_status"`
 	DocDate      time.Time `db:"doc_date"`
 	DocNumber    string    `db:"doc_number"`
-	CustomerName string    `db:"customer_name"`
-	TINNo        string    `db:"tin_no"`
-	Address      string    `db:"address"`
+	CustomerName *string   `db:"customer_name"`
+	TINNo        *string   `db:"tin_no"`
+	Address      *string   `db:"address"`
 	Supplier     string    `db:"supplier"`
 	ItemID       int       `db:"item_id"`
 	Qty          float64   `db:"qty"`
@@ -115,32 +93,9 @@ type SalesDetail struct {
 }
 
 type SalesDetailWithItem struct {
-	ID           int       `db:"id"`
-	DocType      string    `db:"doc_type"`
-	DocStatus    string    `db:"doc_status"`
-	DocDate      time.Time `db:"doc_date"`
-	DocNumber    string    `db:"doc_number"`
-	CustomerName string    `db:"customer_name"`
-	TINNo        string    `db:"tin_no"`
-	Address      string    `db:"address"`
-	Supplier     string    `db:"supplier"`
-	ItemID       int       `db:"item_id"`
-	Qty          float64   `db:"qty"`
-	UOM          string    `db:"uom"`
-	Price        float64   `db:"price"`
-	TotalSales   float64   `db:"total_sales"`
-	Cost         float64   `db:"cost"`
-	TotalCost    float64   `db:"total_cost"`
-	Patong       float64   `db:"patong"`
-	POSCharge    float64   `db:"pos_charge"`
-	WT2307       float64   `db:"wt_2307"`
-	TotalRemit   float64   `db:"total_remit"`
-	Profit       float64   `db:"profit"`
-	ProfitMargin float64   `db:"profit_margin"`
-	Remarks      string    `db:"remarks"`
-	ItemCode     string    `db:"item_code"`
-	Description  string    `db:"item_description"`
-	RefPL        *string   `db:"ref_pl"`
+	SalesDetail
+	ItemCode    string `db:"item_code"`
+	Description string `db:"item_description"`
 }
 
 type InventoryAdjustment struct {
@@ -151,20 +106,13 @@ type InventoryAdjustment struct {
 	UOM           string    `db:"uom"`
 	AdjustmentQty float64   `db:"adjustment_qty"`
 	Cost          float64   `db:"cost"`
-	Remarks       string    `db:"remarks"`
+	Remarks       *string   `db:"remarks"`
 }
 
 type InventoryAdjustmentWithItem struct {
-	ID            int       `db:"id"`
-	AdjustmentID  *int      `db:"adjustment_id"`
-	Date          time.Time `db:"date"`
-	ItemID        int       `db:"item_id"`
-	UOM           string    `db:"uom"`
-	AdjustmentQty float64   `db:"adjustment_qty"`
-	Cost          float64   `db:"cost"`
-	Remarks       string    `db:"remarks"`
-	ItemCode      string    `db:"item_code"`
-	Description   string    `db:"item_description"`
+	InventoryAdjustment
+	ItemCode    string `db:"item_code"`
+	Description string `db:"item_description"`
 }
 
 // ItemStockView is a read model for the inventory stock list view
@@ -244,19 +192,9 @@ type Customer struct {
 }
 
 type CustomerWithStats struct {
-	ID            int       `db:"id" json:"id"`
-	Code          string    `db:"code" json:"code"`
-	Name          string    `db:"name" json:"name"`
-	TINNo         string    `db:"tin_no" json:"tin_no"`
-	Address       string    `db:"address" json:"address"`
-	ContactPerson string    `db:"contact_person" json:"contact_person"`
-	Phone         string    `db:"phone" json:"phone"`
-	Email         string    `db:"email" json:"email"`
-	PaymentTerms  string    `db:"payment_terms" json:"payment_terms"`
-	Notes         string    `db:"notes" json:"notes"`
-	CreatedAt     time.Time `db:"created_at" json:"created_at"`
-	TotalSales    float64   `db:"total_sales" json:"total_sales"`
-	SalesCount    int       `db:"sales_count" json:"sales_count"`
+	Customer
+	TotalSales float64 `db:"total_sales" json:"total_sales"`
+	SalesCount int     `db:"sales_count" json:"sales_count"`
 }
 
 type DashboardCardConfig struct {
@@ -264,6 +202,16 @@ type DashboardCardConfig struct {
 	Width  string `json:"width"`  // "quarter", "half", "full"
 	Height string `json:"height"` // "small", "medium", "large"
 }
+
+type RolePermission struct {
+	RoleID        int64  `db:"role_id"`
+	PermissionKey string `db:"permission_key"`
+}
+
+
+
+
+
 
 
 

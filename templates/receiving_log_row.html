@@ -1,18 +1,18 @@
 {{ define "receiving_log_row.html" }}
 <div id="receiving-log-row-{{ .ID }}" class="tr">
     <div class="td" data-col="date">{{ .Date.Format "2006-01-02" }}</div>
-    <div class="td" data-col="pl_no">{{ if .PLNo }}{{ .PLNo }}{{ else }}-{{ end }}</div>
+    {{ $pl := derefStr .PLNo }}<div class="td" data-col="pl_no">{{ if $pl }}{{ $pl }}{{ else }}-{{ end }}</div>
     <div class="td" data-col="supplier"><span class="badge badge-primary">{{ .Supplier }}</span></div>
     <div class="td" data-col="qty" class="text-success" style="font-weight: 600;">+{{ .Qty }}</div>
     <div class="td" data-col="description" style="font-weight: 500;">{{ .Description }}</div>
     <div class="td" data-col="uom">{{ .UOM }}</div>
-    <div class="td" data-col="unit_price">₱{{ printf "%.2f" .UnitPrice }}</div>
+    <div class="td" data-col="unit_price">₱{{ printf "%.2f" (derefFloat .UnitPrice) }}</div>
     <div class="td" data-col="less1">{{ if gt .Less1 0.0 }}{{ printf "%.1f" .Less1 }}%{{ else }}-{{ end }}</div>
     <div class="td" data-col="less2">{{ if gt .Less2 0.0 }}{{ printf "%.1f" .Less2 }}%{{ else }}-{{ end }}</div>
     <div class="td" data-col="unit_cost">₱{{ printf "%.2f" .Cost }}</div>
     <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}</div>
     <div class="td" data-col="markup">{{ printf "%.0f" .Markup }}%</div>
-    <div class="td" data-col="selling_price" style="font-weight: 500;">₱{{ printf "%.2f" .SellingPrice }}</div>
+    <div class="td" data-col="selling_price" style="font-weight: 500;">₱{{ printf "%.2f" (derefFloat .SellingPrice) }}</div>
     <div class="td" data-col="remarks">{{ if .Remarks }}{{ .Remarks }}{{ else }}-{{ end }}</div>
     <div class="td" data-col="actions">
         <div class="actions-cell">

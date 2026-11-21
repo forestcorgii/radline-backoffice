@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -108,7 +109,7 @@ func (app *App) ReceiptScannerHandler(w http.ResponseWriter, r *http.Request) {
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
-	dsConfig := getDeepSeekConfig()
+	dsConfig := getDeepSeekConfigMasked()
 
 	data := struct {
 		Items          []models.Item
@@ -125,17 +126,26 @@ func (app *App) ReceiptScannerHandler(w http.ResponseWriter, r *http.Request) {
 
 // ReceiptScannerParseHandler handles image upload and extracts receipt data via DeepSeek (Vision or Text+OCR)
 func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Request) {
+	// Cap total request body at 10MB
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+
 	// Parse multipart form
 	err := r.ParseMultipartForm(10 << 20) // 10MB max
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to parse form."}}`)
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) || strings.Contains(strings.ToLower(err.Error()), "request body too large") {
+			setHXTriggerToast(w, "error", "Uploaded file exceeds 10MB limit.")
+			http.Error(w, "Uploaded file exceeds 10MB limit", http.StatusRequestEntityTooLarge)
+			return
+		}
+		setHXTriggerToast(w, "error", "Failed to parse form.")
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
 	file, header, err := r.FormFile("receipt_image")
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "No image uploaded."}}`)
+		setHXTriggerToast(w, "error", "No image uploaded.")
 		http.Error(w, "No image uploaded", http.StatusBadRequest)
 		return
 	}
@@ -144,12 +154,18 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 	// Read file bytes
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to read image file."}}`)
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			setHXTriggerToast(w, "error", "Uploaded file exceeds 10MB limit.")
+			http.Error(w, "Uploaded file exceeds 10MB limit", http.StatusRequestEntityTooLarge)
+			return
+		}
+		setHXTriggerToast(w, "error", "Failed to read image file.")
 		http.Error(w, "Failed to read image file", http.StatusBadRequest)
 		return
 	}
 
-	cfg := getDeepSeekConfig()
+	cfg := getDeepSeekConfigInternal()
 	var rawContent string
 
 	// Determine processing pipeline:
@@ -184,45 +200,41 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 
 	if err != nil {
 		log.Printf("DeepSeek processing failed: %v", err)
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "warning", "message": "DeepSeek error: %s. Loaded empty form."}}`, strings.ReplaceAll(err.Error(), `"`, `'`)))
+		setHXTriggerToast(w, "warning", fmt.Sprintf("DeepSeek error: %s. Loaded empty form.", err.Error()))
 		docType = "SALES"
 	} else {
 		docType, docNumber, docDate, supplier, customer, extractedItems, err = parseDeepSeekJSON(rawContent)
 		if err != nil {
 			log.Printf("Failed to parse DeepSeek JSON response: %v", err)
-			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "warning", "message": "Failed to parse receipt JSON structure. Loaded empty form."}}`)
+			setHXTriggerToast(w, "warning", "Failed to parse receipt JSON structure. Loaded empty form.")
 			docType = "SALES"
 		} else {
-			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "DeepSeek successfully extracted sales receipt!"}}`)
-		}
-	}
-
-	// Resolve extracted items against database items
-	for i := range extractedItems {
-		itemID, resolvedUOM := findMatchingItem(extractedItems[i].ItemDescription)
-		if itemID > 0 {
-			extractedItems[i].ItemID = itemID
-			if resolvedUOM != "" {
-				extractedItems[i].Uom = resolvedUOM
-			}
-			var item struct {
-				Code        string `db:"code"`
-				Description string `db:"description"`
-			}
-			err := db.DB.Get(&item, "SELECT code, description FROM items WHERE id = ?", itemID)
-			if err == nil {
-				extractedItems[i].ItemDescription = fmt.Sprintf("%s — %s", item.Code, item.Description)
-			}
+			setHXTriggerToast(w, "success", "DeepSeek successfully extracted sales receipt!")
 		}
 	}
 
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	if db.DB != nil {
+		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY code ASC")
+	}
+
+	// Resolve extracted items against pre-loaded catalog items in memory (eliminating N+1 queries)
+	for i := range extractedItems {
+		if matched := matchCatalogItem(extractedItems[i].ItemDescription, items); matched != nil {
+			extractedItems[i].ItemID = matched.ID
+			if matched.DefaultUOM != "" {
+				extractedItems[i].Uom = matched.DefaultUOM
+			}
+			extractedItems[i].ItemDescription = fmt.Sprintf("%s — %s", matched.Code, matched.Description)
+		}
+	}
 
 	var uoms []models.Uom
-	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+	if db.DB != nil {
+		_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
+	}
 
-	dsConfig := getDeepSeekConfig()
+	dsConfig := getDeepSeekConfigMasked()
 
 	// If HTMX request, render just the extracted data section
 	if r.Header.Get("HX-Request") == "true" {
@@ -261,8 +273,8 @@ func (app *App) ReceiptScannerParseHandler(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-// getDeepSeekConfig returns configured API key, base URL, and model from DB system_settings or env vars
-func getDeepSeekConfig() DeepSeekConfig {
+// getDeepSeekConfigInternal returns configured real API key, base URL, and model from DB system_settings or env vars
+func getDeepSeekConfigInternal() DeepSeekConfig {
 	apiKey := strings.TrimSpace(db.GetSystemSetting("deepseek_api_key"))
 	if apiKey == "" {
 		apiKey = strings.TrimSpace(os.Getenv("DEEPSEEK_API_KEY"))
@@ -292,11 +304,28 @@ func getDeepSeekConfig() DeepSeekConfig {
 	}
 }
 
+// getDeepSeekConfig returns configured API key, base URL, and model from DB system_settings or env vars
+func getDeepSeekConfig() DeepSeekConfig {
+	return getDeepSeekConfigInternal()
+}
+
+// getDeepSeekConfigMasked returns DeepSeekConfig with APIKey masked for HTML template view models
+func getDeepSeekConfigMasked() DeepSeekConfig {
+	cfg := getDeepSeekConfigInternal()
+	if cfg.APIKey != "" {
+		cfg.APIKey = MaskedAPIKeyPlaceholder
+	}
+	return cfg
+}
+
 // callDeepSeekVisionAPI makes an HTTP request to DeepSeek's OpenAI-compatible Chat Completions API
 func callDeepSeekVisionAPI(imageBytes []byte, mimeType string) (string, error) {
-	cfg := getDeepSeekConfig()
+	cfg := getDeepSeekConfigInternal()
 	if !cfg.HasAPIKey || strings.TrimSpace(cfg.APIKey) == "" {
 		return "", fmt.Errorf("API Key is missing. Please configure your API key in Settings or Receipt Scanner drawer.")
+	}
+	if err := ValidateAIProviderURL(cfg.APIBase); err != nil {
+		return "", fmt.Errorf("invalid AI provider URL: %w", err)
 	}
 
 	if mimeType == "" || mimeType == "application/octet-stream" {
@@ -361,10 +390,15 @@ Return ONLY valid JSON matching this schema.`
 	req.Header.Set("HTTP-Referer", "http://localhost:8080")
 	req.Header.Set("X-Title", "RAV BackOffice")
 
-	client := &http.Client{Timeout: 45 * time.Second}
+	client := &http.Client{
+		Timeout: 45 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to connect to DeepSeek API: %w", err)
+		return "", fmt.Errorf("failed to connect to AI provider: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -375,13 +409,14 @@ Return ONLY valid JSON matching this schema.`
 
 	if resp.StatusCode != http.StatusOK {
 		respStr := string(bodyBytes)
+		log.Printf("DeepSeek Vision API returned HTTP %d: %s", resp.StatusCode, respStr)
 		if resp.StatusCode == http.StatusUnauthorized || strings.Contains(respStr, "Missing Authentication") || strings.Contains(respStr, "401") || strings.Contains(respStr, "invalid_api_key") {
-			return "", fmt.Errorf("Authentication failed (401 Unauthorized). Please verify that your API Key for '%s' is correct in settings.", cfg.APIBase)
+			return "", fmt.Errorf("Authentication failed (401 Unauthorized). Please verify that your API Key is correct in settings.")
 		}
 		if strings.Contains(respStr, "unknown variant `image_url`") || strings.Contains(respStr, "expected `text`") {
-			return "", fmt.Errorf("endpoint '%s' is text-only and rejected image input. Please set Base URL & Model to a Vision-capable provider (e.g. OpenRouter https://openrouter.ai/api/v1 or SiliconFlow)", cfg.APIBase)
+			return "", fmt.Errorf("configured endpoint is text-only and rejected image input")
 		}
-		return "", fmt.Errorf("DeepSeek API returned status %d: %s", resp.StatusCode, respStr)
+		return "", fmt.Errorf("AI provider returned HTTP %d", resp.StatusCode)
 	}
 
 	var dsResp deepSeekResponse
@@ -390,11 +425,12 @@ Return ONLY valid JSON matching this schema.`
 	}
 
 	if dsResp.Error != nil && dsResp.Error.Message != "" {
-		return "", fmt.Errorf("DeepSeek API error: %s", dsResp.Error.Message)
+		log.Printf("DeepSeek Vision API error payload: %s", dsResp.Error.Message)
+		return "", fmt.Errorf("AI provider returned an error")
 	}
 
 	if len(dsResp.Choices) == 0 {
-		return "", fmt.Errorf("DeepSeek API returned no choices")
+		return "", fmt.Errorf("AI provider returned no choices")
 	}
 
 	return dsResp.Choices[0].Message.Content, nil
@@ -461,36 +497,38 @@ func parseDeepSeekJSON(rawJSON string) (docType, docNumber, docDate, supplier, c
 	return docType, docNumber, docDate, supplier, customer, items, nil
 }
 
-// findMatchingItem queries the database to find a matching item ID and Default UOM
-func findMatchingItem(description string) (int, string) {
-	if description == "" {
-		return 0, ""
+// matchCatalogItem matches an extracted receipt line item against a pre-loaded slice of catalog items in memory.
+func matchCatalogItem(description string, items []models.Item) *models.Item {
+	desc := strings.TrimSpace(description)
+	if desc == "" || len(items) == 0 {
+		return nil
 	}
-	var match struct {
-		ID         int    `db:"id"`
-		DefaultUOM string `db:"default_uom"`
+	// 1. Exact match on code
+	for i := range items {
+		if items[i].Code == desc {
+			return &items[i]
+		}
 	}
-	// Try exact match on code
-	err := db.DB.Get(&match, "SELECT id, default_uom FROM items WHERE code = ? LIMIT 1", description)
-	if err == nil {
-		return match.ID, match.DefaultUOM
+	// 2. Exact match on description
+	for i := range items {
+		if items[i].Description == desc {
+			return &items[i]
+		}
 	}
-	// Try exact match on description
-	err = db.DB.Get(&match, "SELECT id, default_uom FROM items WHERE description = ? LIMIT 1", description)
-	if err == nil {
-		return match.ID, match.DefaultUOM
+	descLower := strings.ToLower(desc)
+	// 3. Case-insensitive partial match on description
+	for i := range items {
+		if strings.Contains(strings.ToLower(items[i].Description), descLower) {
+			return &items[i]
+		}
 	}
-	// Try partial match on description
-	err = db.DB.Get(&match, "SELECT id, default_uom FROM items WHERE description LIKE ? LIMIT 1", "%"+description+"%")
-	if err == nil {
-		return match.ID, match.DefaultUOM
+	// 4. Case-insensitive partial match on code
+	for i := range items {
+		if strings.Contains(strings.ToLower(items[i].Code), descLower) {
+			return &items[i]
+		}
 	}
-	// Try partial match on code
-	err = db.DB.Get(&match, "SELECT id, default_uom FROM items WHERE code LIKE ? LIMIT 1", "%"+description+"%")
-	if err == nil {
-		return match.ID, match.DefaultUOM
-	}
-	return 0, ""
+	return nil
 }
 
 // callOCRSpaceAPI calls the OCR.space Free API to extract raw text from image
@@ -560,6 +598,9 @@ func callDeepSeekTextAPI(ocrText string, cfg DeepSeekConfig) (string, error) {
 	if !cfg.HasAPIKey || strings.TrimSpace(cfg.APIKey) == "" {
 		return "", fmt.Errorf("API Key is missing. Please configure your API key in Settings or Receipt Scanner drawer.")
 	}
+	if err := ValidateAIProviderURL(cfg.APIBase); err != nil {
+		return "", fmt.Errorf("invalid AI provider URL: %w", err)
+	}
 
 	prompt := fmt.Sprintf(`You are an expert receipt parser. Analyze the following raw text extracted from a sales receipt or invoice, and extract structured data into a JSON object with keys:
 - "doc_type": string ("SI", "DR", or "SALES")
@@ -608,10 +649,15 @@ RAW RECEIPT TEXT:
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+strings.TrimSpace(cfg.APIKey))
 
-	client := &http.Client{Timeout: 45 * time.Second}
+	client := &http.Client{
+		Timeout: 45 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to connect to DeepSeek API: %w", err)
+		return "", fmt.Errorf("failed to connect to AI provider: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -622,10 +668,11 @@ RAW RECEIPT TEXT:
 
 	if resp.StatusCode != http.StatusOK {
 		respStr := string(bodyBytes)
+		log.Printf("DeepSeek Text API returned HTTP %d: %s", resp.StatusCode, respStr)
 		if resp.StatusCode == http.StatusUnauthorized || strings.Contains(respStr, "401") {
-			return "", fmt.Errorf("Authentication failed (401 Unauthorized) for '%s'. Please verify your API Key.", cfg.APIBase)
+			return "", fmt.Errorf("Authentication failed (401 Unauthorized). Please verify your API Key.")
 		}
-		return "", fmt.Errorf("DeepSeek API returned status %d: %s", resp.StatusCode, respStr)
+		return "", fmt.Errorf("AI provider returned HTTP %d", resp.StatusCode)
 	}
 
 	var dsResp deepSeekResponse
@@ -634,11 +681,12 @@ RAW RECEIPT TEXT:
 	}
 
 	if dsResp.Error != nil && dsResp.Error.Message != "" {
-		return "", fmt.Errorf("DeepSeek API error: %s", dsResp.Error.Message)
+		log.Printf("DeepSeek Text API error payload: %s", dsResp.Error.Message)
+		return "", fmt.Errorf("AI provider returned an error")
 	}
 
 	if len(dsResp.Choices) == 0 {
-		return "", fmt.Errorf("DeepSeek API returned no choices")
+		return "", fmt.Errorf("AI provider returned no choices")
 	}
 
 	return dsResp.Choices[0].Message.Content, nil

@@ -1,7 +1,7 @@
 {{ define "adjustment_rows.html" }}
 {{ range . }}
 <div class="tr">
-    <div class="td" data-col="adj_id"><span class="badge badge-secondary">{{ if .AdjustmentID }}ADJ-{{ .AdjustmentID }}{{ else }}-{{ end }}</span>
+    <div class="td" data-col="adj_id"><span class="badge badge-secondary">{{ if .AdjustmentID }}ADJ-{{ derefInt .AdjustmentID }}{{ else }}-{{ end }}</span>
     </div>
     <div class="td" data-col="date">{{ .Date.Format "2006-01-02" }}</div>
     <div class="td" data-col="item_description" style="font-weight: 500;">{{ .Description }}</div>
@@ -10,7 +10,7 @@
     </div>
     <div class="td" data-col="uom">{{ .UOM }}</div>
     <div class="td" data-col="cost_impact">₱{{ printf "%.2f" .Cost }}</div>
-    <div class="td" data-col="remarks" style="color: var(--text-muted);">{{ if .Remarks }}{{ .Remarks }}{{ else }}-{{ end }}</div>
+    {{ $rem := derefStr .Remarks }}<div class="td" data-col="remarks" style="color: var(--text-muted);">{{ if $rem }}{{ $rem }}{{ else }}-{{ end }}</div>
 </div>
 {{ else }}
 <div class="tr" style="display: block;">

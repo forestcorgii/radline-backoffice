@@ -30,7 +30,7 @@ type UserSession struct {
 
 type ActivityLog struct {
 	ID         int64     `db:"id"`
-	UserID     int64     `db:"user_id"`
+	UserID     *int64    `db:"user_id"`
 	Username   string    `db:"username"`
 	Action     string    `db:"action"`
 	EntityType string    `db:"entity_type"`

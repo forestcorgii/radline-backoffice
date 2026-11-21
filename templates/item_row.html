@@ -1,7 +1,7 @@
 {{ define "item_row.html" }}
 <div id="item-row-{{ .ID }}" class="tr">
     <div class="td" data-col="description" style="font-weight: 500;">{{ .Description }}</div>
-    <div class="td" data-col="model">{{ if .Model }}{{ .Model }}{{ else }}—{{ end }}</div>
+    {{ $m := derefStr .Model }}<div class="td" data-col="model">{{ if $m }}{{ $m }}{{ else }}—{{ end }}</div>
     <div class="td" data-col="brand">{{ if .BrandName }}{{ .BrandName }}{{ else }}—{{ end }}</div>
     <div class="td" data-col="category">{{ if .CategoryName }}{{ .CategoryName }}{{ else }}—{{ end }}</div>
     <div class="td" data-col="default_uom"><span class="badge badge-secondary">{{ .DefaultUOM }}</span></div>
