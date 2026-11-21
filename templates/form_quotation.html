@@ -716,8 +716,17 @@ function removeQuoteRow(btn) {
     }
 }
 
-function resetQuoteForm() {
-    if (confirm("Reset the quotation form to default?")) {
+async function resetQuoteForm() {
+    const confirmed = typeof window.showShadcnAlertDialog === 'function'
+        ? await window.showShadcnAlertDialog({
+            title: 'Reset Quotation',
+            description: 'Reset the quotation form to default?',
+            isConfirm: true,
+            confirmText: 'Reset',
+            cancelText: 'Cancel'
+        })
+        : window.confirm("Reset the quotation form to default?");
+    if (confirmed) {
         document.getElementById('cust_name').value = '';
         document.getElementById('cust_tin').value = '';
         document.getElementById('cust_address').value = '';
@@ -739,6 +748,7 @@ function resetQuoteForm() {
         recalcQuoteSheet();
     }
 }
+window.resetQuotationForm = resetQuoteForm;
 
 // Initial calculation
 recalcQuoteSheet();

@@ -1594,6 +1594,8 @@ th {
 	font-size: 0.6875rem;
 	text-transform: uppercase;
 	letter-spacing: 0.05em;
+	position: relative;
+	user-select: none;
 }
 
 /* Alternating zebra striping for list views */
@@ -2084,7 +2086,7 @@ tbody tr.edit-row td {
 
 /* Text status helpers */
 .text-success {
-	color: #047857 !important;
+	color: var(--success-color, #10b981) !important;
 }
 
 .text-danger {
@@ -2435,12 +2437,6 @@ tbody tr.edit-row td {
 	width: 100%;
 }
 
-.table-container:has(.searchable-dropdown),
-.table-container:has(.has-dropdown),
-.table-container.has-dropdown {
-	overflow: visible !important;
-}
-
 .searchable-dropdown:focus-within,
 .searchable-dropdown.active {
 	position: relative;
@@ -2723,14 +2719,6 @@ tbody tr.edit-row td {
 	font-weight: 600 !important;
 }
 
-.text-primary {
-	color: var(--primary-color) !important;
-}
-
-.text-success {
-	color: var(--success-color, #10b981) !important;
-}
-
 /* ==========================================================================
    shadcn/ui Alert Dialog Component
    ========================================================================== */
@@ -2840,16 +2828,12 @@ tbody tr.edit-row td {
 	table-layout: fixed;
 }
 
-.excel-table th,
-.excel-table td {
+.excel-table th {
 	border: 1px solid var(--border-color);
-	padding: 0;
+	padding: 0 0.4rem;
 	vertical-align: middle;
 	position: relative;
 	box-sizing: border-box;
-}
-
-.excel-table th {
 	background-color: hsl(var(--muted));
 	color: var(--text-muted);
 	font-size: 0.6875rem;
@@ -2859,7 +2843,6 @@ tbody tr.edit-row td {
 	text-align: left;
 	white-space: nowrap;
 	height: 1.75rem;
-	padding: 0 0.4rem;
 }
 
 .excel-table tbody {
@@ -2877,6 +2860,11 @@ tbody tr.edit-row td {
 
 .excel-table td {
 	display: table-cell !important;
+	border: 1px solid var(--border-color);
+	padding: 0;
+	vertical-align: middle;
+	position: relative;
+	box-sizing: border-box;
 	background-color: var(--surface-color);
 	height: 1.875rem;
 	transition: background-color 0.15s ease;
@@ -3012,6 +3000,7 @@ tbody tr.edit-row td {
 	justify-content: space-between;
 	width: 100%;
 	gap: 0.25rem;
+	padding-right: 6px;
 }
 
 .th-title {
@@ -3312,11 +3301,6 @@ td.has-hidden-prev::before {
 .col-menu-item:hover {
 	background-color: #f1f5f9;
 	color: #4f46e5;
-}
-
-.resizable-table,
-.sales-log-table {
-	table-layout: fixed;
 }
 
 .resizable-table .th[data-col],
@@ -3827,16 +3811,6 @@ select.form-input option[value="Other"] {
 /* =========================================================================
    List Views Enhancements: Header Colors, Resizing, Grouping & Reordering
    ========================================================================= */
-
-.th,
-th {
-	position: relative;
-	user-select: none;
-}
-
-.th-content {
-	padding-right: 6px;
-}
 
 /* Table-Wide Header Color Themes */
 [data-header-theme="slate"] .thead .tr .th,

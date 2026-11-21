@@ -163,7 +163,10 @@
         const muom = option.getAttribute('data-muom');
         const factor = parseFloat(option.getAttribute('data-factor'));
 
-        formulaDiv.innerHTML = `Conversion Rate: <strong>1 ${muom} = ${factor} ${uom}</strong>`;
+        formulaDiv.textContent = 'Conversion Rate: ';
+        const strongEl = document.createElement('strong');
+        strongEl.textContent = `1 ${muom} = ${factor} ${uom}`;
+        formulaDiv.appendChild(strongEl);
         uomValInput.disabled = false;
         muomValInput.disabled = false;
         uomLabel.textContent = `${uom} Quantity (Base)`;
@@ -227,6 +230,10 @@
     }
     window.toggleAddUomSettingForm = toggleAddUomSettingForm;
 
+    if (window._pageAbortCtrl) window._pageAbortCtrl.abort();
+    window._pageAbortCtrl = new AbortController();
+    var _pageSig = { signal: window._pageAbortCtrl.signal };
+
     document.body.addEventListener('uom-setting-added', function () {
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {
@@ -234,6 +241,6 @@
         } else {
             htmx.ajax('GET', '/uom-settings', '#uom-settings-results');
         }
-    });
+    }, _pageSig);
 </script>
 {{ end }}

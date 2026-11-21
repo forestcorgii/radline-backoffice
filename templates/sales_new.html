@@ -11,7 +11,7 @@
 
 <div class="card">
     <h2 class="mb-4">Encode Sales</h2>
-    <form hx-post="/sales/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); }">
+    <form hx-post="/sales/add" hx-swap="none" hx-disabled-elt="find button[type='submit']" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); }">
         <div class="grid grid-cols-5">
             <div class="form-group">
                 <label for="doc_date">Document Date</label>

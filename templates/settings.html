@@ -588,7 +588,10 @@
         const muom = option.getAttribute('data-muom');
         const factor = parseFloat(option.getAttribute('data-factor'));
 
-        formulaDiv.innerHTML = `Conversion Rule: <strong>1 ${muom} = ${factor} ${uom}</strong>`;
+        formulaDiv.textContent = 'Conversion Rule: ';
+        const strongEl = document.createElement('strong');
+        strongEl.textContent = `1 ${muom} = ${factor} ${uom}`;
+        formulaDiv.appendChild(strongEl);
         uomValInput.disabled = false;
         muomValInput.disabled = false;
         uomLabel.textContent = `${uom} Quantity (Base)`;

@@ -153,6 +153,10 @@
         window.initReceivingColumnResizing();
     })();
 
+    if (window._pageAbortCtrl) window._pageAbortCtrl.abort();
+    window._pageAbortCtrl = new AbortController();
+    var _pageSig = { signal: window._pageAbortCtrl.signal };
+
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         if (typeof window.applyReceivingColumnWidths === 'function') {
             window.applyReceivingColumnWidths();
@@ -160,14 +164,14 @@
         if (typeof window.initReceivingColumnResizing === 'function') {
             window.initReceivingColumnResizing();
         }
-    });
+    }, _pageSig);
 
     document.body.addEventListener('stock-received', function () {
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {
             htmx.trigger(searchInput, 'search');
         }
-    });
+    }, _pageSig);
 
     // Autocompute selling price from Unit Cost, Less 1, Less 2, and Markup
     document.addEventListener('input', function (e) {
@@ -203,6 +207,6 @@
         if (costCell) {
             costCell.textContent = '₱' + cost.toFixed(2);
         }
-    });
+    }, _pageSig);
 </script>
 {{ end }}

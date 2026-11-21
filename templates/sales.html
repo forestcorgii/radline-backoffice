@@ -15,7 +15,7 @@
             ✕ Close
         </button>
     </div>
-    <form hx-post="/sales/add" hx-swap="none"
+    <form hx-post="/sales/add" hx-swap="none" hx-disabled-elt="find button[type='submit']"
         hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('doc_date').valueAsDate = new Date(); const tbody = document.getElementById('sales-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleEncodeSalesForm(); }">
         <div class="grid grid-cols-4">
             <div class="form-group">
@@ -406,7 +406,7 @@
         const totalPrice = qty * price;
         const totalCost = qty * cost;
         const totalRemit = totalPrice - (patong + posCharge + wt2307);
-        const profit = totalPrice - totalCost;
+        const profit = totalPrice - totalCost - patong - posCharge - wt2307;
         const profitMargin = totalPrice > 0 ? (profit / totalPrice) * 100 : 0;
 
         // For encoding card inputs:
@@ -529,15 +529,19 @@
             if (popover) popover.style.display = 'none';
         };
 
+        if (window._pageAbortCtrl) window._pageAbortCtrl.abort();
+        window._pageAbortCtrl = new AbortController();
+        const _pageSig = { signal: window._pageAbortCtrl.signal };
+
         document.addEventListener('click', function (e) {
             if (!e.target.closest('.status-icon-dropdown') && !e.target.closest('.status-menu-popover')) {
                 document.querySelectorAll('.status-menu-popover').forEach(el => el.style.display = 'none');
             }
-        });
+        }, _pageSig);
 
         window.addEventListener('scroll', function () {
             document.querySelectorAll('.status-menu-popover').forEach(el => el.style.display = 'none');
-        }, true);
+        }, { capture: true, signal: window._pageAbortCtrl.signal });
 
         function getSalesColumnWidths() {
             try {
@@ -669,7 +673,7 @@
                 cb.checked = !collapsedCols.includes(colKey);
             });
         }
-    });
+    }, _pageSig);
 
     window.onSalesViewSettingChange = function () {
         const config = { columns: {}, filters: {} };
@@ -736,7 +740,7 @@
                 loadingText.textContent = isEdit ? "Updating batch edit view..." : "Searching & filtering sales logs...";
             }
         }
-    });
+    }, _pageSig);
 
     window.updateSelectColorClass = function (el) {
         if (!el) return;
@@ -784,7 +788,7 @@
         if (container && popover && !container.contains(event.target)) {
             popover.classList.remove('show');
         }
-    });
+    }, _pageSig);
 
     let isSettingDatePreset = false;
 
@@ -874,7 +878,7 @@
                 }
             }
         }
-    });
+    }, _pageSig);
 
     document.addEventListener('input', function (e) {
         if (e.target && (e.target.name === 'start_date' || e.target.name === 'end_date')) {
@@ -885,13 +889,12 @@
                 }
             }
         }
-    });
+    }, _pageSig);
 
     // Apply immediately
     window.applySalesColumnWidths();
     window.applySalesViewSettings();
     window.initSalesColumnResizing();
-    }) ();
 
     // Re-apply settings on HTMX swaps
     document.body.addEventListener('htmx:afterSwap', function (evt) {
@@ -904,13 +907,14 @@
         if (typeof window.initSalesColumnResizing === 'function') {
             window.initSalesColumnResizing();
         }
-    });
+    }, _pageSig);
 
     document.body.addEventListener('sales-added', function () {
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {
             htmx.trigger(searchInput, 'search');
         }
-    });
+    }, _pageSig);
+    }) ();
 </script>
 {{ end }}

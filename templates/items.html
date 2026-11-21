@@ -15,7 +15,7 @@
             ✕ Close
         </button>
     </div>
-    <form hx-post="/items/add" hx-swap="none"
+    <form hx-post="/items/add" hx-swap="none" hx-disabled-elt="find button[type='submit']"
         hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); updateAddItemSuggestions(); toggleAddItemForm(); }">
 
         <div class="grid grid-cols-3 mt-4">
@@ -469,6 +469,10 @@
             });
         };
 
+        if (window._pageAbortCtrl) window._pageAbortCtrl.abort();
+        window._pageAbortCtrl = new AbortController();
+        const _pageSig = { signal: window._pageAbortCtrl.signal };
+
         window.addEventListener('radline-excel-cols-updated', function (e) {
             if (e.detail && (e.detail.tableId === 'items-table' || (e.detail.tableId && e.detail.tableId.includes('items')))) {
                 const collapsedCols = e.detail.collapsedCols || [];
@@ -482,7 +486,7 @@
                     cb.checked = !collapsedCols.includes(colKey);
                 });
             }
-        });
+        }, _pageSig);
 
         window.onItemsViewSettingChange = function () {
             const config = { columns: {}, filters: {} };
@@ -523,24 +527,31 @@
             if (container && popover && !container.contains(event.target)) {
                 popover.classList.remove('show');
             }
-        });
+        }, _pageSig);
 
         window.applyItemsColumnWidths();
         window.applyItemsViewSettings();
         window.initItemsColumnResizing();
-    })();
 
-    document.body.addEventListener('htmx:afterSwap', function (evt) {
-        if (typeof window.applyItemsColumnWidths === 'function') {
-            window.applyItemsColumnWidths();
-        }
-        if (typeof window.applyItemsViewSettings === 'function') {
-            window.applyItemsViewSettings();
-        }
-        if (typeof window.initItemsColumnResizing === 'function') {
-            window.initItemsColumnResizing();
-        }
-    });
+        document.body.addEventListener('htmx:afterSwap', function (evt) {
+            if (typeof window.applyItemsColumnWidths === 'function') {
+                window.applyItemsColumnWidths();
+            }
+            if (typeof window.applyItemsViewSettings === 'function') {
+                window.applyItemsViewSettings();
+            }
+            if (typeof window.initItemsColumnResizing === 'function') {
+                window.initItemsColumnResizing();
+            }
+        }, _pageSig);
+
+        document.body.addEventListener('item-added', function () {
+            const searchInput = document.querySelector('input[name="search"]');
+            if (searchInput) {
+                htmx.trigger(searchInput, 'search');
+            }
+        }, _pageSig);
+    })();
 
     // --- Generic Brand/Category Searchable Dropdown Helpers ---
 
@@ -891,19 +902,6 @@
         if (catHidden) catHidden.value = '0';
         addItemCodeManual = false;
         addItemDescManual = false;
-    });
-
-    document.body.addEventListener('htmx:afterSwap', function (evt) {
-        if (typeof window.applyItemsViewSettings === 'function') {
-            window.applyItemsViewSettings();
-        }
-    });
-
-    document.body.addEventListener('item-added', function () {
-        const searchInput = document.querySelector('input[name="search"]');
-        if (searchInput) {
-            htmx.trigger(searchInput, 'search');
-        }
     });
 </script>
 {{ end }}

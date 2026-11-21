@@ -7,7 +7,7 @@
             ✕ Close
         </button>
     </div>
-    <form hx-post="/inventory/adjustments/add" hx-swap="none" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('adj_date').valueAsDate = new Date(); const tbody = document.getElementById('adjustment-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleAdjustStockForm(); }">
+    <form hx-post="/inventory/adjustments/add" hx-swap="none" hx-disabled-elt="find button[type='submit']" hx-on::after-request="if(event.detail.successful && event.detail.elt === this) { this.reset(); document.getElementById('adj_date').valueAsDate = new Date(); const tbody = document.getElementById('adjustment-items-tbody'); if (tbody) { while(tbody.children.length > 1) { tbody.removeChild(tbody.lastChild); } } toggleAdjustStockForm(); }">
         <div class="grid grid-adj-header">
             <div class="form-group">
                 <label for="adj_date">Adjustment Date</label>

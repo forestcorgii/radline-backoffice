@@ -102,7 +102,7 @@
             <button onclick="document.getElementById('add-goal-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
         </div>
 
-        <form hx-post="/goals/add">
+        <form hx-post="/goals/add" hx-disabled-elt="find button[type='submit']">
             <div class="form-group mb-4">
                 <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Goal Title</label>
                 <input type="text" name="title" required placeholder="e.g. October 2026 Sales Target" class="form-input" style="width: 100%;">

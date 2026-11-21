@@ -331,13 +331,17 @@
             }
         };
 
+        if (window._pageAbortCtrl) window._pageAbortCtrl.abort();
+        window._pageAbortCtrl = new AbortController();
+        const _pageSig = { signal: window._pageAbortCtrl.signal };
+
         document.addEventListener('click', function (event) {
             const container = document.querySelector('#inventory-stock-results')?.closest('.card')?.querySelector('.customize-view-container');
             const popover = document.getElementById('customize-inventory-view-popover');
             if (container && popover && !container.contains(event.target)) {
                 popover.classList.remove('show');
             }
-        });
+        }, _pageSig);
 
         window.applyInventoryColumnWidths();
         window.applyInventoryViewSettings();
@@ -386,7 +390,7 @@
                 cb.checked = !collapsedCols.includes(colKey);
             });
         }
-    });
+    }, { signal: window._pageAbortCtrl.signal });
 
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         if (typeof window.applyInventoryColumnWidths === 'function') {
@@ -395,20 +399,20 @@
         if (typeof window.applyInventoryViewSettings === 'function') {
             window.applyInventoryViewSettings();
         }
-    });
+    }, { signal: window._pageAbortCtrl.signal });
 
     document.body.addEventListener('stock-received', function () {
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {
             htmx.trigger(searchInput, 'search');
         }
-    });
+    }, { signal: window._pageAbortCtrl.signal });
 
     document.body.addEventListener('stock-adjusted', function () {
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {
             htmx.trigger(searchInput, 'search');
         }
-    });
+    }, { signal: window._pageAbortCtrl.signal });
 </script>
 {{ end }}

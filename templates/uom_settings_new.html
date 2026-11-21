@@ -11,7 +11,7 @@
 
 <div class="card" style="max-width: 600px; margin: 0 auto;">
     <h2 class="mb-4" style="font-size: 1.25rem; font-weight: 600;">Add UOM Setting</h2>
-    <form hx-post="/uom-settings/add" hx-swap="none">
+    <form hx-post="/uom-settings/add" hx-swap="none" hx-disabled-elt="find button[type='submit']">
         <div class="form-group" style="margin-bottom: 1rem;">
             <label for="item_id" style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Select Item</label>
             <select id="item_id" name="item_id" class="form-input" required 

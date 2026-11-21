@@ -327,29 +327,33 @@
             }
         };
 
+        if (window._pageAbortCtrl) window._pageAbortCtrl.abort();
+        window._pageAbortCtrl = new AbortController();
+        var _pageSig = { signal: window._pageAbortCtrl.signal };
+
         document.addEventListener('click', function (event) {
             const container = document.querySelector('#monthly-inventory-results')?.closest('.card')?.querySelector('.customize-view-container');
             const popover = document.getElementById('customize-monthly-view-popover');
             if (container && popover && !container.contains(event.target)) {
                 popover.classList.remove('show');
             }
-        });
+        }, _pageSig);
 
         window.applyMonthlyColumnWidths();
         window.applyMonthlyViewSettings();
         window.initMonthlyColumnResizing();
-    })();
 
-    document.body.addEventListener('htmx:afterSwap', function (evt) {
-        if (typeof window.applyMonthlyColumnWidths === 'function') {
-            window.applyMonthlyColumnWidths();
-        }
-        if (typeof window.applyMonthlyViewSettings === 'function') {
-            window.applyMonthlyViewSettings();
-        }
-        if (typeof window.initMonthlyColumnResizing === 'function') {
-            window.initMonthlyColumnResizing();
-        }
-    });
+        document.body.addEventListener('htmx:afterSwap', function (evt) {
+            if (typeof window.applyMonthlyColumnWidths === 'function') {
+                window.applyMonthlyColumnWidths();
+            }
+            if (typeof window.applyMonthlyViewSettings === 'function') {
+                window.applyMonthlyViewSettings();
+            }
+            if (typeof window.initMonthlyColumnResizing === 'function') {
+                window.initMonthlyColumnResizing();
+            }
+        }, _pageSig);
+    })();
 </script>
 {{ end }}

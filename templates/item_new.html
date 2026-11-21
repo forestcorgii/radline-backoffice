@@ -11,7 +11,7 @@
 
 <div class="card">
     <h2 class="mb-4">Add Item</h2>
-    <form hx-post="/items/add" hx-swap="none">
+    <form hx-post="/items/add" hx-swap="none" hx-disabled-elt="find button[type='submit']">
         <div class="grid grid-cols-3">
             <div class="form-group">
                 <label for="code">Item Code</label>

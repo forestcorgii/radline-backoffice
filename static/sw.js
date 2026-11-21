@@ -1,18 +1,14 @@
-const CACHE_NAME = 'rav-v1';
+const CACHE_NAME = 'rav-v6.5';
 const PRECACHE_ASSETS = [
-  '/',
   '/offline.html',
-  '/static/offline.html',
-  '/static/index.css?v=5.2',
-  '/static/index.css',
+  '/static/index.css?v=6.5',
   '/static/htmx.min.js',
+  '/static/js/base-ui.js?v=6.5',
+  '/static/js/table-engine.js?v=6.5',
   '/manifest.webmanifest',
-  '/static/manifest.webmanifest',
+  '/static/icons/icon.svg',
   '/static/icons/icon-192.png',
-  '/static/icons/icon-512.png',
-  '/static/icons/icon-maskable-192.png',
-  '/static/icons/icon-maskable-512.png',
-  '/static/icons/icon.svg'
+  '/static/icons/icon-512.png'
 ];
 
 // Install: Pre-cache core shell & offline assets
@@ -70,23 +66,17 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .catch(async () => {
-          return new Response(`
-            <div class="card" style="margin: 2rem auto; max-width: 500px; text-align: center; padding: 2rem;">
-              <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📡</div>
-              <h3 style="margin-bottom: 0.5rem; font-size: 1.15rem; font-weight: 600;">Connection Lost</h3>
-              <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">Unable to load data while offline. Please check your network connection.</p>
-              <button onclick="window.location.reload()" class="btn" style="padding: 0.5rem 1.25rem;">Retry Connection</button>
-            </div>
-          `, {
-            status: 200,
-            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          return new Response('Offline — unable to complete request.', {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
           });
         })
     );
     return;
   }
 
-  // 3. Static assets & fonts: Cache-first with network fallback & background update
+  // 3. Static assets & fonts: Stale-while-revalidate (serve cache immediately, update in background)
   if (
     url.pathname.startsWith('/static/') ||
     url.hostname === 'fonts.googleapis.com' ||
@@ -94,16 +84,14 @@ self.addEventListener('fetch', (event) => {
   ) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) {
-          return cached;
-        }
-        return fetch(request).then((response) => {
+        const networkFetch = fetch(request).then((response) => {
           if (response && response.status === 200) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
           return response;
-        });
+        }).catch(() => cached);
+        return cached || networkFetch;
       })
     );
     return;

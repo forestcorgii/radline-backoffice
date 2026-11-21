@@ -66,6 +66,8 @@
                     <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; overflow-y: auto; max-height: 58px; min-width: 0;">
                         {{ range .Reminders }}
                         <div class="calendar-reminder-chip"
+                            role="button"
+                            tabindex="0"
                             draggable="true"
                             data-id="{{ .ID }}"
                             data-title="{{ .Title }}"
@@ -78,6 +80,7 @@
                             ondragstart="handleChipDragStart(event)"
                             ondragend="handleChipDragEnd(event)"
                             onclick="handleEditReminderClick(this)"
+                            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();handleEditReminderClick(this);}"
                             style="font-size: 0.625rem; padding: 2px 4px; border-radius: 2px; background: {{ if eq .Priority "High" }}hsl(0 84% 95%){{ else if eq .Priority "Medium" }}hsl(38 92% 95%){{ else }}hsl(142 72% 95%){{ end }}; color: {{ if eq .Priority "High" }}#b91c1c{{ else if eq .Priority "Medium" }}#b45309{{ else }}#047857{{ end }}; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid {{ if eq .Priority "High" }}#ef4444{{ else if eq .Priority "Medium" }}#f59e0b{{ else }}#10b981{{ end }}; cursor: grab; min-width: 0; max-width: 100%; box-sizing: border-box;" 
                             title="{{ .Title }}{{ if .Details }} - {{ .Details }}{{ end }}{{ if .AssignedToName }} (Assigned: {{ .AssignedToName }}){{ end }} • Drag to reschedule or click to edit">
                             {{ if .AssignedToName }}<span style="opacity: 0.8; font-size: 0.5625rem; margin-right: 2px;">👤</span>{{ end }}{{ .Title }}
@@ -187,7 +190,7 @@
             <button onclick="document.getElementById('add-reminder-modal').style.display='none'" style="background: none; border: none; font-size: 1.25rem; cursor: pointer;">&times;</button>
         </div>
 
-        <form hx-post="/reminders/add" hx-target="#main-content">
+        <form hx-post="/reminders/add" hx-target="#main-content" hx-disabled-elt="find button[type='submit']">
             <div class="form-group mb-4">
                 <label style="font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Title</label>
                 <input type="text" name="title" required placeholder="e.g. Check monthly stock reconciliation" class="form-input" style="width: 100%;">

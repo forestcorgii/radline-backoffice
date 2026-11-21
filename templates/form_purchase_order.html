@@ -701,8 +701,17 @@ function removePORow(btn) {
     }
 }
 
-function resetPOForm() {
-    if (confirm("Reset the purchase order form to default?")) {
+async function resetPOForm() {
+    const confirmed = typeof window.showShadcnAlertDialog === 'function'
+        ? await window.showShadcnAlertDialog({
+            title: 'Reset Purchase Order',
+            description: 'Reset the purchase order form to default?',
+            isConfirm: true,
+            confirmText: 'Reset',
+            cancelText: 'Cancel'
+        })
+        : window.confirm("Reset the purchase order form to default?");
+    if (confirmed) {
         document.getElementById('vendor_name').value = '';
         document.getElementById('vendor_tin').value = '';
         document.getElementById('vendor_address').value = '';

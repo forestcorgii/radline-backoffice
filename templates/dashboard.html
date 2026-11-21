@@ -754,6 +754,10 @@
             }
         };
 
+        if (window._pageAbortCtrl) window._pageAbortCtrl.abort();
+        window._pageAbortCtrl = new AbortController();
+        var _pageSig = { signal: window._pageAbortCtrl.signal };
+
         // Close popovers on outside click
         document.addEventListener('click', function (e) {
             if (!e.target.closest('.dash-config-popover') && !e.target.closest('.dash-config-btn')) {
@@ -761,7 +765,7 @@
                     p.classList.remove('show');
                 });
             }
-        });
+        }, _pageSig);
 
         window.setCardWidth = function (cardId, width) {
             var card = document.getElementById(cardId);
@@ -860,8 +864,16 @@
             }, 300);
         };
 
-        window.resetDashboardLayout = function () {
-            var confirmed = confirm('Reset dashboard layout to default?');
+        window.resetDashboardLayout = async function () {
+            var confirmed = typeof window.showShadcnAlertDialog === 'function'
+                ? await window.showShadcnAlertDialog({
+                    title: 'Reset Dashboard Layout',
+                    description: 'Reset dashboard layout to default?',
+                    isConfirm: true,
+                    confirmText: 'Reset',
+                    cancelText: 'Cancel'
+                })
+                : window.confirm('Reset dashboard layout to default?');
             if (!confirmed) return;
 
             fetch('/dashboard/layout/reset', {
@@ -880,6 +892,8 @@
 
             var cards = grid.querySelectorAll('.dashboard-card');
             cards.forEach(function (card) {
+                if (card.dataset.dndBound === '1') return;
+                card.dataset.dndBound = '1';
                 card.setAttribute('draggable', 'true');
 
                 card.addEventListener('dragstart', function (e) {
@@ -905,53 +919,56 @@
                 });
             });
 
-            grid.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                if (!draggedCard) return;
+            if (grid.dataset.dndBound !== '1') {
+                grid.dataset.dndBound = '1';
+                grid.addEventListener('dragover', function (e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (!draggedCard) return;
 
-                var targetCard = e.target.closest('.dashboard-card');
-                if (!targetCard || targetCard === draggedCard) return;
+                    var targetCard = e.target.closest('.dashboard-card');
+                    if (!targetCard || targetCard === draggedCard) return;
 
-                var rect = targetCard.getBoundingClientRect();
-                var indicator = getDropIndicator();
+                    var rect = targetCard.getBoundingClientRect();
+                    var indicator = getDropIndicator();
 
-                // Match width span of dragged card for visual accuracy
-                indicator.className = 'dash-drop-indicator';
-                if (draggedCard.classList.contains('dash-w-quarter')) indicator.classList.add('dash-w-quarter');
-                else if (draggedCard.classList.contains('dash-w-half')) indicator.classList.add('dash-w-half');
-                else indicator.classList.add('dash-w-full');
+                    // Match width span of dragged card for visual accuracy
+                    indicator.className = 'dash-drop-indicator';
+                    if (draggedCard.classList.contains('dash-w-quarter')) indicator.classList.add('dash-w-quarter');
+                    else if (draggedCard.classList.contains('dash-w-half')) indicator.classList.add('dash-w-half');
+                    else indicator.classList.add('dash-w-full');
 
-                var midpoint = rect.left + rect.width / 2;
-                if (e.clientX < midpoint) {
-                    grid.insertBefore(indicator, targetCard);
-                } else {
-                    grid.insertBefore(indicator, targetCard.nextSibling);
-                }
-            });
+                    var midpoint = rect.left + rect.width / 2;
+                    if (e.clientX < midpoint) {
+                        grid.insertBefore(indicator, targetCard);
+                    } else {
+                        grid.insertBefore(indicator, targetCard.nextSibling);
+                    }
+                });
 
-            grid.addEventListener('drop', function (e) {
-                e.preventDefault();
-                if (!draggedCard) return;
+                grid.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    if (!draggedCard) return;
 
-                var indicator = getDropIndicator();
-                if (indicator && indicator.parentNode === grid) {
-                    grid.insertBefore(draggedCard, indicator);
-                    indicator.parentNode.removeChild(indicator);
-                }
-                draggedCard.classList.remove('is-dragging');
-                draggedCard = null;
-                window.saveDashboardLayout();
-            });
+                    var indicator = getDropIndicator();
+                    if (indicator && indicator.parentNode === grid) {
+                        grid.insertBefore(draggedCard, indicator);
+                        indicator.parentNode.removeChild(indicator);
+                    }
+                    draggedCard.classList.remove('is-dragging');
+                    draggedCard = null;
+                    window.saveDashboardLayout();
+                });
+            }
         }
 
         // Run on load and HTMX swaps
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initDragAndDrop);
+            document.addEventListener('DOMContentLoaded', initDragAndDrop, _pageSig);
         } else {
             initDragAndDrop();
         }
-        document.addEventListener('htmx:afterSettle', initDragAndDrop);
+        document.addEventListener('htmx:afterSettle', initDragAndDrop, _pageSig);
     })();
 </script>
 {{ end }}

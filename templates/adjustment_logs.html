@@ -150,6 +150,10 @@
         window.initAdjustmentColumnResizing();
     })();
 
+    if (window._pageAbortCtrl) window._pageAbortCtrl.abort();
+    window._pageAbortCtrl = new AbortController();
+    var _pageSig = { signal: window._pageAbortCtrl.signal };
+
     document.body.addEventListener('htmx:afterSwap', function (evt) {
         if (typeof window.applyAdjustmentColumnWidths === 'function') {
             window.applyAdjustmentColumnWidths();
@@ -157,13 +161,13 @@
         if (typeof window.initAdjustmentColumnResizing === 'function') {
             window.initAdjustmentColumnResizing();
         }
-    });
+    }, _pageSig);
 
     document.body.addEventListener('stock-adjusted', function () {
         const searchInput = document.querySelector('input[name="search"]');
         if (searchInput) {
             htmx.trigger(searchInput, 'search');
         }
-    });
+    }, _pageSig);
 </script>
 {{ end }}
