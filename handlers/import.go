@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"rav/db"
+	"rav/domain"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -22,10 +23,20 @@ func (app *App) ImportPageHandler(w http.ResponseWriter, r *http.Request) {
 
 // ImportUploadHandler handles the Excel file upload and runs the database import inside a transaction
 func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
+	// Cap upload request body at 25MB
+	r.Body = http.MaxBytesReader(w, r.Body, 25<<20)
+
 	// Parse multipart form
-	err := r.ParseMultipartForm(50 << 20) // Limit upload to 50MB
+	err := r.ParseMultipartForm(25 << 20)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to parse form."}}`)
+		var maxBytesErr *http.MaxBytesError
+		if strings.Contains(strings.ToLower(err.Error()), "request body too large") || fmt.Sprintf("%T", err) == "*http.MaxBytesError" {
+			_ = maxBytesErr
+			setToastTrigger(w, "error", "Uploaded file exceeds the 25MB size limit.")
+			http.Error(w, "Uploaded file exceeds the 25MB size limit", http.StatusRequestEntityTooLarge)
+			return
+		}
+		setToastTrigger(w, "error", "Failed to parse form.")
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
@@ -85,21 +96,22 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If clear existing is checked, execute deletes in correct order
 	if clearExisting {
-		deleteQuery := `
-			DELETE FROM inventory_adjustments;
-			DELETE FROM stock_adjustments;
-			DELETE FROM sales_details;
-			DELETE FROM receiving_logs;
-			DELETE FROM uom_settings;
-			DELETE FROM items;
-			DELETE FROM brands;
-			DELETE FROM categories;
-		`
-		_, err = tx.Exec(deleteQuery)
-		if err != nil {
-			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to clear existing database tables."}}`)
-			http.Error(w, fmt.Sprintf("Failed to clear existing database tables: %v", err), http.StatusInternalServerError)
-			return
+		clearTables := []string{
+			"inventory_adjustments",
+			"stock_adjustments",
+			"sales_details",
+			"receiving_logs",
+			"uom_settings",
+			"items",
+			"brands",
+			"categories",
+		}
+		for _, tbl := range clearTables {
+			if _, err = tx.Exec("DELETE FROM " + tbl); err != nil {
+				w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to clear existing database tables."}}`)
+				http.Error(w, fmt.Sprintf("Failed to clear existing database tables (%s): %v", tbl, err), http.StatusInternalServerError)
+				return
+			}
 		}
 		// Reset sqlite sequence for all cleared tables in a single query
 		if !db.DB.IsPostgres() {
@@ -141,9 +153,12 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 						continue
 					}
 					_, err = tx.Exec("INSERT INTO brands (code, name) VALUES (?, ?) ON CONFLICT DO NOTHING", code, name)
-					if err == nil {
-						summary.Brands++
+					if err != nil {
+						w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to import brand."}}`)
+						http.Error(w, fmt.Sprintf("Failed to import brand %q: %v", code, err), http.StatusInternalServerError)
+						return
 					}
+					summary.Brands++
 				}
 			}
 		}
@@ -167,9 +182,12 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 						continue
 					}
 					_, err = tx.Exec("INSERT INTO categories (code, name) VALUES (?, ?) ON CONFLICT DO NOTHING", code, name)
-					if err == nil {
-						summary.Categories++
+					if err != nil {
+						w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to import category."}}`)
+						http.Error(w, fmt.Sprintf("Failed to import category %q: %v", code, err), http.StatusInternalServerError)
+						return
 					}
+					summary.Categories++
 				}
 			}
 		}
@@ -267,9 +285,12 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 						VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 						ON CONFLICT DO NOTHING
 					`, code, desc, defaultUom, model, brandID, categoryID, variation, remarks)
-					if err == nil {
-						summary.Items++
+					if err != nil {
+						w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to import item."}}`)
+						http.Error(w, fmt.Sprintf("Failed to import item %q: %v", code, err), http.StatusInternalServerError)
+						return
 					}
+					summary.Items++
 				}
 				// Reload item cache to include newly imported items
 				if err = loadCaches(); err != nil {
@@ -318,10 +339,14 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 					_, err = tx.Exec(`
 						INSERT INTO uom_settings (item_id, muom, conversion_factor)
 						VALUES (?, ?, ?)
+						ON CONFLICT (item_id, muom) DO NOTHING
 					`, itemID, muom, factor)
-					if err == nil {
-						summary.Uoms++
+					if err != nil {
+						w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to import UOM setting."}}`)
+						http.Error(w, fmt.Sprintf("Failed to import UOM setting for item %q: %v", itemCode, err), http.StatusInternalServerError)
+						return
 					}
+					summary.Uoms++
 				}
 			}
 		}
@@ -361,7 +386,7 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 
 					qty := parseExcelFloat(qtyStr)
 					plNo := getValByHeader(row, colMap, "PL NO.")
-					unitPrice := parseExcelFloat(getValByHeader(row, colMap, "UNIT PRICE "))
+					unitPrice := parseExcelFloat(getValByHeader(row, colMap, "UNIT PRICE"))
 					cost := parseExcelFloat(getValByHeader(row, colMap, "COST"))
 					totalCost := parseExcelFloat(getValByHeader(row, colMap, "TOTAL COST"))
 					sellingPrice := parseExcelFloat(getValByHeader(row, colMap, "SELLING PRICE"))
@@ -373,14 +398,21 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 					if totalCost <= 0 {
 						totalCost = qty * cost
 					}
+					unitPrice = domain.Round2(unitPrice)
+					cost = domain.Round2(cost)
+					totalCost = domain.Round2(totalCost)
+					sellingPrice = domain.Round2(sellingPrice)
 
 					_, err = tx.Exec(`
 						INSERT INTO receiving_logs (supplier, date, pl_no, item_id, qty, uom, unit_price, cost, total_cost, selling_price)
 						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					`, supplier, date, plNo, itemID, qty, uom, unitPrice, cost, totalCost, sellingPrice)
-					if err == nil {
-						summary.Receiving++
+					if err != nil {
+						w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to import receiving log."}}`)
+						http.Error(w, fmt.Sprintf("Failed to import receiving log for item %q: %v", itemCode, err), http.StatusInternalServerError)
+						return
 					}
+					summary.Receiving++
 				}
 			}
 		}
@@ -480,29 +512,45 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 					}
 
 					// Calculate defaults if missing
+					price = domain.Round2(price)
+					cost = domain.Round2(cost)
+					patong = domain.Round2(patong)
+					posCharge = domain.Round2(posCharge)
+					wt2307 = domain.Round2(wt2307)
 					if totalSales <= 0 {
 						totalSales = qty * price
 					}
+					totalSales = domain.Round2(totalSales)
 					if totalCost <= 0 {
 						totalCost = qty * cost
 					}
+					totalCost = domain.Round2(totalCost)
 					if profit == 0 && totalSales > 0 {
-						profit = totalSales - totalCost
+						profit = domain.Round2(totalSales - totalCost - posCharge - patong - wt2307)
+					} else {
+						profit = domain.Round2(profit)
 					}
 					if totalRemit == 0 && totalSales > 0 {
-						totalRemit = totalSales - (patong + posCharge + wt2307)
+						totalRemit = domain.Round2(totalSales - (patong + posCharge + wt2307))
+					} else {
+						totalRemit = domain.Round2(totalRemit)
 					}
 					if profitMargin == 0 && totalSales > 0 {
-						profitMargin = (profit / totalSales) * 100
+						profitMargin = domain.Round2((profit / totalSales) * 100)
+					} else {
+						profitMargin = domain.Round2(profitMargin)
 					}
 
 					_, err = tx.Exec(`
 						INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, patong, pos_charge, wt_2307, total_remit, profit, profit_margin, remarks, ref_pl)
 						VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 					`, docType, docStatus, date, docNumber, customerName, supplier, itemID, qty, uom, price, totalSales, cost, totalCost, patong, posCharge, wt2307, totalRemit, profit, profitMargin, remarks, refPLVal)
-					if err == nil {
-						summary.Sales++
+					if err != nil {
+						w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to import sales detail."}}`)
+						http.Error(w, fmt.Sprintf("Failed to import sales detail for item %q: %v", itemCode, err), http.StatusInternalServerError)
+						return
 					}
+					summary.Sales++
 				}
 			}
 		}
@@ -560,16 +608,21 @@ func (app *App) ImportUploadHandler(w http.ResponseWriter, r *http.Request) {
 						RETURNING id
 					`, date, adjRemark).Scan(&headerID)
 					if errHeader != nil {
-						continue
+						w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to import adjustment header."}}`)
+						http.Error(w, fmt.Sprintf("Failed to import stock adjustment header: %v", errHeader), http.StatusInternalServerError)
+						return
 					}
 
 					_, err = tx.Exec(`
 						INSERT INTO inventory_adjustments (adjustment_id, date, item_id, uom, adjustment_qty, cost, remarks)
 						VALUES (?, ?, ?, ?, ?, ?, ?)
 					`, headerID, date, itemID, uom, qty, cost, remarks)
-					if err == nil {
-						summary.Adjustments++
+					if err != nil {
+						w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to import inventory adjustment."}}`)
+						http.Error(w, fmt.Sprintf("Failed to import inventory adjustment for item %q: %v", itemCode, err), http.StatusInternalServerError)
+						return
 					}
+					summary.Adjustments++
 				}
 			}
 		}
@@ -646,7 +699,7 @@ func getRowCell(row []string, index int) string {
 
 // Helper: Fetch row values mapped by column header name
 func getValByHeader(row []string, colMap map[string]int, headerName string) string {
-	idx, ok := colMap[strings.ToLower(headerName)]
+	idx, ok := colMap[strings.ToLower(strings.TrimSpace(headerName))]
 	if !ok {
 		return ""
 	}

@@ -18,14 +18,14 @@ func TestNewSale_Validation(t *testing.T) {
 	}
 
 	tests := []struct {
-		name      string
-		docType   string
-		docNo     string
-		supplier  string
-		docDate   time.Time
-		items     []domain.SaleItem
-		wantErr   bool
-		errMsg    string
+		name     string
+		docType  string
+		docNo    string
+		supplier string
+		docDate  time.Time
+		items    []domain.SaleItem
+		wantErr  bool
+		errMsg   string
 	}{
 		{
 			name:     "valid sale with one item",
@@ -51,6 +51,16 @@ func TestNewSale_Validation(t *testing.T) {
 		{
 			name:     "empty doc type",
 			docType:  "",
+			docNo:    "INV100",
+			supplier: "ASCD",
+			docDate:  time.Now(),
+			items:    []domain.SaleItem{validItem},
+			wantErr:  true,
+			errMsg:   "doc type cannot be empty",
+		},
+		{
+			name:     "whitespace doc type",
+			docType:  "   ",
 			docNo:    "INV100",
 			supplier: "ASCD",
 			docDate:  time.Now(),
@@ -158,6 +168,26 @@ func TestNewSale_Validation(t *testing.T) {
 			wantErr:  true,
 			errMsg:   "cost cannot be negative",
 		},
+		{
+			name:     "negative patong",
+			docType:  "SI",
+			docNo:    "INV100",
+			supplier: "ASCD",
+			docDate:  time.Now(),
+			items:    []domain.SaleItem{{ItemID: 1, Qty: 5.0, UOM: "PCS", Price: 100.0, Cost: 80.0, Patong: -1}},
+			wantErr:  true,
+			errMsg:   "patong cannot be negative",
+		},
+		{
+			name:     "deductions exceed total sales",
+			docType:  "SI",
+			docNo:    "INV100",
+			supplier: "ASCD",
+			docDate:  time.Now(),
+			items:    []domain.SaleItem{{ItemID: 1, Qty: 1.0, UOM: "PCS", Price: 100.0, Cost: 80.0, Patong: 60.0, POSCharge: 50.0}},
+			wantErr:  true,
+			errMsg:   "total deductions cannot exceed total sales",
+		},
 	}
 
 	for _, tt := range tests {
@@ -191,6 +221,7 @@ func TestSale_ToSalesDetails(t *testing.T) {
 	}
 
 	// Verify calculations and mappings for first item
+	// TotalSales = 300, TotalCost = 200, deductions = 17 -> Profit = 300 - 200 - 17 = 83.0
 	d1 := details[0]
 	if d1.DocType != "SI" || d1.DocNumber != "INV-XYZ" || d1.Supplier != "SupplierA" || d1.CustomerName != "John Doe" {
 		t.Errorf("incorrect header mappings on first detail: %+v", d1)
@@ -198,14 +229,14 @@ func TestSale_ToSalesDetails(t *testing.T) {
 	if d1.ItemID != 1 || d1.Qty != 2.0 || d1.UOM != "PCS" || d1.Price != 150.0 || d1.Cost != 100.0 {
 		t.Errorf("incorrect item mappings on first detail: %+v", d1)
 	}
-	if d1.TotalSales != 300.0 || d1.TotalCost != 200.0 || d1.Profit != 100.0 {
+	if d1.TotalSales != 300.0 || d1.TotalCost != 200.0 || d1.Profit != 83.0 {
 		t.Errorf("incorrect calculated values on first detail: %+v", d1)
 	}
 	expectedRemit1 := 300.0 - (10.0 + 5.0 + 2.0) // 283.0
 	if d1.TotalRemit != expectedRemit1 {
 		t.Errorf("expected TotalRemit %f, got %f", expectedRemit1, d1.TotalRemit)
 	}
-	expectedMargin1 := (100.0 / 300.0) * 100.0 // 33.333333333333336
+	expectedMargin1 := domain.Round2((83.0 / 300.0) * 100.0) // 27.67
 	if math.Abs(d1.ProfitMargin-expectedMargin1) > 0.0001 {
 		t.Errorf("expected ProfitMargin %f, got %f", expectedMargin1, d1.ProfitMargin)
 	}
@@ -224,9 +255,26 @@ func TestSale_ToSalesDetails(t *testing.T) {
 	if d2.TotalRemit != 150.0 {
 		t.Errorf("expected TotalRemit 150.0, got %f", d2.TotalRemit)
 	}
-	expectedMargin2 := (60.0 / 150.0) * 100.0 // 40%
+	expectedMargin2 := 40.0
 	if d2.ProfitMargin != expectedMargin2 {
 		t.Errorf("expected ProfitMargin %f, got %f", expectedMargin2, d2.ProfitMargin)
+	}
+}
+
+func TestNewSalesDetail_DeductionsAndZeroDate(t *testing.T) {
+	if _, err := domain.NewSalesDetail(1, "SI", "POSTED", time.Time{}, "INV1", "Cust", "ASCD", 1, 1, "PCS", 100, 80, 0, 0, 0, "", ""); err == nil {
+		t.Errorf("expected error for zero docDate in NewSalesDetail")
+	}
+
+	sd, err := domain.NewSalesDetail(1, "SI", "POSTED", time.Now(), "INV1", "Cust", "ASCD", 1, 2, "PCS", 150, 100, 10, 5, 2, "", "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if sd.Profit != 83.0 {
+		t.Errorf("expected Profit 83.0 after deductions, got %f", sd.Profit)
+	}
+	if sd.ProfitMargin != 27.67 {
+		t.Errorf("expected ProfitMargin 27.67, got %f", sd.ProfitMargin)
 	}
 }
 

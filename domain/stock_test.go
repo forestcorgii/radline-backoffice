@@ -1,11 +1,27 @@
 package domain_test
 
 import (
+	"math"
 	"testing"
 	"time"
 
 	"rav/domain"
 )
+
+func TestRound2AndIsFinite(t *testing.T) {
+	if domain.Round2(12.345) != 12.35 {
+		t.Errorf("expected 12.35, got %f", domain.Round2(12.345))
+	}
+	if !domain.IsFinite(42.5) {
+		t.Errorf("expected 42.5 to be finite")
+	}
+	if domain.IsFinite(math.NaN()) {
+		t.Errorf("expected NaN not to be finite")
+	}
+	if domain.IsFinite(math.Inf(1)) || domain.IsFinite(math.Inf(-1)) {
+		t.Errorf("expected ±Inf not to be finite")
+	}
+}
 
 func TestNewBrand_Validation(t *testing.T) {
 	tests := []struct {
@@ -16,7 +32,9 @@ func TestNewBrand_Validation(t *testing.T) {
 	}{
 		{"valid brand", "BRD1", "Brand One", false},
 		{"empty code", "", "Brand One", true},
+		{"whitespace code", "   ", "Brand One", true},
 		{"empty name", "BRD1", "", true},
+		{"whitespace name", "BRD1", " \t ", true},
 	}
 
 	for _, tt := range tests {
@@ -38,7 +56,9 @@ func TestNewCategory_Validation(t *testing.T) {
 	}{
 		{"valid category", "CAT1", "Category One", false},
 		{"empty code", "", "Category One", true},
+		{"whitespace code", "   ", "Category One", true},
 		{"empty name", "CAT1", "", true},
+		{"whitespace name", "CAT1", "  ", true},
 	}
 
 	for _, tt := range tests {
@@ -84,8 +104,11 @@ func TestNewUomSetting_Validation(t *testing.T) {
 	}{
 		{"valid uom", "BOX", 10.0, false},
 		{"empty uom", "", 10.0, true},
+		{"whitespace uom", "   ", 10.0, true},
 		{"zero factor", "BOX", 0.0, true},
 		{"negative factor", "BOX", -5.0, true},
+		{"NaN factor", "BOX", math.NaN(), true},
+		{"Inf factor", "BOX", math.Inf(1), true},
 	}
 
 	for _, tt := range tests {
@@ -131,15 +154,15 @@ func TestNewReceivingLog_Validation(t *testing.T) {
 
 func TestNewSalesDetail_Validation(t *testing.T) {
 	tests := []struct {
-		name      string
-		docType   string
-		docNo     string
-		supplier  string
-		qty       float64
-		uom       string
-		price     float64
-		cost      float64
-		wantErr   bool
+		name     string
+		docType  string
+		docNo    string
+		supplier string
+		qty      float64
+		uom      string
+		price    float64
+		cost     float64
+		wantErr  bool
 	}{
 		{"valid sale", "SI", "INV100", "ASCD", 5.0, "PCS", 150.0, 100.0, false},
 		{"empty doctype", "", "INV100", "ASCD", 5.0, "PCS", 150.0, 100.0, true},
@@ -179,21 +202,25 @@ func TestNewSalesDetail_Validation(t *testing.T) {
 func TestNewInventoryAdjustment_Validation(t *testing.T) {
 	tests := []struct {
 		name    string
+		date    time.Time
 		qty     float64
 		cost    float64
 		remarks string
 		wantErr bool
 	}{
-		{"valid adjustment positive", 5.0, 100.0, "Found items", false},
-		{"valid adjustment negative", -2.0, 100.0, "Damaged items", false},
-		{"zero adjustment", 0.0, 100.0, "No change", true},
-		{"negative cost", 5.0, -10.0, "Negative cost", true},
-		{"empty remarks", 5.0, 100.0, "", true},
+		{"valid adjustment positive", time.Now(), 5.0, 100.0, "Found items", false},
+		{"valid adjustment negative", time.Now(), -2.0, 100.0, "Damaged items", false},
+		{"zero date", time.Time{}, 5.0, 100.0, "Found items", true},
+		{"zero adjustment", time.Now(), 0.0, 100.0, "No change", true},
+		{"negative cost", time.Now(), 5.0, -10.0, "Negative cost", true},
+		{"empty remarks", time.Now(), 5.0, 100.0, "", true},
+		{"whitespace remarks", time.Now(), 5.0, 100.0, "   ", true},
+		{"NaN qty", time.Now(), math.NaN(), 100.0, "NaN", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := domain.NewInventoryAdjustment(1, 0, time.Now(), 1, "PCS", tt.qty, tt.cost, tt.remarks)
+			_, err := domain.NewInventoryAdjustment(1, 0, tt.date, 1, "PCS", tt.qty, tt.cost, tt.remarks)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewInventoryAdjustment() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -202,74 +229,69 @@ func TestNewInventoryAdjustment_Validation(t *testing.T) {
 }
 
 func TestItemStock_CalculateOnHand(t *testing.T) {
-	// Setup Item
 	item, err := domain.NewItem(1, "ITM1", "Test Item", "PCS", "M1", 1, 1, "", "")
 	if err != nil {
 		t.Fatalf("failed to setup item: %v", err)
 	}
 
-	// Setup UOM conversion settings: 1 BOX = 10 PCS
 	boxUOM, err := domain.NewUomSetting("BOX", 10.0)
 	if err != nil {
 		t.Fatalf("failed to setup UOM: %v", err)
 	}
 	uomSettings := []domain.UomSetting{boxUOM}
 
-	// Setup Receiving Logs
-	// 10 PCS in Supplier A
-	rl1, _ := domain.NewReceivingLog(1, "SupplierA", time.Now(), "PL1", 1, 10.0, "PCS", 100.0, 0, 0, 80.0, 130, "")
-	// 2 BOX in Supplier A (equals 20 PCS)
-	rl2, _ := domain.NewReceivingLog(2, "SupplierA", time.Now(), "PL2", 1, 2.0, "BOX", 1000.0, 0, 0, 800.0, 130, "")
-	// 5 PCS in Supplier B
+	rl1, _ := domain.NewReceivingLog(1, "SupplierA", time.Now(), "PL1", 1, 10.0, "pcs", 100.0, 0, 0, 80.0, 130, "")
+	rl2, _ := domain.NewReceivingLog(2, "SupplierA", time.Now(), "PL2", 1, 2.0, "box", 1000.0, 0, 0, 800.0, 130, "")
 	rl3, _ := domain.NewReceivingLog(3, "SupplierB", time.Now(), "PL3", 1, 5.0, "PCS", 100.0, 0, 0, 80.0, 130, "")
+	// Unrelated item ID 2 should be ignored
+	rlOtherItem, _ := domain.NewReceivingLog(4, "SupplierA", time.Now(), "PL4", 2, 100.0, "PCS", 100.0, 0, 0, 80.0, 130, "")
 
-	receivingLogs := []domain.ReceivingLog{rl1, rl2, rl3}
+	receivingLogs := []domain.ReceivingLog{rl1, rl2, rl3, rlOtherItem}
 
-	// Setup Sales Details
-	// 3 PCS sold in Supplier A
 	s1, _ := domain.NewSalesDetail(1, "SI", "POSTED", time.Now(), "INV1", "Cust", "SupplierA", 1, 3.0, "PCS", 120.0, 80.0, 0, 0, 0, "", "")
-	// 1 BOX sold in Supplier A (equals 10 PCS)
-	s2, _ := domain.NewSalesDetail(2, "SI", "POSTED", time.Now(), "INV2", "Cust", "SupplierA", 1, 1.0, "BOX", 1200.0, 800.0, 0, 0, 0, "", "")
-	// 2 PCS sold in Supplier B
+	s2, _ := domain.NewSalesDetail(2, "SI", "POSTED", time.Now(), "INV2", "Cust", "SupplierA", 1, 1.0, "box", 1200.0, 800.0, 0, 0, 0, "", "")
 	s3, _ := domain.NewSalesDetail(3, "SI", "POSTED", time.Now(), "INV3", "Cust", "SupplierB", 1, 2.0, "PCS", 120.0, 80.0, 0, 0, 0, "", "")
+	sOtherItem, _ := domain.NewSalesDetail(4, "SI", "POSTED", time.Now(), "INV4", "Cust", "SupplierA", 2, 50.0, "PCS", 120.0, 80.0, 0, 0, 0, "", "")
 
-	salesDetails := []domain.SalesDetail{s1, s2, s3}
+	salesDetails := []domain.SalesDetail{s1, s2, s3, sOtherItem}
 
-	// Setup Adjustments (not supplier-specific)
-	// 2 PCS adjusted positive, 1 BOX adjusted negative (equals -10 PCS)
 	adj1, _ := domain.NewInventoryAdjustment(1, 0, time.Now(), 1, "PCS", 2.0, 80.0, "Found")
 	adj2, _ := domain.NewInventoryAdjustment(2, 0, time.Now(), 1, "BOX", -1.0, 800.0, "Stolen")
+	adjOtherItem, _ := domain.NewInventoryAdjustment(3, 0, time.Now(), 2, "PCS", 50.0, 80.0, "Other")
 
-	adjustments := []domain.InventoryAdjustment{adj1, adj2}
+	adjustments := []domain.InventoryAdjustment{adj1, adj2, adjOtherItem}
 
 	stock := domain.NewItemStock(item, uomSettings, receivingLogs, salesDetails, adjustments)
 
-	// Calculate stock on hand for SupplierA
-	// Received: 10 PCS + 2 BOX (20 PCS) = 30 PCS
-	// Sold: 3 PCS + 1 BOX (10 PCS) = 13 PCS
-	// Expected: 30 - 13 = 17 PCS
 	onHandA := stock.CalculateOnHand("SupplierA")
 	if onHandA != 17.0 {
 		t.Errorf("expected SupplierA stock on hand to be 17.0, got %f", onHandA)
 	}
 
-	// Calculate stock on hand for SupplierB
-	// Received: 5 PCS
-	// Sold: 2 PCS
-	// Expected: 3 PCS
 	onHandB := stock.CalculateOnHand("SupplierB")
 	if onHandB != 3.0 {
 		t.Errorf("expected SupplierB stock on hand to be 3.0, got %f", onHandB)
 	}
 
-	// Calculate global stock on hand (includes adjustments)
-	// Total Received: 10 + 20 + 5 = 35 PCS
-	// Total Sold: 3 + 10 + 2 = 15 PCS
-	// Total Adjusted: +2 - 10 = -8 PCS
-	// Expected: 35 - 15 - 8 = 12 PCS
 	globalOnHand := stock.CalculateGlobalOnHand()
 	if globalOnHand != 12.0 {
 		t.Errorf("expected Global stock on hand to be 12.0, got %f", globalOnHand)
+	}
+
+	// Strict UOM conversion factor checks
+	factorBox, err := stock.GetConversionFactorStrict("box")
+	if err != nil || factorBox != 10.0 {
+		t.Errorf("expected strict conversion factor 10.0 for 'box', got %f, err=%v", factorBox, err)
+	}
+	factorPcs, err := stock.GetConversionFactorStrict("pcs")
+	if err != nil || factorPcs != 1.0 {
+		t.Errorf("expected strict conversion factor 1.0 for 'pcs', got %f, err=%v", factorPcs, err)
+	}
+	if _, err := stock.GetConversionFactorStrict(""); err == nil {
+		t.Errorf("expected error for empty UOM in GetConversionFactorStrict")
+	}
+	if _, err := stock.GetConversionFactorStrict("GALLON"); err == nil {
+		t.Errorf("expected error for unknown UOM in GetConversionFactorStrict")
 	}
 }
 
@@ -279,16 +301,11 @@ func TestItemStock_GetOldestPLWithStock(t *testing.T) {
 		t.Fatalf("failed to setup item: %v", err)
 	}
 
-	// 1. Empty logs
 	stockEmpty := domain.NewItemStock(item, nil, nil, nil, nil)
 	if _, _, _, found := stockEmpty.GetOldestPLWithStock(); found {
 		t.Errorf("expected false for empty receiving logs")
 	}
 
-	// Setup receiving logs:
-	// PL1 on Day 1: 10 PCS @ cost 100, price 150
-	// PL2 on Day 2: 15 PCS @ cost 110, price 160
-	// PL3 on Day 3: 20 PCS @ cost 120, price 170
 	t1 := time.Date(2026, 7, 1, 10, 0, 0, 0, time.UTC)
 	t2 := t1.Add(24 * time.Hour)
 	t3 := t2.Add(24 * time.Hour)
@@ -299,7 +316,6 @@ func TestItemStock_GetOldestPLWithStock(t *testing.T) {
 	receivingLogs := []domain.ReceivingLog{rl1, rl2, rl3}
 
 	// Case A: No sales, no adjustments (OnHand = 45)
-	// Oldest PL with stock should be PL1 (cost 100, price 130 = 100*130/100, plNo PL1)
 	stockA := domain.NewItemStock(item, nil, receivingLogs, nil, nil)
 	costA, priceA, plNoA, foundA := stockA.GetOldestPLWithStock()
 	if !foundA || costA != 100.0 || priceA != 130.0 || plNoA != "PL1" {
@@ -307,7 +323,6 @@ func TestItemStock_GetOldestPLWithStock(t *testing.T) {
 	}
 
 	// Case B: Sales of 8 PCS (OnHand = 37)
-	// Oldest PL with stock should still be PL1 (PL1 has 2 PCS remaining)
 	sB, _ := domain.NewSalesDetail(1, "SI", "POSTED", t2, "INV1", "Cust", "SupplierA", 1, 8.0, "PCS", 150.0, 100.0, 0, 0, 0, "", "")
 	stockB := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sB}, nil)
 	costB, priceB, plNoB, foundB := stockB.GetOldestPLWithStock()
@@ -316,8 +331,6 @@ func TestItemStock_GetOldestPLWithStock(t *testing.T) {
 	}
 
 	// Case C: Sales of 12 PCS (OnHand = 33)
-	// PL1 (10 PCS) is fully consumed. PL2 has 13 PCS remaining.
-	// Oldest PL with stock should be PL2 (cost 110, price 143 = 110*130/100, plNo PL2)
 	sC, _ := domain.NewSalesDetail(1, "SI", "POSTED", t2, "INV1", "Cust", "SupplierA", 1, 12.0, "PCS", 150.0, 100.0, 0, 0, 0, "", "")
 	stockC := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sC}, nil)
 	costC, priceC, plNoC, foundC := stockC.GetOldestPLWithStock()
@@ -326,8 +339,6 @@ func TestItemStock_GetOldestPLWithStock(t *testing.T) {
 	}
 
 	// Case D: Sales of 28 PCS (OnHand = 17)
-	// PL1 (10 PCS) and PL2 (15 PCS) are fully consumed. PL3 has 17 PCS remaining.
-	// Oldest PL with stock should be PL3 (cost 120, price 156 = 120*130/100, plNo PL3)
 	sD, _ := domain.NewSalesDetail(1, "SI", "POSTED", t3, "INV1", "Cust", "SupplierA", 1, 28.0, "PCS", 150.0, 100.0, 0, 0, 0, "", "")
 	stockD := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sD}, nil)
 	costD, priceD, plNoD, foundD := stockD.GetOldestPLWithStock()
@@ -336,11 +347,33 @@ func TestItemStock_GetOldestPLWithStock(t *testing.T) {
 	}
 
 	// Case E: Sales of 45 PCS (OnHand = 0)
-	// All consumed. Returns found = false.
 	sE, _ := domain.NewSalesDetail(1, "SI", "POSTED", t3, "INV1", "Cust", "SupplierA", 1, 45.0, "PCS", 150.0, 100.0, 0, 0, 0, "", "")
 	stockE := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sE}, nil)
 	if _, _, _, foundE := stockE.GetOldestPLWithStock(); foundE {
 		t.Errorf("expected false when onHand is 0")
+	}
+
+	// Case F: Positive adjustment should NOT resurrect an already-depleted PL1
+	posAdj, _ := domain.NewInventoryAdjustment(1, 0, t3, 1, "PCS", 5.0, 110.0, "Found extra")
+	stockF := domain.NewItemStock(item, nil, receivingLogs, []domain.SalesDetail{sC}, []domain.InventoryAdjustment{posAdj})
+	costF, _, plNoF, foundF := stockF.GetOldestPLWithStock()
+	if !foundF || plNoF != "PL2" || costF != 110.0 {
+		t.Errorf("Case F failed: positive adjustment resurrected PL1, got plNo=%q cost=%f", plNoF, costF)
+	}
+
+	// Case G: Multi-UOM receiving log converts Cost & SellingPrice to DefaultUOM
+	boxUOM, _ := domain.NewUomSetting("BOX", 10.0)
+	rlBox, _ := domain.NewReceivingLog(10, "SupplierA", t1, "PL-BOX", 1, 2.0, "BOX", 1000.0, 0, 0, 800.0, 130, "")
+	stockBox := domain.NewItemStock(item, []domain.UomSetting{boxUOM}, []domain.ReceivingLog{rlBox}, nil, nil)
+	costBox, priceBox, plBox, foundBox := stockBox.GetOldestPLWithStock()
+	if !foundBox || plBox != "PL-BOX" || costBox != 80.0 || priceBox != 104.0 {
+		t.Errorf("Case G failed: expected cost 80.0 and price 104.0 per PCS, got cost=%f price=%f pl=%q", costBox, priceBox, plBox)
+	}
+
+	// Case H: GetOldestPLWithStockForSupplier filters by supplier
+	costSupB, priceSupB, plSupB, foundSupB := stockA.GetOldestPLWithStockForSupplier("SupplierB")
+	if !foundSupB || plSupB != "PL3" || costSupB != 120.0 || priceSupB != 156.0 {
+		t.Errorf("Case H failed: expected PL3 for SupplierB, got pl=%q cost=%f price=%f found=%t", plSupB, costSupB, priceSupB, foundSupB)
 	}
 }
 
@@ -348,25 +381,18 @@ func TestItemStock_CalculateOnHand_Status(t *testing.T) {
 	item := domain.Item{ID: 1, Code: "ITEM001", DefaultUOM: "PCS"}
 	rl, _ := domain.NewReceivingLog(1, "SupplierA", time.Now(), "PL1", 1, 10.0, "PCS", 100.0, 0, 0, 80.0, 130, "")
 
-	// 1. Posted sale: should deduct stock
 	s1, _ := domain.NewSalesDetail(1, "SI", "Posted", time.Now(), "INV1", "Cust", "SupplierA", 1, 3.0, "PCS", 150.0, 80.0, 0, 0, 0, "", "")
-	// 2. Active sale: should NOT deduct stock
 	s2, _ := domain.NewSalesDetail(2, "SI", "Active", time.Now(), "INV2", "Cust", "SupplierA", 1, 2.0, "PCS", 150.0, 80.0, 0, 0, 0, "", "")
-	// 3. Cancelled/Return sale: should NOT deduct stock
 	s3, _ := domain.NewSalesDetail(3, "SI", "Cancelled/Return", time.Now(), "INV3", "Cust", "SupplierA", 1, 4.0, "PCS", 150.0, 80.0, 0, 0, 0, "", "")
 
 	sales := []domain.SalesDetail{s1, s2, s3}
 	stock := domain.NewItemStock(item, nil, []domain.ReceivingLog{rl}, sales, nil)
 
-	// Supplier-specific on-hand stock:
-	// Received = 10. Deduct only s1 (3) -> OnHand = 7.
 	onHandSupplier := stock.CalculateOnHand("SupplierA")
 	if onHandSupplier != 7.0 {
 		t.Errorf("expected CalculateOnHand to be 7.0, got %f", onHandSupplier)
 	}
 
-	// Global on-hand stock:
-	// Received = 10. Deduct only s1 (3) -> OnHand = 7.
 	onHandGlobal := stock.CalculateGlobalOnHand()
 	if onHandGlobal != 7.0 {
 		t.Errorf("expected CalculateGlobalOnHand to be 7.0, got %f", onHandGlobal)

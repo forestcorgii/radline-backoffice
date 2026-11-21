@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 // UomSetting represents a conversion factor value object/entity.
 type UomSetting struct {
@@ -10,10 +13,11 @@ type UomSetting struct {
 
 // NewUomSetting creates a UomSetting ensuring UOM and factor constraints.
 func NewUomSetting(muom string, factor float64) (UomSetting, error) {
+	muom = strings.TrimSpace(muom)
 	if muom == "" {
 		return UomSetting{}, errors.New("UOM code cannot be empty")
 	}
-	if factor <= 0 {
+	if !IsFinite(factor) || factor <= 0 {
 		return UomSetting{}, errors.New("conversion factor must be greater than zero")
 	}
 	return UomSetting{
@@ -29,7 +33,7 @@ func (u UomSetting) ConvertToBase(qty float64) float64 {
 
 // ConvertToMultiple converts base units quantity to multiple units quantity.
 func (u UomSetting) ConvertToMultiple(qty float64) float64 {
-	if u.ConversionFactor == 0 {
+	if !IsFinite(u.ConversionFactor) || u.ConversionFactor == 0 {
 		return 0
 	}
 	return qty / u.ConversionFactor

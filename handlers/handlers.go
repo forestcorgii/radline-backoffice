@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"html/template"
 	"log"
 	"net/http"
@@ -9,9 +11,76 @@ import (
 	"time"
 
 	"rav/db"
-	"rav/domain"
 	"rav/models"
 )
+
+func setHXTrigger(w http.ResponseWriter, payload map[string]any) {
+	if b, err := json.Marshal(payload); err == nil {
+		w.Header().Set("HX-Trigger", string(b))
+	}
+}
+
+func setHXTriggerToast(w http.ResponseWriter, toastType, message string) {
+	setHXTrigger(w, map[string]any{
+		"show-toast": map[string]string{
+			"type":    toastType,
+			"message": message,
+		},
+	})
+}
+
+func setHXLocation(w http.ResponseWriter, path, target string) {
+	if b, err := json.Marshal(map[string]string{
+		"path":   path,
+		"target": target,
+	}); err == nil {
+		w.Header().Set("HX-Location", string(b))
+	}
+}
+
+// TemplateFuncMap returns the shared HTML template helper functions.
+func TemplateFuncMap() template.FuncMap {
+	return template.FuncMap{
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"mul": func(a, b float64) float64 {
+			return a * b
+		},
+		"derefInt": func(p *int) int {
+			if p == nil {
+				return 0
+			}
+			return *p
+		},
+		"derefStr": func(p *string) string {
+			if p == nil {
+				return ""
+			}
+			return *p
+		},
+		"derefFloat": func(p *float64) float64 {
+			if p == nil {
+				return 0
+			}
+			return *p
+		},
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			d := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				d[key] = values[i+1]
+			}
+			return d, nil
+		},
+	}
+}
 
 type App struct {
 	Templates map[string]*template.Template
@@ -20,15 +89,18 @@ type App struct {
 func (app *App) Render(w http.ResponseWriter, name string, data interface{}) {
 	t, ok := app.Templates[name]
 	if !ok {
-		http.Error(w, "Template not found: "+name, http.StatusInternalServerError)
+		http.Error(w, "Template not found", http.StatusInternalServerError)
+		return
+	}
+	var buf bytes.Buffer
+	err := t.ExecuteTemplate(&buf, name, data)
+	if err != nil {
+		log.Printf("ExecuteTemplate error in %s: %v", name, err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	err := t.ExecuteTemplate(w, name, data)
-	if err != nil {
-		log.Printf("ExecuteTemplate error in %s: %v", name, err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	_, _ = w.Write(buf.Bytes())
 }
 
 // RenderFragment renders two template fragments in a single response.
@@ -36,45 +108,48 @@ func (app *App) Render(w http.ResponseWriter, name string, data interface{}) {
 // wrapping <tr>-based fragments in <table><tbody>, which would corrupt
 // any OOB swap elements (like pagination) that follow.
 func (app *App) RenderFragment(w http.ResponseWriter, first, second string, data1, data2 interface{}) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	t1, ok := app.Templates[first]
 	if !ok {
-		http.Error(w, "Template not found: "+first, http.StatusInternalServerError)
+		http.Error(w, "Template not found", http.StatusInternalServerError)
 		return
 	}
 	t2, ok := app.Templates[second]
 	if !ok {
-		http.Error(w, "Template not found: "+second, http.StatusInternalServerError)
+		http.Error(w, "Template not found", http.StatusInternalServerError)
 		return
 	}
-	// Write a comment so the response doesn't start with <tr>,
-	// which would cause HTMX's makeFragment to wrap aggressively.
-	// This ensures any OOB swap elements (like the <div> in pagination)
-	// are properly parsed as siblings rather than being trapped inside <tbody>.
-	w.Write([]byte("<!-- htmx-fragment -->"))
-	err := t1.ExecuteTemplate(w, first, data1)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	var buf bytes.Buffer
+	buf.WriteString("<!-- htmx-fragment -->")
+	if err := t1.ExecuteTemplate(&buf, first, data1); err != nil {
+		log.Printf("ExecuteTemplate error in %s: %v", first, err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	err = t2.ExecuteTemplate(w, second, data2)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err := t2.ExecuteTemplate(&buf, second, data2); err != nil {
+		log.Printf("ExecuteTemplate error in %s: %v", second, err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write(buf.Bytes())
 }
 
 func (app *App) RenderPage(w http.ResponseWriter, r *http.Request, name string, data interface{}) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if r.Header.Get("HX-Request") == "true" {
 		t, ok := app.Templates[name]
 		if !ok {
-			http.Error(w, "Template not found: "+name, http.StatusInternalServerError)
+			http.Error(w, "Template not found", http.StatusInternalServerError)
 			return
 		}
-		err := t.ExecuteTemplate(w, "content", data)
+		var buf bytes.Buffer
+		err := t.ExecuteTemplate(&buf, "content", data)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Printf("ExecuteTemplate error in %s (content): %v", name, err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_, _ = w.Write(buf.Bytes())
 	} else {
 		app.Render(w, name, data)
 	}
@@ -195,39 +270,44 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// If still empty, mock data for clean display
+	// If still empty, populate 6 zero-value months up to endDate for clean chart layout without fake figures
 	if len(trend) == 0 {
-		trend = []MonthlyTrend{
-			{Month: "2026-05", Sales: 22000, Cost: 16000, Profit: 6000},
-			{Month: "2026-06", Sales: 28000, Cost: 20200, Profit: 7800},
-			{Month: "2026-07", Sales: 24000, Cost: 17500, Profit: 6500},
-			{Month: "2026-08", Sales: 31000, Cost: 22600, Profit: 8400},
-			{Month: "2026-09", Sales: 35000, Cost: 25800, Profit: 9200},
-			{Month: "2026-10", Sales: 39000, Cost: 28500, Profit: 10500},
+		for i := 5; i >= 0; i-- {
+			m := endDate.AddDate(0, -i, 0).Format("2006-01")
+			trend = append(trend, MonthlyTrend{Month: m})
 		}
 	}
 
-	// 5. Sales & Total Inventory Trend
+	// 5. Sales & Total Inventory Trend (batch-fetched in a single query)
 	type MonthlyInvTrend struct {
 		Month          string  `db:"month"`
 		Sales          float64 `db:"sales"`
 		InventoryValue float64 `db:"inventory_value"`
 	}
+	invByMonth := make(map[string]float64)
+	if len(trend) > 0 {
+		minMonth := trend[0].Month
+		maxMonth := trend[len(trend)-1].Month
+		var recMonthly []struct {
+			Month     string  `db:"month"`
+			TotalCost float64 `db:"total_cost"`
+		}
+		_ = db.DB.Select(&recMonthly, `
+			SELECT substr(date, 1, 7) as month, COALESCE(SUM(total_cost), 0.0) as total_cost
+			FROM receiving_logs
+			WHERE substr(date, 1, 7) >= ? AND substr(date, 1, 7) <= ?
+			GROUP BY month
+		`, minMonth, maxMonth)
+		for _, rm := range recMonthly {
+			invByMonth[rm.Month] = rm.TotalCost
+		}
+	}
 	var invTrend []MonthlyInvTrend
 	for _, tr := range trend {
-		var invCost float64
-		_ = db.DB.Get(&invCost, `
-			SELECT COALESCE(SUM(total_cost), 0.0)
-			FROM receiving_logs
-			WHERE substr(date, 1, 7) = ?
-		`, tr.Month)
-		if invCost == 0 {
-			invCost = tr.Sales * 0.65 // representative ratio if no receiving in that month
-		}
 		invTrend = append(invTrend, MonthlyInvTrend{
 			Month:          tr.Month,
 			Sales:          tr.Sales,
-			InventoryValue: invCost,
+			InventoryValue: invByMonth[tr.Month],
 		})
 	}
 
@@ -352,30 +432,7 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 	var goals []models.GoalWithProgress
 	var rawGoals []models.EarningGoal
 	_ = db.DB.Select(&rawGoals, "SELECT id, title, period_type, target_period, target_revenue, target_profit, created_at FROM earning_goals ORDER BY target_period DESC LIMIT 2")
-	for _, g := range rawGoals {
-		var actual struct {
-			Revenue float64 `db:"revenue"`
-			Profit  float64 `db:"profit"`
-		}
-		if g.PeriodType == string(domain.GoalPeriodMonthly) {
-			_ = db.DB.Get(&actual, "SELECT COALESCE(SUM(total_sales), 0.0) as revenue, COALESCE(SUM(profit), 0.0) as profit FROM sales_details WHERE doc_status IN ('Posted', 'POSTED') AND substr(doc_date, 1, 7) = ?", g.TargetPeriod)
-		} else {
-			_ = db.DB.Get(&actual, "SELECT COALESCE(SUM(total_sales), 0.0) as revenue, COALESCE(SUM(profit), 0.0) as profit FROM sales_details WHERE doc_status IN ('Posted', 'POSTED') AND substr(doc_date, 1, 4) = ?", g.TargetPeriod)
-		}
-		dg := domain.EarningGoal{
-			TargetRevenue: g.TargetRevenue,
-			TargetProfit:  g.TargetProfit,
-		}
-		prog := dg.CalculateProgress(actual.Revenue, actual.Profit)
-		goals = append(goals, models.GoalWithProgress{
-			EarningGoal:     g,
-			ActualRevenue:   actual.Revenue,
-			ActualProfit:    actual.Profit,
-			RevenueProgress: prog.RevenueProgress,
-			ProfitProgress:  prog.ProfitProgress,
-			Status:          prog.Status,
-		})
-	}
+	goals = computeGoalsProgress(rawGoals)
 
 	// 10. Upcoming Reminders
 	var upcomingReminders []models.Reminder
@@ -429,15 +486,27 @@ func (app *App) DashboardHandler(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("fragment") == "trends" {
 			t, ok := app.Templates["dashboard_trends.html"]
 			if ok {
+				var buf bytes.Buffer
+				if err := t.Execute(&buf, data); err != nil {
+					log.Printf("Execute error in dashboard_trends.html: %v", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
-				_ = t.Execute(w, data)
+				_, _ = w.Write(buf.Bytes())
 				return
 			}
 		} else if r.URL.Query().Get("fragment") == "top_products" {
 			t, ok := app.Templates["dashboard_top_products.html"]
 			if ok {
+				var buf bytes.Buffer
+				if err := t.Execute(&buf, data); err != nil {
+					log.Printf("Execute error in dashboard_top_products.html: %v", err)
+					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+					return
+				}
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
-				_ = t.Execute(w, data)
+				_, _ = w.Write(buf.Bytes())
 				return
 			}
 		}
@@ -610,12 +679,19 @@ func (app *App) SaveUserPreferenceHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
+
 	var payload struct {
 		Key    string `json:"key"`
 		Value  string `json:"value"`
 		Delete bool   `json:"delete"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			http.Error(w, "Payload too large", http.StatusRequestEntityTooLarge)
+			return
+		}
 		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
 		return
 	}
@@ -623,6 +699,10 @@ func (app *App) SaveUserPreferenceHandler(w http.ResponseWriter, r *http.Request
 	key := strings.TrimSpace(payload.Key)
 	if key == "" || len(key) > 128 {
 		http.Error(w, "Invalid preference key", http.StatusBadRequest)
+		return
+	}
+	if len(payload.Value) > 32768 {
+		http.Error(w, "Preference value exceeds maximum size", http.StatusBadRequest)
 		return
 	}
 

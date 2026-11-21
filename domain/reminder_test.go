@@ -8,8 +8,9 @@ import (
 )
 
 func TestReminder_IsOverdue(t *testing.T) {
-	yesterday := time.Now().Add(-24 * time.Hour)
-	tomorrow := time.Now().Add(24 * time.Hour)
+	now := time.Now()
+	yesterday := now.Add(-24 * time.Hour)
+	tomorrow := now.Add(24 * time.Hour)
 
 	rPendingPast := domain.Reminder{
 		DueDate: yesterday,
@@ -33,6 +34,24 @@ func TestReminder_IsOverdue(t *testing.T) {
 	}
 	if rPendingFuture.IsOverdue() {
 		t.Errorf("expected future reminder NOT to be overdue")
+	}
+
+	// Date-only (midnight) reminder due TODAY should NOT be overdue on the same day
+	todayMidnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	rDueToday := domain.Reminder{
+		DueDate: todayMidnight,
+		Status:  domain.StatusPending,
+	}
+	if rDueToday.IsOverdue() {
+		t.Errorf("expected midnight date-only reminder due today NOT to be overdue yet")
+	}
+
+	// Zero DueDate should NOT be overdue
+	rZero := domain.Reminder{
+		Status: domain.StatusPending,
+	}
+	if rZero.IsOverdue() {
+		t.Errorf("expected zero due date NOT to be overdue")
 	}
 }
 
@@ -61,11 +80,20 @@ func TestReminder_Assignment(t *testing.T) {
 
 	uid := int64(42)
 	r.AssignTo(&uid, "Alice")
+	// Mutating caller's uid should not mutate r.AssignedToUserID
+	uid = 99
 	if !r.IsAssigned() {
 		t.Errorf("expected reminder to be assigned")
 	}
 	if *r.AssignedToUserID != 42 || r.AssignedToName != "Alice" {
-		t.Errorf("unexpected assigned user data: %v, %s", r.AssignedToUserID, r.AssignedToName)
+		t.Errorf("unexpected assigned user data: %v, %s", *r.AssignedToUserID, r.AssignedToName)
+	}
+
+	// Assigning <= 0 unassigns cleanly
+	zeroID := int64(0)
+	r.AssignTo(&zeroID, "Bob")
+	if r.IsAssigned() || r.AssignedToUserID != nil || r.AssignedToName != "" {
+		t.Errorf("expected AssignTo(0) to clear assignment, got %+v", r)
 	}
 
 	r.Unassign()
@@ -88,4 +116,3 @@ func TestValidateReminderStatus(t *testing.T) {
 		t.Errorf("expected invalid status to return error")
 	}
 }
-

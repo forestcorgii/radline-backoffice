@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 // Category represents a category domain entity.
 type Category struct {
@@ -11,6 +14,8 @@ type Category struct {
 
 // NewCategory creates a new Category entity validating code and name constraints.
 func NewCategory(id int, code, name string) (Category, error) {
+	code = strings.TrimSpace(code)
+	name = strings.TrimSpace(name)
 	if code == "" {
 		return Category{}, errors.New("category code cannot be empty")
 	}

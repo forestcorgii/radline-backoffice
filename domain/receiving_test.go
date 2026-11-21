@@ -71,7 +71,7 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			date:     time.Now(),
 			items:    []domain.StockReceiveItem{},
 			wantErr:  true,
-			errMsg:   "stocktake must have at least one item",
+			errMsg:   "stock receive must have at least one item",
 		},
 		{
 			name:     "invalid item ID",
@@ -139,6 +139,28 @@ func TestNewStockReceive_Validation(t *testing.T) {
 			wantErr: true,
 			errMsg:  "unit price cannot be negative",
 		},
+		{
+			name:     "less1 out of bounds (>100)",
+			plNo:     "PL100",
+			supplier: "ASCD",
+			date:     time.Now(),
+			items: []domain.StockReceiveItem{
+				{ItemID: 1, Qty: 10.0, UOM: "PCS", UnitPrice: 100.0, Less1: 110.0},
+			},
+			wantErr: true,
+			errMsg:  "less1 discount must be between 0 and 100",
+		},
+		{
+			name:     "less2 negative",
+			plNo:     "PL100",
+			supplier: "ASCD",
+			date:     time.Now(),
+			items: []domain.StockReceiveItem{
+				{ItemID: 1, Qty: 10.0, UOM: "PCS", UnitPrice: 100.0, Less2: -5.0},
+			},
+			wantErr: true,
+			errMsg:  "less2 discount must be between 0 and 100",
+		},
 	}
 
 	for _, tt := range tests {
@@ -159,7 +181,7 @@ func TestStockReceive_ToReceivingLogs(t *testing.T) {
 	date := time.Now()
 	items := []domain.StockReceiveItem{
 		{ItemID: 1, Qty: 10.0, UOM: "PCS", UnitPrice: 100.0, Less1: 10, Less2: 5, Markup: 130},
-		{ItemID: 2, Qty: 5.0, UOM: "BOX", UnitPrice: 500.0, Less1: 0, Less2: 0, Markup: 150},
+		{ItemID: 2, Qty: 5.0, UOM: "BOX", UnitCost: 500.0, Less1: 0, Less2: 0, Markup: 150},
 	}
 
 	sr, err := domain.NewStockReceive("PL999", "RENOWN", date, items)
@@ -172,11 +194,6 @@ func TestStockReceive_ToReceivingLogs(t *testing.T) {
 		t.Fatalf("expected 2 receiving logs, got %d", len(logs))
 	}
 
-	// Verify first item log mapping
-	// UnitPrice=100, Less1=10%, Less2=5%
-	// UnitCost = 100 * (1-0.10) * (1-0.05) = 100 * 0.9 * 0.95 = 85.5
-	// TotalCost = 10 * 85.5 = 855
-	// SellingPrice = 85.5 * 130/100 = 111.15
 	log1 := logs[0]
 	if log1.Supplier != "RENOWN" {
 		t.Errorf("expected Supplier RENOWN, got %s", log1.Supplier)
@@ -216,32 +233,28 @@ func TestStockReceive_ToReceivingLogs(t *testing.T) {
 	if log1.Markup != 130.0 {
 		t.Errorf("expected Markup 130.0, got %f", log1.Markup)
 	}
-	expectedSelling1 := 85.5 * 130 / 100 // 111.15
+	expectedSelling1 := 111.15
 	if log1.SellingPrice != expectedSelling1 {
 		t.Errorf("expected SellingPrice %f, got %f", expectedSelling1, log1.SellingPrice)
 	}
 
-	// Verify second item log mapping
-	// UnitPrice=500, Less1=0, Less2=0 → UnitCost=500
-	// TotalCost = 5 * 500 = 2500
-	// SellingPrice = 500 * 150/100 = 750
+	// Second item initialized via UnitCost fallback
 	log2 := logs[1]
-	if log2.ItemID != 2 {
-		t.Errorf("expected ItemID 2, got %d", log2.ItemID)
+	if log2.ItemID != 2 || log2.UnitPrice != 500.0 || log2.Cost != 500.0 || log2.TotalCost != 2500.0 || log2.SellingPrice != 750.0 {
+		t.Errorf("unexpected second log values: %+v", log2)
 	}
-	if log2.Qty != 5.0 {
-		t.Errorf("expected Qty 5.0, got %f", log2.Qty)
+}
+
+func TestNewReceivingLog_AutoCostAndDateValidation(t *testing.T) {
+	if _, err := domain.NewReceivingLog(1, "ASCD", time.Time{}, "PL1", 1, 5, "PCS", 100, 0, 0, 100, 130, ""); err == nil {
+		t.Errorf("expected error for zero date in NewReceivingLog")
 	}
-	if log2.Cost != 500.0 {
-		t.Errorf("expected Cost 500.0, got %f", log2.Cost)
+
+	rl, err := domain.NewReceivingLog(1, "ASCD", time.Now(), "PL1", 1, 10, "PCS", 100, 10, 5, 0, 130, "")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if log2.TotalCost != 2500.0 {
-		t.Errorf("expected TotalCost 2500.0, got %f", log2.TotalCost)
-	}
-	if log2.Markup != 150.0 {
-		t.Errorf("expected Markup 150.0, got %f", log2.Markup)
-	}
-	if log2.SellingPrice != 750.0 {
-		t.Errorf("expected SellingPrice 750.0, got %f", log2.SellingPrice)
+	if rl.Cost != 85.5 || rl.TotalCost != 855.0 || rl.SellingPrice != 111.15 {
+		t.Errorf("expected auto-calculated cost=85.5 total=855.0 selling=111.15, got %+v", rl)
 	}
 }

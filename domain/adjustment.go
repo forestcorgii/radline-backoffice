@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -19,16 +20,22 @@ type InventoryAdjustment struct {
 
 // NewInventoryAdjustment creates an inventory adjustment, validating parameters.
 func NewInventoryAdjustment(id int, adjustmentID int, date time.Time, itemID int, uom string, qty, cost float64, remarks string) (InventoryAdjustment, error) {
+	uom = strings.TrimSpace(uom)
+	remarks = strings.TrimSpace(remarks)
+
+	if date.IsZero() {
+		return InventoryAdjustment{}, errors.New("date must be valid")
+	}
 	if itemID <= 0 {
 		return InventoryAdjustment{}, errors.New("item ID must be valid")
 	}
 	if uom == "" {
 		return InventoryAdjustment{}, errors.New("UOM cannot be empty")
 	}
-	if qty == 0 {
+	if !IsFinite(qty) || qty == 0 {
 		return InventoryAdjustment{}, errors.New("adjustment quantity cannot be zero")
 	}
-	if cost < 0 {
+	if !IsFinite(cost) || cost < 0 {
 		return InventoryAdjustment{}, errors.New("cost cannot be negative")
 	}
 	if remarks == "" {
@@ -41,7 +48,7 @@ func NewInventoryAdjustment(id int, adjustmentID int, date time.Time, itemID int
 		ItemID:        itemID,
 		UOM:           uom,
 		AdjustmentQty: qty,
-		Cost:          cost,
+		Cost:          Round2(cost),
 		Remarks:       remarks,
 	}, nil
 }
@@ -63,6 +70,7 @@ type StockAdjustment struct {
 
 // NewStockAdjustment constructs and validates a StockAdjustment aggregate.
 func NewStockAdjustment(date time.Time, remarks string, items []StockAdjustmentItem) (StockAdjustment, error) {
+	remarks = strings.TrimSpace(remarks)
 	if date.IsZero() {
 		return StockAdjustment{}, errors.New("date must be valid")
 	}
@@ -75,24 +83,25 @@ func NewStockAdjustment(date time.Time, remarks string, items []StockAdjustmentI
 
 	validatedItems := make([]StockAdjustmentItem, len(items))
 	for i, item := range items {
+		itemUOM := strings.TrimSpace(item.UOM)
 		if item.ItemID <= 0 {
 			return StockAdjustment{}, errors.New("item ID must be valid")
 		}
-		if item.Qty == 0 {
+		if !IsFinite(item.Qty) || item.Qty == 0 {
 			return StockAdjustment{}, errors.New("adjustment quantity cannot be zero")
 		}
-		if item.UOM == "" {
+		if itemUOM == "" {
 			return StockAdjustment{}, errors.New("UOM cannot be empty")
 		}
-		if item.Cost < 0 {
+		if !IsFinite(item.Cost) || item.Cost < 0 {
 			return StockAdjustment{}, errors.New("cost cannot be negative")
 		}
 
 		validatedItems[i] = StockAdjustmentItem{
 			ItemID: item.ItemID,
 			Qty:    item.Qty,
-			UOM:    item.UOM,
-			Cost:   item.Cost,
+			UOM:    itemUOM,
+			Cost:   Round2(item.Cost),
 		}
 	}
 

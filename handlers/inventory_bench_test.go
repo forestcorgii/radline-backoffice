@@ -14,7 +14,15 @@ import (
 
 func BenchmarkAdjustStockHandler(b *testing.B) {
 	// Initialize in-memory sqlite db for tests
-	db.InitTestDB()
+	if err := db.InitTestDB(); err != nil {
+		b.Fatalf("Failed to init test DB: %v", err)
+	}
+	b.Cleanup(func() {
+		if db.DB != nil {
+			_ = db.DB.Close()
+			db.DB = nil
+		}
+	})
 
 	// Ensure there are enough items
 	for i := 1; i <= 1000; i++ {

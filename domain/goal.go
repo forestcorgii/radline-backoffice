@@ -36,19 +36,36 @@ type GoalProgress struct {
 }
 
 func (g *EarningGoal) CalculateProgress(actualRevenue, actualProfit float64) GoalProgress {
+	if !IsFinite(actualRevenue) {
+		actualRevenue = 0
+	}
+	if !IsFinite(actualProfit) {
+		actualProfit = 0
+	}
+	actualRevenue = Round2(actualRevenue)
+	actualProfit = Round2(actualProfit)
+	targetRevenue := Round2(g.TargetRevenue)
+	targetProfit := Round2(g.TargetProfit)
+
 	var revProgress float64
-	if g.TargetRevenue > 0 {
-		revProgress = (actualRevenue / g.TargetRevenue) * 100
+	if targetRevenue > 0 {
+		revProgress = math.Round(((actualRevenue/targetRevenue)*100)*10) / 10
 	}
 
 	var profitProgress float64
-	if g.TargetProfit > 0 {
-		profitProgress = (actualProfit / g.TargetProfit) * 100
+	if targetProfit > 0 {
+		profitProgress = math.Round(((actualProfit/targetProfit)*100)*10) / 10
 	}
 
 	status := "In Progress"
 	avgProgress := (revProgress + profitProgress) / 2
-	if revProgress >= 100 && profitProgress >= 100 {
+	if profitProgress < 0 {
+		if avgProgress >= 40 {
+			status = "In Progress"
+		} else {
+			status = "Behind"
+		}
+	} else if revProgress >= 100 && profitProgress >= 100 {
 		status = "Exceeded"
 	} else if avgProgress >= 75 {
 		status = "On Track"
@@ -57,29 +74,58 @@ func (g *EarningGoal) CalculateProgress(actualRevenue, actualProfit float64) Goa
 	}
 
 	return GoalProgress{
-		RevenueProgress: math.Round(revProgress*10) / 10,
-		ProfitProgress:  math.Round(profitProgress*10) / 10,
-		RevenueVariance: g.TargetRevenue - actualRevenue,
-		ProfitVariance:  g.TargetProfit - actualProfit,
+		RevenueProgress: revProgress,
+		ProfitProgress:  profitProgress,
+		RevenueVariance: Round2(targetRevenue - actualRevenue),
+		ProfitVariance:  Round2(targetProfit - actualProfit),
 		Status:          status,
 	}
+}
+
+func isValidTargetPeriod(periodType, targetPeriod string) bool {
+	if periodType == string(GoalPeriodMonthly) {
+		if len(targetPeriod) != 7 || targetPeriod[4] != '-' {
+			return false
+		}
+		_, err := time.Parse("2006-01", targetPeriod)
+		return err == nil
+	}
+	if periodType == string(GoalPeriodYearly) {
+		if len(targetPeriod) != 4 {
+			return false
+		}
+		_, err := time.Parse("2006", targetPeriod)
+		return err == nil
+	}
+	return false
 }
 
 func ValidateEarningGoal(title, periodType, targetPeriod string, targetRevenue, targetProfit float64) error {
 	if strings.TrimSpace(title) == "" {
 		return errors.New("goal title is required")
 	}
+	periodType = strings.TrimSpace(periodType)
 	if periodType != string(GoalPeriodMonthly) && periodType != string(GoalPeriodYearly) {
 		return errors.New("period type must be Monthly or Yearly")
 	}
-	if strings.TrimSpace(targetPeriod) == "" {
+	targetPeriod = strings.TrimSpace(targetPeriod)
+	if targetPeriod == "" {
 		return errors.New("target period is required")
 	}
-	if targetRevenue <= 0 {
+	if !isValidTargetPeriod(periodType, targetPeriod) {
+		if periodType == string(GoalPeriodMonthly) {
+			return errors.New("monthly target period must be in YYYY-MM format")
+		}
+		return errors.New("yearly target period must be in YYYY format")
+	}
+	if !IsFinite(targetRevenue) || targetRevenue <= 0 {
 		return errors.New("target revenue must be greater than zero")
 	}
-	if targetProfit <= 0 {
+	if !IsFinite(targetProfit) || targetProfit <= 0 {
 		return errors.New("target profit must be greater than zero")
+	}
+	if Round2(targetProfit) > Round2(targetRevenue) {
+		return errors.New("target profit cannot exceed target revenue")
 	}
 	return nil
 }

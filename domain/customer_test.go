@@ -1,12 +1,14 @@
-package domain
+package domain_test
 
 import (
 	"testing"
+
+	"rav/domain"
 )
 
 func TestNewCustomer(t *testing.T) {
 	t.Run("valid customer with default payment terms", func(t *testing.T) {
-		cust, err := NewCustomer(1, "CUST-001", "Acme Corporation", "123-456-789-000", "123 Main St", "John Doe", "09123456789", "john@acme.com", "", "Important client")
+		cust, err := domain.NewCustomer(1, "CUST-001", "Acme Corporation", "123-456-789-000", "123 Main St", "John Doe", "09123456789", "john@acme.com", "", "Important client")
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -22,7 +24,7 @@ func TestNewCustomer(t *testing.T) {
 	})
 
 	t.Run("valid customer with explicit payment terms", func(t *testing.T) {
-		cust, err := NewCustomer(2, "CUST-002", "Globex Inc", "", "", "", "", "", "Cash on Delivery (COD)", "")
+		cust, err := domain.NewCustomer(2, "CUST-002", "Globex Inc", "", "", "", "", "", "Cash on Delivery (COD)", "")
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -32,14 +34,14 @@ func TestNewCustomer(t *testing.T) {
 	})
 
 	t.Run("empty code returns error", func(t *testing.T) {
-		_, err := NewCustomer(0, "   ", "Acme", "", "", "", "", "", "", "")
+		_, err := domain.NewCustomer(0, "   ", "Acme", "", "", "", "", "", "", "")
 		if err == nil {
 			t.Fatal("expected error for empty code, got nil")
 		}
 	})
 
 	t.Run("empty name returns error", func(t *testing.T) {
-		_, err := NewCustomer(0, "CUST-003", "", "", "", "", "", "", "", "")
+		_, err := domain.NewCustomer(0, "CUST-003", "  \t ", "", "", "", "", "", "", "")
 		if err == nil {
 			t.Fatal("expected error for empty name, got nil")
 		}

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,44 +13,68 @@ import (
 	"rav/models"
 )
 
-// GoalsHandler displays earning targets and tracks performance against actual figures
-func (app *App) GoalsHandler(w http.ResponseWriter, r *http.Request) {
-	var rawGoals []models.EarningGoal
-	err := db.DB.Select(&rawGoals, "SELECT id, title, period_type, target_period, target_revenue, target_profit, created_at FROM earning_goals ORDER BY target_period DESC, id DESC")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+type periodSalesTotals struct {
+	Period  string  `db:"period"`
+	Revenue float64 `db:"revenue"`
+	Profit  float64 `db:"profit"`
+}
+
+// computeGoalsProgress calculates progress for a slice of goals without N+1 queries.
+func computeGoalsProgress(rawGoals []models.EarningGoal) []models.GoalWithProgress {
+	if len(rawGoals) == 0 {
+		return nil
 	}
 
-	var goalsWithProgress []models.GoalWithProgress
+	hasMonthly := false
+	hasYearly := false
 	for _, g := range rawGoals {
-		// Calculate actual revenue and profit for the target period
-		var actual struct {
-			Revenue float64 `db:"revenue"`
-			Profit  float64 `db:"profit"`
-		}
-
-		var query string
-		var arg string
 		if g.PeriodType == string(domain.GoalPeriodMonthly) {
-			// e.g. "2026-10"
-			query = `
-				SELECT COALESCE(SUM(total_sales), 0.0) as revenue, COALESCE(SUM(profit), 0.0) as profit
-				FROM sales_details
-				WHERE doc_status IN ('Posted', 'POSTED') AND substr(doc_date, 1, 7) = ?
-			`
-			arg = g.TargetPeriod
+			hasMonthly = true
 		} else {
-			// e.g. "2026"
-			query = `
-				SELECT COALESCE(SUM(total_sales), 0.0) as revenue, COALESCE(SUM(profit), 0.0) as profit
-				FROM sales_details
-				WHERE doc_status IN ('Posted', 'POSTED') AND substr(doc_date, 1, 4) = ?
-			`
-			arg = g.TargetPeriod
+			hasYearly = true
 		}
+	}
 
-		_ = db.DB.Get(&actual, query, arg)
+	monthlyMap := make(map[string]periodSalesTotals)
+	if hasMonthly && db.DB != nil {
+		var rows []periodSalesTotals
+		_ = db.DB.Select(&rows, `
+			SELECT substr(doc_date, 1, 7) as period,
+			       COALESCE(SUM(total_sales), 0.0) as revenue,
+			       COALESCE(SUM(profit), 0.0) as profit
+			FROM sales_details
+			WHERE doc_status IN ('Posted', 'POSTED')
+			GROUP BY period
+		`)
+		for _, r := range rows {
+			monthlyMap[r.Period] = r
+		}
+	}
+
+	yearlyMap := make(map[string]periodSalesTotals)
+	if hasYearly && db.DB != nil {
+		var rows []periodSalesTotals
+		_ = db.DB.Select(&rows, `
+			SELECT substr(doc_date, 1, 4) as period,
+			       COALESCE(SUM(total_sales), 0.0) as revenue,
+			       COALESCE(SUM(profit), 0.0) as profit
+			FROM sales_details
+			WHERE doc_status IN ('Posted', 'POSTED')
+			GROUP BY period
+		`)
+		for _, r := range rows {
+			yearlyMap[r.Period] = r
+		}
+	}
+
+	goalsWithProgress := make([]models.GoalWithProgress, 0, len(rawGoals))
+	for _, g := range rawGoals {
+		var actual periodSalesTotals
+		if g.PeriodType == string(domain.GoalPeriodMonthly) {
+			actual = monthlyMap[g.TargetPeriod]
+		} else {
+			actual = yearlyMap[g.TargetPeriod]
+		}
 
 		domGoal := domain.EarningGoal{
 			ID:            g.ID,
@@ -73,6 +98,20 @@ func (app *App) GoalsHandler(w http.ResponseWriter, r *http.Request) {
 			Status:          prog.Status,
 		})
 	}
+	return goalsWithProgress
+}
+
+// GoalsHandler displays earning targets and tracks performance against actual figures
+func (app *App) GoalsHandler(w http.ResponseWriter, r *http.Request) {
+	var rawGoals []models.EarningGoal
+	err := db.DB.Select(&rawGoals, "SELECT id, title, period_type, target_period, target_revenue, target_profit, created_at FROM earning_goals ORDER BY target_period DESC, id DESC")
+	if err != nil {
+		log.Printf("GoalsHandler DB error: %v", err)
+		http.Error(w, "Failed to load earning goals", http.StatusInternalServerError)
+		return
+	}
+
+	goalsWithProgress := computeGoalsProgress(rawGoals)
 
 	currentMonth := time.Now().Format("2006-01")
 	currentYear := time.Now().Format("2006")
@@ -104,7 +143,7 @@ func (app *App) AddGoalHandler(w http.ResponseWriter, r *http.Request) {
 	targetProfit, _ := strconv.ParseFloat(r.FormValue("target_profit"), 64)
 
 	if err := domain.ValidateEarningGoal(title, periodType, targetPeriod, targetRevenue, targetProfit); err != nil {
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		setHXTriggerToast(w, "error", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -116,15 +155,17 @@ func (app *App) AddGoalHandler(w http.ResponseWriter, r *http.Request) {
 		RETURNING id
 	`, title, periodType, targetPeriod, targetRevenue, targetProfit).Scan(&newID)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to create earning goal"}}`)
+		log.Printf("AddGoalHandler insert error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to create earning goal")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	app.LogActivity(r, "CREATE_GOAL", "EarningGoal", fmt.Sprintf("%d", newID), fmt.Sprintf("Created %s target '%s' for period %s", periodType, title, targetPeriod))
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Earning goal set successfully!"}}`)
-	if r.Header.Get("HX-Target") == "#main-content" {
-		w.Header().Set("HX-Location", `{"path": "/goals", "target": "#main-content"}`)
+	setHXTriggerToast(w, "success", "Earning goal set successfully!")
+	target := strings.TrimPrefix(r.Header.Get("HX-Target"), "#")
+	if target == "main-content" {
+		setHXLocation(w, "/goals", "#main-content")
 	} else {
 		w.Header().Set("HX-Redirect", "/goals")
 	}
@@ -142,15 +183,17 @@ func (app *App) DeleteGoalHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.DB.Exec("DELETE FROM earning_goals WHERE id = ?", id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to delete goal"}}`)
+		log.Printf("DeleteGoalHandler delete error: %v", err)
+		setHXTriggerToast(w, "error", "Failed to delete goal")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	app.LogActivity(r, "DELETE_GOAL", "EarningGoal", idStr, "Deleted earning goal ID "+idStr)
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Earning goal removed"}}`)
-	if r.Header.Get("HX-Target") == "#main-content" {
-		w.Header().Set("HX-Location", `{"path": "/goals", "target": "#main-content"}`)
+	setHXTriggerToast(w, "success", "Earning goal removed")
+	target := strings.TrimPrefix(r.Header.Get("HX-Target"), "#")
+	if target == "main-content" {
+		setHXLocation(w, "/goals", "#main-content")
 	} else {
 		w.Header().Set("HX-Redirect", "/goals")
 	}

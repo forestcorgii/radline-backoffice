@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"rav/db"
+	"rav/domain"
 	"rav/models"
 )
 
@@ -66,7 +67,7 @@ func (app *App) BrandsHandler(w http.ResponseWriter, r *http.Request) {
 	var brands []models.Brand
 	err := db.DB.Select(&brands, query, selectArgs...)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load brands", http.StatusInternalServerError)
 		return
 	}
 
@@ -92,20 +93,25 @@ func (app *App) AddBrandHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.FormValue("code")
 	name := r.FormValue("name")
 
-	if code == "" || name == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Code and Name are required."}}`)
+	domBrand, err := domain.NewBrand(0, code, name)
+	if err != nil {
+		setToastTrigger(w, "error", "Code and Name are required.")
 		http.Error(w, "Code and Name are required", http.StatusBadRequest)
 		return
 	}
 
-	_, err := db.DB.Exec("INSERT INTO brands (code, name) VALUES (?, ?)", code, name)
+	_, err = db.DB.Exec("INSERT INTO brands (code, name) VALUES (?, ?)", domBrand.Code, domBrand.Name)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to add brand. Code might already be in use."}}`)
-		http.Error(w, "Failed to insert brand", http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to add brand. Code might already be in use.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "Brand code already in use", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to insert brand", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Brand added successfully!"}, "brand-added": ""}`)
+	setToastTrigger(w, "success", "Brand added successfully!", "brand-added")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -146,16 +152,21 @@ func (app *App) UpdateBrandHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.FormValue("code")
 	name := r.FormValue("name")
 
-	if code == "" || name == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Code and Name are required."}}`)
+	domBrand, err := domain.NewBrand(id, code, name)
+	if err != nil {
+		setToastTrigger(w, "error", "Code and Name are required.")
 		http.Error(w, "Code and Name are required", http.StatusBadRequest)
 		return
 	}
 
-	_, err = db.DB.Exec("UPDATE brands SET code = ?, name = ? WHERE id = ?", code, name, id)
+	_, err = db.DB.Exec("UPDATE brands SET code = ?, name = ? WHERE id = ?", domBrand.Code, domBrand.Name, id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update brand. Code might already be in use."}}`)
-		http.Error(w, "Failed to update brand", http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to update brand. Code might already be in use.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "Brand code already in use", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to update brand", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -172,7 +183,7 @@ func (app *App) UpdateBrandHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Brand updated successfully!"}}`)
+	setToastTrigger(w, "success", "Brand updated successfully!")
 	app.Render(w, "brand_row.html", brand)
 }
 
@@ -275,7 +286,7 @@ func (app *App) CategoriesHandler(w http.ResponseWriter, r *http.Request) {
 	var categories []models.Category
 	err := db.DB.Select(&categories, query, selectArgs...)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load categories", http.StatusInternalServerError)
 		return
 	}
 
@@ -301,20 +312,25 @@ func (app *App) AddCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.FormValue("code")
 	name := r.FormValue("name")
 
-	if code == "" || name == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Code and Name are required."}}`)
+	domCat, err := domain.NewCategory(0, code, name)
+	if err != nil {
+		setToastTrigger(w, "error", "Code and Name are required.")
 		http.Error(w, "Code and Name are required", http.StatusBadRequest)
 		return
 	}
 
-	_, err := db.DB.Exec("INSERT INTO categories (code, name) VALUES (?, ?)", code, name)
+	_, err = db.DB.Exec("INSERT INTO categories (code, name) VALUES (?, ?)", domCat.Code, domCat.Name)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to add category. Code might already be in use."}}`)
-		http.Error(w, "Failed to insert category", http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to add category. Code might already be in use.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "Category code already in use", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to insert category", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Category added successfully!"}, "category-added": ""}`)
+	setToastTrigger(w, "success", "Category added successfully!", "category-added")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -355,16 +371,21 @@ func (app *App) UpdateCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.FormValue("code")
 	name := r.FormValue("name")
 
-	if code == "" || name == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Code and Name are required."}}`)
+	domCat, err := domain.NewCategory(id, code, name)
+	if err != nil {
+		setToastTrigger(w, "error", "Code and Name are required.")
 		http.Error(w, "Code and Name are required", http.StatusBadRequest)
 		return
 	}
 
-	_, err = db.DB.Exec("UPDATE categories SET code = ?, name = ? WHERE id = ?", code, name, id)
+	_, err = db.DB.Exec("UPDATE categories SET code = ?, name = ? WHERE id = ?", domCat.Code, domCat.Name, id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update category. Code might already be in use."}}`)
-		http.Error(w, "Failed to update category", http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to update category. Code might already be in use.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "Category code already in use", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to update category", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -381,7 +402,7 @@ func (app *App) UpdateCategoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Category updated successfully!"}}`)
+	setToastTrigger(w, "success", "Category updated successfully!")
 	app.Render(w, "category_row.html", category)
 }
 
@@ -488,7 +509,7 @@ func (app *App) ItemsHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.ItemWithRelations
 	err := db.DB.Select(&items, query, selectArgs...)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load items", http.StatusInternalServerError)
 		return
 	}
 
@@ -534,39 +555,47 @@ func (app *App) AddItemHandler(w http.ResponseWriter, r *http.Request) {
 	categoryIDStr := r.FormValue("category_id")
 	variation := r.FormValue("variation")
 
-	if code == "" || description == "" || defaultUom == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Code, Description and Default UOM are required."}}`)
+	brandIDVal, _ := strconv.Atoi(brandIDStr)
+	if brandIDVal < 0 {
+		brandIDVal = 0
+	}
+	categoryIDVal, _ := strconv.Atoi(categoryIDStr)
+	if categoryIDVal < 0 {
+		categoryIDVal = 0
+	}
+
+	domItem, err := domain.NewItem(0, code, description, defaultUom, model, brandIDVal, categoryIDVal, variation, "")
+	if err != nil {
+		setToastTrigger(w, "error", "Code, Description and Default UOM are required.")
 		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return
 	}
 
 	var brandID interface{}
-	brandIDVal, err := strconv.Atoi(brandIDStr)
-	if err == nil && brandIDVal > 0 {
-		brandID = brandIDVal
-	} else {
-		brandID = nil
+	if domItem.BrandID > 0 {
+		brandID = domItem.BrandID
 	}
 
 	var categoryID interface{}
-	categoryIDVal, err := strconv.Atoi(categoryIDStr)
-	if err == nil && categoryIDVal > 0 {
-		categoryID = categoryIDVal
-	} else {
-		categoryID = nil
+	if domItem.CategoryID > 0 {
+		categoryID = domItem.CategoryID
 	}
 
 	_, err = db.DB.Exec(`
 		INSERT INTO items (code, description, model, brand_id, category_id, default_uom, variation, remarks)
 		VALUES (?, ?, ?, ?, ?, ?, ?, '')
-	`, code, description, model, brandID, categoryID, defaultUom, variation)
+	`, domItem.Code, domItem.Description, domItem.Model, brandID, categoryID, domItem.DefaultUOM, domItem.Variation)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to add item. Code might already be in use."}}`)
-		http.Error(w, "Failed to insert item", http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to add item. Code might already be in use.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "Item code already in use", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to insert item", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Item added successfully!"}, "item-added": ""}`)
+	setToastTrigger(w, "success", "Item added successfully!", "item-added")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -626,36 +655,44 @@ func (app *App) UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	brandIDStr := r.FormValue("brand_id")
 	categoryIDStr := r.FormValue("category_id")
 
-	if code == "" || description == "" || defaultUom == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Code, Description and Default UOM are required."}}`)
+	brandIDVal, _ := strconv.Atoi(brandIDStr)
+	if brandIDVal < 0 {
+		brandIDVal = 0
+	}
+	categoryIDVal, _ := strconv.Atoi(categoryIDStr)
+	if categoryIDVal < 0 {
+		categoryIDVal = 0
+	}
+
+	domItem, err := domain.NewItem(id, code, description, defaultUom, model, brandIDVal, categoryIDVal, "", "")
+	if err != nil {
+		setToastTrigger(w, "error", "Code, Description and Default UOM are required.")
 		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return
 	}
 
 	var brandID interface{}
-	brandIDVal, err := strconv.Atoi(brandIDStr)
-	if err == nil && brandIDVal > 0 {
-		brandID = brandIDVal
-	} else {
-		brandID = nil
+	if domItem.BrandID > 0 {
+		brandID = domItem.BrandID
 	}
 
 	var categoryID interface{}
-	categoryIDVal, err := strconv.Atoi(categoryIDStr)
-	if err == nil && categoryIDVal > 0 {
-		categoryID = categoryIDVal
-	} else {
-		categoryID = nil
+	if domItem.CategoryID > 0 {
+		categoryID = domItem.CategoryID
 	}
 
 	_, err = db.DB.Exec(`
 		UPDATE items
 		SET code = ?, description = ?, model = ?, brand_id = ?, category_id = ?, default_uom = ?
 		WHERE id = ?
-	`, code, description, model, brandID, categoryID, defaultUom, id)
+	`, domItem.Code, domItem.Description, domItem.Model, brandID, categoryID, domItem.DefaultUOM, id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update item. Code might already be in use."}}`)
-		http.Error(w, "Failed to update item", http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to update item. Code might already be in use.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "Item code already in use", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to update item", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -673,7 +710,7 @@ func (app *App) UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Item updated successfully!"}}`)
+	setToastTrigger(w, "success", "Item updated successfully!")
 	app.Render(w, "item_row.html", item)
 }
 
@@ -743,7 +780,7 @@ func (app *App) SelectBrandsHandler(w http.ResponseWriter, r *http.Request) {
 	var brands []models.Brand
 	err := db.DB.Select(&brands, "SELECT id, code, name FROM brands ORDER BY code ASC")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load brands", http.StatusInternalServerError)
 		return
 	}
 	app.Render(w, "brand_select.html", brands)
@@ -754,7 +791,7 @@ func (app *App) SelectCategoriesHandler(w http.ResponseWriter, r *http.Request) 
 	var categories []models.Category
 	err := db.DB.Select(&categories, "SELECT id, code, name FROM categories ORDER BY code ASC")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load categories", http.StatusInternalServerError)
 		return
 	}
 	app.Render(w, "category_select.html", categories)
@@ -763,9 +800,9 @@ func (app *App) SelectCategoriesHandler(w http.ResponseWriter, r *http.Request) 
 // SelectItemsHandler renders the updated item select fragment
 func (app *App) SelectItemsHandler(w http.ResponseWriter, r *http.Request) {
 	var items []models.Item
-	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	err := db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load items", http.StatusInternalServerError)
 		return
 	}
 	app.Render(w, "item_select.html", items)
@@ -773,6 +810,7 @@ func (app *App) SelectItemsHandler(w http.ResponseWriter, r *http.Request) {
 
 // SearchItemsHandler handles debounced item searching with result limits and multi-keyword matching
 func (app *App) SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	limitStr := r.URL.Query().Get("limit")
 	limit := 100
@@ -806,7 +844,7 @@ func (app *App) SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to search items", http.StatusInternalServerError)
 		return
 	}
 

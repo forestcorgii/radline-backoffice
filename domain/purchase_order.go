@@ -10,9 +10,12 @@ var (
 	ErrEmptyPONumber    = errors.New("purchase order number cannot be empty")
 	ErrEmptyVendorName  = errors.New("vendor name cannot be empty")
 	ErrInvalidPODate    = errors.New("purchase order date is required")
+	ErrInvalidPODueDate = errors.New("due date cannot be before purchase order date")
+	ErrInvalidPOFreight = errors.New("freight cannot be negative")
 	ErrNoItemsInPO      = errors.New("purchase order must contain at least one item")
 	ErrInvalidItemQty   = errors.New("item quantity must be greater than zero")
 	ErrInvalidItemCost  = errors.New("item cost cannot be negative")
+	ErrBlankPOItemRow   = errors.New("item description or item code is required for non-empty line item")
 )
 
 // PurchaseOrderItem represents a single line item in a Purchase Order
@@ -56,28 +59,38 @@ func (po *PurchaseOrder) CalculateTotals() {
 	var subtotal float64
 	for i := range po.Items {
 		item := &po.Items[i]
-		if item.Qty < 0 {
+		// If both description and item code are blank, only skip when Qty == 0 && UnitCost == 0 (truly blank row),
+		// or if Validate() already ran. Wait: if a test calls CalculateTotals() with {Qty: 2, UnitCost: 100} (no description/code),
+		// wait - let's check PurchaseOrder_CalculateTotals in purchase_order_test.go!
+		if !IsFinite(item.Qty) || item.Qty < 0 {
 			item.Qty = 0
 		}
-		if item.UnitCost < 0 {
+		if !IsFinite(item.UnitCost) || item.UnitCost < 0 {
 			item.UnitCost = 0
 		}
-		item.TotalAmount = item.Qty * item.UnitCost
-		subtotal += item.TotalAmount
+		if strings.TrimSpace(item.Description) == "" && strings.TrimSpace(item.ItemCode) == "" && item.Qty == 0 && item.UnitCost == 0 {
+			item.TotalAmount = 0
+			continue
+		}
+		item.UnitCost = Round2(item.UnitCost)
+		item.TotalAmount = Round2(item.Qty * item.UnitCost)
+		subtotal = Round2(subtotal + item.TotalAmount)
 	}
-	po.Subtotal = subtotal
+	po.Subtotal = Round2(subtotal)
 
-	if po.Freight < 0 {
+	if !IsFinite(po.Freight) || po.Freight < 0 {
 		po.Freight = 0
+	} else {
+		po.Freight = Round2(po.Freight)
 	}
 
 	if po.ApplyVAT {
-		po.VATAmt = (po.Subtotal + po.Freight) * 0.12
+		po.VATAmt = Round2((po.Subtotal + po.Freight) * 0.12)
 	} else {
 		po.VATAmt = 0
 	}
 
-	po.GrandTotal = po.Subtotal + po.Freight + po.VATAmt
+	po.GrandTotal = Round2(po.Subtotal + po.Freight + po.VATAmt)
 }
 
 // Validate verifies domain invariants for the Purchase Order aggregate
@@ -88,8 +101,14 @@ func (po *PurchaseOrder) Validate() error {
 	if po.Date.IsZero() {
 		return ErrInvalidPODate
 	}
+	if po.DueDate != nil && !po.DueDate.IsZero() && !po.Date.IsZero() && po.DueDate.Before(po.Date) {
+		return ErrInvalidPODueDate
+	}
 	if strings.TrimSpace(po.VendorName) == "" {
 		return ErrEmptyVendorName
+	}
+	if !IsFinite(po.Freight) || po.Freight < 0 {
+		return ErrInvalidPOFreight
 	}
 	if len(po.Items) == 0 {
 		return ErrNoItemsInPO
@@ -98,12 +117,15 @@ func (po *PurchaseOrder) Validate() error {
 	hasValidItem := false
 	for _, item := range po.Items {
 		if strings.TrimSpace(item.Description) == "" && strings.TrimSpace(item.ItemCode) == "" {
+			if !IsFinite(item.Qty) || !IsFinite(item.UnitCost) || item.Qty != 0 || item.UnitCost != 0 {
+				return ErrBlankPOItemRow
+			}
 			continue
 		}
-		if item.Qty <= 0 {
+		if !IsFinite(item.Qty) || item.Qty <= 0 {
 			return ErrInvalidItemQty
 		}
-		if item.UnitCost < 0 {
+		if !IsFinite(item.UnitCost) || item.UnitCost < 0 {
 			return ErrInvalidItemCost
 		}
 		hasValidItem = true

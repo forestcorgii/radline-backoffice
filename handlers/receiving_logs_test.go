@@ -11,14 +11,7 @@ import (
 
 func parseTemplatesForTest() map[string]*template.Template {
 	templates := make(map[string]*template.Template)
-	funcMap := template.FuncMap{
-		"derefInt": func(p *int) int {
-			if p == nil {
-				return 0
-			}
-			return *p
-		},
-	}
+	funcMap := TemplateFuncMap()
 
 	pages := []string{"receiving_logs.html"}
 	for _, page := range pages {
@@ -28,10 +21,13 @@ func parseTemplatesForTest() map[string]*template.Template {
 		templates[page] = t
 	}
 
-	fragments := []string{"receiving_logs_results.html"}
+	fragments := []string{"receiving_logs_results.html", "receiving_log_row.html", "receiving_log_edit_row.html"}
 	for _, frag := range fragments {
 		t := template.New(frag).Funcs(funcMap)
-		files := []string{"../templates/" + frag, "../templates/receiving_rows.html", "../templates/receiving_log_row.html"}
+		files := []string{"../templates/" + frag}
+		if frag == "receiving_logs_results.html" {
+			files = append(files, "../templates/receiving_rows.html", "../templates/receiving_log_row.html")
+		}
 		t = template.Must(t.ParseFiles(files...))
 		templates[frag] = t
 	}
@@ -40,9 +36,20 @@ func parseTemplatesForTest() map[string]*template.Template {
 }
 
 func TestReceivingLogsHandler(t *testing.T) {
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to init db: %v", err)
+	setupIsolatedTestDB(t)
+
+	if _, err := db.DB.Exec("INSERT INTO uoms (code) VALUES ('PCS') ON CONFLICT DO NOTHING"); err != nil {
+		t.Fatalf("Failed to seed uom: %v", err)
+	}
+	var itemID int
+	if err := db.DB.QueryRow("INSERT INTO items (code, description, default_uom) VALUES ('TEST-01', 'Test Receiving Item', 'PCS') RETURNING id").Scan(&itemID); err != nil {
+		t.Fatalf("Failed to seed item: %v", err)
+	}
+	if _, err := db.DB.Exec(`
+		INSERT INTO receiving_logs (supplier, date, pl_no, item_id, qty, uom, unit_price, less1, less2, cost, total_cost, markup, selling_price, remarks)
+		VALUES ('ASCD', '2026-01-10', 'PL-TEST', ?, 10, 'PCS', 100.0, 0, 0, 100.0, 1000.0, 130.0, 130.0, '')
+	`, itemID); err != nil {
+		t.Fatalf("Failed to seed receiving_log: %v", err)
 	}
 
 	app := &App{

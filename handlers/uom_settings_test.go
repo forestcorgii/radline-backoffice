@@ -46,9 +46,17 @@ func parseUomTemplatesForTest() map[string]*template.Template {
 }
 
 func TestUomSettingsFilteringAndSimplification(t *testing.T) {
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to init db: %v", err)
+	setupIsolatedTestDB(t)
+
+	if _, err := db.DB.Exec("INSERT INTO uoms (code) VALUES ('PCS'), ('BOX') ON CONFLICT DO NOTHING"); err != nil {
+		t.Fatalf("Failed to seed uoms: %v", err)
+	}
+	var itemID int
+	if err := db.DB.QueryRow("INSERT INTO items (code, description, default_uom) VALUES ('UOM-01', 'Test UOM Item', 'PCS') RETURNING id").Scan(&itemID); err != nil {
+		t.Fatalf("Failed to seed item: %v", err)
+	}
+	if _, err := db.DB.Exec("INSERT INTO uom_settings (item_id, muom, conversion_factor) VALUES (?, 'BOX', 12)", itemID); err != nil {
+		t.Fatalf("Failed to seed uom_settings: %v", err)
 	}
 
 	app := &App{

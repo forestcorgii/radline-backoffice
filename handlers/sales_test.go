@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"html/template"
 	"net/http"
 	"net/http/httptest"
@@ -16,28 +15,7 @@ import (
 
 func parseSalesTemplatesForTest() map[string]*template.Template {
 	templates := make(map[string]*template.Template)
-	funcMap := template.FuncMap{
-		"derefInt": func(p *int) int {
-			if p == nil {
-				return 0
-			}
-			return *p
-		},
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
-	}
+	funcMap := TemplateFuncMap()
 
 	pages := []string{"sales.html"}
 	for _, page := range pages {
@@ -63,11 +41,36 @@ func parseSalesTemplatesForTest() map[string]*template.Template {
 	return templates
 }
 
-func TestSalesSearchFragmentHandler(t *testing.T) {
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to init db: %v", err)
+func seedSalesTestFixture(t *testing.T) int {
+	t.Helper()
+	if _, err := db.DB.Exec("INSERT INTO uoms (code) VALUES ('PCS'), ('BOX') ON CONFLICT DO NOTHING"); err != nil {
+		t.Fatalf("Failed to seed uoms: %v", err)
 	}
+	var itemID int
+	if err := db.DB.QueryRow("INSERT INTO items (code, description, default_uom) VALUES ('SALE-01', 'Test Sale Item', 'PCS') RETURNING id").Scan(&itemID); err != nil {
+		t.Fatalf("Failed to seed item: %v", err)
+	}
+	if _, err := db.DB.Exec("INSERT INTO uom_settings (item_id, muom, conversion_factor) VALUES (?, 'BOX', 10)", itemID); err != nil {
+		t.Fatalf("Failed to seed uom_settings: %v", err)
+	}
+	if _, err := db.DB.Exec(`
+		INSERT INTO receiving_logs (supplier, date, pl_no, item_id, qty, uom, unit_price, cost, total_cost, markup, selling_price)
+		VALUES ('ASCD', '2026-01-05', 'PL-SALE-1', ?, 50, 'PCS', 100.0, 100.0, 5000.0, 130.0, 130.0)
+	`, itemID); err != nil {
+		t.Fatalf("Failed to seed receiving_log: %v", err)
+	}
+	if _, err := db.DB.Exec(`
+		INSERT INTO sales_details (doc_type, doc_status, doc_date, doc_number, customer_name, tin_no, address, supplier, item_id, qty, uom, price, total_sales, cost, total_cost, patong, pos_charge, wt_2307, total_remit, profit, profit_margin, remarks)
+		VALUES ('SI', 'Posted', '2026-01-10', 'SI-TEST-1', 'Test Customer', '123-456', 'Manila', 'ASCD', ?, 2, 'PCS', 130.0, 260.0, 100.0, 200.0, 0, 0, 0, 260.0, 60.0, 23.08, '')
+	`, itemID); err != nil {
+		t.Fatalf("Failed to seed sales_detail: %v", err)
+	}
+	return itemID
+}
+
+func TestSalesSearchFragmentHandler(t *testing.T) {
+	setupIsolatedTestDB(t)
+	seedSalesTestFixture(t)
 
 	app := &App{
 		Templates: parseSalesTemplatesForTest(),
@@ -99,24 +102,14 @@ func TestSalesSearchFragmentHandler(t *testing.T) {
 }
 
 func TestSaleItemRowDetailsHandler(t *testing.T) {
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to init db: %v", err)
-	}
+	setupIsolatedTestDB(t)
+	itemID := seedSalesTestFixture(t)
 
 	app := &App{
 		Templates: parseSalesTemplatesForTest(),
 	}
 
-	var items []models.Item
-	err = db.DB.Select(&items, "SELECT id, description FROM items LIMIT 5")
-	if err != nil || len(items) == 0 {
-		t.Logf("No items in DB: %v", err)
-		return
-	}
-
-	it := items[0]
-	req := httptest.NewRequest("GET", "/sales/item-row-details?item_id="+strconv.Itoa(it.ID), nil)
+	req := httptest.NewRequest("GET", "/sales/item-row-details?item_id="+strconv.Itoa(itemID), nil)
 	w := httptest.NewRecorder()
 	app.SaleItemRowDetailsHandler(w, req)
 	if w.Code != http.StatusOK {
@@ -130,6 +123,9 @@ func TestSaleItemRowDetailsHandler(t *testing.T) {
 	if !strings.Contains(body, "name=\"uom\"") {
 		t.Errorf("Response body missing uom field")
 	}
+	if !strings.Contains(body, "BOX") {
+		t.Errorf("Response body missing UOM option BOX from uom_settings")
+	}
 }
 
 func TestSaleRowDeductionsDisplay(t *testing.T) {
@@ -139,12 +135,14 @@ func TestSaleRowDeductionsDisplay(t *testing.T) {
 
 	// Case 1: All deductions zero -> renders dash
 	saleZero := models.SalesDetailWithItem{
-		ID:        1,
-		DocStatus: "Active",
-		DocDate:   time.Now(),
-		Patong:    0,
-		POSCharge: 0,
-		WT2307:    0,
+		SalesDetail: models.SalesDetail{
+			ID:        1,
+			DocStatus: "Active",
+			DocDate:   time.Now(),
+			Patong:    0,
+			POSCharge: 0,
+			WT2307:    0,
+		},
 	}
 	w1 := httptest.NewRecorder()
 	app.Render(w1, "sale_row.html", saleZero)
@@ -158,12 +156,14 @@ func TestSaleRowDeductionsDisplay(t *testing.T) {
 
 	// Case 2: Only Patong non-zero -> renders only P: ₱50.00
 	salePatongOnly := models.SalesDetailWithItem{
-		ID:        2,
-		DocStatus: "Active",
-		DocDate:   time.Now(),
-		Patong:    50.00,
-		POSCharge: 0,
-		WT2307:    0,
+		SalesDetail: models.SalesDetail{
+			ID:        2,
+			DocStatus: "Active",
+			DocDate:   time.Now(),
+			Patong:    50.00,
+			POSCharge: 0,
+			WT2307:    0,
+		},
 	}
 	w2 := httptest.NewRecorder()
 	app.Render(w2, "sale_row.html", salePatongOnly)
@@ -177,12 +177,14 @@ func TestSaleRowDeductionsDisplay(t *testing.T) {
 
 	// Case 3: Only POS Charge and WT2307 non-zero -> renders C: ₱12.50 and W: ₱5.25
 	saleOther := models.SalesDetailWithItem{
-		ID:        3,
-		DocStatus: "Active",
-		DocDate:   time.Now(),
-		Patong:    0,
-		POSCharge: 12.50,
-		WT2307:    5.25,
+		SalesDetail: models.SalesDetail{
+			ID:        3,
+			DocStatus: "Active",
+			DocDate:   time.Now(),
+			Patong:    0,
+			POSCharge: 12.50,
+			WT2307:    5.25,
+		},
 	}
 	w3 := httptest.NewRecorder()
 	app.Render(w3, "sale_row.html", saleOther)
@@ -199,10 +201,8 @@ func TestSaleRowDeductionsDisplay(t *testing.T) {
 }
 
 func TestSalesPageNavigation(t *testing.T) {
-	err := db.InitDB("../backoffice.db")
-	if err != nil {
-		t.Fatalf("Failed to init db: %v", err)
-	}
+	setupIsolatedTestDB(t)
+	seedSalesTestFixture(t)
 
 	app := &App{
 		Templates: parseSalesTemplatesForTest(),

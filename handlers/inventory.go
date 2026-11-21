@@ -1,18 +1,50 @@
 package handlers
 
 import (
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+
 	"rav/db"
 	"rav/domain"
 	"rav/models"
 )
 
-// stockListQuery returns the SQL query for computing per-item stock levels
+func setToastTrigger(w http.ResponseWriter, toastType, message string, extraEvents ...string) {
+	payload := map[string]interface{}{
+		"show-toast": map[string]string{
+			"type":    toastType,
+			"message": message,
+		},
+	}
+	for _, ev := range extraEvents {
+		if ev != "" {
+			payload[ev] = ""
+		}
+	}
+	if b, err := json.Marshal(payload); err == nil {
+		w.Header().Set("HX-Trigger", string(b))
+	}
+}
+
+func isUniqueViolationErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "unique constraint") ||
+		strings.Contains(msg, "duplicate key") ||
+		strings.Contains(msg, "23505")
+}
+
+// stockListQuery returns the SQL query for computing per-item stock levels (normalized to Default UOM)
 func stockListQuery(search, stockFilter string) (string, []interface{}) {
 	var args []interface{}
 
@@ -30,13 +62,23 @@ func stockListQuery(search, stockFilter string) (string, []interface{}) {
 			0.0 AS current_price
 		FROM items i
 		LEFT JOIN (
-			SELECT item_id, SUM(qty) AS total_received FROM receiving_logs GROUP BY item_id
+			SELECT r.item_id, SUM(r.qty * COALESCE(u.conversion_factor, 1.0)) AS total_received
+			FROM receiving_logs r
+			LEFT JOIN uom_settings u ON u.item_id = r.item_id AND LOWER(u.muom) = LOWER(r.uom)
+			GROUP BY r.item_id
 		) r ON r.item_id = i.id
 		LEFT JOIN (
-			SELECT item_id, SUM(qty) AS total_sold FROM sales_details WHERE doc_status IN ('Posted', 'POSTED') GROUP BY item_id
+			SELECT s.item_id, SUM(s.qty * COALESCE(u.conversion_factor, 1.0)) AS total_sold
+			FROM sales_details s
+			LEFT JOIN uom_settings u ON u.item_id = s.item_id AND LOWER(u.muom) = LOWER(s.uom)
+			WHERE s.doc_status IN ('Posted', 'POSTED')
+			GROUP BY s.item_id
 		) s ON s.item_id = i.id
 		LEFT JOIN (
-			SELECT item_id, SUM(adjustment_qty) AS total_adjusted FROM inventory_adjustments GROUP BY item_id
+			SELECT a.item_id, SUM(a.adjustment_qty * COALESCE(u.conversion_factor, 1.0)) AS total_adjusted
+			FROM inventory_adjustments a
+			LEFT JOIN uom_settings u ON u.item_id = a.item_id AND LOWER(u.muom) = LOWER(a.uom)
+			GROUP BY a.item_id
 		) a ON a.item_id = i.id
 	`
 
@@ -77,47 +119,103 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 	selectArgs := append(args, limit)
 
 	var stockItems []models.ItemStockView
-	_ = db.DB.Select(&stockItems, query, selectArgs...)
+	if err := db.DB.Select(&stockItems, query, selectArgs...); err != nil {
+		log.Printf("ERROR: InventoryHandler stock list query failed: %v", err)
+		http.Error(w, "Failed to load inventory stock list", http.StatusInternalServerError)
+		return
+	}
 
 	// Populate CurrentCost and CurrentPrice in batch using the oldest PL with stock available (with latest fallback)
-	// Uses a single efficient SQL query per item instead of loading all transaction data into memory
 	if len(stockItems) > 0 {
+		itemIDs := make([]int, len(stockItems))
+		for i := range stockItems {
+			itemIDs[i] = stockItems[i].ItemID
+		}
+
+		// 1. Batch fetch receiving logs with conversion factors ordered chronologically
+		type recBatchRow struct {
+			ItemID       int       `db:"item_id"`
+			ID           int       `db:"id"`
+			Date         time.Time `db:"date"`
+			Qty          float64   `db:"qty"`
+			Cost         float64   `db:"cost"`
+			SellingPrice float64   `db:"selling_price"`
+			Factor       float64   `db:"factor"`
+		}
+		var recRows []recBatchRow
+		recQuery, recArgs, err := sqlx.In(`
+			SELECT r.item_id, r.id, r.date, r.qty, r.cost, COALESCE(r.selling_price, 0.0) AS selling_price,
+			       COALESCE(u.conversion_factor, 1.0) AS factor
+			FROM receiving_logs r
+			LEFT JOIN uom_settings u ON u.item_id = r.item_id AND LOWER(u.muom) = LOWER(r.uom)
+			WHERE r.item_id IN (?)
+			ORDER BY r.item_id ASC, r.date ASC, r.id ASC
+		`, itemIDs)
+		if err == nil {
+			_ = db.DB.Select(&recRows, recQuery, recArgs...)
+		}
+
+		recByItem := make(map[int][]recBatchRow, len(stockItems))
+		for _, rr := range recRows {
+			recByItem[rr.ItemID] = append(recByItem[rr.ItemID], rr)
+		}
+
+		// 2. Batch fetch negative adjustments in default UOM (positive adjustments do not resurrect depleted PLs)
+		type negAdjRow struct {
+			ItemID int     `db:"item_id"`
+			NegQty float64 `db:"neg_qty"`
+		}
+		var negAdjRows []negAdjRow
+		negQuery, negArgs, err := sqlx.In(`
+			SELECT a.item_id, COALESCE(SUM(-a.adjustment_qty * COALESCE(u.conversion_factor, 1.0)), 0.0) AS neg_qty
+			FROM inventory_adjustments a
+			LEFT JOIN uom_settings u ON u.item_id = a.item_id AND LOWER(u.muom) = LOWER(a.uom)
+			WHERE a.item_id IN (?) AND a.adjustment_qty < 0
+			GROUP BY a.item_id
+		`, itemIDs)
+		if err == nil {
+			_ = db.DB.Select(&negAdjRows, negQuery, negArgs...)
+		}
+		negAdjByItem := make(map[int]float64, len(negAdjRows))
+		for _, nr := range negAdjRows {
+			negAdjByItem[nr.ItemID] = nr.NegQty
+		}
+
 		for i := range stockItems {
 			itemID := stockItems[i].ItemID
-			// Try to get the oldest PL with remaining stock
-			type CostPriceResult struct {
-				Cost         float64 `db:"cost"`
-				SellingPrice float64 `db:"selling_price"`
+			logs := recByItem[itemID]
+			if len(logs) == 0 {
+				continue
 			}
-			var result CostPriceResult
-			err := db.DB.Get(&result, `
-				WITH item_stats AS (
-					SELECT
-						COALESCE((SELECT SUM(r.qty) FROM receiving_logs r WHERE r.item_id = ?), 0) AS total_received,
-						COALESCE((SELECT SUM(s.qty) FROM sales_details s WHERE s.item_id = ? AND s.doc_status IN ('Posted', 'POSTED')), 0) AS total_sold,
-						COALESCE((SELECT SUM(a.adjustment_qty) FROM inventory_adjustments a WHERE a.item_id = ?), 0) AS total_adjusted
-				),
-				oh AS (SELECT (total_received - total_sold + total_adjusted) AS on_hand FROM item_stats)
-				SELECT r.cost, r.selling_price
-				FROM receiving_logs r, oh
-				WHERE r.item_id = ? AND oh.on_hand > 0
-				  AND (SELECT COALESCE(SUM(r2.qty), 0) FROM receiving_logs r2
-				       WHERE r2.item_id = ? AND (r2.date < r.date OR (r2.date = r.date AND r2.id < r.id)))
-				      < (SELECT COALESCE(SUM(s.qty), 0) FROM sales_details s WHERE s.item_id = ? AND s.doc_status IN ('Posted', 'POSTED'))
-				ORDER BY r.date ASC, r.id ASC
-				LIMIT 1
-			`, itemID, itemID, itemID, itemID, itemID, itemID)
-			if err == nil {
-				stockItems[i].CurrentCost = result.Cost
-				stockItems[i].CurrentPrice = result.SellingPrice
-			} else {
-				// Fallback to latest receiving log's cost and price
-				var lastRec models.ReceivingLog
-				err := db.DB.Get(&lastRec, "SELECT cost, selling_price FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
-				if err == nil {
-					stockItems[i].CurrentCost = lastRec.Cost
-					stockItems[i].CurrentPrice = lastRec.SellingPrice
+
+			found := false
+			if stockItems[i].OnHand > 1e-9 {
+				totalConsumed := stockItems[i].TotalSold + negAdjByItem[itemID]
+				cumReceived := 0.0
+				for _, rl := range logs {
+					factor := rl.Factor
+					if factor <= 0 {
+						factor = 1.0
+					}
+					cumReceived += rl.Qty * factor
+					if cumReceived > totalConsumed+1e-9 {
+						stockItems[i].CurrentCost = domain.Round2(rl.Cost / factor)
+						stockItems[i].CurrentPrice = domain.Round2(rl.SellingPrice / factor)
+						found = true
+						break
+					}
 				}
+			}
+
+			if !found {
+				// Fallback to latest receiving log's cost and price scaled to DefaultUOM
+				lastRec := logs[len(logs)-1]
+				factor := lastRec.Factor
+				if factor <= 0 {
+					factor = 1.0
+				}
+				stockItems[i].CurrentCost = domain.Round2(lastRec.Cost / factor)
+				stockItems[i].CurrentPrice = domain.Round2(lastRec.SellingPrice / factor)
 			}
 		}
 	}
@@ -134,7 +232,7 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
 
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
@@ -205,7 +303,7 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(unitPrices) {
+	if len(itemIDs) != len(qtys) || len(itemIDs) != len(uoms) || len(itemIDs) != len(unitPrices) || len(itemIDs) != len(unitCosts) {
 		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Mismatch in item fields lengths."}}`)
 		http.Error(w, "Mismatch in item fields lengths", http.StatusBadRequest)
 		return
@@ -254,15 +352,15 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 
 	stockReceive, err := domain.NewStockReceive(plNo, supplier, parsedDate, receiveItems)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "`+err.Error()+`"}}`)
+		setToastTrigger(w, "error", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	tx, err := db.DB.Beginx()
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Database transaction failed."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Database transaction failed.")
+		http.Error(w, "Database transaction failed", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -274,8 +372,8 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`))
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to prepare receiving log statement."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to prepare receiving log statement.")
+		http.Error(w, "Failed to prepare receiving log statement", http.StatusInternalServerError)
 		return
 	}
 	defer stmt.Close()
@@ -283,20 +381,20 @@ func (app *App) ReceiveStockHandler(w http.ResponseWriter, r *http.Request) {
 	for _, rl := range logs {
 		_, err = stmt.Exec(rl.Supplier, rl.Date, rl.PLNo, rl.ItemID, rl.Qty, rl.UOM, rl.UnitPrice, rl.Less1, rl.Less2, rl.Cost, rl.TotalCost, rl.Markup, rl.SellingPrice, rl.Remarks)
 		if err != nil {
-			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save receiving log."}}`)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			setToastTrigger(w, "error", "Failed to save receiving log.")
+			http.Error(w, "Failed to save receiving log", http.StatusInternalServerError)
 			return
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to commit receiving transaction."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to commit receiving transaction.")
+		http.Error(w, "Failed to commit receiving transaction", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock received successfully!"}, "stock-received": ""}`)
+	setToastTrigger(w, "success", "Stock received successfully!", "stock-received")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -343,7 +441,9 @@ func (app *App) ReceivingItemRowDetailsHandler(w http.ResponseWriter, r *http.Re
 		var lastRec models.ReceivingLog
 		err := db.DB.Get(&lastRec, "SELECT unit_price, less1, less2, markup FROM receiving_logs WHERE item_id = ? ORDER BY date DESC, id DESC LIMIT 1", itemID)
 		if err == nil {
-			lastPrice = lastRec.UnitPrice
+			if lastRec.UnitPrice != nil {
+				lastPrice = *lastRec.UnitPrice
+			}
 			lastLess1 = lastRec.Less1
 			lastLess2 = lastRec.Less2
 			lastMarkup = lastRec.Markup
@@ -358,11 +458,12 @@ func (app *App) ReceivingItemRowDetailsHandler(w http.ResponseWriter, r *http.Re
 	var uoms []models.Uom
 	if itemID > 0 {
 		_ = db.DB.Select(&uoms, `
-			SELECT code FROM (
+			SELECT u.code FROM (
 				SELECT default_uom AS code FROM items WHERE id = ?
 				UNION
 				SELECT muom AS code FROM uom_settings WHERE item_id = ?
-			) ORDER BY code ASC
+			) AS u WHERE u.code != '' AND u.code IS NOT NULL
+			ORDER BY u.code ASC
 		`, itemID, itemID)
 	}
 
@@ -437,15 +538,15 @@ func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
 
 	stockAdj, err := domain.NewStockAdjustment(parsedDate, remarks, adjItems)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "`+err.Error()+`"}}`)
+		setToastTrigger(w, "error", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	tx, err := db.DB.Beginx()
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Database transaction failed."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Database transaction failed.")
+		http.Error(w, "Database transaction failed", http.StatusInternalServerError)
 		return
 	}
 	defer tx.Rollback()
@@ -454,8 +555,8 @@ func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
 	var adjustmentID int64
 	err = tx.QueryRow(`INSERT INTO stock_adjustments (date, remarks) VALUES (?, ?) RETURNING id`, stockAdj.Date, stockAdj.Remarks).Scan(&adjustmentID)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save adjustment header."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to save adjustment header.")
+		http.Error(w, "Failed to save adjustment header", http.StatusInternalServerError)
 		return
 	}
 
@@ -479,20 +580,20 @@ func (app *App) AdjustStockHandler(w http.ResponseWriter, r *http.Request) {
 		query = tx.Rebind(query)
 		_, err = tx.Exec(query, args...)
 		if err != nil {
-			w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to save adjustment items."}}`)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			setToastTrigger(w, "error", "Failed to save adjustment items.")
+			http.Error(w, "Failed to save adjustment items", http.StatusInternalServerError)
 			return
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to commit adjustment transaction."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to commit adjustment transaction.")
+		http.Error(w, "Failed to commit adjustment transaction", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Stock adjusted successfully!"}, "stock-adjusted": ""}`)
+	setToastTrigger(w, "success", "Stock adjusted successfully!", "stock-adjusted")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -538,11 +639,12 @@ func (app *App) AdjustmentItemRowDetailsHandler(w http.ResponseWriter, r *http.R
 	var uoms []models.Uom
 	if itemID > 0 {
 		_ = db.DB.Select(&uoms, `
-			SELECT code FROM (
+			SELECT u.code FROM (
 				SELECT default_uom AS code FROM items WHERE id = ?
 				UNION
 				SELECT muom AS code FROM uom_settings WHERE item_id = ?
-			) ORDER BY code ASC
+			) AS u WHERE u.code != '' AND u.code IS NOT NULL
+			ORDER BY u.code ASC
 		`, itemID, itemID)
 	}
 
@@ -573,7 +675,7 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 		FROM (
 			SELECT substr(date, 1, 7) AS month, item_id, qty AS received, 0.0 AS sold, 0.0 AS adjusted FROM receiving_logs
 			UNION ALL
-			SELECT substr(doc_date, 1, 7) AS month, item_id, 0.0 AS received, qty AS sold, 0.0 AS adjusted FROM sales_details
+			SELECT substr(doc_date, 1, 7) AS month, item_id, 0.0 AS received, qty AS sold, 0.0 AS adjusted FROM sales_details WHERE doc_status IN ('Posted', 'POSTED')
 			UNION ALL
 			SELECT substr(date, 1, 7) AS month, item_id, 0.0 AS received, 0.0 AS sold, adjustment_qty AS adjusted FROM inventory_adjustments
 		) t
@@ -620,7 +722,7 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 	err := db.DB.Select(&rows, query, selectArgs...)
 	if err != nil {
 		log.Printf("ERROR: MonthlyInventoryHandler query failed: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load monthly inventory", http.StatusInternalServerError)
 		return
 	}
 
@@ -629,7 +731,7 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 	errMonths := db.DB.Select(&months, `
 		SELECT DISTINCT substr(date, 1, 7) as m FROM receiving_logs WHERE date IS NOT NULL
 		UNION
-		SELECT DISTINCT substr(doc_date, 1, 7) as m FROM sales_details WHERE doc_date IS NOT NULL
+		SELECT DISTINCT substr(doc_date, 1, 7) as m FROM sales_details WHERE doc_date IS NOT NULL AND doc_status IN ('Posted', 'POSTED')
 		UNION
 		SELECT DISTINCT substr(date, 1, 7) as m FROM inventory_adjustments WHERE date IS NOT NULL
 		ORDER BY m DESC
@@ -708,14 +810,14 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	var receivingLogs []models.ReceivingLogWithItem
 	err := db.DB.Select(&receivingLogs, query, selectArgs...)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load receiving logs", http.StatusInternalServerError)
 		return
 	}
 
 	var suppliers []string
 	err = db.DB.Select(&suppliers, "SELECT DISTINCT supplier FROM receiving_logs WHERE supplier != '' ORDER BY supplier ASC")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load suppliers", http.StatusInternalServerError)
 		return
 	}
 
@@ -730,7 +832,7 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
@@ -794,7 +896,7 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	var adjustmentLogs []models.InventoryAdjustmentWithItem
 	err := db.DB.Select(&adjustmentLogs, query, selectArgs...)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load adjustment logs", http.StatusInternalServerError)
 		return
 	}
 
@@ -809,7 +911,7 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var adjItems []models.Item
-	_ = db.DB.Select(&adjItems, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	_ = db.DB.Select(&adjItems, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
 	var adjUoms []models.Uom
 	_ = db.DB.Select(&adjUoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
@@ -831,92 +933,145 @@ func (app *App) AdjustmentLogsHandler(w http.ResponseWriter, r *http.Request) {
 
 // DeleteReceivingLogHandler deletes a receiving log by ID
 func (app *App) DeleteReceivingLogHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w, "Missing ID", http.StatusBadRequest)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id <= 0 {
+		http.Error(w, "Invalid receiving log ID", http.StatusBadRequest)
 		return
 	}
 
-	_, err := db.DB.Exec("DELETE FROM receiving_logs WHERE id = ?", id)
+	_, err = db.DB.Exec("DELETE FROM receiving_logs WHERE id = ?", id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to delete receiving log."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to delete receiving log.")
+		http.Error(w, "Failed to delete receiving log", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Receiving log deleted."}}`)
+	setToastTrigger(w, "success", "Receiving log deleted.")
 	w.WriteHeader(http.StatusOK)
 }
 
 // EditReceivingLogHandler returns an inline edit form row for a receiving log
 func (app *App) EditReceivingLogHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w, "Missing ID", http.StatusBadRequest)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id <= 0 {
+		http.Error(w, "Invalid receiving log ID", http.StatusBadRequest)
 		return
 	}
 
-	var log models.ReceivingLogWithItem
-	err := db.DB.Get(&log, `
+	var logRow models.ReceivingLogWithItem
+	err = db.DB.Get(&logRow, `
 		SELECT r.*, i.code as item_code, i.description as item_description
 		FROM receiving_logs r
 		JOIN items i ON r.item_id = i.id
 		WHERE r.id = ?
 	`, id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "Receiving log not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to load receiving log", http.StatusInternalServerError)
 		return
 	}
 
-	app.Render(w, "receiving_log_edit_row.html", log)
+	app.Render(w, "receiving_log_edit_row.html", logRow)
 }
 
 // UpdateReceivingLogHandler updates a receiving log inline
 func (app *App) UpdateReceivingLogHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w, "Missing ID", http.StatusBadRequest)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id <= 0 {
+		http.Error(w, "Invalid receiving log ID", http.StatusBadRequest)
 		return
 	}
 
-	unitPrice, _ := strconv.ParseFloat(r.FormValue("unit_price"), 64)
-	less1, _ := strconv.ParseFloat(r.FormValue("less1"), 64)
-	less2, _ := strconv.ParseFloat(r.FormValue("less2"), 64)
-	markup, _ := strconv.ParseFloat(r.FormValue("markup"), 64)
-	remarks := r.FormValue("remarks")
-	qty, _ := strconv.ParseFloat(r.FormValue("qty"), 64)
-
-	if markup <= 0 {
-		markup = 130
+	if err := r.ParseForm(); err != nil {
+		setToastTrigger(w, "error", "Failed to parse form.")
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
 	}
 
-	unitCost := unitPrice * (1 - less1/100) * (1 - less2/100)
-	totalCost := qty * unitCost
-	sellingPrice := unitCost * markup / 100
+	qty, errQty := strconv.ParseFloat(r.FormValue("qty"), 64)
+	unitPrice, errPrice := strconv.ParseFloat(r.FormValue("unit_price"), 64)
+	var less1, less2, markup float64
+	var errL1, errL2, errMarkup error
+	if s := strings.TrimSpace(r.FormValue("less1")); s != "" {
+		less1, errL1 = strconv.ParseFloat(s, 64)
+	}
+	if s := strings.TrimSpace(r.FormValue("less2")); s != "" {
+		less2, errL2 = strconv.ParseFloat(s, 64)
+	}
+	if s := strings.TrimSpace(r.FormValue("markup")); s != "" {
+		markup, errMarkup = strconv.ParseFloat(s, 64)
+	}
+	remarks := r.FormValue("remarks")
 
-	_, err := db.DB.Exec(`
+	if errQty != nil || errPrice != nil || errL1 != nil || errL2 != nil || errMarkup != nil {
+		setToastTrigger(w, "error", "Invalid numeric input.")
+		http.Error(w, "Invalid numeric input", http.StatusBadRequest)
+		return
+	}
+
+	var existing models.ReceivingLog
+	if err := db.DB.Get(&existing, "SELECT id, supplier, date, pl_no, item_id, uom FROM receiving_logs WHERE id = ?", id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "Receiving log not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Failed to load receiving log", http.StatusInternalServerError)
+		return
+	}
+
+	plNo := ""
+	if existing.PLNo != nil {
+		plNo = *existing.PLNo
+	}
+
+	// Pass cost=0 so domain.NewReceivingLog computes Cost = Round2(UnitPrice * (1 - Less1/100) * (1 - Less2/100))
+	domLog, err := domain.NewReceivingLog(
+		id,
+		existing.Supplier,
+		existing.Date,
+		plNo,
+		existing.ItemID,
+		qty,
+		existing.UOM,
+		unitPrice,
+		less1,
+		less2,
+		0,
+		markup,
+		remarks,
+	)
+	if err != nil {
+		setToastTrigger(w, "error", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.DB.Exec(`
 		UPDATE receiving_logs
 		SET unit_price = ?, less1 = ?, less2 = ?, cost = ?, total_cost = ?, markup = ?, selling_price = ?, remarks = ?, qty = ?
 		WHERE id = ?
-	`, unitPrice, less1, less2, unitCost, totalCost, markup, sellingPrice, remarks, qty, id)
+	`, domLog.UnitPrice, domLog.Less1, domLog.Less2, domLog.Cost, domLog.TotalCost, domLog.Markup, domLog.SellingPrice, domLog.Remarks, domLog.Qty, id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update receiving log."}}`)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to update receiving log.")
+		http.Error(w, "Failed to update receiving log", http.StatusInternalServerError)
 		return
 	}
 
-	var log models.ReceivingLogWithItem
-	err = db.DB.Get(&log, `
+	var logRow models.ReceivingLogWithItem
+	err = db.DB.Get(&logRow, `
 		SELECT r.*, i.code as item_code, i.description as item_description
 		FROM receiving_logs r
 		JOIN items i ON r.item_id = i.id
 		WHERE r.id = ?
 	`, id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to retrieve updated receiving log", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Receiving log updated."}}`)
-	app.Render(w, "receiving_log_row.html", log)
+	setToastTrigger(w, "success", "Receiving log updated.")
+	app.Render(w, "receiving_log_row.html", logRow)
 }

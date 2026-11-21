@@ -36,17 +36,32 @@ type Reminder struct {
 }
 
 func (r *Reminder) IsOverdue() bool {
-	if r.Status == StatusCompleted {
+	if r == nil {
 		return false
 	}
-	// Consider overdue if due date was before today (midnight)
-	now := time.Now()
-	today := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location())
-	return r.DueDate.Before(today) && r.DueDate.Before(now)
+	if strings.EqualFold(strings.TrimSpace(string(r.Status)), string(StatusCompleted)) || r.DueDate.IsZero() {
+		return false
+	}
+	loc := r.DueDate.Location()
+	if loc == nil {
+		loc = time.UTC
+	}
+	now := time.Now().In(loc)
+	if r.DueDate.Hour() == 0 && r.DueDate.Minute() == 0 && r.DueDate.Second() == 0 && r.DueDate.Nanosecond() == 0 {
+		startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+		return r.DueDate.Before(startOfToday)
+	}
+	return r.DueDate.Before(now)
 }
 
 func (r *Reminder) AssignTo(userID *int64, userName string) {
-	r.AssignedToUserID = userID
+	if userID == nil || *userID <= 0 {
+		r.AssignedToUserID = nil
+		r.AssignedToName = ""
+		return
+	}
+	idCopy := *userID
+	r.AssignedToUserID = &idCopy
 	r.AssignedToName = strings.TrimSpace(userName)
 }
 
@@ -78,4 +93,3 @@ func ValidateReminderStatus(status ReminderStatus) error {
 	}
 	return nil
 }
-

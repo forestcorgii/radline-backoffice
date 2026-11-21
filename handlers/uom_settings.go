@@ -14,7 +14,7 @@ func (app *App) UomsHandler(w http.ResponseWriter, r *http.Request) {
 	var uoms []models.Uom
 	err := db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load UOMs", http.StatusInternalServerError)
 		return
 	}
 
@@ -43,7 +43,7 @@ func (app *App) UomsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch Items for conversion form dropdown
 	var items []models.Item
-	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC")
+	_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 500")
 
 	data := struct {
 		Uoms           []models.Uom
@@ -122,7 +122,7 @@ func (app *App) UomSettingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	uomSettings, err := app.queryUomSettings(search, muom, sort, limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load UOM settings", http.StatusInternalServerError)
 		return
 	}
 
@@ -144,7 +144,7 @@ func (app *App) AddUomHandler(w http.ResponseWriter, r *http.Request) {
 	code := strings.TrimSpace(r.FormValue("code"))
 
 	if code == "" {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Code is required."}}`)
+		setToastTrigger(w, "error", "Code is required.")
 		http.Error(w, "Code is required", http.StatusBadRequest)
 		return
 	}
@@ -153,12 +153,16 @@ func (app *App) AddUomHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := db.DB.Exec("INSERT INTO uoms (code) VALUES (?)", code)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to add UOM. Code might already exist."}}`)
-		http.Error(w, "Failed to insert UOM", http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to add UOM. Code might already exist.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "UOM code already exists", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to insert UOM", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "UOM added successfully!"}, "uom-added": ""}`)
+	setToastTrigger(w, "success", "UOM added successfully!", "uom-added")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -194,43 +198,57 @@ func (app *App) DeleteUomHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tx, err := db.DB.Beginx()
+	if err != nil {
+		setToastTrigger(w, "error", "Failed to start database transaction.")
+		http.Error(w, "Database transaction failed", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
 	// Check if in use as Default UOM in items
 	var count int
-	err = db.DB.Get(&count, `
+	err = tx.Get(&count, `
 		SELECT COUNT(*) FROM items WHERE default_uom IN (SELECT code FROM uoms WHERE id = ?)
 	`, id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to check UOM usage", http.StatusInternalServerError)
 		return
 	}
 	if count > 0 {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Cannot delete UOM because it is in use by one or more items."}}`)
+		setToastTrigger(w, "error", "Cannot delete UOM because it is in use by one or more items.")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	// Check if in use as MUOM in uom_settings
-	err = db.DB.Get(&count, `
+	err = tx.Get(&count, `
 		SELECT COUNT(*) FROM uom_settings WHERE muom IN (SELECT code FROM uoms WHERE id = ?)
 	`, id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to check UOM rules usage", http.StatusInternalServerError)
 		return
 	}
 	if count > 0 {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Cannot delete UOM because it is used in one or more UOM rules."}}`)
+		setToastTrigger(w, "error", "Cannot delete UOM because it is used in one or more UOM rules.")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	_, err = db.DB.Exec("DELETE FROM uoms WHERE id = ?", id)
+	_, err = tx.Exec("DELETE FROM uoms WHERE id = ?", id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to delete UOM."}}`)
+		setToastTrigger(w, "error", "Failed to delete UOM.")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "UOM deleted successfully!"}, "uom-added": ""}`)
+	if err := tx.Commit(); err != nil {
+		setToastTrigger(w, "error", "Failed to commit UOM deletion.")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	setToastTrigger(w, "success", "UOM deleted successfully!", "uom-added")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -245,7 +263,7 @@ func (app *App) SelectUomsHandler(w http.ResponseWriter, r *http.Request) {
 	var uoms []models.Uom
 	err := db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load UOMs", http.StatusInternalServerError)
 		return
 	}
 

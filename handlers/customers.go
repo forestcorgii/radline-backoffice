@@ -70,7 +70,7 @@ func (app *App) CustomersHandler(w http.ResponseWriter, r *http.Request) {
 	var customers []models.CustomerWithStats
 	err := db.DB.Select(&customers, query, selectArgs...)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to load customers", http.StatusInternalServerError)
 		return
 	}
 
@@ -104,16 +104,24 @@ func (app *App) AddCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	paymentTerms := strings.TrimSpace(r.FormValue("payment_terms"))
 	notes := strings.TrimSpace(r.FormValue("notes"))
 
-	// Auto-generate code if empty
+	tx, err := db.DB.Beginx()
+	if err != nil {
+		setToastTrigger(w, "error", "Failed to start database transaction.")
+		http.Error(w, "Database transaction failed", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Auto-generate code if empty inside transaction
 	if code == "" {
 		var maxID int
-		_ = db.DB.Get(&maxID, "SELECT COALESCE(MAX(id), 0) FROM customers")
+		_ = tx.Get(&maxID, "SELECT COALESCE(MAX(id), 0) FROM customers")
 		code = fmt.Sprintf("CUST-%04d", maxID+1)
 	}
 
 	domCust, err := domain.NewCustomer(0, code, name, tinNo, address, contactPerson, phone, email, paymentTerms, notes)
 	if err != nil {
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		setToastTrigger(w, "error", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -122,14 +130,24 @@ func (app *App) AddCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		INSERT INTO customers (code, name, tin_no, address, contact_person, phone, email, payment_terms, notes)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	_, err = db.DB.Exec(insertQuery, domCust.Code, domCust.Name, domCust.TINNo, domCust.Address, domCust.ContactPerson, domCust.Phone, domCust.Email, domCust.PaymentTerms, domCust.Notes)
+	_, err = tx.Exec(insertQuery, domCust.Code, domCust.Name, domCust.TINNo, domCust.Address, domCust.ContactPerson, domCust.Phone, domCust.Email, domCust.PaymentTerms, domCust.Notes)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to add customer. Code or Name might already exist."}}`)
-		http.Error(w, "Failed to add customer: "+err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to add customer. Code or Name might already exist.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "Customer code or name already exists", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to add customer", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Customer added successfully."}, "customer-added": {}}`)
+	if err := tx.Commit(); err != nil {
+		setToastTrigger(w, "error", "Failed to commit customer creation.")
+		http.Error(w, "Failed to commit customer creation", http.StatusInternalServerError)
+		return
+	}
+
+	setToastTrigger(w, "success", "Customer added successfully.", "customer-added")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -172,24 +190,45 @@ func (app *App) UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 
 	domCust, err := domain.NewCustomer(id, code, name, tinNo, address, contactPerson, phone, email, paymentTerms, notes)
 	if err != nil {
-		w.Header().Set("HX-Trigger", fmt.Sprintf(`{"show-toast": {"type": "error", "message": "%s"}}`, err.Error()))
+		setToastTrigger(w, "error", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	tx, err := db.DB.Beginx()
+	if err != nil {
+		setToastTrigger(w, "error", "Failed to start database transaction.")
+		http.Error(w, "Database transaction failed", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	var oldName string
+	_ = tx.Get(&oldName, "SELECT name FROM customers WHERE id = ?", id)
 
 	updateQuery := `
 		UPDATE customers 
 		SET code = ?, name = ?, tin_no = ?, address = ?, contact_person = ?, phone = ?, email = ?, payment_terms = ?, notes = ?
 		WHERE id = ?
 	`
-	_, err = db.DB.Exec(updateQuery, domCust.Code, domCust.Name, domCust.TINNo, domCust.Address, domCust.ContactPerson, domCust.Phone, domCust.Email, domCust.PaymentTerms, domCust.Notes, id)
+	_, err = tx.Exec(updateQuery, domCust.Code, domCust.Name, domCust.TINNo, domCust.Address, domCust.ContactPerson, domCust.Phone, domCust.Email, domCust.PaymentTerms, domCust.Notes, id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to update customer."}}`)
-		http.Error(w, "Failed to update customer: "+err.Error(), http.StatusInternalServerError)
+		setToastTrigger(w, "error", "Failed to update customer.")
+		if isUniqueViolationErr(err) {
+			http.Error(w, "Customer code already exists", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to update customer", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Customer updated successfully."}}`)
+	if oldName != "" && oldName != domCust.Name {
+		if _, err := tx.Exec("UPDATE sales_details SET customer_name = ? WHERE customer_name = ?", domCust.Name, oldName); err != nil {
+			setToastTrigger(w, "error", "Failed to update customer sales records.")
+			http.Error(w, "Failed to update customer sales records", http.StatusInternalServerError)
+			return
+		}
+	}
 
 	// Return updated row
 	var cust models.CustomerWithStats
@@ -204,7 +243,19 @@ func (app *App) UpdateCustomerHandler(w http.ResponseWriter, r *http.Request) {
 		WHERE c.id = ?
 		GROUP BY c.id, c.code, c.name, c.tin_no, c.address, c.contact_person, c.phone, c.email, c.payment_terms, c.notes, c.created_at
 	`
-	_ = db.DB.Get(&cust, query, id)
+	if err := tx.Get(&cust, query, id); err != nil {
+		setToastTrigger(w, "error", "Failed to retrieve updated customer.")
+		http.Error(w, "Failed to retrieve updated customer", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		setToastTrigger(w, "error", "Failed to commit customer update.")
+		http.Error(w, "Failed to commit customer update", http.StatusInternalServerError)
+		return
+	}
+
+	setToastTrigger(w, "success", "Customer updated successfully.")
 	app.Render(w, "customer_row.html", cust)
 }
 
@@ -241,17 +292,18 @@ func (app *App) DeleteCustomerHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	_, err := db.DB.Exec("DELETE FROM customers WHERE id = ?", id)
 	if err != nil {
-		w.Header().Set("HX-Trigger", `{"show-toast": {"type": "error", "message": "Failed to delete customer."}}`)
+		setToastTrigger(w, "error", "Failed to delete customer.")
 		http.Error(w, "Failed to delete customer", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"show-toast": {"type": "success", "message": "Customer deleted successfully."}}`)
+	setToastTrigger(w, "success", "Customer deleted successfully.")
 	w.WriteHeader(http.StatusOK)
 }
 
 // SearchCustomersHandler searches customers for fast debounced autocomplete in forms & sales
 func (app *App) SearchCustomersHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	limit := 20
 	if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l > 0 {
@@ -282,7 +334,7 @@ func (app *App) SearchCustomersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to search customers", http.StatusInternalServerError)
 		return
 	}
 
