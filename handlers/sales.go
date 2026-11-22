@@ -168,27 +168,43 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 		_ = db.DB.Select(&items, "SELECT id, code, description, default_uom FROM items ORDER BY description ASC LIMIT 25")
 	}
 
+	var totalSalesSum, totalRemitSum, totalProfitSum float64
+	for _, s := range sales {
+		totalSalesSum += s.TotalSales
+		totalRemitSum += s.TotalRemit
+		totalProfitSum += s.Profit
+	}
+	totalSalesSum = domain.Round2(totalSalesSum)
+	totalRemitSum = domain.Round2(totalRemitSum)
+	totalProfitSum = domain.Round2(totalProfitSum)
+
 	var uoms []models.Uom
 	_ = db.DB.Select(&uoms, "SELECT id, code FROM uoms ORDER BY code ASC")
 
 	target := r.Header.Get("HX-Target")
 	if r.Header.Get("HX-Request") == "true" && target != "main-content" && target != "#main-content" && target != "" {
 		data := struct {
-			Sales      []models.SalesDetailWithItem
-			IsEdit     bool
-			Items      []models.Item
-			Uoms       []models.Uom
-			StartDate  string
-			EndDate    string
-			DatePreset string
+			Sales          []models.SalesDetailWithItem
+			IsEdit         bool
+			Items          []models.Item
+			Uoms           []models.Uom
+			StartDate      string
+			EndDate        string
+			DatePreset     string
+			TotalSalesSum  float64
+			TotalRemitSum  float64
+			TotalProfitSum float64
 		}{
-			Sales:      sales,
-			IsEdit:     isEdit,
-			Items:      items,
-			Uoms:       uoms,
-			StartDate:  startDateStr,
-			EndDate:    endDateStr,
-			DatePreset: datePreset,
+			Sales:          sales,
+			IsEdit:         isEdit,
+			Items:          items,
+			Uoms:           uoms,
+			StartDate:      startDateStr,
+			EndDate:        endDateStr,
+			DatePreset:     datePreset,
+			TotalSalesSum:  totalSalesSum,
+			TotalRemitSum:  totalRemitSum,
+			TotalProfitSum: totalProfitSum,
 		}
 		app.Render(w, "sales_results.html", data)
 	} else {
@@ -206,6 +222,9 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 			SupplierFilter string
 			Sort           string
 			Limit          int
+			TotalSalesSum  float64
+			TotalRemitSum  float64
+			TotalProfitSum float64
 		}{
 			Sales:  sales,
 			IsEdit: isEdit,
@@ -223,6 +242,9 @@ func (app *App) SalesHandler(w http.ResponseWriter, r *http.Request) {
 			SupplierFilter: supplierFilter,
 			Sort:           sort,
 			Limit:          limit,
+			TotalSalesSum:  totalSalesSum,
+			TotalRemitSum:  totalRemitSum,
+			TotalProfitSum: totalProfitSum,
 		}
 		app.RenderPage(w, r, "sales.html", data)
 	}

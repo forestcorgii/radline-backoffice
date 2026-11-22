@@ -6,25 +6,26 @@
 {{ template "adjust_stock_form.html" . }}
 
 <div class="card">
-    <div class="header-bar">
-        <h2>Adjustment Logs</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.875rem; padding-bottom: 0.625rem; border-bottom: 1px solid hsl(var(--border) / 0.8);">
+        <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-main);">Adjustment Logs</h3>
     </div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#adjustment-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
-                <input type="text" name="search" placeholder="Search by Remarks, Item Description, or Adjustment ID..."
-                    hx-get="/inventory/adjustments/logs" hx-trigger="keyup changed delay:300ms, search"
-                    hx-target="#adjustment-logs-results" hx-include="closest form"
-                    hx-indicator="#adjustment-loading-indicator" class="form-input">
+                <div class="listview-search-wrap">
+                    <span class="listview-search-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" name="search" placeholder="Search by Remarks, Item Description, or Adjustment ID..."
+                        hx-get="/inventory/adjustments/logs" hx-trigger="keyup changed delay:300ms, search"
+                        hx-target="#adjustment-logs-results" hx-include="closest form"
+                        hx-indicator="#adjustment-loading-indicator" class="form-input">
+                    <button type="button" class="listview-search-clear" onclick="clearListSearch(this)" title="Clear search">&times;</button>
+                </div>
             </div>
-            <div class="filter-item">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
-                    By</label>
-                <select name="sort" class="form-input" hx-get="/inventory/adjustments/logs"
+            <div class="filter-item filter-sort">
+                <select name="sort" class="form-input" title="Sort By" hx-get="/inventory/adjustments/logs"
                     hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change"
                     hx-indicator="#adjustment-loading-indicator">
                     <option value="date_desc">Newest First</option>
@@ -32,18 +33,15 @@
                     <option value="qty_desc">Highest Abs(Quantity) First</option>
                 </select>
             </div>
-            <div class="filter-item">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
-                    Rows</label>
-                <select name="limit" class="form-input" hx-get="/inventory/adjustments/logs"
+            <div class="filter-item filter-limit">
+                <select name="limit" class="form-input" title="Rows" hx-get="/inventory/adjustments/logs"
                     hx-target="#adjustment-logs-results" hx-include="closest form" hx-trigger="change"
                     hx-indicator="#adjustment-loading-indicator">
-                    <option value="25" selected>Top 25</option>
-                    <option value="50">Top 50</option>
-                    <option value="100">Top 100</option>
-                    <option value="200">Top 200</option>
-                    <option value="500">Top 500</option>
+                    <option value="25" selected>25 rows</option>
+                    <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
+                    <option value="200">200 rows</option>
+                    <option value="500">500 rows</option>
                 </select>
             </div>
         </div>
@@ -54,16 +52,21 @@
         </div>
 
         <div id="adjustment-logs-results">
+            <div class="listview-summary-bar">
+                <div class="listview-summary-count">
+                    <span>Showing <strong>{{ len .AdjustmentLogs }}</strong> adjustment records</span>
+                </div>
+            </div>
             <div class="table-container">
                     <div class="table table-scroll-md resizable-table adjustment-logs-table" id="adjustment-logs-table">
                         <div class="thead">
                             <div class="tr">
-                                <div class="th" data-col="adj_id">Adj#</div>
+                                <div class="th sticky-col-1" data-col="adj_id">Adj#</div>
                                 <div class="th" data-col="date">Date</div>
                                 <div class="th" data-col="item_description">Item Description</div>
-                                <div class="th" data-col="adj_qty">Adj Qty</div>
+                                <div class="th num" data-col="adj_qty">Adj Qty</div>
                                 <div class="th" data-col="uom">UOM</div>
-                                <div class="th" data-col="cost_impact">Cost Impact</div>
+                                <div class="th num" data-col="cost_impact">Cost Impact</div>
                                 <div class="th" data-col="remarks">Remarks</div>
                             </div>
                         </div>

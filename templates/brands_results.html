@@ -1,13 +1,17 @@
 {{ define "brands_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .Brands }}</strong> brands</span>
+    </div>
+</div>
 <div class="table-container">
-    <table class="table-scroll-md">
+    <table class="table-scroll-md resizable-table brands-table" id="brands-table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Items Count</th>
-                <th>Actions</th>
+                <th data-col="code">Code</th>
+                <th data-col="name">Name</th>
+                <th data-col="items_count">Items Count</th>
+                <th data-col="actions">Actions</th>
             </tr>
         </thead>
         <tbody id="brands-tbody">

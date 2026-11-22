@@ -6,24 +6,26 @@
 {{ template "receive_stock_form.html" . }}
 
 <div class="card">
-    <div class="header-bar">
-        <h2>Receiving Logs</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.875rem; padding-bottom: 0.625rem; border-bottom: 1px solid hsl(var(--border) / 0.8);">
+        <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-main);">Receiving Logs</h3>
     </div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#receiving-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
-                <input type="text" name="search" placeholder="Search by PL No. or Item Code..."
-                    hx-get="/inventory/receiving/logs" hx-trigger="keyup changed delay:300ms, search"
-                    hx-target="#receiving-logs-results" hx-include="closest form"
-                    hx-indicator="#receiving-loading-indicator" class="form-input">
+                <div class="listview-search-wrap">
+                    <span class="listview-search-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" name="search" placeholder="Search by PL No. or Item Code..."
+                        hx-get="/inventory/receiving/logs" hx-trigger="keyup changed delay:300ms, search"
+                        hx-target="#receiving-logs-results" hx-include="closest form"
+                        hx-indicator="#receiving-loading-indicator" class="form-input">
+                    <button type="button" class="listview-search-clear" onclick="clearListSearch(this)" title="Clear search">&times;</button>
+                </div>
             </div>
-            <div class="filter-item">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Supplier</label>
-                <select name="supplier_filter" class="form-input" hx-get="/inventory/receiving/logs"
+            <div class="filter-item filter-supplier">
+                <select name="supplier_filter" class="form-input" title="Supplier" hx-get="/inventory/receiving/logs"
                     hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change"
                     hx-indicator="#receiving-loading-indicator">
                     <option value="all">All Suppliers</option>
@@ -32,11 +34,8 @@
                     {{ end }}
                 </select>
             </div>
-            <div class="filter-item">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort
-                    By</label>
-                <select name="sort" class="form-input" hx-get="/inventory/receiving/logs"
+            <div class="filter-item filter-sort">
+                <select name="sort" class="form-input" title="Sort By" hx-get="/inventory/receiving/logs"
                     hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change"
                     hx-indicator="#receiving-loading-indicator">
                     <option value="date_desc">Newest First</option>
@@ -44,18 +43,15 @@
                     <option value="qty_desc">Highest Quantity First</option>
                 </select>
             </div>
-            <div class="filter-item">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
-                    Rows</label>
-                <select name="limit" class="form-input" hx-get="/inventory/receiving/logs"
+            <div class="filter-item filter-limit">
+                <select name="limit" class="form-input" title="Rows" hx-get="/inventory/receiving/logs"
                     hx-target="#receiving-logs-results" hx-include="closest form" hx-trigger="change"
                     hx-indicator="#receiving-loading-indicator">
-                    <option value="25" selected>Top 25</option>
-                    <option value="50">Top 50</option>
-                    <option value="100">Top 100</option>
-                    <option value="200">Top 200</option>
-                    <option value="500">Top 500</option>
+                    <option value="25" selected>25 rows</option>
+                    <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
+                    <option value="200">200 rows</option>
+                    <option value="500">500 rows</option>
                 </select>
             </div>
         </div>
@@ -201,11 +197,11 @@
         // Display updated calculated values if matching display containers exist in edit/view rows
         const sellingPriceCell = row.querySelector('.calc-selling-price');
         if (sellingPriceCell) {
-            sellingPriceCell.textContent = '₱' + sellingPrice.toFixed(2);
+            sellingPriceCell.textContent = '₱' + formatMoney(sellingPrice);
         }
         const costCell = row.querySelector('.calc-cost');
         if (costCell) {
-            costCell.textContent = '₱' + cost.toFixed(2);
+            costCell.textContent = '₱' + formatMoney(cost);
         }
     }, _pageSig);
 </script>

@@ -19,6 +19,7 @@ import (
 func parseCustomerTemplatesForTest() map[string]*template.Template {
 	templates := make(map[string]*template.Template)
 	funcMap := template.FuncMap{
+		"money": FormatMoney,
 		"derefInt": func(p *int) int {
 			if p == nil {
 				return 0

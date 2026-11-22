@@ -1,10 +1,15 @@
 {{ define "uoms_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .Uoms }}</strong> units of measure</span>
+    </div>
+</div>
 <div class="table-container">
-    <table>
+    <table class="resizable-table uoms-table" id="uoms-table">
         <thead>
             <tr>
-                <th style="width: 65%;">Code</th>
-                <th style="width: 20%;">Actions</th>
+                <th data-col="code" style="width: 75%;">Code</th>
+                <th data-col="actions" style="width: 25%;">Actions</th>
             </tr>
         </thead>
         <tbody id="uoms-tbody">

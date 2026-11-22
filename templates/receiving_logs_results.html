@@ -1,21 +1,30 @@
 {{ define "receiving_logs_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .ReceivingLogs }}</strong> receiving records</span>
+    </div>
+    <div class="listview-summary-metrics">
+        <span class="summary-pill summary-pill-success">Total Qty: <strong>{{ printf "%.2f" .TotalQty }}</strong></span>
+        <span class="summary-pill summary-pill-primary">Total Cost: <strong>₱{{ money .TotalCostSum }}</strong></span>
+    </div>
+</div>
 <div class="table-container">
     <div class="table table-scroll-md resizable-table receiving-logs-table" id="receiving-logs-table">
         <div class="thead">
             <div class="tr">
-                <div class="th" data-col="date">Date</div>
+                <div class="th sticky-col-1" data-col="date">Date</div>
                 <div class="th" data-col="pl_no">PL No.</div>
                 <div class="th" data-col="supplier">Supplier</div>
-                <div class="th" data-col="qty">Qty</div>
+                <div class="th num" data-col="qty">Qty</div>
                 <div class="th" data-col="description">Description</div>
                 <div class="th" data-col="uom">UOM</div>
-                <div class="th" data-col="unit_price">Unit Price</div>
-                <div class="th" data-col="less1">Less 1</div>
-                <div class="th" data-col="less2">Less 2</div>
-                <div class="th" data-col="unit_cost">Unit Cost</div>
-                <div class="th" data-col="total_cost">Total Cost</div>
-                <div class="th" data-col="markup">Markup</div>
-                <div class="th" data-col="selling_price">Selling Price</div>
+                <div class="th num" data-col="unit_price">Unit Price</div>
+                <div class="th num" data-col="less1">Less 1</div>
+                <div class="th num" data-col="less2">Less 2</div>
+                <div class="th num" data-col="unit_cost">Unit Cost</div>
+                <div class="th num" data-col="total_cost">Total Cost</div>
+                <div class="th num" data-col="markup">Markup</div>
+                <div class="th num" data-col="selling_price">Selling Price</div>
                 <div class="th" data-col="remarks">Remarks</div>
                 <div class="th" data-col="actions">Action</div>
             </div>

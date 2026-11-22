@@ -62,13 +62,13 @@
         <input type="number" step="any" name="price" value="{{ printf "%.2f" $sale.Price }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" title="Unit Price" required>
     </div>
     <div class="td" data-col="total_sales" class="text-success" style="font-weight: 500; font-size: 0.8125rem;">
-        <span class="calc-total-sales">₱{{ printf "%.2f" $sale.TotalSales }}</span>
+        <span class="calc-total-sales">₱{{ money $sale.TotalSales }}</span>
     </div>
     <div class="td" data-col="cost">
         <input type="number" step="any" name="cost" value="{{ printf "%.2f" $sale.Cost }}" oninput="calcSaleRow(this)" class="form-input" style="padding: 0.35rem 0.5rem; font-size: 0.8125rem; width: 100%; box-sizing: border-box;" title="Unit Cost" required>
     </div>
     <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500; font-size: 0.8125rem;">
-        <span class="calc-total-cost">₱{{ printf "%.2f" $sale.TotalCost }}</span>
+        <span class="calc-total-cost">₱{{ money $sale.TotalCost }}</span>
     </div>
     <div class="td" data-col="patong">
         <div style="display: flex; flex-direction: column; gap: 2px; width: 100%;">
@@ -87,10 +87,10 @@
         </div>
     </div>
     <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500; font-size: 0.8125rem;">
-        <span class="calc-total-remit">₱{{ printf "%.2f" $sale.TotalRemit }}</span>
+        <span class="calc-total-remit">₱{{ money $sale.TotalRemit }}</span>
     </div>
     <div class="td" data-col="profit" class="text-success" style="font-weight: 500; font-size: 0.8125rem;">
-        <span class="calc-profit">₱{{ printf "%.2f" $sale.Profit }}</span>
+        <span class="calc-profit">₱{{ money $sale.Profit }}</span>
     </div>
     <div class="td" data-col="profit_margin" style="font-weight: 500; font-size: 0.8125rem;">
         <span class="calc-profit-margin">{{ printf "%.2f" $sale.ProfitMargin }}%</span>

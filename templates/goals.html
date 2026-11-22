@@ -55,14 +55,14 @@
                     <div style="height: 100%; width: {{ if gt .RevenueProgress 100.0 }}100{{ else if lt .RevenueProgress 0.0 }}0{{ else }}{{ .RevenueProgress }}{{ end }}%; background: hsl(var(--primary)); border-radius: 4px;"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
-                    <span>Actual: <strong style="color: var(--text-main);">₱{{ printf "%.2f" .ActualRevenue }}</strong></span>
-                    <span>Target: <strong>₱{{ printf "%.2f" .TargetRevenue }}</strong></span>
+                    <span>Actual: <strong style="color: var(--text-main);">₱{{ money .ActualRevenue }}</strong></span>
+                    <span>Target: <strong>₱{{ money .TargetRevenue }}</strong></span>
                 </div>
                 <div style="margin-top: 0.35rem; font-size: 0.6875rem; color: var(--text-muted);">
                     {{ if le .RevenueVariance 0.0 }}
-                    <span style="color: hsl(142 72% 35%); font-weight: 600;">Surplus: +₱{{ printf "%.2f" (mul .RevenueVariance -1.0) }}</span>
+                    <span style="color: hsl(142 72% 35%); font-weight: 600;">Surplus: +₱{{ money (mul .RevenueVariance -1.0) }}</span>
                     {{ else }}
-                    <span>Remaining to reach goal: ₱{{ printf "%.2f" .RevenueVariance }}</span>
+                    <span>Remaining to reach goal: ₱{{ money .RevenueVariance }}</span>
                     {{ end }}
                 </div>
             </div>
@@ -77,14 +77,14 @@
                     <div style="height: 100%; width: {{ if gt .ProfitProgress 100.0 }}100{{ else if lt .ProfitProgress 0.0 }}0{{ else }}{{ .ProfitProgress }}{{ end }}%; background: hsl(142 72% 35%); border-radius: 4px;"></div>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
-                    <span>Actual: <strong style="color: hsl(142 72% 35%);">₱{{ printf "%.2f" .ActualProfit }}</strong></span>
-                    <span>Target: <strong>₱{{ printf "%.2f" .TargetProfit }}</strong></span>
+                    <span>Actual: <strong style="color: hsl(142 72% 35%);">₱{{ money .ActualProfit }}</strong></span>
+                    <span>Target: <strong>₱{{ money .TargetProfit }}</strong></span>
                 </div>
                 <div style="margin-top: 0.35rem; font-size: 0.6875rem; color: var(--text-muted);">
                     {{ if le .ProfitVariance 0.0 }}
-                    <span style="color: hsl(142 72% 35%); font-weight: 600;">Surplus: +₱{{ printf "%.2f" (mul .ProfitVariance -1.0) }}</span>
+                    <span style="color: hsl(142 72% 35%); font-weight: 600;">Surplus: +₱{{ money (mul .ProfitVariance -1.0) }}</span>
                     {{ else }}
-                    <span>Remaining to reach goal: ₱{{ printf "%.2f" .ProfitVariance }}</span>
+                    <span>Remaining to reach goal: ₱{{ money .ProfitVariance }}</span>
                     {{ end }}
                 </div>
             </div>

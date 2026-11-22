@@ -3,10 +3,10 @@
 > Back to [[00-index]] · Related: [[htmx-patterns]], [[sidebar-navigation]], [[responsive-design]], [[templates-overview]]
 
 ## Canonical Stylesheet & Extracted JS Modules
-- **Stylesheet**: [`static/index.css`](../static/index.css) (linked in [`templates/base.html`](../templates/base.html) as `/static/index.css?v=7.0` — always increment `?v=` when changing CSS).
+- **Stylesheet**: [`static/index.css`](../static/index.css) (linked in [`templates/base.html`](../templates/base.html) as `/static/index.css?v=8.0` — always increment `?v=` when changing CSS).
 - **Extracted Frontend Scripts** (linked in [`templates/base.html`](../templates/base.html)):
-  - [`static/js/base-ui.js`](../static/js/base-ui.js) (`/static/js/base-ui.js?v=7.0`) — Sidebar collapse/mobile drawers, `+ New` Quick Actions menu, `#shadcn-alert-dialog` HTMX confirmation interceptors, toasts, and searchable dropdown positioning/caching.
-  - [`static/js/table-engine.js`](../static/js/table-engine.js) (`/static/js/table-engine.js?v=7.0`) — Universal List Views Engine (Excel collapsible columns, `.table-col-resizer` 60-FPS resizing, semantic column groups, drag-and-drop column reordering, header themes, and hybrid `localStorage` + `POST /api/user-preferences` sync).
+  - [`static/js/base-ui.js`](../static/js/base-ui.js) (`/static/js/base-ui.js?v=8.0`) — Sidebar collapse/mobile drawers, `+ New` Quick Actions menu, `#shadcn-alert-dialog` HTMX confirmation interceptors, toasts, listview search clear/reset, and searchable dropdown positioning/caching.
+  - [`static/js/table-engine.js`](../static/js/table-engine.js) (`/static/js/table-engine.js?v=8.0`) — Universal List Views Engine (Excel collapsible columns, `.table-col-resizer` 60-FPS resizing, semantic column groups, drag-and-drop column reordering, header themes, Comfortable/Compact density toggle, and hybrid `localStorage` + `POST /api/user-preferences` sync).
 
 ## Current Theme & Base Typography (Enterprise Blue & Breathing Room v7.0)
 ```css
@@ -115,3 +115,12 @@
     - Standardized Form Controls & Buttons (`.form-input`, `input`, `select`, `.btn`): `height: 2.25rem` (`36px`), `font-size: 0.8125rem`, soft 3px focus ring (`0 0 0 3px hsl(var(--ring) / 0.16)`). Compact button variant `.btn-sm` uses `height: 1.875rem` (`30px`).
     - Table Density (`th, td`, `.th, .td`): `padding: 0.625rem 0.875rem` (`10px 14px`), `font-size: 0.8125rem` (`13px`). `.excel-table` row height expanded to `2.375rem` (`38px`).
     - Dashboard Height Tokens: `.dash-h-sm: 175px`, `.dash-h-md: 340px`, `.dash-h-lg: 510px`, `.dashboard-grid` gap `1.25rem`.
+
+### Context: Crisp Enterprise SaaS Listviews, Summary Bars & Density Toggle (v8.0)
+- **Problem**: Listviews had non-sticky headers, left-aligned financial numbers, duplicate `class="..."` attributes that dropped color classes, stray `+`/`-` signs (including a `-$` typo on `sold`), inconsistent toolbars, and no live summary/totals bars.
+- **Enforced Solution**:
+  - **Sticky Headers & Frozen Left Columns**: `.table-container` uses `max-height: calc(100vh - 285px); overflow: auto;` with sticky `.th`/`th` (`top: 0; z-index: 15`) and `.sticky-col-1` (`left: 0; z-index: 10/22`) on key left columns.
+  - **Right-Aligned Tabular Numerics (No `+`/`-` Signs)**: Numeric columns use `.th.num` / `.td.num` (`text-align: right; font-variant-numeric: tabular-nums`) and rely on color classes (`text-success`, `text-danger`, `text-primary`) without `+` or `-` prefixes.
+  - **Density Toggle**: `[data-table-density="compact"]` vs `comfortable` injected into `.customize-view-popover` by `/static/js/table-engine.js?v=8.0` and persisted via `radline_table_density`.
+  - **Unified Search & Live Summary Bar**: `.listview-search-wrap` adds a leading search icon and `×` clear button (`window.clearListSearch`); `.listview-summary-bar` renders live row counts and financial/stock totals inside `#*-results` HTMX targets.
+  - **Conditional Sales Date Range**: `sales.html` hides `start_date` and `end_date` whenever `date_preset != "custom"`.

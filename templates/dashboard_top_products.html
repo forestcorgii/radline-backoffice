@@ -45,14 +45,14 @@
             </div>
             <div style="text-align: right; flex-shrink: 0; margin-left: 0.5rem;">
                 {{ if eq $.TopFilter "profit" }}
-                    <div style="font-weight: 700; font-size: 0.8125rem; color: hsl(142 72% 35%);">₱{{ printf "%.2f" $prod.TotalProfit }}</div>
-                    <div style="font-size: 0.6875rem; color: var(--text-muted);">₱{{ printf "%.2f" $prod.TotalSales }} sales</div>
+                    <div style="font-weight: 700; font-size: 0.8125rem; color: hsl(142 72% 35%);">₱{{ money $prod.TotalProfit }}</div>
+                    <div style="font-size: 0.6875rem; color: var(--text-muted);">₱{{ money $prod.TotalSales }} sales</div>
                 {{ else if eq $.TopFilter "sales" }}
-                    <div style="font-weight: 700; font-size: 0.8125rem; color: hsl(var(--primary));">₱{{ printf "%.2f" $prod.TotalSales }}</div>
+                    <div style="font-weight: 700; font-size: 0.8125rem; color: hsl(var(--primary));">₱{{ money $prod.TotalSales }}</div>
                     <div style="font-size: 0.6875rem; color: var(--text-muted);">{{ printf "%.0f" $prod.TotalQty }} {{ $prod.UOM }}</div>
                 {{ else }}
                     <div style="font-weight: 700; font-size: 0.8125rem; color: var(--text-main);">{{ printf "%.0f" $prod.TotalQty }} {{ $prod.UOM }}</div>
-                    <div style="font-size: 0.6875rem; color: hsl(142 72% 35%); font-weight: 600;">₱{{ printf "%.2f" $prod.TotalSales }}</div>
+                    <div style="font-size: 0.6875rem; color: hsl(142 72% 35%); font-weight: 600;">₱{{ money $prod.TotalSales }}</div>
                 {{ end }}
             </div>
         </div>

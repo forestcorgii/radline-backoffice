@@ -1494,3 +1494,69 @@ window.confirmAsync = function (message, title) {
         cancelText: 'Cancel'
     });
 };
+
+
+// =========================================================================
+// Listviews v8.0: Search Clear Button & Filter Reset Helpers
+// =========================================================================
+function syncListSearchClearButtons() {
+    document.querySelectorAll('.listview-search-wrap').forEach(wrap => {
+        const input = wrap.querySelector('input');
+        const btn = wrap.querySelector('.listview-search-clear');
+        if (input && btn) {
+            btn.classList.toggle('visible', input.value.trim().length > 0);
+        }
+    });
+}
+
+document.addEventListener('input', function (e) {
+    const wrap = e.target && e.target.closest ? e.target.closest('.listview-search-wrap') : null;
+    if (!wrap) return;
+    const btn = wrap.querySelector('.listview-search-clear');
+    if (btn) {
+        btn.classList.toggle('visible', e.target.value.trim().length > 0);
+    }
+});
+
+document.body.addEventListener('htmx:afterSwap', syncListSearchClearButtons);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncListSearchClearButtons);
+} else {
+    syncListSearchClearButtons();
+}
+
+window.clearListSearch = function (btn) {
+    const wrap = btn ? btn.closest('.listview-search-wrap') : null;
+    if (!wrap) return;
+    const input = wrap.querySelector('input');
+    if (!input) return;
+    input.value = '';
+    btn.classList.remove('visible');
+    input.focus();
+    if (window.htmx) {
+        window.htmx.trigger(input, 'search');
+    } else {
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+};
+
+window.resetListFilters = function (el) {
+    const form = el ? (el.closest('form') || document.querySelector('.search-filter-bar')?.closest('form')) : null;
+    if (!form) return;
+    form.querySelectorAll('input[type="text"], input[type="search"]').forEach(inp => {
+        inp.value = '';
+    });
+    form.querySelectorAll('select').forEach(sel => {
+        if (sel.options.length > 0) sel.selectedIndex = 0;
+    });
+    syncListSearchClearButtons();
+    const triggerEl = form.querySelector('input[name="search"]') || form.querySelector('select');
+    if (triggerEl && window.htmx) {
+        window.htmx.trigger(triggerEl, triggerEl.tagName === 'SELECT' ? 'change' : 'search');
+    }
+};
+
+window.formatMoney = function (val) {
+    const n = Number(val) || 0;
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};

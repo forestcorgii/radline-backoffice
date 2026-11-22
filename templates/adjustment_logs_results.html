@@ -1,14 +1,19 @@
 {{ define "adjustment_logs_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .AdjustmentLogs }}</strong> adjustment records</span>
+    </div>
+</div>
 <div class="table-container">
     <div class="table table-scroll-md resizable-table adjustment-logs-table" id="adjustment-logs-table">
         <div class="thead">
             <div class="tr">
-                <div class="th" data-col="adj_id">Adj#</div>
+                <div class="th sticky-col-1" data-col="adj_id">Adj#</div>
                 <div class="th" data-col="date">Date</div>
                 <div class="th" data-col="item_description">Item Description</div>
-                <div class="th" data-col="adj_qty">Adj Qty</div>
+                <div class="th num" data-col="adj_qty">Adj Qty</div>
                 <div class="th" data-col="uom">UOM</div>
-                <div class="th" data-col="cost_impact">Cost Impact</div>
+                <div class="th num" data-col="cost_impact">Cost Impact</div>
                 <div class="th" data-col="remarks">Remarks</div>
             </div>
         </div>

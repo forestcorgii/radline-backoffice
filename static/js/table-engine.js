@@ -134,12 +134,30 @@ window.RADLINE_TABLE_GROUPS = {
         { id: 'item_classification', label: 'Classification & UOM', cols: ['brand', 'category', 'default_uom'] }
     ],
     'receiving-logs-table': [
-        { id: 'rec_doc', label: 'Document Info', cols: ['pl_id', 'date', 'supplier'] },
-        { id: 'rec_item', label: 'Item & Valuation', cols: ['item_description', 'qty', 'uom', 'cost_per_unit', 'total_cost', 'remarks'] }
+        { id: 'rec_doc', label: 'Document Info', cols: ['date', 'pl_no', 'supplier'] },
+        { id: 'rec_item', label: 'Item Details', cols: ['qty', 'description', 'uom'] },
+        { id: 'rec_pricing', label: 'Pricing & Costing', cols: ['unit_price', 'less1', 'less2', 'unit_cost', 'total_cost', 'markup', 'selling_price', 'remarks'] }
     ],
     'adjustment-logs-table': [
         { id: 'adj_doc', label: 'Adjustment Info', cols: ['adj_id', 'date', 'item_description'] },
         { id: 'adj_impact', label: 'Quantity & Cost Impact', cols: ['adj_qty', 'uom', 'cost_impact', 'remarks'] }
+    ],
+    'customers-table': [
+        { id: 'cust_identity', label: 'Customer Identity', cols: ['code', 'name', 'tin_no'] },
+        { id: 'cust_contact', label: 'Contact & Terms', cols: ['address', 'contact', 'payment_terms', 'total_sales'] }
+    ],
+    'brands-table': [
+        { id: 'brand_info', label: 'Brand Details', cols: ['code', 'name', 'items_count'] }
+    ],
+    'categories-table': [
+        { id: 'cat_info', label: 'Category Details', cols: ['code', 'name', 'items_count'] }
+    ],
+    'uoms-table': [
+        { id: 'uom_info', label: 'UOM Details', cols: ['code'] }
+    ],
+    'activity-logs-table': [
+        { id: 'act_who', label: 'Operator & Action', cols: ['timestamp', 'operator', 'action', 'target'] },
+        { id: 'act_meta', label: 'Details & Network', cols: ['details', 'ip_address'] }
     ]
 };
 
@@ -628,6 +646,28 @@ window.initExcelCollapsibleColumns = function () {
 
             const firstSectionTitle = popover.querySelector('.customize-section-title');
             if (firstSectionTitle) {
+                const densityTitle = document.createElement('div');
+                densityTitle.className = 'customize-section-title';
+                densityTitle.textContent = 'Row Density';
+
+                const currentDensity = localStorage.getItem('radline_table_density') || 'comfortable';
+                const densityWrap = document.createElement('div');
+                densityWrap.className = 'density-segmented';
+                densityWrap.innerHTML = `
+                    <button type="button" class="density-seg-btn ${currentDensity === 'comfortable' ? 'active' : ''}" data-density="comfortable">Comfortable</button>
+                    <button type="button" class="density-seg-btn ${currentDensity === 'compact' ? 'active' : ''}" data-density="compact">Compact</button>
+                `;
+                densityWrap.querySelectorAll('.density-seg-btn').forEach(btn => {
+                    btn.onclick = (ev) => {
+                        ev.stopPropagation();
+                        const mode = btn.getAttribute('data-density') || 'comfortable';
+                        window.setTableDensity(mode);
+                    };
+                });
+
+                firstSectionTitle.parentNode.insertBefore(densityTitle, firstSectionTitle);
+                firstSectionTitle.parentNode.insertBefore(densityWrap, firstSectionTitle);
+
                 const themeTitle = document.createElement('div');
                 themeTitle.className = 'customize-section-title';
                 themeTitle.textContent = 'Header Color Theme';
@@ -1225,3 +1265,32 @@ window.addEventListener('online', function () {
         detail: { type: 'success', message: 'Connection restored. Back online.' }
     }));
 });
+
+
+// =========================================================================
+// Table Density Switcher (Comfortable vs Compact)
+// =========================================================================
+window.applyTableDensity = function () {
+    const mode = localStorage.getItem('radline_table_density') || 'comfortable';
+    document.documentElement.setAttribute('data-table-density', mode);
+    document.querySelectorAll('.density-seg-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-density') === mode);
+    });
+};
+
+window.setTableDensity = function (mode) {
+    const valid = mode === 'compact' ? 'compact' : 'comfortable';
+    if (typeof window.saveRadlinePreference === 'function') {
+        window.saveRadlinePreference('radline_table_density', valid, false);
+    } else {
+        localStorage.setItem('radline_table_density', valid);
+    }
+    window.applyTableDensity();
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.applyTableDensity);
+} else {
+    window.applyTableDensity();
+}
+document.body.addEventListener('htmx:afterSwap', window.applyTableDensity);

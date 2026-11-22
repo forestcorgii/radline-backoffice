@@ -1,32 +1,33 @@
 {{ define "inventory_stock_rows.html" }}
 {{ range . }}
 <div class="tr">
-    <div class="td" data-col="description" style="font-weight: 500;">{{ .Description }}</div>
+    <div class="td sticky-col-1" data-col="description" style="font-weight: 500;">{{ .Description }}</div>
     <div class="td" data-col="uom"><span class="badge badge-secondary">{{ .DefaultUOM }}</span></div>
-    <div class="td" data-col="received" class="text-success" style="font-weight: 500;">{{ if gt .TotalReceived 0.0 }}+{{ printf "%.2f" .TotalReceived
-        }}{{ else }}0.00{{ end }}</div>
-    <div class="td" data-col="sold" class="text-danger" style="font-weight: 500;">{{ if gt .TotalSold 0.0 }}-{{ printf "%.2f" .TotalSold }}{{ else
-        }}0.00{{ end }}</div>
-    <div class="td" data-col="adjusted" style="font-weight: 500;"
-        class="{{ if gt .TotalAdjusted 0.0 }}text-success{{ else if lt .TotalAdjusted 0.0 }}text-danger{{ else }}text-muted{{ end }}">
-        {{ if gt .TotalAdjusted 0.0 }}+{{ end }}{{ printf "%.2f" .TotalAdjusted }}
+    <div class="td num text-success" data-col="received" style="font-weight: 500;">{{ printf "%.2f" .TotalReceived }}</div>
+    <div class="td num text-danger" data-col="sold" style="font-weight: 500;">{{ printf "%.2f" .TotalSold }}</div>
+    <div class="td num {{ if gt .TotalAdjusted 0.0 }}text-success{{ else if lt .TotalAdjusted 0.0 }}text-danger{{ else }}text-muted{{ end }}" data-col="adjusted" style="font-weight: 500;">
+        {{ if lt .TotalAdjusted 0.0 }}{{ printf "%.2f" (mul .TotalAdjusted -1.0) }}{{ else }}{{ printf "%.2f" .TotalAdjusted }}{{ end }}
     </div>
-    <div class="td" data-col="on_hand">
+    <div class="td num" data-col="on_hand">
         {{ if gt .OnHand 0.0 }}
         <span style="font-weight: 600; color: var(--text-main);">{{ printf "%.2f" .OnHand }}</span>
         {{ else if eq .OnHand 0.0 }}
         <span class="badge badge-danger">0.00</span>
         {{ else }}
-        <span class="badge badge-danger">{{ printf "%.2f" .OnHand }}</span>
+        <span class="badge badge-danger">{{ printf "%.2f" (mul .OnHand -1.0) }}</span>
         {{ end }}
     </div>
-    <div class="td" data-col="current_cost" style="font-weight: 500;">₱{{ printf "%.2f" .CurrentCost }}</div>
-    <div class="td" data-col="current_price" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .CurrentPrice }}</div>
+    <div class="td num" data-col="current_cost" style="font-weight: 500;">₱{{ money .CurrentCost }}</div>
+    <div class="td num text-primary" data-col="current_price" style="font-weight: 600;">₱{{ money .CurrentPrice }}</div>
 </div>
 {{ else }}
 <div class="tr" style="display: block;">
-    <div class="td" style="display: block; text-align: center; color: var(--text-muted); padding: 2rem; width: 100%;">
-        No items found.
+    <div class="td table-empty-state" style="display: flex; width: 100%; border: none;">
+        <div class="table-empty-state-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+        </div>
+        <div class="table-empty-state-title">No stock items found</div>
+        <div class="table-empty-state-desc">Try adjusting your stock filter or search query.</div>
     </div>
 </div>
 {{ end }}

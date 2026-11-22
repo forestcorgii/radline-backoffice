@@ -1503,23 +1503,28 @@ select:focus,
 /* Tables */
 .table-container {
 	width: 100%;
-	overflow-x: auto;
+	overflow: auto;
+	max-height: calc(100vh - 285px);
+	min-height: 180px;
 	-webkit-overflow-scrolling: touch;
-	margin-top: 0.75rem;
+	margin-top: 0.5rem;
 	position: relative;
 	z-index: 1;
 	border: 1px solid hsl(var(--border));
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius);
 	background: #ffffff;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .table-container:has(.searchable-dropdown),
 .table-container:has(.has-dropdown),
 .table-container.has-dropdown {
 	overflow: visible !important;
+	max-height: none !important;
 }
 
 .table-container::-webkit-scrollbar {
+	width: 7px;
 	height: 7px;
 }
 
@@ -1602,28 +1607,30 @@ th,
 td {
 	padding: 0.625rem 0.875rem;
 	text-align: left;
-	border-bottom: 1px solid hsl(var(--border) / 0.75);
+	border-bottom: 1px solid hsl(var(--border) / 0.6);
 	font-size: 0.8125rem;
 	white-space: nowrap;
-	transition: background-color 0.15s ease;
+	transition: background-color 0.12s ease;
 }
 
 th {
 	background-color: #f8fafc;
-	color: #334155;
+	color: #475569;
 	font-weight: 700;
 	font-size: 0.71875rem;
 	text-transform: uppercase;
-	letter-spacing: 0.045em;
-	border-bottom: 2px solid #cbd5e1;
-	position: relative;
+	letter-spacing: 0.04em;
+	border-bottom: 1px solid #cbd5e1;
+	position: sticky;
+	top: 0;
+	z-index: 15;
 	user-select: none;
 }
 
 /* Alternating zebra striping for list views */
 tbody tr:nth-child(even),
 tbody tr:nth-child(even) td {
-	background-color: #fbfcfe;
+	background-color: #fafbfd;
 }
 
 tr:hover td,
@@ -3061,8 +3068,7 @@ tbody tr.edit-row td {
 	display: table-cell;
 	padding: 0.625rem 0.875rem;
 	text-align: left;
-	border-bottom: 1px solid #e2e8f0;
-	border-right: 1px solid rgba(226, 232, 240, 0.7);
+	border-bottom: 1px solid hsl(var(--border) / 0.6);
 	font-size: 0.8125rem;
 	white-space: nowrap;
 	vertical-align: middle;
@@ -3070,28 +3076,30 @@ tbody tr.edit-row td {
 	color: #0f172a;
 }
 
-.th:last-child,
-.td:last-child {
-	border-right: none;
-}
-
 .th {
 	background-color: #f8fafc !important;
-	color: #334155 !important;
+	color: #475569 !important;
 	font-weight: 700 !important;
 	font-size: 0.71875rem !important;
 	text-transform: uppercase !important;
-	letter-spacing: 0.045em !important;
-	border-bottom: 2px solid #cbd5e1 !important;
+	letter-spacing: 0.04em !important;
+	border-bottom: 1px solid #cbd5e1 !important;
+	border-right: 1px solid rgba(226, 232, 240, 0.55);
 	padding: 0.65rem 0.875rem;
-	position: relative;
+	position: sticky;
+	top: 0;
+	z-index: 15;
 	user-select: none;
+}
+
+.th:last-child {
+	border-right: none;
 }
 
 /* Alternating zebra striping matching sheet forms */
 .tbody .tr:nth-child(even),
 .tbody .tr:nth-child(even) .td {
-	background-color: #fbfcfe;
+	background-color: #fafbfd;
 }
 
 .tbody .tr:nth-child(odd),
@@ -4271,4 +4279,265 @@ th.col-drop-right {
 .col-swatch-circle.active {
 	border-color: #0f172a;
 	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+}
+
+
+/* =========================================================================
+   Listviews v8.0: Crisp Enterprise SaaS Polish, Density, Summary Bar & Sticky Cols
+   ========================================================================= */
+
+/* Right-aligned Tabular Numeric Columns */
+.th.num,
+.td.num,
+th.num,
+td.num {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.th.num .th-content {
+	justify-content: flex-end;
+	text-align: right;
+}
+
+.th.num .th-title {
+	text-align: right;
+}
+
+/* Table Density Modes (Comfortable default vs Compact) */
+[data-table-density="compact"] .th,
+[data-table-density="compact"] th {
+	padding: 0.45rem 0.65rem;
+	font-size: 0.6875rem;
+}
+
+[data-table-density="compact"] .td,
+[data-table-density="compact"] td {
+	padding: 0.35rem 0.65rem;
+	font-size: 0.78125rem;
+}
+
+.density-segmented {
+	display: inline-flex;
+	background: hsl(var(--secondary));
+	border: 1px solid hsl(var(--border));
+	border-radius: 6px;
+	padding: 2px;
+	gap: 2px;
+	width: 100%;
+	margin-bottom: 0.625rem;
+}
+
+.density-seg-btn {
+	flex: 1;
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	font-weight: 600;
+	padding: 0.3rem 0.5rem;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.density-seg-btn.active {
+	background: #ffffff;
+	color: hsl(var(--primary));
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+/* Frozen Left Key Columns on Wide Tables */
+.sticky-col-1 {
+	position: sticky !important;
+	left: 0;
+	z-index: 10;
+	box-shadow: 2px 0 6px -2px rgba(15, 23, 42, 0.08);
+}
+
+.th.sticky-col-1,
+th.sticky-col-1 {
+	z-index: 22 !important;
+}
+
+.tbody .tr:nth-child(odd) .td.sticky-col-1 {
+	background-color: #ffffff;
+}
+
+.tbody .tr:nth-child(even) .td.sticky-col-1 {
+	background-color: #fafbfd;
+}
+
+.tbody .tr:hover .td.sticky-col-1 {
+	background-color: hsl(var(--accent)) !important;
+}
+
+/* Unified Search Input with Leading Icon & Clear Button */
+.listview-search-wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+}
+
+.listview-search-icon {
+	position: absolute;
+	left: 0.75rem;
+	color: hsl(var(--muted-foreground));
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+}
+
+.listview-search-wrap .form-input {
+	padding-left: 2.2rem !important;
+	padding-right: 2rem !important;
+}
+
+.listview-search-clear {
+	position: absolute;
+	right: 0.5rem;
+	width: 1.375rem;
+	height: 1.375rem;
+	border-radius: 50%;
+	border: none;
+	background: hsl(var(--secondary));
+	color: hsl(var(--muted-foreground));
+	font-size: 0.875rem;
+	line-height: 1;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.listview-search-clear.visible {
+	display: inline-flex;
+}
+
+.listview-search-clear:hover {
+	background: hsl(var(--border));
+	color: var(--text-main);
+}
+
+/* Live Summary / Totals Bar */
+.listview-summary-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.5rem 0.75rem;
+	padding: 0.5rem 0.875rem;
+	margin-top: 0.25rem;
+	margin-bottom: 0.5rem;
+	background: #f8fafc;
+	border: 1px solid hsl(var(--border));
+	border-radius: var(--radius-sm);
+	font-size: 0.78125rem;
+}
+
+.listview-summary-count {
+	font-weight: 600;
+	color: var(--text-muted);
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.listview-summary-count strong {
+	color: var(--text-main);
+	font-variant-numeric: tabular-nums;
+}
+
+.listview-summary-metrics {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.summary-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.2rem 0.6rem;
+	border-radius: 9999px;
+	background: #ffffff;
+	border: 1px solid hsl(var(--border));
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+}
+
+.summary-pill strong {
+	color: var(--text-main);
+	font-weight: 700;
+}
+
+.summary-pill-primary {
+	background: hsl(var(--primary-tint));
+	border-color: hsl(217 91% 53% / 0.22);
+	color: hsl(var(--primary-dark));
+}
+
+.summary-pill-primary strong {
+	color: hsl(var(--primary-dark));
+}
+
+.summary-pill-success {
+	background: hsl(142 76% 96%);
+	border-color: hsl(142 72% 29% / 0.2);
+	color: hsl(142 72% 29%);
+}
+
+.summary-pill-success strong {
+	color: hsl(142 72% 26%);
+}
+
+.summary-pill-danger {
+	background: hsl(0 86% 97%);
+	border-color: hsl(0 72% 51% / 0.2);
+	color: hsl(0 72% 45%);
+}
+
+.summary-pill-danger strong {
+	color: hsl(0 72% 42%);
+}
+
+/* Rich Table Empty State */
+.table-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem 1.5rem;
+	text-align: center;
+	color: var(--text-muted);
+	gap: 0.5rem;
+}
+
+.table-empty-state-icon {
+	width: 40px;
+	height: 40px;
+	border-radius: 10px;
+	background: hsl(var(--secondary));
+	color: hsl(var(--muted-foreground));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 0.25rem;
+}
+
+.table-empty-state-title {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-main);
+}
+
+.table-empty-state-desc {
+	font-size: 0.78125rem;
+	color: var(--text-muted);
+	max-width: 340px;
 }

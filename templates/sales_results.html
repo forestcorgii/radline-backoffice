@@ -1,9 +1,19 @@
 {{ define "sales_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .Sales }}</strong> sales records</span>
+    </div>
+    <div class="listview-summary-metrics">
+        <span class="summary-pill">Total Sales: <strong>₱{{ money .TotalSalesSum }}</strong></span>
+        <span class="summary-pill summary-pill-primary">Total Remit: <strong>₱{{ money .TotalRemitSum }}</strong></span>
+        <span class="summary-pill summary-pill-success">Net Profit: <strong>₱{{ money .TotalProfitSum }}</strong></span>
+    </div>
+</div>
 <div class="table-container">
-    <div class="table table-scroll-lg sales-log-table">
+    <div class="table table-scroll-lg sales-log-table" id="sales-log-table">
         <div class="thead">
             <div class="tr">
-                <div class="th" data-col="doc_status">Status</div>
+                <div class="th sticky-col-1" data-col="doc_status">Status</div>
                 <div class="th" data-col="doc_date">Date</div>
                 <div class="th" data-col="doc_type_number">Doc Type / Number</div>
                 <div class="th" data-col="customer_name">Customer Name</div>
@@ -11,16 +21,15 @@
                 <div class="th" data-col="address">Address</div>
                 <div class="th" data-col="supplier">Supplier</div>
                 <div class="th" data-col="item_description">Item Description</div>
-                <div class="th" data-col="qty">Qty</div>
+                <div class="th num" data-col="qty">Qty</div>
                 <div class="th" data-col="uom">UOM</div>
-                <div class="th" data-col="price">Price</div>
-                <div class="th" data-col="total_sales">Total Price</div>
-                <div class="th" data-col="cost">Cost</div>
-                <div class="th" data-col="total_cost">Total Cost</div>
-                <div class="th" data-col="patong" title="Patong / POS / WT 2307">Deductions</div>
-                <div class="th" data-col="total_remit">Total Remit</div>
-                <div class="th" data-col="profit">Profit</div>
-                <div class="th" data-col="profit_margin">Profit Margin</div>
+                <div class="th num" data-col="price">Price</div>
+                <div class="th num" data-col="total_sales">Total Price</div>
+                <div class="th num" data-col="cost">Cost</div>
+                <div class="th num" data-col="total_cost">Total Cost</div>
+                <div class="th num" data-col="patong" title="Patong / POS / WT 2307">Deductions</div>
+                <div class="th num" data-col="total_remit">Total Remit</div>
+                <div class="th num" data-col="profit">Profit</div>
                 <div class="th" data-col="remarks">Remarks</div>
                 <div class="th" data-col="actions">Actions</div>
             </div>

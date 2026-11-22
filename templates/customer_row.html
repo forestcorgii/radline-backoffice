@@ -25,13 +25,13 @@
         {{ end }}
     </td>
     <td>
-        <span style="font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 12px; background: hsl(var(--primary-h, 243) 75% 59% / 0.1); color: hsl(var(--primary-h, 243) 75% 45%); font-weight: 500;">
+        <span class="badge badge-primary">
             {{ if .PaymentTerms }}{{ .PaymentTerms }}{{ else }}Net 30 Days{{ end }}
         </span>
     </td>
-    <td style="text-align: right; font-weight: 600; font-family: monospace;">
+    <td class="num" style="font-weight: 600;">
         {{ if gt .SalesCount 0 }}
-            ₱{{ printf "%.2f" .TotalSales }} <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">({{ .SalesCount }})</span>
+            ₱{{ money .TotalSales }} <span style="font-size: 0.75rem; font-weight: normal; color: var(--text-muted);">({{ .SalesCount }})</span>
         {{ else }}
             <span style="color: var(--text-muted); font-weight: normal;">₱0.00</span>
         {{ end }}

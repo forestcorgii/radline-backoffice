@@ -1,6 +1,6 @@
 {{ define "sale_row.html" }}
 <div id="sale-row-{{ .ID }}" class="tr">
-    <div class="td" data-col="doc_status">
+    <div class="td sticky-col-1" data-col="doc_status">
         <div class="status-icon-dropdown">
             <button type="button" class="status-icon-btn {{ if or (eq .DocStatus "Posted") (eq .DocStatus "POSTED") }}status-icon-posted{{ else if or (eq .DocStatus "Cancelled/Return") (eq .DocStatus "CANCELLED/RETURN") }}status-icon-cancelled{{ else }}status-icon-active{{ end }}"
                 title="Status: {{ .DocStatus }} (Click to change)"
@@ -39,27 +39,23 @@
     {{ $addr := derefStr .Address }}<div class="td" data-col="address" title="{{ $addr }}">{{ if $addr }}{{ $addr }}{{ else }}—{{ end }}</div>
     <div class="td" data-col="supplier"><span class="badge {{ if or (eq .Supplier "ASCD") (eq .Supplier "ascd") }}badge-success{{ else if or (eq .Supplier "RENOWN") (eq .Supplier "Renown") }}badge-primary{{ else }}badge-warning{{ end }}">{{ .Supplier }}</span></div>
     <div class="td" data-col="item_description" style="font-weight: 500;">{{ .Description }}</div>
-    <div class="td" data-col="qty" style="font-weight: 600;">{{ .Qty }}</div>
+    <div class="td num" data-col="qty" style="font-weight: 600;">{{ .Qty }}</div>
     <div class="td" data-col="uom">{{ .UOM }}</div>
-    <div class="td" data-col="price">₱{{ printf "%.2f" .Price }}</div>
-    <div class="td" data-col="total_sales" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .TotalSales
-        }}</div>
-    <div class="td" data-col="cost">₱{{ printf "%.2f" .Cost }}</div>
-    <div class="td" data-col="total_cost" class="text-danger" style="font-weight: 500;">₱{{ printf "%.2f" .TotalCost }}
-    </div>
-    <div class="td" data-col="patong">
+    <div class="td num" data-col="price">₱{{ money .Price }}</div>
+    <div class="td num text-success" data-col="total_sales" style="font-weight: 600;">₱{{ money .TotalSales }}</div>
+    <div class="td num" data-col="cost">₱{{ money .Cost }}</div>
+    <div class="td num text-danger" data-col="total_cost" style="font-weight: 500;">₱{{ money .TotalCost }}</div>
+    <div class="td num" data-col="patong">
         {{ if or (ne .Patong 0.0) (ne .POSCharge 0.0) (ne .WT2307 0.0) }}
-        <div style="display: flex; flex-direction: column; gap: 1px; font-size: 0.6875rem; line-height: 1.15; color: var(--text-muted);">
-            {{ if ne .Patong 0.0 }}<span title="Patong">P: ₱{{ printf "%.2f" .Patong }}</span>{{ end }}
-            {{ if ne .POSCharge 0.0 }}<span title="POS Charge">C: ₱{{ printf "%.2f" .POSCharge }}</span>{{ end }}
-            {{ if ne .WT2307 0.0 }}<span title="WT 2307">W: ₱{{ printf "%.2f" .WT2307 }}</span>{{ end }}
+        <div style="display: flex; flex-direction: column; gap: 1px; font-size: 0.6875rem; line-height: 1.15; color: var(--text-muted); align-items: flex-end;">
+            {{ if ne .Patong 0.0 }}<span title="Patong">P: ₱{{ money .Patong }}</span>{{ end }}
+            {{ if ne .POSCharge 0.0 }}<span title="POS Charge">C: ₱{{ money .POSCharge }}</span>{{ end }}
+            {{ if ne .WT2307 0.0 }}<span title="WT 2307">W: ₱{{ money .WT2307 }}</span>{{ end }}
         </div>
         {{ else }}—{{ end }}
     </div>
-    <div class="td" data-col="total_remit" class="text-primary" style="font-weight: 500;">₱{{ printf "%.2f" .TotalRemit
-        }}</div>
-    <div class="td" data-col="profit" class="text-success" style="font-weight: 500;">₱{{ printf "%.2f" .Profit }} ({{
-        printf "%.2f" .ProfitMargin }}%)</div>
+    <div class="td num text-primary" data-col="total_remit" style="font-weight: 600;">₱{{ money .TotalRemit }}</div>
+    <div class="td num text-success" data-col="profit" style="font-weight: 600;">₱{{ money .Profit }} ({{ printf "%.2f" .ProfitMargin }}%)</div>
     <div class="td" data-col="remarks">{{ if .Remarks }}{{ .Remarks }}{{ else }}—{{ end }}</div>
     <div class="td" data-col="actions">
         <div class="actions-cell">

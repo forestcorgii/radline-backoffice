@@ -1,15 +1,20 @@
 {{ define "activity_logs_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .Logs }}</strong> audit events</span>
+    </div>
+</div>
 <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border-color);">
-    <div class="table-container">
-        <table class="table-scroll-lg" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.75rem;">
+    <div class="table-container" style="margin-top: 0; border: none; border-radius: 0;">
+        <table class="table-scroll-lg resizable-table activity-logs-table" id="activity-logs-table">
             <thead>
-                <tr style="background: hsl(var(--secondary) / 0.5); border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.6875rem; text-transform: uppercase;">
-                    <th style="padding: 0.75rem 1rem; width: 140px;">Timestamp</th>
-                    <th style="padding: 0.75rem 1rem; width: 120px;">Operator</th>
-                    <th style="padding: 0.75rem 1rem; width: 130px;">Action</th>
-                    <th style="padding: 0.75rem 1rem; width: 100px;">Target</th>
-                    <th style="padding: 0.75rem 1rem;">Details</th>
-                    <th style="padding: 0.75rem 1rem; width: 110px;">IP Address</th>
+                <tr>
+                    <th class="sticky-col-1" data-col="timestamp" style="width: 140px;">Timestamp</th>
+                    <th data-col="operator" style="width: 120px;">Operator</th>
+                    <th data-col="action" style="width: 130px;">Action</th>
+                    <th data-col="target" style="width: 100px;">Target</th>
+                    <th data-col="details">Details</th>
+                    <th data-col="ip_address" style="width: 110px;">IP Address</th>
                 </tr>
             </thead>
             <tbody>

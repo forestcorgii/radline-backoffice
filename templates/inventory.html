@@ -97,9 +97,15 @@
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#inventory-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow" data-filter="search">
-                <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/stock"
-                    hx-trigger="keyup changed delay:300ms, search" hx-target="#inventory-stock-results"
-                    hx-include="closest form" hx-indicator="#inventory-loading-indicator" class="form-input">
+                <div class="listview-search-wrap">
+                    <span class="listview-search-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/stock"
+                        hx-trigger="keyup changed delay:300ms, search" hx-target="#inventory-stock-results"
+                        hx-include="closest form" hx-indicator="#inventory-loading-indicator" class="form-input">
+                    <button type="button" class="listview-search-clear" onclick="clearListSearch(this)" title="Clear search">&times;</button>
+                </div>
             </div>
             <div class="filter-item" data-filter="stock_filter" style="width: 8.5rem;">
                 <select name="stock_filter" class="form-input" title="Stock Filter" hx-get="/inventory/stock"

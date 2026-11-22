@@ -220,12 +220,31 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var totalOnHand, totalStockValue float64
+	var outOfStockCount int
+	for _, s := range stockItems {
+		totalOnHand += s.OnHand
+		if s.OnHand > 0 {
+			totalStockValue += s.OnHand * s.CurrentCost
+		} else {
+			outOfStockCount++
+		}
+	}
+	totalOnHand = domain.Round2(totalOnHand)
+	totalStockValue = domain.Round2(totalStockValue)
+
 	// If HTMX request for filtering, return just the rows fragment
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			StockItems []models.ItemStockView
+			StockItems      []models.ItemStockView
+			TotalOnHand     float64
+			TotalStockValue float64
+			OutOfStockCount int
 		}{
-			StockItems: stockItems,
+			StockItems:      stockItems,
+			TotalOnHand:     totalOnHand,
+			TotalStockValue: totalStockValue,
+			OutOfStockCount: outOfStockCount,
 		}
 		app.Render(w, "inventory_stock_results.html", data)
 		return
@@ -248,12 +267,18 @@ func (app *App) InventoryHandler(w http.ResponseWriter, r *http.Request) {
 		Uoms              []models.Uom
 		ReceivingRowData  interface{}
 		AdjustmentRowData interface{}
+		TotalOnHand       float64
+		TotalStockValue   float64
+		OutOfStockCount   int
 	}{
 		StockItems:        stockItems,
 		Items:             items,
 		Uoms:              uoms,
 		ReceivingRowData:  rowData,
 		AdjustmentRowData: rowData,
+		TotalOnHand:       totalOnHand,
+		TotalStockValue:   totalStockValue,
+		OutOfStockCount:   outOfStockCount,
 	}
 	app.RenderPage(w, r, "inventory.html", data)
 }
@@ -740,25 +765,47 @@ func (app *App) MonthlyInventoryHandler(w http.ResponseWriter, r *http.Request) 
 		log.Printf("ERROR: MonthlyInventoryHandler months query failed: %v", errMonths)
 	}
 
+	var totalReceived, totalSold, totalNetChange float64
+	for _, row := range rows {
+		totalReceived += row.QtyReceived
+		totalSold += row.QtySold
+		totalNetChange += row.NetChange
+	}
+	totalReceived = domain.Round2(totalReceived)
+	totalSold = domain.Round2(totalSold)
+	totalNetChange = domain.Round2(totalNetChange)
+
 	// If HTMX request for content filter, only render the table rows fragment
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
-			Rows []MonthlyInventoryRow
+			Rows           []MonthlyInventoryRow
+			TotalReceived  float64
+			TotalSold      float64
+			TotalNetChange float64
 		}{
-			Rows: rows,
+			Rows:           rows,
+			TotalReceived:  totalReceived,
+			TotalSold:      totalSold,
+			TotalNetChange: totalNetChange,
 		}
 		app.Render(w, "monthly_inventory_results.html", data)
 		return
 	}
 
 	data := struct {
-		Rows        []MonthlyInventoryRow
-		Months      []string
-		MonthFilter string
+		Rows           []MonthlyInventoryRow
+		Months         []string
+		MonthFilter    string
+		TotalReceived  float64
+		TotalSold      float64
+		TotalNetChange float64
 	}{
-		Rows:        rows,
-		Months:      months,
-		MonthFilter: monthFilter,
+		Rows:           rows,
+		Months:         months,
+		MonthFilter:    monthFilter,
+		TotalReceived:  totalReceived,
+		TotalSold:      totalSold,
+		TotalNetChange: totalNetChange,
 	}
 
 	app.RenderPage(w, r, "monthly_inventory.html", data)
@@ -821,11 +868,23 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var totalQty, totalCostSum float64
+	for _, rl := range receivingLogs {
+		totalQty += rl.Qty
+		totalCostSum += rl.TotalCost
+	}
+	totalQty = domain.Round2(totalQty)
+	totalCostSum = domain.Round2(totalCostSum)
+
 	if r.Header.Get("HX-Request") == "true" && r.Header.Get("HX-Target") != "main-content" {
 		data := struct {
 			ReceivingLogs []models.ReceivingLogWithItem
+			TotalQty      float64
+			TotalCostSum  float64
 		}{
 			ReceivingLogs: receivingLogs,
+			TotalQty:      totalQty,
+			TotalCostSum:  totalCostSum,
 		}
 		app.Render(w, "receiving_logs_results.html", data)
 		return
@@ -846,11 +905,15 @@ func (app *App) ReceivingLogsHandler(w http.ResponseWriter, r *http.Request) {
 		Suppliers        []string
 		SupplierFilter   string
 		ReceivingRowData interface{}
+		TotalQty         float64
+		TotalCostSum     float64
 	}{
 		ReceivingLogs:    receivingLogs,
 		Suppliers:        suppliers,
 		SupplierFilter:   supplierFilter,
 		ReceivingRowData: receivingRowData,
+		TotalQty:         totalQty,
+		TotalCostSum:     totalCostSum,
 	}
 
 	app.RenderPage(w, r, "receiving_logs.html", data)

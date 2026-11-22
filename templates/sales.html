@@ -277,9 +277,15 @@
 
         <div class="search-filter-bar">
             <div class="flex-grow" data-filter="search">
-                <input type="text" name="search" placeholder="Search sales by doc #, customer, item..." hx-get="/sales"
-                    hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results"
-                    hx-include="#sales-filter-form" hx-indicator="#sales-loading-indicator" class="form-input">
+                <div class="listview-search-wrap">
+                    <span class="listview-search-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" name="search" placeholder="Search sales by doc #, customer, item..." hx-get="/sales"
+                        hx-trigger="keyup changed delay:300ms, search" hx-target="#sales-results"
+                        hx-include="#sales-filter-form" hx-indicator="#sales-loading-indicator" class="form-input">
+                    <button type="button" class="listview-search-clear" onclick="clearListSearch(this)" title="Clear search">&times;</button>
+                </div>
             </div>
             <div class="filter-item filter-period" data-filter="date_preset">
                 <select name="date_preset" id="date_preset_select" class="form-input" title="Period">
@@ -355,37 +361,7 @@
     </div>
 
     <div id="sales-results">
-        <div class="table-container">
-            <div class="table table-scroll-lg sales-log-table" id="sales-log-table">
-                <div class="thead">
-                    <div class="tr">
-                        <div class="th" data-col="doc_status">Status</div>
-                        <div class="th" data-col="doc_date">Date</div>
-                        <div class="th" data-col="doc_type_number">Doc Type / Number</div>
-                        <div class="th" data-col="customer_name">Customer Name</div>
-                        <div class="th" data-col="tin_no">TIN No.</div>
-                        <div class="th" data-col="address">Address</div>
-                        <div class="th" data-col="supplier">Supplier</div>
-                        <div class="th" data-col="item_description">Item Description</div>
-                        <div class="th" data-col="qty">Qty</div>
-                        <div class="th" data-col="uom">UOM</div>
-                        <div class="th" data-col="price">Price</div>
-                        <div class="th" data-col="total_sales">Total Price</div>
-                        <div class="th" data-col="cost">Cost</div>
-                        <div class="th" data-col="total_cost">Total Cost</div>
-                        <div class="th" data-col="patong" title="Patong / POS / WT 2307">Deductions</div>
-                        <div class="th" data-col="total_remit">Total Remit</div>
-                        <div class="th" data-col="profit">Profit</div>
-                        <!-- <div class="th" data-col="profit_margin">Profit Margin</div> -->
-                        <div class="th" data-col="remarks">Remarks</div>
-                        <div class="th" data-col="actions">Actions</div>
-                    </div>
-                </div>
-                <div class="tbody" id="sales-tbody">
-                    {{ template "sales_rows.html" . }}
-                </div>
-            </div>
-        </div>
+        {{ template "sales_results.html" . }}
     </div>
 </div>
 
@@ -425,16 +401,16 @@
 
         // For batch edit table row spans:
         const spanTotalSales = row.querySelector('.calc-total-sales');
-        if (spanTotalSales) spanTotalSales.textContent = '₱' + totalPrice.toFixed(2);
+        if (spanTotalSales) spanTotalSales.textContent = '₱' + formatMoney(totalPrice);
 
         const spanTotalCost = row.querySelector('.calc-total-cost');
-        if (spanTotalCost) spanTotalCost.textContent = '₱' + totalCost.toFixed(2);
+        if (spanTotalCost) spanTotalCost.textContent = '₱' + formatMoney(totalCost);
 
         const spanTotalRemit = row.querySelector('.calc-total-remit');
-        if (spanTotalRemit) spanTotalRemit.textContent = '₱' + totalRemit.toFixed(2);
+        if (spanTotalRemit) spanTotalRemit.textContent = '₱' + formatMoney(totalRemit);
 
         const spanProfit = row.querySelector('.calc-profit');
-        if (spanProfit) spanProfit.textContent = '₱' + profit.toFixed(2);
+        if (spanProfit) spanProfit.textContent = '₱' + formatMoney(profit);
 
         const spanProfitMargin = row.querySelector('.calc-profit-margin');
         if (spanProfitMargin) spanProfitMargin.textContent = profitMargin.toFixed(2) + '%';
@@ -656,6 +632,9 @@
                 el.style.display = isVisible ? '' : 'none';
             });
         });
+        if (typeof syncSalesDateRangeVisibility === 'function') {
+            syncSalesDateRangeVisibility(config);
+        }
     };
 
     window.addEventListener('radline-excel-cols-updated', function (e) {
@@ -797,7 +776,19 @@
         return `${yyyy}-${mm}-${dd}`;
     }
 
+    function syncSalesDateRangeVisibility(config) {
+        const presetSelect = document.getElementById('date_preset_select');
+        const isCustom = !presetSelect || presetSelect.value === 'custom' || presetSelect.value === '';
+        ['start_date', 'end_date'].forEach(filterKey => {
+            const allowByConfig = !config || !config.filters || config.filters[filterKey] !== false;
+            document.querySelectorAll(`[data-filter="${filterKey}"]`).forEach(el => {
+                el.style.display = (isCustom && allowByConfig) ? '' : 'none';
+            });
+        });
+    }
+
     function applyDatePreset(preset) {
+        syncSalesDateRangeVisibility(getSalesViewConfig());
         if (preset === 'custom') return;
 
         const today = new Date();

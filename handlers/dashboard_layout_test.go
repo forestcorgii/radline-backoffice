@@ -136,7 +136,7 @@ func TestSaveAndResetDashboardLayoutHandler(t *testing.T) {
 func TestDashboardTrendsWithCost(t *testing.T) {
 	_ = db.InitDB(":memory:")
 
-	tmpl, err := template.ParseFiles("../templates/dashboard_trends.html")
+	tmpl, err := template.New("dashboard_trends.html").Funcs(TemplateFuncMap()).ParseFiles("../templates/dashboard_trends.html")
 	if err != nil {
 		t.Fatalf("Failed to parse dashboard_trends.html: %v", err)
 	}
@@ -177,7 +177,8 @@ func TestDashboardTopProductsFilter(t *testing.T) {
 	_ = db.InitDB(":memory:")
 
 	funcMap := template.FuncMap{
-		"add": func(a, b int) int { return a + b },
+		"money": FormatMoney,
+		"add":   func(a, b int) int { return a + b },
 	}
 	tmpl, err := template.New("dashboard_top_products.html").Funcs(funcMap).ParseFiles("../templates/dashboard_top_products.html")
 	if err != nil {

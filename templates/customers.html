@@ -84,18 +84,22 @@
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#customers-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow">
-                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search</label>
-                <input type="text" name="search" placeholder="Search by name, code, TIN, address, or contact..." 
-                       hx-get="/customers" 
-                       hx-trigger="keyup changed delay:300ms, search" 
-                       hx-target="#customers-results" 
-                       hx-include="closest form"
-                       hx-indicator="#customers-loading-indicator"
-                       class="form-input">
+                <div class="listview-search-wrap">
+                    <span class="listview-search-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" name="search" placeholder="Search by name, code, TIN, address, or contact..." 
+                           hx-get="/customers" 
+                           hx-trigger="keyup changed delay:300ms, search" 
+                           hx-target="#customers-results" 
+                           hx-include="closest form"
+                           hx-indicator="#customers-loading-indicator"
+                           class="form-input">
+                    <button type="button" class="listview-search-clear" onclick="clearListSearch(this)" title="Clear search">&times;</button>
+                </div>
             </div>
-            <div class="filter-item">
-                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sales Activity</label>
-                <select name="filter" class="form-input"
+            <div class="filter-item" style="width: 10.5rem;">
+                <select name="filter" class="form-input" title="Sales Activity"
                         hx-get="/customers" 
                         hx-target="#customers-results" 
                         hx-include="closest form"
@@ -106,9 +110,8 @@
                     <option value="no_sales">No Sales Yet</option>
                 </select>
             </div>
-            <div class="filter-item">
-                <label style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Sort By</label>
-                <select name="sort" class="form-input"
+            <div class="filter-item filter-sort">
+                <select name="sort" class="form-input" title="Sort By"
                         hx-get="/customers" 
                         hx-target="#customers-results" 
                         hx-include="closest form"

@@ -1,16 +1,26 @@
 {{ define "inventory_stock_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .StockItems }}</strong> items</span>
+    </div>
+    <div class="listview-summary-metrics">
+        <span class="summary-pill">Total On Hand: <strong>{{ printf "%.2f" .TotalOnHand }}</strong></span>
+        <span class="summary-pill summary-pill-primary">Stock Value: <strong>₱{{ money .TotalStockValue }}</strong></span>
+        <span class="summary-pill {{ if gt .OutOfStockCount 0 }}summary-pill-danger{{ end }}">Out of Stock: <strong>{{ .OutOfStockCount }}</strong></span>
+    </div>
+</div>
 <div class="table-container">
     <div class="table table-scroll-md resizable-table inventory-stock-table" id="inventory-stock-table">
         <div class="thead">
             <div class="tr">
-                <div class="th" data-col="description" style="width: 36%;">Description</div>
+                <div class="th sticky-col-1" data-col="description" style="width: 36%;">Description</div>
                 <div class="th" data-col="uom" style="width: 8%;">UOM</div>
-                <div class="th" data-col="received" style="width: 10%;">Received</div>
-                <div class="th" data-col="sold" style="width: 8%;">Sold</div>
-                <div class="th" data-col="adjusted" style="width: 10%;">Adjusted</div>
-                <div class="th" data-col="on_hand" style="width: 10%;">On Hand</div>
-                <div class="th" data-col="current_cost" style="width: 9%;">Current Cost</div>
-                <div class="th" data-col="current_price" style="width: 9%;">Current Price</div>
+                <div class="th num" data-col="received" style="width: 10%;">Received</div>
+                <div class="th num" data-col="sold" style="width: 8%;">Sold</div>
+                <div class="th num" data-col="adjusted" style="width: 10%;">Adjusted</div>
+                <div class="th num" data-col="on_hand" style="width: 10%;">On Hand</div>
+                <div class="th num" data-col="current_cost" style="width: 9%;">Current Cost</div>
+                <div class="th num" data-col="current_price" style="width: 9%;">Current Price</div>
             </div>
         </div>
         <div class="tbody" id="inventory-stock-tbody">

@@ -1,13 +1,17 @@
 {{ define "categories_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .Categories }}</strong> categories</span>
+    </div>
+</div>
 <div class="table-container">
-    <table class="table-scroll-md">
+    <table class="table-scroll-md resizable-table categories-table" id="categories-table">
         <thead>
             <tr>
-                <th style="width: 10%;">ID</th>
-                <th style="width: 20%;">Code</th>
-                <th style="width: 45%;">Name</th>
-                <th style="width: 15%;">Items Count</th>
-                <th style="width: 10%;">Actions</th>
+                <th data-col="code" style="width: 22%;">Code</th>
+                <th data-col="name" style="width: 48%;">Name</th>
+                <th data-col="items_count" style="width: 18%;">Items Count</th>
+                <th data-col="actions" style="width: 12%;">Actions</th>
             </tr>
         </thead>
         <tbody id="categories-tbody">

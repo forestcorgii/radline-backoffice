@@ -80,27 +80,27 @@
             <!-- Sales Bar -->
                 <rect class="chart-bar-sales" x="{{ .SalesX }}" y="{{ .SalesY }}" width="13" height="{{ .SalesHeight }}"
                 rx="2" fill="hsl(var(--primary))" style="transition: opacity 0.2s ease; opacity: 0.88;">
-                <title>{{ .Label }} Sales: ₱{{ printf "%.2f" .Sales }}</title>
+                <title>{{ .Label }} Sales: ₱{{ money .Sales }}</title>
             </rect>
 
             <!-- Cost Bar -->
             <rect class="chart-bar-cost" x="{{ .CostX }}" y="{{ .CostY }}" width="13" height="{{ .CostHeight }}" rx="2"
                 fill="hsl(38 92% 50%)" style="transition: opacity 0.2s ease; opacity: 0.88;">
-                <title>{{ .Label }} Cost: ₱{{ printf "%.2f" .Cost }}</title>
+                <title>{{ .Label }} Cost: ₱{{ money .Cost }}</title>
             </rect>
 
             <!-- Profit Bar -->
                 <rect class="chart-bar-profit" x="{{ .ProfitX }}" y="{{ .ProfitY }}" width="13"
                 height="{{ .ProfitHeight }}" rx="2" fill="hsl(142 72% 35%)"
                 style="transition: opacity 0.2s ease; opacity: 0.88;">
-                <title>{{ .Label }} Profit: ₱{{ printf "%.2f" .Profit }}</title>
+                <title>{{ .Label }} Profit: ₱{{ money .Profit }}</title>
             </rect>
 
             <!-- Inventory Bar -->
             <rect class="chart-bar-inventory" x="{{ .InventoryX }}" y="{{ .InventoryY }}" width="13"
                 height="{{ .InventoryHeight }}" rx="2" fill="hsl(199 89% 48%)"
                 style="transition: opacity 0.2s ease; opacity: 0.88;">
-                <title>{{ .Label }} Inventory Intake: ₱{{ printf "%.2f" .Inventory }}</title>
+                <title>{{ .Label }} Inventory Intake: ₱{{ money .Inventory }}</title>
             </rect>
 
             <!-- X Axis Label -->

@@ -1,15 +1,25 @@
 {{ define "monthly_inventory_results.html" }}
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .Rows }}</strong> monthly records</span>
+    </div>
+    <div class="listview-summary-metrics">
+        <span class="summary-pill summary-pill-success">Received: <strong>{{ printf "%.2f" .TotalReceived }}</strong></span>
+        <span class="summary-pill summary-pill-danger">Sold: <strong>{{ printf "%.2f" .TotalSold }}</strong></span>
+        <span class="summary-pill summary-pill-primary">Net Change: <strong>{{ if lt .TotalNetChange 0.0 }}{{ printf "%.2f" (mul .TotalNetChange -1.0) }}{{ else }}{{ printf "%.2f" .TotalNetChange }}{{ end }}</strong></span>
+    </div>
+</div>
 <div class="table-container">
     <div class="table table-scroll-md resizable-table monthly-inventory-table" id="monthly-inventory-table">
         <div class="thead">
             <div class="tr">
-                <div class="th" data-col="month" style="width: 15%;">Month</div>
+                <div class="th sticky-col-1" data-col="month" style="width: 15%;">Month</div>
                 <div class="th" data-col="description" style="width: 25%;">Description</div>
                 <div class="th" data-col="uom" style="width: 10%;">UOM</div>
-                <div class="th" data-col="received" style="width: 11%;">Received</div>
-                <div class="th" data-col="sold" style="width: 11%;">Sold</div>
-                <div class="th" data-col="adjusted" style="width: 11%;">Adjusted</div>
-                <div class="th" data-col="net_change" style="width: 12%;">Net Change</div>
+                <div class="th num" data-col="received" style="width: 11%;">Received</div>
+                <div class="th num" data-col="sold" style="width: 11%;">Sold</div>
+                <div class="th num" data-col="adjusted" style="width: 11%;">Adjusted</div>
+                <div class="th num" data-col="net_change" style="width: 12%;">Net Change</div>
             </div>
         </div>
         <div class="tbody" id="monthly-inventory-tbody">

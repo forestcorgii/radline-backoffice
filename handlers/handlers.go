@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -38,9 +40,44 @@ func setHXLocation(w http.ResponseWriter, path, target string) {
 	}
 }
 
+// FormatMoney formats a float64 with comma thousands separators and 2 decimal places (e.g. 30,868.80).
+func FormatMoney(val float64) string {
+	if math.Abs(val) < 0.005 {
+		val = 0
+	}
+	neg := val < 0
+	if neg {
+		val = -val
+	}
+	raw := fmt.Sprintf("%.2f", val)
+	parts := strings.SplitN(raw, ".", 2)
+	intPart := parts[0]
+	n := len(intPart)
+	if n > 3 {
+		var b strings.Builder
+		rem := n % 3
+		if rem > 0 {
+			b.WriteString(intPart[:rem])
+			b.WriteByte(',')
+		}
+		for i := rem; i < n; i += 3 {
+			if i > rem {
+				b.WriteByte(',')
+			}
+			b.WriteString(intPart[i : i+3])
+		}
+		intPart = b.String()
+	}
+	if neg {
+		return "-" + intPart + "." + parts[1]
+	}
+	return intPart + "." + parts[1]
+}
+
 // TemplateFuncMap returns the shared HTML template helper functions.
 func TemplateFuncMap() template.FuncMap {
 	return template.FuncMap{
+		"money": FormatMoney,
 		"add": func(a, b int) int {
 			return a + b
 		},

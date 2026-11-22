@@ -8,23 +8,100 @@
         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.875rem; padding-bottom: 0.625rem; border-bottom: 1px solid hsl(var(--border) / 0.8);">
         <h3 style="font-size: 1rem; font-weight: 700; margin: 0; color: var(--text-main);">Monthly Inventory
             Movements</h3>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <div class="customize-view-container">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="toggleCustomizeMonthlyViewPopover(event)"
+                    style="width: 1.875rem; padding: 0;"
+                    title="Customize Visible Columns and Filters">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                </button>
+
+                <div id="customize-monthly-view-popover" class="customize-view-popover">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                        <span style="font-weight: 600; font-size: 0.8125rem;">Monthly Inventory View</span>
+                        <button type="button" onclick="resetMonthlyViewSettings()"
+                            style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset
+                            Default</button>
+                    </div>
+
+                    <div class="customize-section-title">Table Columns</div>
+                    <div class="customize-checkbox-grid">
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="month" onchange="onMonthlyViewSettingChange()">
+                            <span>Month</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="description"
+                                onchange="onMonthlyViewSettingChange()">
+                            <span>Description</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="uom" onchange="onMonthlyViewSettingChange()">
+                            <span>UOM</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="received"
+                                onchange="onMonthlyViewSettingChange()">
+                            <span>Received</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="sold" onchange="onMonthlyViewSettingChange()">
+                            <span>Sold</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="adjusted"
+                                onchange="onMonthlyViewSettingChange()">
+                            <span>Adjusted</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-col="net_change"
+                                onchange="onMonthlyViewSettingChange()">
+                            <span>Net Change</span>
+                        </label>
+                    </div>
+
+                    <div class="customize-section-title">Visible Filters</div>
+                    <div class="customize-checkbox-grid">
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="search"
+                                onchange="onMonthlyViewSettingChange()">
+                            <span>Search Bar</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="month_filter"
+                                onchange="onMonthlyViewSettingChange()">
+                            <span>Month Filter</span>
+                        </label>
+                        <label class="customize-checkbox-item">
+                            <input type="checkbox" data-target-filter="limit"
+                                onchange="onMonthlyViewSettingChange()">
+                            <span>Show Rows (Limit)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <form style="display: contents;" onsubmit="return false;" hx-indicator="#monthly-loading-indicator">
         <div class="search-filter-bar">
             <div class="flex-grow" data-filter="search">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Search
-                    Items</label>
-                <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/monthly"
-                    hx-trigger="keyup changed delay:300ms, search" hx-target="#monthly-inventory-results"
-                    hx-include="closest form" hx-indicator="#monthly-loading-indicator" class="form-input">
+                <div class="listview-search-wrap">
+                    <span class="listview-search-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" name="search" placeholder="Search by item description..." hx-get="/inventory/monthly"
+                        hx-trigger="keyup changed delay:300ms, search" hx-target="#monthly-inventory-results"
+                        hx-include="closest form" hx-indicator="#monthly-loading-indicator" class="form-input">
+                    <button type="button" class="listview-search-clear" onclick="clearListSearch(this)" title="Clear search">&times;</button>
+                </div>
             </div>
-            <div class="filter-item" data-filter="month_filter">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Month
-                    Filter</label>
-                <select name="month_filter" class="form-input" hx-get="/inventory/monthly"
+            <div class="filter-item" data-filter="month_filter" style="width: 10rem;">
+                <select name="month_filter" class="form-input" title="Month Filter" hx-get="/inventory/monthly"
                     hx-target="#monthly-inventory-results" hx-include="closest form" hx-trigger="change"
                     hx-indicator="#monthly-loading-indicator">
                     <option value="all">All Months</option>
@@ -33,98 +110,16 @@
                     {{ end }}
                 </select>
             </div>
-            <div class="filter-item" data-filter="limit">
-                <label
-                    style="margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 500; color: var(--text-muted); display: block;">Show
-                    Rows</label>
-                <select name="limit" class="form-input" hx-get="/inventory/monthly"
+            <div class="filter-item" data-filter="limit" style="width: 6.5rem;">
+                <select name="limit" class="form-input" title="Rows" hx-get="/inventory/monthly"
                     hx-target="#monthly-inventory-results" hx-include="closest form" hx-trigger="change"
                     hx-indicator="#monthly-loading-indicator">
-                    <option value="25" selected>Top 25</option>
-                    <option value="50">Top 50</option>
-                    <option value="100">Top 100</option>
-                    <option value="200">Top 200</option>
-                    <option value="500">Top 500</option>
+                    <option value="25" selected>25 rows</option>
+                    <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
+                    <option value="200">200 rows</option>
+                    <option value="500">500 rows</option>
                 </select>
-            </div>
-            <!-- Customize View Button Popover -->
-            <div class="filter-item"
-                style="width: auto; align-self: flex-end; display: flex; gap: 0.5rem; align-items: center;">
-                <div class="customize-view-container">
-                    <button type="button" class="btn btn-secondary" onclick="toggleCustomizeMonthlyViewPopover(event)"
-                        style="width: 2.25rem; padding: 0;"
-                        title="Customize Visible Columns and Filters">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                        </svg>
-                    </button>
-
-                    <div id="customize-monthly-view-popover" class="customize-view-popover">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
-                            <span style="font-weight: 600; font-size: 0.875rem;">Monthly Inventory View</span>
-                            <button type="button" onclick="resetMonthlyViewSettings()"
-                                style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0;">Reset
-                                Default</button>
-                        </div>
-
-                        <div class="customize-section-title">Table Columns</div>
-                        <div class="customize-checkbox-grid">
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="month" onchange="onMonthlyViewSettingChange()">
-                                <span>Month</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="description"
-                                    onchange="onMonthlyViewSettingChange()">
-                                <span>Description</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="uom" onchange="onMonthlyViewSettingChange()">
-                                <span>UOM</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="received"
-                                    onchange="onMonthlyViewSettingChange()">
-                                <span>Received</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="sold" onchange="onMonthlyViewSettingChange()">
-                                <span>Sold</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="adjusted"
-                                    onchange="onMonthlyViewSettingChange()">
-                                <span>Adjusted</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-col="net_change"
-                                    onchange="onMonthlyViewSettingChange()">
-                                <span>Net Change</span>
-                            </label>
-                        </div>
-
-                        <div class="customize-section-title">Visible Filters</div>
-                        <div class="customize-checkbox-grid">
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="search"
-                                    onchange="onMonthlyViewSettingChange()">
-                                <span>Search Bar</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="month_filter"
-                                    onchange="onMonthlyViewSettingChange()">
-                                <span>Month Filter</span>
-                            </label>
-                            <label class="customize-checkbox-item">
-                                <input type="checkbox" data-target-filter="limit"
-                                    onchange="onMonthlyViewSettingChange()">
-                                <span>Show Rows (Limit)</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 

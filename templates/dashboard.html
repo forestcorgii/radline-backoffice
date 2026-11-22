@@ -192,7 +192,7 @@
                         </svg>
                     </div>
                 </div>
-                <div class="qb-kpi-value">₱{{ printf "%.2f" $.TotalSales }}</div>
+                <div class="qb-kpi-value">₱{{ money $.TotalSales }}</div>
                 <div class="qb-kpi-desc">Gross billed revenue from completed customer sales</div>
             </div>
         </div>
@@ -261,7 +261,7 @@
                         </svg>
                     </div>
                 </div>
-                <div class="qb-kpi-value">₱{{ printf "%.2f" $.TotalCosts }}</div>
+                <div class="qb-kpi-value">₱{{ money $.TotalCosts }}</div>
                 <div class="qb-kpi-desc">Direct inventory acquisition cost of sold merchandise</div>
             </div>
         </div>
@@ -331,7 +331,7 @@
                         </svg>
                     </div>
                 </div>
-                <div class="qb-kpi-value profit-green">₱{{ printf "%.2f" $.GrossProfit }}</div>
+                <div class="qb-kpi-value profit-green">₱{{ money $.GrossProfit }}</div>
                 <div class="qb-kpi-desc">Realized earnings before operating expenses & taxes</div>
             </div>
         </div>

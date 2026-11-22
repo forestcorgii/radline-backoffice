@@ -1,15 +1,20 @@
+<div class="listview-summary-bar">
+    <div class="listview-summary-count">
+        <span>Showing <strong>{{ len .Customers }}</strong> customers</span>
+    </div>
+</div>
 <div class="table-container">
-    <table class="table-scroll-md">
+    <table class="table-scroll-md resizable-table customers-table" id="customers-table">
         <thead>
             <tr>
-                <th style="width: 120px;">Code</th>
-                <th style="min-width: 200px;">Customer Name</th>
-                <th style="width: 140px;">TIN No.</th>
-                <th style="min-width: 220px;">Address</th>
-                <th style="min-width: 160px;">Contact & Phone</th>
-                <th style="width: 130px;">Payment Terms</th>
-                <th style="width: 140px; text-align: right;">Total Sales</th>
-                <th style="width: 110px; text-align: center;">Actions</th>
+                <th class="sticky-col-1" data-col="code" style="width: 120px;">Code</th>
+                <th data-col="name" style="min-width: 200px;">Customer Name</th>
+                <th data-col="tin_no" style="width: 140px;">TIN No.</th>
+                <th data-col="address" style="min-width: 220px;">Address</th>
+                <th data-col="contact" style="min-width: 160px;">Contact & Phone</th>
+                <th data-col="payment_terms" style="width: 130px;">Payment Terms</th>
+                <th class="num" data-col="total_sales" style="width: 140px;">Total Sales</th>
+                <th data-col="actions" style="width: 110px; text-align: center;">Actions</th>
             </tr>
         </thead>
         <tbody id="customers-tbody">
